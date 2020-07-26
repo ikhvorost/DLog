@@ -9,6 +9,30 @@ import os.activity
 // assertation
 
 
+enum Platform {
+	case macOS
+	case macCatalyst
+	case tvOS
+	case watchOS
+	case iOS
+	
+	static var current : Platform {
+		#if os(OSX)
+			return .macOS
+		#elseif os(watchOS)
+			return .watchOS
+		#elseif os(tvOS)
+			return .tvOS
+		#elseif os(iOS)
+			#if targetEnvironment(macCatalyst)
+				return .macCatalyst
+			#else
+				return .iOS
+			#endif
+		#endif
+	}
+}
+
 struct DebugKit {
     
 }
@@ -78,17 +102,48 @@ public struct LogType  {
 	static let assert = LogType(icon: "🅰️", name: "ASSERT", type: OSLogType.debug)
 }
 
-public protocol LogHandler {
-	func log(text: String, type: LogType, time: String, fileName: String, function: String, line: UInt)
+public struct LogMessage {
+	let category: String
+	let text: String
+	let type: LogType
+	let time: String
+	let scope: DLog.Scope?
+	let fileName: String
+	let function: String
+	let line: UInt
 }
 
-public class XCConsoleLogHandler : LogHandler {
-	public func log(text: String, type: LogType, time: String, fileName: String, function: String, line: UInt) {
-		print(time, "[DLOG]", type.icon, "[\(type.name)]", "<\(fileName):\(line)>", text)
+public protocol LogOutput {
+	func log(message: LogMessage)
+	func scope(scope: DLog.Scope, start: Bool, time: String, category: String)
+}
+
+public class XConsoleOutput : LogOutput {
+	func write(category: String, time: String, padding: String, icon: String, type: LogType, location: String, text: String) {
+		print(time, "[\(category)]", padding, icon, "[\(type.name)]", location, text)
+	}
+	
+	public func log(message: LogMessage) {
+		var padding = ""
+		if let s = message.scope {
+			padding = String(repeating: "|\t", count: s.level)
+		}
+		
+		write(category: message.category, time: message.time, padding: padding, icon: "\(message.type.icon)", type: message.type, location: "<\(message.fileName):\(message.line)>", text: message.text)
+	}
+	
+	public func scope(scope: DLog.Scope, start: Bool, time: String, category: String) {
+		let icon = start ? "┌" : "└"
+		let padding = String(repeating: "|\t", count: scope.level-1) + icon
+		
+		let interval = Int(scope.time.timeIntervalSinceNow * -1000)
+		let ms = !start ? "(\(interval) ms)" : nil
+			
+		print(time, "[\(category)]", padding, "[\(scope.name)]", ms ?? "")
 	}
 }
 
-public class TerminalLogHandler : LogHandler {
+public class TerminalOutput : XConsoleOutput {
 	
 	struct Colors {
 		let textColor: ANSIEscapeCode
@@ -98,52 +153,53 @@ public class TerminalLogHandler : LogHandler {
 	static let colors = [
 		OSLogType.default : Colors(textColor: .textGreen, backgroundColor: .backgroundGreen),
 		OSLogType.info : Colors(textColor: .textBlue, backgroundColor: .backgroundBlue),
-		OSLogType.debug : Colors(textColor: .textWhite, backgroundColor: .backgroundWhite),
+		OSLogType.debug : Colors(textColor: .textWhite, backgroundColor: .reversed),
 		OSLogType.error : Colors(textColor: .textYellow, backgroundColor: .backgroundYellow),
 		OSLogType.fault : Colors(textColor: .textRed, backgroundColor: .backgrounRed)
 	]
 	
-	public func log(text: String, type: LogType, time: String, fileName: String, function: String, line: UInt) {
+	override func write(category: String, time: String, padding: String, icon: String, type: LogType, location: String, text: String) {
 		var tag = "[\(type.name)]"
-		var location = "<\(fileName):\(line)>".escape(code: .underline)
+		var file = location.escape(code: .underline)
 		var msg = text
-		
+
 		if let color = Self.colors[type.type] {
 			tag = tag.escape(code: color.backgroundColor)
-			location = location.escape(code: color.textColor)
+			file = file.escape(code: color.textColor)
 			msg = msg.escape(code: color.textColor)
 		}
 		
-		print(time, "[DLOG]", type.icon, tag, location, msg)
+		print(time, "[\(category)]", padding, tag, file, msg)
 	}
 }
 
-public class AutoLogHandler : LogHandler {
-	let handler: LogHandler
+public class OSLogOutput : LogOutput {
+	private var log: OSLog?
 	
-	enum Platform {
-		case macOS
-		case macCatalyst
-		case tvOS
-		case watchOS
-		case iOS
+	private func oslog(category: String) -> OSLog {
+		if let l = log {
+			return l
+		}
+		else {
+			let subsystem = Bundle.main.bundleIdentifier ?? ""
+			log = OSLog(subsystem: subsystem, category: category)
+			return log!
+		}
 	}
 	
-	static var platform : Platform {
-		#if os(OSX)
-			return .macOS
-		#elseif os(watchOS)
-			return .watchOS
-		#elseif os(tvOS)
-			return .tvOS
-		#elseif os(iOS)
-			#if targetEnvironment(macCatalyst)
-				return .macCatalyst
-			#else
-				return .iOS
-			#endif
-		#endif
+	public func log(message: LogMessage) {
+		let log = oslog(category: message.category)
+		
+		let location = "<\(message.fileName):\(message.line)>"
+		os_log("%s %s", log: log, type: message.type.type, location, message.text)
 	}
+	
+	public func scope(scope: DLog.Scope, start: Bool, time: String, category: String) {
+	}
+}
+
+public class AdaptiveOutput : LogOutput {
+	let output: LogOutput
 	
 	static var isDebug : Bool {
 		var info = kinfo_proc()
@@ -160,47 +216,51 @@ public class AutoLogHandler : LogHandler {
 	
 	init() {
 		if Self.isDebug {
-			handler = XCConsoleLogHandler()
+			output = XConsoleOutput()
 		}
 		else {
-			handler  = Self.isTerminal ? TerminalLogHandler() : OSLogHandler()
+			output  = Self.isTerminal ? TerminalOutput() : OSLogOutput()
 		}
 	}
 	
-	public func log(text: String, type: LogType, time: String, fileName: String, function: String, line: UInt) {
-		handler.log(text: text, type: type, time: time, fileName: fileName, function: function, line: line)
+	public func log(message: LogMessage) {
+		output.log(message: message)
+	}
+	
+	public func scope(scope: DLog.Scope, start: Bool, time: String, category: String) {
+		output.scope(scope: scope, start: start, time: time, category: category)
 	}
 }
 
-public class OSLogHandler : LogHandler {
-	//let oslog = OSLog(subsystem: "com.mycompany.myapp", category: "myapp")
+//public class FileOutput : LogOutput {
+//}
+
+//public class FTPOutput : LogOutput {
+//}
+
+//public class SQLOutput : LogOutput {
+//}
+
+//public class JSONOutput : LogOutput {
+//}
+
+public class DLog {
+	private let category: String
+	private let outputs: [LogOutput]
+	private var scopes = [Scope]()
 	
-	public func log(text: String, type: LogType, time: String, fileName: String, function: String, line: UInt) {
-		let location = "<\(fileName):\(line)>"
-		os_log("%s %s", type: type.type, location, text)
-	}
-}
-
-//public class FileLogHandler : LogHandler {
-//}
-
-//public class FTPLogHandler : LogHandler {
-//}
-
-//public class SQLLogHandler : LogHandler {
-//}
-
-//public class JSONLogHandler : LogHandler {
-//}
-
-class DLog {
-	let handlers: [LogHandler]
-	
-	init(handlers: [LogHandler] = [AutoLogHandler()]) {
-		self.handlers = handlers
+	public struct Scope {
+		let level: Int
+		let name: String
+		let time: Date
 	}
 	
-	private let debugDateFormatter: DateFormatter = {
+	init(category: String = "DLOG", output: [LogOutput] = [AdaptiveOutput()]) {
+		self.category = category
+		self.outputs = output
+	}
+	
+	private static let debugDateFormatter: DateFormatter = {
 		let dateFormatter = DateFormatter()
 		dateFormatter.dateFormat = "HH:mm:ss:SSS"
 		return dateFormatter
@@ -208,14 +268,18 @@ class DLog {
 	
 	private func log(_ text: String, type: LogType, file: String, function: String, line: UInt) {
 		let fileName = NSString(string: file).lastPathComponent
-		let time = debugDateFormatter.string(from: Date())
+		let time = Self.debugDateFormatter.string(from: Date())
 		
-		handlers.forEach {
-			$0.log(text: text, type: type, time: time, fileName: fileName, function: function, line: line)
+		let scope = scopes.last
+		
+		let message = LogMessage(category: category, text: text, type: type, time: time, scope: scope, fileName: fileName, function: function, line: line)
+		
+		outputs.forEach {
+			$0.log(message: message)
 		}
 	}
 	
-	public func trace(_ text: String = "", file: String = #file, function: String = #function, line: UInt = #line) {
+	public func trace(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) {
 		log(text != "" ? text : function, type: .trace, file: file, function: function, line: line)
 	}
 	
@@ -235,6 +299,26 @@ class DLog {
 	public func fault(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) {
 		log(text, type: .fault, file: file, function: function, line: line)
 	}
+	
+	public func scope(_ name: String = #function, closure: () -> Void) {
+		let date = Date()
+		let s = Scope(level: scopes.count + 1, name: name, time: date)
+		scopes.append(s)
+		
+		var time = Self.debugDateFormatter.string(from: date)
+		outputs.forEach {
+			$0.scope(scope: s, start: true, time: time, category: category)
+		}
+		
+		closure()
+		
+		time = Self.debugDateFormatter.string(from: Date())
+		outputs.forEach {
+			$0.scope(scope: s, start: false, time: time, category: category)
+		}
+		
+		_ = scopes.popLast()
+	}
 }
 
 /*
@@ -245,8 +329,6 @@ public func dlog(_ items: String..., icon: Character = "▶️", file: String = 
 	
 	let head = "[\(time)] [DLOG] \(icon) <\(fileName):\(line)>"
 	print(head, text)
-	//NSLog(text)
-	print("\("⚠️ [dlog] print", color: .red)")
 	
 	// https://nshipster.com/swift-log/
 	// log stream --predicate 'eventMessage CONTAINS[c] "[dlog]"' --style syslog
@@ -264,7 +346,7 @@ public func dlog(_ items: String..., icon: Character = "▶️", file: String = 
 public func dlog(error: Error, file: String = #file, function: String = #function, line: UInt = #line) {
 	dlog("\("Error: \(error.localizedDescription)", color: .yellow)", icon: "⚠️", file: file, function: function, line: line)
 }
-*/
+// */
 
 public func asyncAfter(_ sec: Double = 0.25, closure: @escaping (() -> Void) ) {
 	DispatchQueue.global().asyncAfter(deadline: .now() + sec) {
