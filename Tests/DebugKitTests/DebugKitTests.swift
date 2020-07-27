@@ -9,6 +9,19 @@ extension String : LocalizedError {
 	public var errorDescription: String? { return self }
 }
 
+class Trace {
+	let name: String
+	
+	init(name: String = #function) {
+		self.name = name
+		print("+", name)
+	}
+	
+	deinit {
+		print("-", name)
+	}
+}
+
 final class DebugKitTests: XCTestCase {
 	
 	func wait(count: Int, timeout: TimeInterval = 1, name: String = #function, closure: ([XCTestExpectation]) -> Void) {
@@ -32,13 +45,29 @@ final class DebugKitTests: XCTestCase {
 	
 	// Tests
 	
-	func test_Auto() {
-		let log = DLog()
-		log.trace()
-		log.info("info")
-		log.debug("debug")
-		log.error("Error")
-		log.fault("Fatal error")
+	func test_Trace() {
+		//let t = Trace()
+	}
+	
+	func test_Scope() {
+		let log = DLog(output: [XConsoleOutput(), OSLogOutput()])
+		
+		log.trace("trace")
+		
+		log.scope(name: "Hello") {
+			log.trace("trace")
+			log.info("info")
+			
+			log.scope(name: "World") {
+				log.debug("debug")
+				log.error("Error")
+			}
+			
+			log.fault("Fatal error")
+		}
+		
+		log.trace("trace")
+		
 	}
 }
 

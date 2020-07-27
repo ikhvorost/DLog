@@ -9,6 +9,13 @@ import os.activity
 // assertation
 
 
+let debugDateFormatter: DateFormatter = {
+	let dateFormatter = DateFormatter()
+	dateFormatter.dateFormat = "HH:mm:ss:SSS"
+	return dateFormatter
+}()
+
+
 enum Platform {
 	case macOS
 	case macCatalyst
@@ -107,32 +114,35 @@ public struct LogMessage {
 	let text: String
 	let type: LogType
 	let time: String
-	let scope: DLog.Scope?
 	let fileName: String
 	let function: String
 	let line: UInt
 }
 
+struct Scope {
+	let level: Int
+	let name: String
+	let time: Date
+	//let parent: Scope?
+}
+
 public protocol LogOutput {
 	func log(message: LogMessage)
-	func scope(scope: DLog.Scope, start: Bool, time: String, category: String)
+	func scope(name: String, category: String, closure: () -> Void)
+	
+	//func scopeEnter(name: String, category: String) -> DLog.Scope
+	//func scopeLeave(scope: DLog.Scope)
 }
 
 public class XConsoleOutput : LogOutput {
+	
+	var scopes = [Scope]()
+	
 	func write(category: String, time: String, padding: String, icon: String, type: LogType, location: String, text: String) {
 		print(time, "[\(category)]", padding, icon, "[\(type.name)]", location, text)
 	}
 	
-	public func log(message: LogMessage) {
-		var padding = ""
-		if let s = message.scope {
-			padding = String(repeating: "|\t", count: s.level)
-		}
-		
-		write(category: message.category, time: message.time, padding: padding, icon: "\(message.type.icon)", type: message.type, location: "<\(message.fileName):\(message.line)>", text: message.text)
-	}
-	
-	public func scope(scope: DLog.Scope, start: Bool, time: String, category: String) {
+	func writeScope(scope: Scope, start: Bool, time: String, category: String) {
 		let icon = start ? "┌" : "└"
 		let padding = String(repeating: "|\t", count: scope.level-1) + icon
 		
@@ -140,6 +150,31 @@ public class XConsoleOutput : LogOutput {
 		let ms = !start ? "(\(interval) ms)" : nil
 			
 		print(time, "[\(category)]", padding, "[\(scope.name)]", ms ?? "")
+	}
+	
+	public func log(message: LogMessage) {
+		var padding = ""
+		if let s = scopes.last {
+			padding = String(repeating: "|\t", count: s.level)
+		}
+		
+		write(category: message.category, time: message.time, padding: padding, icon: "\(message.type.icon)", type: message.type, location: "<\(message.fileName):\(message.line)>", text: message.text)
+	}
+	
+	public func scope(name: String, category: String, closure: () -> Void) {
+		let date = Date()
+		let s = Scope(level: scopes.count + 1, name: name, time: date)
+		scopes.append(s)
+
+		var time = debugDateFormatter.string(from: date)
+		writeScope(scope: s, start: true, time: time, category: category)
+
+		closure()
+
+		time = debugDateFormatter.string(from: Date())
+		writeScope(scope: s, start: false, time: time, category: category)
+
+		_ = scopes.popLast()
 	}
 }
 
@@ -174,17 +209,15 @@ public class TerminalOutput : XConsoleOutput {
 }
 
 public class OSLogOutput : LogOutput {
-	private var log: OSLog?
+	var log: OSLog?
 	
 	private func oslog(category: String) -> OSLog {
-		if let l = log {
-			return l
-		}
-		else {
+		DispatchQueue.once {
 			let subsystem = Bundle.main.bundleIdentifier ?? ""
 			log = OSLog(subsystem: subsystem, category: category)
-			return log!
 		}
+		assert(log != nil)
+		return log!
 	}
 	
 	public func log(message: LogMessage) {
@@ -194,7 +227,8 @@ public class OSLogOutput : LogOutput {
 		os_log("%s %s", log: log, type: message.type.type, location, message.text)
 	}
 	
-	public func scope(scope: DLog.Scope, start: Bool, time: String, category: String) {
+	public func scope(name: String, category: String, closure: () -> Void) {
+		_os_activity_initiate(UnsafeMutableRawPointer(mutating: #dsohandle), strdup(name), OS_ACTIVITY_FLAG_DEFAULT, closure)
 	}
 }
 
@@ -227,12 +261,15 @@ public class AdaptiveOutput : LogOutput {
 		output.log(message: message)
 	}
 	
-	public func scope(scope: DLog.Scope, start: Bool, time: String, category: String) {
-		output.scope(scope: scope, start: start, time: time, category: category)
+	public func scope(name: String, category: String, closure: () -> Void) {
+		output.scope(name: name, category: category, closure: closure)
 	}
 }
 
 //public class FileOutput : LogOutput {
+//}
+
+//public class RestOutput : LogOutput {
 //}
 
 //public class FTPOutput : LogOutput {
@@ -247,32 +284,18 @@ public class AdaptiveOutput : LogOutput {
 public class DLog {
 	private let category: String
 	private let outputs: [LogOutput]
-	private var scopes = [Scope]()
-	
-	public struct Scope {
-		let level: Int
-		let name: String
-		let time: Date
-	}
+	//private var level = .debug
 	
 	init(category: String = "DLOG", output: [LogOutput] = [AdaptiveOutput()]) {
 		self.category = category
 		self.outputs = output
 	}
 	
-	private static let debugDateFormatter: DateFormatter = {
-		let dateFormatter = DateFormatter()
-		dateFormatter.dateFormat = "HH:mm:ss:SSS"
-		return dateFormatter
-	}()
-	
 	private func log(_ text: String, type: LogType, file: String, function: String, line: UInt) {
 		let fileName = NSString(string: file).lastPathComponent
-		let time = Self.debugDateFormatter.string(from: Date())
+		let time = debugDateFormatter.string(from: Date())
 		
-		let scope = scopes.last
-		
-		let message = LogMessage(category: category, text: text, type: type, time: time, scope: scope, fileName: fileName, function: function, line: line)
+		let message = LogMessage(category: category, text: text, type: type, time: time, fileName: fileName, function: function, line: line)
 		
 		outputs.forEach {
 			$0.log(message: message)
@@ -300,53 +323,12 @@ public class DLog {
 		log(text, type: .fault, file: file, function: function, line: line)
 	}
 	
-	public func scope(_ name: String = #function, closure: () -> Void) {
-		let date = Date()
-		let s = Scope(level: scopes.count + 1, name: name, time: date)
-		scopes.append(s)
-		
-		var time = Self.debugDateFormatter.string(from: date)
+	public func scope(name: String = #function, closure: () -> Void) {
 		outputs.forEach {
-			$0.scope(scope: s, start: true, time: time, category: category)
+			$0.scope(name: name, category: category, closure: closure)
 		}
-		
-		closure()
-		
-		time = Self.debugDateFormatter.string(from: Date())
-		outputs.forEach {
-			$0.scope(scope: s, start: false, time: time, category: category)
-		}
-		
-		_ = scopes.popLast()
 	}
 }
-
-/*
-public func dlog(_ items: String..., icon: Character = "▶️", file: String = #file, function: String = #function, line: UInt = #line) {
-	let text = items.count > 0 ? items.joined(separator: " ") : function
-	let fileName = NSString(string: file).lastPathComponent
-	let time = debugDateFormatter.string(from: Date())
-	
-	let head = "[\(time)] [DLOG] \(icon) <\(fileName):\(line)>"
-	print(head, text)
-	
-	// https://nshipster.com/swift-log/
-	// log stream --predicate 'eventMessage CONTAINS[c] "[dlog]"' --style syslog
-	
-	
-	_os_activity_initiate(UnsafeMutableRawPointer(mutating: #dsohandle), strdup("net"), OS_ACTIVITY_FLAG_DEFAULT,  {
-    
-	os_log("⚠️  [dlog] os_log %s", type: .fault,  "\(text, color: .red)")
-		_os_activity_initiate(UnsafeMutableRawPointer(mutating: #dsohandle), strdup("request"), OS_ACTIVITY_FLAG_DEFAULT,  {
-			os_log("%s %s", head, text)
-		})
-	})
-}
-
-public func dlog(error: Error, file: String = #file, function: String = #function, line: UInt = #line) {
-	dlog("\("Error: \(error.localizedDescription)", color: .yellow)", icon: "⚠️", file: file, function: function, line: line)
-}
-// */
 
 public func asyncAfter(_ sec: Double = 0.25, closure: @escaping (() -> Void) ) {
 	DispatchQueue.global().asyncAfter(deadline: .now() + sec) {
