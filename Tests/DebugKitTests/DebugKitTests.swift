@@ -1,5 +1,3 @@
-#if !os(watchOS)
-
 import Foundation
 import XCTest
 @testable import DebugKit
@@ -7,6 +5,10 @@ import XCTest
 /// String errors
 extension String : LocalizedError {
 	public var errorDescription: String? { return self }
+}
+
+func asyncAfter(_ sec: Double = 0.25, closure: @escaping (() -> Void) ) {
+	DispatchQueue.global().asyncAfter(deadline: .now() + sec, execute: closure)
 }
 
 class Trace {
@@ -40,35 +42,58 @@ final class DebugKitTests: XCTestCase {
 	
 //	override func setUp() {
 //		super.setUp()
-//		//print(ProcessInfo.processInfo.environment)
 //	}
 	
 	// Tests
 	
-	func test_Trace() {
-		//let t = Trace()
+	//let log = DLog() // Adaptive
+	let log = DLog(output: [OSLogOutput()])
+	
+	func test_LogTypes() {
+		log.trace("trace")
+		log.info("info")
+		log.debug("debug")
+		log.error("Error")
+		log.fault("Fatal error")
 	}
 	
-	func test_Scope() {
-		let log = DLog(output: [XConsoleOutput(), OSLogOutput()])
+	func test_ScopeStack() {
+		log.trace("no scope")
 		
-		log.trace("trace")
-		
-		log.scope(name: "Hello") {
-			log.trace("trace")
-			log.info("info")
+		log.scope("scope1") {
+			log.trace("scope1 start")
 			
-			log.scope(name: "World") {
-				log.debug("debug")
-				log.error("Error")
+			log.scope("scope2") {
+				log.debug("scope2 start")
+				log.error("scope2 end")
 			}
 			
-			log.fault("Fatal error")
+			log.trace("scope1 end")
 		}
 		
-		log.trace("trace")
-		
+		log.trace("no scope")
+	}
+	
+	func test_ScopeCreate() {
+		wait { exp in
+			
+			let scope = log.scopeCreate("Scope")
+			
+			log.info("no scope")
+			
+			log.scopeEnter(scope)
+			
+			log.info("scope start")
+			
+			asyncAfter {
+				self.log.info("scope end")
+				
+				self.log.scopeLeave(scope)
+				
+				self.log.info("no scope")
+				
+				exp.fulfill()
+			}
+		}
 	}
 }
-
-#endif
