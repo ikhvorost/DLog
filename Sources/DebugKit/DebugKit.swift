@@ -1,4 +1,5 @@
 import Foundation
+import os
 import os.log
 import os.activity
 
@@ -9,6 +10,11 @@ import os.activity
 // oslog
 // .tracev3
 // stored /var/db/diagnostics/ with support in /var/db/uuidtext
+
+// Tasks
+// signpost 📍
+// - assert
+// - Text ouput + Console/Terminal/File output/FTP/REST etc
 
 
 let debugDateFormatter: DateFormatter = {
@@ -116,9 +122,10 @@ public struct LogType  {
 	static let info = LogType(icon: "ℹ️", name: "INFO", type: OSLogType.info)
 	static let debug = LogType(icon: "▶️", name: "DEBUG", type: OSLogType.debug)
 	static let error = LogType(icon: "⚠️", name: "ERROR", type: OSLogType.error)
-	static let fault = LogType(icon: "🛑", name: "FAULT", type: OSLogType.fault)
+	static let fault = LogType(icon: "🆘", name: "FAULT", type: OSLogType.fault)
 	
 	static let assert = LogType(icon: "🅰️", name: "ASSERT", type: OSLogType.debug)
+	static let signpost = LogType(icon: "📍", name: "SIGNPOST", type: OSLogType.debug)
 }
 
 public struct LogMessage {
@@ -129,29 +136,63 @@ public struct LogMessage {
 	let fileName: String
 	let function: String
 	let line: UInt
-	let scope: LogScope?
+	let scopes: [LogScope]
 }
 
 public class LogScope {
-	let level: Int
+	let uid = UUID()
+	weak var log: DLog?
+	var level: Int = 1
 	let name: String
 	let time = Date()
 	let category: String
 	var os_state = os_activity_scope_state_s()
-	//let parent: Scope?
 	
-	init(level: Int, name: String, category: String) {
-		self.level = level
+	init(log: DLog, name: String, category: String) {
+		self.log = log
 		self.name = name
 		self.category = category
+	}
+	
+	public func enter() {
+		log?.enter(scope: self)
+	}
+	
+	public func leave() {
+		log?.leave(scope: self)
+	}
+}
+
+public class LogSignpost {
+	let name: String
+	var count = 0
+	let duration: TimeInterval = 0
+	let minDutation: TimeInterval = 0
+	let avgDutation: TimeInterval = 0
+	let maxDutation: TimeInterval = 0
+	
+	init(_ name: String) {
+		self.name = name
+	}
+	
+	public func begin() {
+		count += 1
+	}
+	
+	public func end() {
+		
+	}
+	
+	public func event() {
+		
 	}
 }
 
 public protocol LogOutput {
 	func log(message: LogMessage)
 	
-	func scopeEnter(scope: LogScope)
-	func scopeLeave(scope: LogScope)
+	func scopeEnter(scope: LogScope, scopes: [LogScope])
+	func scopeLeave(scope: LogScope, scopes: [LogScope])
 }
 
 public class XConsoleOutput : LogOutput {
@@ -160,11 +201,16 @@ public class XConsoleOutput : LogOutput {
 		print(time, "[\(category)]", padding, icon, "[\(type.name)]", location, text)
 	}
 	
-	func writeScope(scope: LogScope, start: Bool) {
+	func writeScope(scope: LogScope, scopes: [LogScope], start: Bool) {
 		let time = debugDateFormatter.string(from: Date())
 		
-		let icon = start ? "┌" : "└"
-		let padding = String(repeating: "|\t", count: scope.level-1) + icon
+		//let padding = String(repeating: "|\t", count: scope.level-1) + icon
+		var padding = ""
+		for level in 1..<scope.level {
+			let scope = scopes.first(where: { $0.level == level })
+			padding += scope != nil ? "|\t" : "\t"
+		}
+		padding += start ? "┌" : "└"
 		
 		let interval = Int(scope.time.timeIntervalSinceNow * -1000)
 		let ms = !start ? "(\(interval) ms)" : nil
@@ -174,19 +220,21 @@ public class XConsoleOutput : LogOutput {
 	
 	public func log(message: LogMessage) {
 		var padding = ""
-		if let scope = message.scope {
-			padding = String(repeating: "|\t", count: scope.level)
+		if let maxlevel = message.scopes.last?.level {
+			for level in 1...maxlevel {
+				let scope = message.scopes.first(where: { $0.level == level })
+				padding += scope != nil ? "|\t" : "\t"
+			}
 		}
-		
 		write(category: message.category, time: message.time, padding: padding, icon: "\(message.type.icon)", type: message.type, location: "<\(message.fileName):\(message.line)>", text: message.text)
 	}
 	
-	public func scopeEnter(scope: LogScope) {
-		writeScope(scope: scope, start: true)
+	public func scopeEnter(scope: LogScope, scopes: [LogScope]) {
+		writeScope(scope: scope, scopes: scopes, start: true)
 	}
 	
-	public func scopeLeave(scope: LogScope) {
-		writeScope(scope: scope, start: false)
+	public func scopeLeave(scope: LogScope, scopes: [LogScope]) {
+		writeScope(scope: scope, scopes: scopes, start: false)
 	}
 }
 
@@ -264,13 +312,24 @@ public class OSLogOutput : LogOutput {
 		os_log("%s %s", dso: Self.dso, log: log, type: message.type.type, location, message.text)
 	}
 	
-	public func scopeEnter(scope: LogScope) {
+	public func scopeEnter(scope: LogScope, scopes: [LogScope]) {
 		let activity = _os_activity_create(Self.dso, strdup(scope.name), Self.OS_ACTIVITY_CURRENT, OS_ACTIVITY_FLAG_DEFAULT)
 		os_activity_scope_enter(activity, &scope.os_state)
 	}
 	
-	public func scopeLeave(scope: LogScope) {
+	public func scopeLeave(scope: LogScope, scopes: [LogScope]) {
 		os_activity_scope_leave(&scope.os_state);
+	}
+	
+	public func signpost() {
+		if let l = log {
+			if #available(macOS 10.14, *) {
+				let sid = OSSignpostID(log: l)
+				os_signpost(.begin, log: l, name: "Read File", signpostID: sid)
+				
+				os_signpost(.end, log: l, name: "Read File", signpostID: sid)
+			}
+		}
 	}
 }
 
@@ -290,7 +349,7 @@ public class AdaptiveOutput : LogOutput {
 		return ProcessInfo.processInfo.environment["_"] != nil
 	}
 	
-	init() {
+	public init() {
 		if Self.isDebug {
 			output = XConsoleOutput()
 		}
@@ -303,12 +362,12 @@ public class AdaptiveOutput : LogOutput {
 		output.log(message: message)
 	}
 	
-	public func scopeEnter(scope: LogScope) {
-		output.scopeEnter(scope: scope)
+	public func scopeEnter(scope: LogScope, scopes: [LogScope]) {
+		output.scopeEnter(scope: scope, scopes: scopes)
 	}
 	
-	public func scopeLeave(scope: LogScope) {
-		output.scopeLeave(scope: scope)
+	public func scopeLeave(scope: LogScope, scopes: [LogScope]) {
+		output.scopeLeave(scope: scope, scopes: scopes)
 	}
 }
 
@@ -331,23 +390,39 @@ public class DLog {
 	private let category: String
 	private let outputs: [LogOutput]
 	//private var level = .debug
+	private var scopes = [LogScope]()
 	
-	var scopes = [LogScope]()
+	public static let disabled = DLog(category: "DISABLED", outputs: [])
 	
-	init(category: String = "DLOG", output: [LogOutput] = [AdaptiveOutput()]) {
+	private var enabled : Bool  {
+		get { outputs.count > 0 }
+	}
+	
+	public init(category: String = "DLOG", outputs: [LogOutput] = [AdaptiveOutput()]) {
 		self.category = category
-		self.outputs = output
+		self.outputs = outputs
 	}
 	
 	private func log(_ text: String, type: LogType, file: String, function: String, line: UInt) {
+		guard enabled else { return }
+		
 		let fileName = NSString(string: file).lastPathComponent
 		let time = debugDateFormatter.string(from: Date())
 		
-		let message = LogMessage(category: category, text: text, type: type, time: time, fileName: fileName, function: function, line: line, scope: scopes.last)
+		let message = LogMessage(category: category,
+								 text: text,
+								 type: type,
+								 time: time,
+								 fileName: fileName,
+								 function: function,
+								 line: line,
+								 scopes: scopes)
 		outputs.forEach {
 			$0.log(message: message)
 		}
 	}
+	
+	// MARK: - public
 	
 	public func trace(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) {
 		log(text != "" ? text : function, type: .trace, file: file, function: function, line: line)
@@ -372,30 +447,43 @@ public class DLog {
 	//public func assert(_ text: String, file: String = #file, function: String = #function, line: UInt = #line)
 	//public func fail(_ text: String, file: String = #file, function: String = #function, line: UInt = #line)
 	
-	// MARK: - Scope
-	
-	public func scopeCreate(_ name: String) -> LogScope {
-		let scope = LogScope(level: scopes.count + 1, name: name, category: category)
+	func enter(scope: LogScope) {
+		guard enabled else { return }
+		
+		// Level
+		guard !scopes.contains(where: { $0.uid == scope.uid }) else { return }
+		if let last = scopes.last {
+			scope.level = last.level + 1
+		}
 		scopes.append(scope)
+	
+		outputs.forEach { $0.scopeEnter(scope: scope, scopes: scopes) }
+	}
+	
+	func leave(scope: LogScope) {
+		guard enabled else { return }
+		outputs.forEach { $0.scopeLeave(scope: scope, scopes: scopes) }
+		scopes.removeAll { $0.uid == scope.uid }
+	}
+	
+	@discardableResult
+	public func scope(_ name: String, _ closure: (() -> Void)? = nil) -> LogScope {
+		let scope = LogScope(log: self, name: name, category: category)
+		
+		guard closure != nil else {
+			return scope
+		}
+	
+		scope.enter()
+		
+		closure?()
+		
+		scope.leave()
+		
 		return scope
 	}
 	
-	func scopeEnter(_ scope: LogScope) {
-		outputs.forEach { $0.scopeEnter(scope: scope) }
-	}
-	
-	func scopeLeave(_ scope: LogScope) {
-		outputs.forEach { $0.scopeLeave(scope: scope) }
-		scopes.removeLast()
-	}
-	
-	public func scope(_ name: String, closure: () -> Void) {
-		let scope = scopeCreate(name)
+	public func signpost(_ name: String) {
 		
-		scopeEnter(scope)
-		
-		closure()
-		
-		scopeLeave(scope)
 	}
 }

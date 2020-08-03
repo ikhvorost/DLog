@@ -46,8 +46,9 @@ final class DebugKitTests: XCTestCase {
 	
 	// Tests
 	
-	//let log = DLog() // Adaptive
-	let log = DLog(output: [OSLogOutput()])
+	let log = DLog() // Adaptive
+	//let log = DLog(outputs: [OSLogOutput()])
+	//let log = DLog.disabled
 	
 	func test_LogTypes() {
 		log.trace("trace")
@@ -61,36 +62,72 @@ final class DebugKitTests: XCTestCase {
 		log.trace("no scope")
 		
 		log.scope("scope1") {
-			log.trace("scope1 start")
+			self.log.trace("scope1 start")
 			
-			log.scope("scope2") {
-				log.debug("scope2 start")
-				log.error("scope2 end")
+			self.log.scope("scope2") {
+				self.log.debug("scope2 start")
+				
+				self.log.scope("scope3") {
+					self.log.info("scope3")
+				}
+				self.log.info("scope2")
+				self.log.error("scope2 end")
 			}
 			
-			log.trace("scope1 end")
+			self.log.trace("scope1 end")
 		}
 		
 		log.trace("no scope")
 	}
 	
+	func test_ScopeDoubleEnter() {
+		let scope1 = log.scope("Scope-1")
+		
+		scope1.enter()
+		scope1.enter()
+		
+		//XCTAssert(log.scopes.count == 1)
+		
+		log.info("scope1")
+		
+		scope1.leave()
+	}
+	
 	func test_ScopeCreate() {
 		wait { exp in
 			
-			let scope = log.scopeCreate("Scope")
+			let scope1 = log.scope("Scope-1")
+			let scope2 = log.scope("Scope-2")
+			let scope3 = log.scope("Scope-3")
 			
-			log.info("no scope")
+			log.debug("no scope")
 			
-			log.scopeEnter(scope)
+			scope1.enter()
 			
-			log.info("scope start")
+			log.info("scope1 start")
+			
+			scope2.enter()
+			
+			log.info("scope2 start")
 			
 			asyncAfter {
-				self.log.info("scope end")
+				scope3.enter()
 				
-				self.log.scopeLeave(scope)
+				self.log.debug("scope3 start")
 				
-				self.log.info("no scope")
+				self.log.debug("scope1 end")
+				
+				scope1.leave()
+				
+				self.log.debug("scope2 end")
+				
+				scope2.leave()
+				
+				self.log.debug("scope3 end")
+				
+				scope3.leave()
+				
+				self.log.error("no scope")
 				
 				exp.fulfill()
 			}
