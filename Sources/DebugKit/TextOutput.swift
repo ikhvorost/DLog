@@ -9,15 +9,16 @@ import Foundation
 
 public class TextOutput : LogOutput {
 	
-	static let icons: [LogType : Character] = [
-		.trace : "◻️",
-		.info : "✅",
-		.debug : "▶️",
-		.error : "⚠️",
-		.fault : "🆘"
-		//.assert : "🅰️"
-		//.signpost : "📍"
-	]
+	static let dateComponentsFormatter: DateComponentsFormatter = {
+		let formatter = DateComponentsFormatter()
+		formatter.allowedUnits = [.minute, .second]
+		return formatter
+	}()
+	
+	func stringFromTime(interval: TimeInterval) -> String {
+		let ms = Int(interval.truncatingRemainder(dividingBy: 1) * 1000)
+		return Self.dateComponentsFormatter.string(from: interval)! + ".\(ms)"
+	}
 
 	func writeScope(scope: LogScope, scopes: [LogScope], start: Bool) -> String {
 		let time = debugDateFormatter.string(from: Date())
@@ -29,8 +30,8 @@ public class TextOutput : LogOutput {
 		}
 		padding += start ? "┌" : "└"
 		
-		let interval = Int(scope.time.timeIntervalSinceNow * -1000)
-		let ms = !start ? "(\(interval) ms)" : nil
+		let interval = -scope.time.timeIntervalSinceNow
+		let ms = !start ? "(\(stringFromTime(interval: interval)))" : nil
 		
 		return "\(time) [\(scope.category)] \(padding) [\(scope.name)] \(ms ?? "")"
 	}
@@ -44,9 +45,7 @@ public class TextOutput : LogOutput {
 			}
 		}
 		
-		let icon = Self.icons[message.type]!
-		
-		return "\(message.time) [\(message.category)] \(padding) \(icon) [\(message.type.rawValue)] <\(message.fileName):\(message.line)> \(message.text)"
+		return "\(message.time) [\(message.category)] \(padding) \(message.type.icon) [\(message.type.rawValue)] <\(message.fileName):\(message.line)> \(message.text)"
 	}
 	
 	public func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String {

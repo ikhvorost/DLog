@@ -63,7 +63,7 @@ extension String {
 // https://koenig-media.raywenderlich.com/downloads/RW-NSRegularExpression-Cheatsheet.pdf
 public class ColoredOutput : StandardOutput {
 	
-	static let time = #"(\d{2}:\d{2}:\d{2}:\d{3})"#
+	static let time = #"(\d{2}:\d{2}:\d{2}\.\d{3})"#
 	static let category = #"\[([^\]]+)\]"#
 	static let icon = #"(\S+\s)"#
 	
@@ -91,6 +91,7 @@ public class ColoredOutput : StandardOutput {
 		"[" + LogType.debug.rawValue + "]" : Tag(textColor: .textCyan, colors: [.backgroundCyan, .textBlack]),
 		"[" + LogType.error.rawValue + "]" : Tag(textColor: .textYellow, colors: [.backgroundYellow, .textBlack]),
 		"[" + LogType.fault.rawValue + "]" : Tag(textColor: .textRed, colors: [.backgrounRed, .textWhite, .blink]),
+		"[" + LogType.assert.rawValue + "]" : Tag(textColor: .textRed, colors: [.backgrounRed, .textWhite]),
 	]
 	
 	func insert(text: inout String, range: NSRange, codes: [ANSIEscapeCode]) {

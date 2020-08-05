@@ -19,7 +19,7 @@ import os.activity
 
 let debugDateFormatter: DateFormatter = {
 	let dateFormatter = DateFormatter()
-	dateFormatter.dateFormat = "HH:mm:ss:SSS"
+	dateFormatter.dateFormat = "HH:mm:ss.SSS"
 	return dateFormatter
 }()
 
@@ -34,9 +34,22 @@ public enum LogType : String {
 	case debug = "DEBUG"
 	case error = "ERROR"
 	case fault = "FAULT"
-	
-	//case assert
+	case assert = "ASSERT"
 	//case signpost
+	
+	private static let icons: [LogType : String] = [
+		.trace : "◻️",
+		.info : "✅",
+		.debug : "▶️",
+		.error : "⚠️",
+		.fault : "🆘",
+		.assert : "🅰️",
+		//.signpost : "📍",
+	]
+	
+	var icon: String {
+		Self.icons[self]!
+	}
 }
 
 public struct LogMessage {
@@ -204,7 +217,12 @@ public class DLog {
 		log(text, type: .fault, file: file, function: function, line: line)
 	}
 	
-	//public func assert(_ text: String, file: String = #file, function: String = #function, line: UInt = #line)
+	public func assert(_ value: Bool, _ text: String = " ", file: String = #file, function: String = #function, line: UInt = #line) {
+		if !value {
+			log(text, type: .assert, file: file, function: function, line: line)
+		}
+	}
+	
 	//public func fail(_ text: String, file: String = #file, function: String = #function, line: UInt = #line)
 	
 	@discardableResult

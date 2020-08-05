@@ -41,7 +41,8 @@ public class OSLogOutput : LogOutput {
 		.info : .info,
 		.debug : .debug,
 		.error : .error,
-		.fault : .fault
+		.fault : .fault,
+		.assert : .fault
 	]
 	
 	var log: OSLog?
@@ -60,7 +61,7 @@ public class OSLogOutput : LogOutput {
 		
 		let location = "<\(message.fileName):\(message.line)>"
 		let type = Self.types[message.type]!
-		os_log("%s %s", dso: Self.dso, log: log, type: type, location, message.text)
+		os_log("%s %s %s", dso: Self.dso, log: log, type: type, message.type.icon, location, message.text)
 		
 		return ""
 	}

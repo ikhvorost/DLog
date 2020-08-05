@@ -33,16 +33,17 @@ final class DebugKitTests: XCTestCase {
 	
 	// Tests
 	
-	let log = DLog() // Adaptive
-	//let log = DLog(outputs: [OSLogOutput()])
+	//let log = DLog() // Adaptive
+	let log = DLog(outputs: [OSLogOutput()])
 	//let log = DLog.disabled
 	
 	func test_LogTypes() {
 		log.trace()
 		log.info("info")
 		log.debug("debug")
-		log.error("Error")
-		log.fault("Fatal error")
+		log.error("error")
+		log.fault("fatal error")
+		log.assert(false, "assert text")
 	}
 	
 	func test_ScopeStack() {
@@ -87,7 +88,7 @@ final class DebugKitTests: XCTestCase {
 			let scope2 = log.scope("Scope-2")
 			let scope3 = log.scope("Scope-3")
 			
-			log.debug("no scope")
+			log.trace("no scope")
 			
 			scope1.enter()
 			
@@ -106,15 +107,15 @@ final class DebugKitTests: XCTestCase {
 				
 				scope1.leave()
 				
-				self.log.debug("scope2 end")
+				self.log.error("scope2 end")
 				
 				scope2.leave()
 				
-				self.log.debug("scope3 end")
+				self.log.fault("scope3 end")
 				
 				scope3.leave()
 				
-				self.log.error("no scope")
+				self.log.trace("no scope")
 				
 				exp.fulfill()
 			}
