@@ -11,19 +11,6 @@ func asyncAfter(_ sec: Double = 0.25, closure: @escaping (() -> Void) ) {
 	DispatchQueue.global().asyncAfter(deadline: .now() + sec, execute: closure)
 }
 
-class Trace {
-	let name: String
-	
-	init(name: String = #function) {
-		self.name = name
-		print("+", name)
-	}
-	
-	deinit {
-		print("-", name)
-	}
-}
-
 final class DebugKitTests: XCTestCase {
 	
 	func wait(count: Int, timeout: TimeInterval = 1, name: String = #function, closure: ([XCTestExpectation]) -> Void) {
@@ -51,7 +38,7 @@ final class DebugKitTests: XCTestCase {
 	//let log = DLog.disabled
 	
 	func test_LogTypes() {
-		log.trace("trace")
+		log.trace()
 		log.info("info")
 		log.debug("debug")
 		log.error("Error")
@@ -59,19 +46,18 @@ final class DebugKitTests: XCTestCase {
 	}
 	
 	func test_ScopeStack() {
-		log.trace("no scope")
+		log.trace()
 		
 		log.scope("scope1") {
-			self.log.trace("scope1 start")
+			self.log.info("scope1 start")
 			
 			self.log.scope("scope2") {
 				self.log.debug("scope2 start")
 				
 				self.log.scope("scope3") {
-					self.log.info("scope3")
+					self.log.error("scope3")
 				}
-				self.log.info("scope2")
-				self.log.error("scope2 end")
+				self.log.fault("scope2")
 			}
 			
 			self.log.trace("scope1 end")
@@ -92,6 +78,7 @@ final class DebugKitTests: XCTestCase {
 		
 		scope1.leave()
 	}
+
 	
 	func test_ScopeCreate() {
 		wait { exp in
