@@ -48,11 +48,10 @@ public class OSLogOutput : LogOutput {
 	var log: OSLog?
 	
 	private func oslog(category: String) -> OSLog {
-		DispatchQueue.once {
+		if log == nil {
 			let subsystem = Bundle.main.bundleIdentifier ?? ""
 			log = OSLog(subsystem: subsystem, category: category)
 		}
-		assert(log != nil)
 		return log!
 	}
 	
@@ -77,14 +76,22 @@ public class OSLogOutput : LogOutput {
 		return ""
 	}
 	
-	public func signpost() {
-		if let l = log {
-			if #available(macOS 10.14, *) {
-				let sid = OSSignpostID(log: l)
-				os_signpost(.begin, log: l, name: "Read File", signpostID: sid)
-				
-				os_signpost(.end, log: l, name: "Read File", signpostID: sid)
-			}
+	public func intervalBegin(interval: LogInterval) {
+		guard #available(macOS 10.14, iOS 12.0, watchOS 5.0, tvOS 12.0, *) else { return }
+		
+		let log = oslog(category: interval.category)
+		if interval.signpostID == nil {
+			interval.signpostID = OSSignpostID(log: log)
 		}
+
+		os_signpost(.begin, log: log, name: interval.name, signpostID: interval.signpostID!)
+	}
+	
+	public func intervalEnd(interval: LogInterval) -> String {
+		guard #available(macOS 10.14, iOS 12.0, watchOS 5.0, tvOS 12.0, *) else { return "" }
+		
+		let log = oslog(category: interval.category)
+		os_signpost(.end, log: log, name: interval.name, signpostID: interval.signpostID!)
+		return ""
 	}
 }

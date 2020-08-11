@@ -31,4 +31,11 @@ public class StandardOutput : LogOutput {
 	public func scopeLeave(scope: LogScope, scopes: [LogScope])  -> String {
 		echo(output.scopeLeave(scope: scope, scopes: scopes))
 	}
+	
+	public func intervalBegin(interval: LogInterval) {
+	}
+	
+	public func intervalEnd(interval: LogInterval) -> String {
+		echo(output.intervalEnd(interval: interval))
+	}
 }

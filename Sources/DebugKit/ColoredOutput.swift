@@ -88,10 +88,11 @@ public class ColoredOutput : StandardOutput {
 	static let tags: [String : Tag] = [
 		"[" + LogType.trace.rawValue + "]" : Tag(textColor: .textWhite, colors: [.backgroundWhite, .textBlack]),
 		"[" + LogType.info.rawValue + "]" : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textWhite]),
+		"[" + LogType.interval.rawValue + "]" : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textWhite]),
+		"[" + LogType.assert.rawValue + "]" : Tag(textColor: .textRed, colors: [.backgrounRed, .textWhite]),
 		"[" + LogType.debug.rawValue + "]" : Tag(textColor: .textCyan, colors: [.backgroundCyan, .textBlack]),
 		"[" + LogType.error.rawValue + "]" : Tag(textColor: .textYellow, colors: [.backgroundYellow, .textBlack]),
 		"[" + LogType.fault.rawValue + "]" : Tag(textColor: .textRed, colors: [.backgrounRed, .textWhite, .blink]),
-		"[" + LogType.assert.rawValue + "]" : Tag(textColor: .textRed, colors: [.backgrounRed, .textWhite]),
 	]
 	
 	func insert(text: inout String, range: NSRange, codes: [ANSIEscapeCode]) {

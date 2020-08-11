@@ -16,7 +16,7 @@ public class TextOutput : LogOutput {
 	}()
 	
 	func stringFromTime(interval: TimeInterval) -> String {
-		let ms = Int(interval.truncatingRemainder(dividingBy: 1) * 1000)
+		let ms = String(format:"%.03f", interval).suffix(3)
 		return Self.dateComponentsFormatter.string(from: interval)! + ".\(ms)"
 	}
 
@@ -30,8 +30,10 @@ public class TextOutput : LogOutput {
 		}
 		padding += start ? "┌" : "└"
 		
-		let interval = -scope.time.timeIntervalSinceNow
-		let ms = !start ? "(\(stringFromTime(interval: interval)))" : nil
+		var ms: String?
+		if !start, let interval = scope.time?.timeIntervalSinceNow {
+			ms = "(\(stringFromTime(interval: -interval))s)"
+		}
 		
 		return "\(time) [\(scope.category)] \(padding) [\(scope.name)] \(ms ?? "")"
 	}
@@ -54,5 +56,21 @@ public class TextOutput : LogOutput {
 	
 	public func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String {
 		return writeScope(scope: scope, scopes: scopes, start: false)
+	}
+	
+	public func intervalBegin(interval: LogInterval) {
+	}
+	
+	public func intervalEnd(interval: LogInterval) -> String {
+		let time = debugDateFormatter.string(from: Date())
+		
+		let duration = stringFromTime(interval: interval.duration)
+		let minDuration = stringFromTime(interval: interval.minDuration)
+		let maxDuration = stringFromTime(interval: interval.maxDuration)
+		let avgDuration = stringFromTime(interval: interval.avgDuration)
+		let text = "[\(interval.name)] Count: \(interval.count), Total: \(duration)s, Min: \(minDuration)s, Max: \(maxDuration)s, Avg: \(avgDuration)s"
+		
+		let message = LogMessage(category: interval.category, text: text, type: .interval, time: time, fileName: interval.file, function: interval.function, line: interval.line, scopes: interval.scopes)
+		return log(message: message)
 	}
 }

@@ -12,8 +12,6 @@ import os.activity
 // stored /var/db/diagnostics/ with support in /var/db/uuidtext
 
 // Tasks
-// signpost 📍
-// - assert
 // - Text ouput + Console/Terminal/File output/FTP/REST etc
 
 
@@ -31,20 +29,20 @@ struct DebugKit {
 public enum LogType : String {
 	case trace = "TRACE"
 	case info  = "INFO"
+	case interval = "INTERVAL"
 	case debug = "DEBUG"
 	case error = "ERROR"
-	case fault = "FAULT"
 	case assert = "ASSERT"
-	//case signpost
+	case fault = "FAULT"
 	
 	private static let icons: [LogType : String] = [
-		.trace : "◻️",
+		.trace : "🏁",
 		.info : "✅",
+		.interval : "⏱",
 		.debug : "▶️",
 		.error : "⚠️",
-		.fault : "🆘",
 		.assert : "🅰️",
-		//.signpost : "📍",
+		.fault : "🆘",
 	]
 	
 	var icon: String {
@@ -68,9 +66,10 @@ public class LogScope {
 	weak var log: DLog?
 	var level: Int = 1
 	let name: String
-	let time = Date()
+	var time: Date?
 	let category: String
 	var os_state = os_activity_scope_state_s()
+	var entered = false
 	
 	init(log: DLog, name: String, category: String) {
 		self.log = log
@@ -83,32 +82,87 @@ public class LogScope {
 	}
 	
 	public func enter() {
+		guard !entered else { return }
+		entered = true
+		
+		time = Date()
 		log?.enter(scope: self)
 	}
 	
 	public func leave() {
+		guard entered else { return }
+		entered = false
 		log?.leave(scope: self)
 	}
 }
 
-public class LogSignpost {
-	let name: String
-	var count = 0
-	let duration: TimeInterval = 0
-	let minDutation: TimeInterval = 0
-	let avgDutation: TimeInterval = 0
-	let maxDutation: TimeInterval = 0
+public class LogInterval {
+	weak var log: DLog?
 	
-	init(_ name: String) {
+	let name: StaticString
+	
+	let category: String
+	let file: String
+	let function: String
+	let line: UInt
+	let scopes: [LogScope]
+	
+	var startTime: Date?
+	
+	var count = 0
+	var duration: TimeInterval = 0
+	var minDuration: TimeInterval = 0
+	var maxDuration: TimeInterval = 0
+	var avgDuration: TimeInterval = 0
+	
+	var id : String {
+		"\(file):\(line)"
+	}
+	
+	// SignpostID
+	private var _signpostID: Any? = nil
+	@available(OSX 10.14, iOS 12.0, watchOS 5.0, tvOS 12.0, *)
+	var signpostID: OSSignpostID? {
+		set { _signpostID = newValue }
+		get { _signpostID as? OSSignpostID }
+	}
+	
+	init(log: DLog, name: StaticString, category: String, file: String, function: String, line: UInt, scopes: [LogScope]) {
+		self.log = log
 		self.name = name
+		self.category = category
+		self.file = file
+		self.function = function
+		self.line = line
+		self.scopes = scopes
 	}
 	
 	public func begin() {
-		count += 1
+		guard startTime == nil else { return }
+	
+		startTime = Date()
+		
+		log?.begin(interval: self)
 	}
 	
 	public func end() {
+		guard let time = startTime else { return }
 		
+		let timeInterval = time.timeIntervalSinceNow
+		let interval = -timeInterval
+		count += 1
+		duration += interval
+		if minDuration == 0 || minDuration > interval {
+			minDuration = interval
+		}
+		if maxDuration == 0 || maxDuration < interval {
+			maxDuration = interval
+		}
+		avgDuration = duration / Double(count)
+		
+		startTime = nil
+		
+		log?.end(interval: self)
 	}
 	
 	public func event() {
@@ -118,8 +172,12 @@ public class LogSignpost {
 
 public protocol LogOutput {
 	@discardableResult func log(message: LogMessage) -> String
+	
 	@discardableResult func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String
 	@discardableResult func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String
+	
+	func intervalBegin(interval: LogInterval)
+	@discardableResult func intervalEnd(interval: LogInterval) -> String
 }
 
 //public class FileOutput : LogOutput {
@@ -138,12 +196,14 @@ public protocol LogOutput {
 //}
 
 public class DLog {
+	public static let disabled = DLog(category: "DISABLED", outputs: [])
+	
 	let category: String
 	private let outputs: [LogOutput]
-	//private var level = .debug
 	private var scopes = [LogScope]()
+	private var intervals = [LogInterval]()
 	
-	public static let disabled = DLog(category: "DISABLED", outputs: [])
+	//private var level = .debug
 	
 	private var enabled : Bool  {
 		get { outputs.count > 0 }
@@ -176,7 +236,6 @@ public class DLog {
 	func enter(scope: LogScope) {
 		guard enabled else { return }
 		
-		guard !scopes.contains(where: { $0.uid == scope.uid }) else { return }
 		if let last = scopes.last {
 			scope.level = last.level + 1
 		}
@@ -193,6 +252,18 @@ public class DLog {
 		
 			scopes.removeAll { $0.uid == scope.uid }
 		}
+	}
+	
+	func begin(interval: LogInterval) {
+		guard enabled else { return }
+	
+		outputs.forEach { $0.intervalBegin(interval: interval) }
+	}
+	
+	func end(interval: LogInterval) {
+		guard enabled else { return }
+		
+		outputs.forEach { $0.intervalEnd(interval: interval) }
 	}
 	
 	// MARK: - public
@@ -223,10 +294,8 @@ public class DLog {
 		}
 	}
 	
-	//public func fail(_ text: String, file: String = #file, function: String = #function, line: UInt = #line)
-	
 	@discardableResult
-	public func scope(_ name: String, _ closure: (() -> Void)? = nil) -> LogScope {
+	public func scope(_ name: String, closure: (() -> Void)? = nil) -> LogScope {
 		let scope = LogScope(log: self, name: name, category: category)
 		
 		guard closure != nil else {
@@ -242,7 +311,34 @@ public class DLog {
 		return scope
 	}
 	
-	public func signpost(_ name: String) {
+	private func interval(id: String, name: StaticString, file: String, function: String, line: UInt, scopes: [LogScope]) -> LogInterval {
+		if let interval = intervals.first(where: { $0.id == id }) {
+			return interval
+		}
+		else {
+			let interval = LogInterval(log: self, name: name, category: category, file: file, function: function, line: line, scopes: scopes)
+			intervals.append(interval)
+			return interval
+		}
+	}
+	
+	@discardableResult
+	public func interval(_ name: StaticString, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval {
+		let fileName = NSString(string: file).lastPathComponent
+		let id = "\(fileName):\(line)"
 		
+		let sp = interval(id: id, name: name, file: fileName, function: function, line: line, scopes: scopes)
+	
+		guard closure != nil else {
+			return sp
+		}
+	
+		sp.begin()
+		
+		closure?()
+		
+		sp.end()
+		
+		return sp
 	}
 }

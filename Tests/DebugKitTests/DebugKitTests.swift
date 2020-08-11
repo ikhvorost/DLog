@@ -33,17 +33,18 @@ final class DebugKitTests: XCTestCase {
 	
 	// Tests
 	
-	//let log = DLog() // Adaptive
-	let log = DLog(outputs: [OSLogOutput()])
+	let log = DLog() // Adaptive
+	//let log = DLog(outputs: [OSLogOutput()])
 	//let log = DLog.disabled
 	
 	func test_LogTypes() {
 		log.trace()
 		log.info("info")
+		log.interval("interval") {}
 		log.debug("debug")
 		log.error("error")
-		log.fault("fatal error")
 		log.assert(false, "assert text")
+		log.fault("fatal error")
 	}
 	
 	func test_ScopeStack() {
@@ -116,6 +117,45 @@ final class DebugKitTests: XCTestCase {
 				scope3.leave()
 				
 				self.log.trace("no scope")
+				
+				exp.fulfill()
+			}
+		}
+	}
+	
+	func test_Interval() {
+		
+		log.scope("Scope 1"){
+			self.log.interval("Interval 1") {
+				sleep(1)
+				self.log.trace("Loop 1")
+			}
+			
+			for _ in 0..<2 {
+			self.log.scope("Scope 2") {
+				self.log.interval("Interval 2") {
+					sleep(1)
+					self.log.info("Loop 2")
+				}
+			}
+			}
+			
+			self.log.interval("Interval 3") {
+				sleep(1)
+				self.log.trace("Loop 3")
+			}
+		}
+	}
+	
+	func test_IntervalCreate() {
+		wait { exp in
+			let interval = log.interval("Interval 1")
+			
+			interval.begin()
+			
+			asyncAfter {
+				interval.end()
+				
 				
 				exp.fulfill()
 			}
