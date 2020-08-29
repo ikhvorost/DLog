@@ -11,6 +11,19 @@ func asyncAfter(_ sec: Double = 0.25, closure: @escaping (() -> Void) ) {
 	DispatchQueue.global().asyncAfter(deadline: .now() + sec, execute: closure)
 }
 
+class FilterOutput : LogOutput {
+	let type: LogType
+	
+	init(type: LogType) {
+		self.type = type
+		super.init()
+	}
+	
+	override func log(message: LogMessage) -> String {
+		return message.type == type ? output.log(message: message) : ""
+	}
+}
+
 
 final class DLogTests: XCTestCase {
 	
@@ -34,10 +47,11 @@ final class DLogTests: XCTestCase {
 		super.setUp()
 		
 		//let log = DLog.adaptive
-		//let log = DLog(outputs: [OSLogOutput()])
 		//let log = DLog.disabled
-		//let log = DLog(outputs: FileOutput(filePath: "/tmp/dlog.txt", output: ColoredOutput()))
-		log = DLog(outputs: NetOutput(), StandardOutput())
+		//log = DLog(outputs: TextOutput() >> FileOutput(filePath: "/users/iurii/dlog.txt"))
+		//log = DLog(outputs: TextOutput() >> StandardOutput())
+		log = DLog(outputs: TextOutput() => FilterOutput(type: .info) => StandardOutput())
+		//log = DLog(outputs: ColoredOutput() >> NetServiceOutput())
 	}
 	
 	// Tests

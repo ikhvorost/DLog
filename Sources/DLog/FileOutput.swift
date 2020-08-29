@@ -9,17 +9,18 @@ import Foundation
 
 
 class FileOutput : LogOutput {
-	let output: TextOutput
 	let file: FileHandle?
 	
-	init(filePath: String, output: TextOutput) {
+	init(filePath: String) {
 		if !FileManager.default.fileExists(atPath: filePath) {
 			FileManager.default.createFile(atPath: filePath, contents: nil, attributes: nil)
 		}
 		file = FileHandle(forWritingAtPath: filePath)
 		file?.seekToEndOfFile()
 		
-		self.output = output
+		super.init()
+		
+		output = TextOutput()
 	}
 	
 	deinit {
@@ -34,22 +35,22 @@ class FileOutput : LogOutput {
 	
 	// MARK: - LogOutput
 	
-	public func log(message: LogMessage) -> String {
+	public override func log(message: LogMessage) -> String {
 		write(output.log(message: message))
 	}
 	
-	public func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String {
+	public override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String {
 		write(output.scopeEnter(scope: scope, scopes: scopes))
 	}
 	
-	public func scopeLeave(scope: LogScope, scopes: [LogScope])  -> String {
+	public override func scopeLeave(scope: LogScope, scopes: [LogScope])  -> String {
 		write(output.scopeLeave(scope: scope, scopes: scopes))
 	}
 	
-	public func intervalBegin(interval: LogInterval) {
+	public override func intervalBegin(interval: LogInterval) {
 	}
 	
-	public func intervalEnd(interval: LogInterval) -> String {
+	public override func intervalEnd(interval: LogInterval) -> String {
 		write(output.intervalEnd(interval: interval))
 	}
 }

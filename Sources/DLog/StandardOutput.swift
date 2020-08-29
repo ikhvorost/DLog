@@ -9,35 +9,38 @@ import Foundation
 
 
 public class StandardOutput : LogOutput {
-	let output: TextOutput
 	
-	init(output: TextOutput = TextOutput()) {
-		self.output = output
+	override init() {
+		super.init()
+		
+		self.output = TextOutput()
 	}
 	
 	func echo(_ text: String) -> String {
-		print(text)
+		if !text.isEmpty {
+			print(text)
+		}
 		return text
 	}
 	
 	// MARK: - LogOutput
 	
-	public func log(message: LogMessage) -> String {
+	public override func log(message: LogMessage) -> String {
 		echo(output.log(message: message))
 	}
 	
-	public func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String {
+	public override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String {
 		echo(output.scopeEnter(scope: scope, scopes: scopes))
 	}
 	
-	public func scopeLeave(scope: LogScope, scopes: [LogScope])  -> String {
+	public override func scopeLeave(scope: LogScope, scopes: [LogScope])  -> String {
 		echo(output.scopeLeave(scope: scope, scopes: scopes))
 	}
 	
-	public func intervalBegin(interval: LogInterval) {
+	public override func intervalBegin(interval: LogInterval) {
 	}
 	
-	public func intervalEnd(interval: LogInterval) -> String {
+	public override func intervalEnd(interval: LogInterval) -> String {
 		echo(output.intervalEnd(interval: interval))
 	}
 }

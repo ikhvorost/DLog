@@ -173,14 +173,28 @@ public class LogInterval {
 	}
 }
 
-public protocol LogOutput {
-	@discardableResult func log(message: LogMessage) -> String
+precedencegroup ForwardPipe {
+    associativity: left
+}
+
+infix operator => : ForwardPipe
+
+public class LogOutput : NSObject {
+	var output: LogOutput!
 	
-	@discardableResult func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String
-	@discardableResult func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String
+	// Forward pipe
+	static func => (left: LogOutput, right: LogOutput) -> LogOutput {
+		right.output = left
+		return right
+	}
+
+	@discardableResult func log(message: LogMessage) -> String { "" }
 	
-	func intervalBegin(interval: LogInterval)
-	@discardableResult func intervalEnd(interval: LogInterval) -> String
+	@discardableResult func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String { "" }
+	@discardableResult func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String { "" }
+	
+	func intervalBegin(interval: LogInterval) {}
+	@discardableResult func intervalEnd(interval: LogInterval) -> String { "" }
 }
 
 //public class RestOutput : LogOutput {
@@ -193,6 +207,9 @@ public protocol LogOutput {
 //}
 
 //public class JSONOutput : LogOutput {
+//}
+
+//public class SlackOutput : LogOutput {
 //}
 
 public class DLog {
@@ -214,8 +231,8 @@ public class DLog {
 		var info = kinfo_proc()
 		var mib : [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_PID, getpid()]
 		var size = MemoryLayout<kinfo_proc>.stride
-		let junk = sysctl(&mib, UInt32(mib.count), &info, &size, nil, 0)
-		//assertfa(junk == 0, "sysctl failed")
+		sysctl(&mib, UInt32(mib.count), &info, &size, nil, 0)
+		//assert(junk == 0, "sysctl failed")
 		return (info.kp_proc.p_flag & P_TRACED) != 0
 	}
 	

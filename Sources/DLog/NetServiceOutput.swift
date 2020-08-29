@@ -7,17 +7,17 @@
 
 import Foundation
 
-class NetOutput : NSObject {
+class NetServiceOutput : LogOutput {
 	let service: NetService
 	var outputStream : OutputStream?
-	let output: TextOutput
 	var buffer = ""
 	
-	init(serviceName: String = "DLog", output: TextOutput = ColoredOutput()) {
+	init(serviceName: String = "DLog") {
 		service = NetService(domain: "local.", type: "_dlog._tcp.", name: serviceName)
-		self.output = output
 		
 		super.init()
+		
+		self.output = ColoredOutput()
 		
 		service.delegate = self
 		service.resolve(withTimeout: 3)
@@ -41,9 +41,30 @@ class NetOutput : NSObject {
 		return text
 	}
 	
+	// MARK: - LogOutput
+	
+	override func log(message: LogMessage) -> String {
+		send(output.log(message: message))
+	}
+	
+	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String {
+		send(output.scopeEnter(scope: scope, scopes: scopes))
+	}
+	
+	override func scopeLeave(scope: LogScope, scopes: [LogScope])  -> String {
+		send(output.scopeLeave(scope: scope, scopes: scopes))
+	}
+	
+	override func intervalBegin(interval: LogInterval) {
+	}
+	
+	override func intervalEnd(interval: LogInterval) -> String {
+		send(output.intervalEnd(interval: interval))
+	}
+	
 }
 
-extension NetOutput : NetServiceDelegate {
+extension NetServiceOutput : NetServiceDelegate {
 	
 	func netServiceDidResolveAddress(_ sender: NetService) {
 		print(#function)
@@ -68,26 +89,5 @@ extension NetOutput : NetServiceDelegate {
 	
 	func netServiceDidStop(_ sender: NetService) {
 		//print(sender)
-	}
-}
-
-extension NetOutput : LogOutput {
-	public func log(message: LogMessage) -> String {
-		send(output.log(message: message))
-	}
-	
-	public func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String {
-		send(output.scopeEnter(scope: scope, scopes: scopes))
-	}
-	
-	public func scopeLeave(scope: LogScope, scopes: [LogScope])  -> String {
-		send(output.scopeLeave(scope: scope, scopes: scopes))
-	}
-	
-	public func intervalBegin(interval: LogInterval) {
-	}
-	
-	public func intervalEnd(interval: LogInterval) -> String {
-		send(output.intervalEnd(interval: interval))
 	}
 }
