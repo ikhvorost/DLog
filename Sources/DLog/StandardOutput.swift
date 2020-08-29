@@ -20,6 +20,8 @@ public class StandardOutput : LogOutput {
 		return text
 	}
 	
+	// MARK: - LogOutput
+	
 	public func log(message: LogMessage) -> String {
 		echo(output.log(message: message))
 	}

@@ -14,6 +14,7 @@ import os.log
 
 enum ANSIEscapeCode: String {
 	case reset = "\u{001b}[0m"
+	case clear = "\u{001b}c"
 	
 	case bold = "\u{001b}[1m"
 	case dim = "\u{001b}[2m"
@@ -21,6 +22,7 @@ enum ANSIEscapeCode: String {
 	case blink = "\u{001b}[5m"
 	case reversed = "\u{001b}[7m"
 	
+	// 8 colors
     case textBlack = "\u{001B}[30m"
     case textRed = "\u{001B}[31m"
     case textGreen = "\u{001B}[32m"
@@ -29,15 +31,6 @@ enum ANSIEscapeCode: String {
     case textMagenta = "\u{001B}[35m"
     case textCyan = "\u{001B}[36m"
     case textWhite = "\u{001B}[37m"
-	
-	case textBrightBlack = "\u{001b}[30;1m"
-	case textBrightRed = "\u{001b}[31;1m"
-	case textBrightGreen = "\u{001b}[32;1m"
-	case textBrightYellow = "\u{001b}[33;1m"
-	case textBrightBlue = "\u{001b}[34;1m"
-	case textBrightMagenta = "\u{001b}[35;1m"
-	case textBrightCyan = "\u{001b}[36;1m"
-	case textBrightWhite = "\u{001b}[37;1m"
 	
 	case backgroundBlack = "\u{001b}[40m"
 	case backgrounRed = "\u{001b}[41m"
@@ -49,25 +42,14 @@ enum ANSIEscapeCode: String {
 	case backgroundWhite = "\u{001b}[47m"
 }
 
-extension String {
-	func escape(_ codes: [ANSIEscapeCode]) -> String {
-		let items = codes.map { $0.rawValue }.joined()
-		return "\(items)\(self)\(ANSIEscapeCode.reset.rawValue)"
-	}
-	
-	func escape(_ codes: ANSIEscapeCode...) -> String {
-		escape(codes)
-	}
-}
-
 // https://koenig-media.raywenderlich.com/downloads/RW-NSRegularExpression-Cheatsheet.pdf
-public class ColoredOutput : StandardOutput {
+public class ColoredOutput : TextOutput {
 	
-	static let time = #"(\d{2}:\d{2}:\d{2}\.\d{3})"#
-	static let category = #"\[([^\]]+)\]"#
-	static let icon = #"(\S+\s)"#
+	private static let time = #"(\d{2}:\d{2}:\d{2}\.\d{3})"#
+	private static let category = #"\[([^\]]+)\]"#
+	private static let icon = #"(\S+\s)"#
 	
-	static let logRegex: NSRegularExpression = {
+	private static let logRegex: NSRegularExpression = {
 		let type = #"(\[[^\]]+\])"#
 		let location = #"(<\S+:\d+>)"#
 		let txt = #"(.+)$"#
@@ -75,27 +57,27 @@ public class ColoredOutput : StandardOutput {
 		return try! NSRegularExpression(pattern: pattern, options: [])
 	}()
 	
-	static let scopeRegex: NSRegularExpression = {
+	private static let scopeRegex: NSRegularExpression = {
 		let pattern = time + #"\s"# + category + #"[^\[]+"# + category
 		return try! NSRegularExpression(pattern: pattern, options: [])
 	}()
 	
-	struct Tag {
+	private struct Tag {
 		let textColor: ANSIEscapeCode
 		let colors: [ANSIEscapeCode]
 	}
 	
-	static let tags: [String : Tag] = [
-		"[" + LogType.trace.rawValue + "]" : Tag(textColor: .textWhite, colors: [.backgroundWhite, .textBlack]),
-		"[" + LogType.info.rawValue + "]" : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textWhite]),
-		"[" + LogType.interval.rawValue + "]" : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textWhite]),
-		"[" + LogType.assert.rawValue + "]" : Tag(textColor: .textRed, colors: [.backgrounRed, .textWhite]),
-		"[" + LogType.debug.rawValue + "]" : Tag(textColor: .textCyan, colors: [.backgroundCyan, .textBlack]),
-		"[" + LogType.error.rawValue + "]" : Tag(textColor: .textYellow, colors: [.backgroundYellow, .textBlack]),
-		"[" + LogType.fault.rawValue + "]" : Tag(textColor: .textRed, colors: [.backgrounRed, .textWhite, .blink]),
+	private static let tags: [String : Tag] = [
+		"[" + LogType.trace.title + "]" : Tag(textColor: .textWhite, colors: [.backgroundWhite, .textBlack]),
+		"[" + LogType.info.title + "]" : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textWhite]),
+		"[" + LogType.interval.title + "]" : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textWhite]),
+		"[" + LogType.assert.title + "]" : Tag(textColor: .textRed, colors: [.backgrounRed, .textWhite]),
+		"[" + LogType.debug.title + "]" : Tag(textColor: .textCyan, colors: [.backgroundCyan, .textBlack]),
+		"[" + LogType.error.title + "]" : Tag(textColor: .textYellow, colors: [.backgroundYellow, .textBlack]),
+		"[" + LogType.fault.title + "]" : Tag(textColor: .textRed, colors: [.backgrounRed, .textWhite, .blink]),
 	]
 	
-	func insert(text: inout String, range: NSRange, codes: [ANSIEscapeCode]) {
+	private func insert(text: inout String, range: NSRange, codes: [ANSIEscapeCode]) {
 		guard let r = Range(range, in: text) else { return }
 		
 		text.insert(contentsOf: ANSIEscapeCode.reset.rawValue, at: r.upperBound)
@@ -103,7 +85,7 @@ public class ColoredOutput : StandardOutput {
 		text.insert(contentsOf: items, at: r.lowerBound)
 	}
 	
-	override func echo(_ text: String) -> String {
+	private func paint(_ text: String) -> String {
 		var t = text
 		
 		let nsrange = NSRange(text.startIndex..<text.endIndex, in: text)
@@ -147,9 +129,28 @@ public class ColoredOutput : StandardOutput {
 			let timeRange = match.range(at: 1)
 			insert(text: &t, range: timeRange, codes: [.dim])
 		}
-		
-		print(t)
-		
+
 		return t
+	}
+	
+	// MARK: - LogOutput
+	
+	override public func log(message: LogMessage) -> String {
+		paint(super.log(message: message))
+	}
+	
+	override public func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String {
+		paint(super.scopeEnter(scope: scope, scopes: scopes))
+	}
+	
+	override public func scopeLeave(scope: LogScope, scopes: [LogScope])  -> String {
+		paint(super.scopeLeave(scope: scope, scopes: scopes))
+	}
+	
+	override public func intervalBegin(interval: LogInterval) {
+	}
+	
+	override public func intervalEnd(interval: LogInterval) -> String {
+		paint(super.intervalEnd(interval: interval))
 	}
 }

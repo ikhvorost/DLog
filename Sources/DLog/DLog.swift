@@ -15,30 +15,19 @@ import os.activity
 // - Text ouput + Console/Terminal/File output/FTP/REST etc
 
 
-let debugDateFormatter: DateFormatter = {
-	let dateFormatter = DateFormatter()
-	dateFormatter.dateFormat = "HH:mm:ss.SSS"
-	return dateFormatter
-}()
-
-
-struct DebugKit {
-    
-}
-
-public enum LogType : String {
-	case trace = "TRACE"
-	case info  = "INFO"
-	case interval = "INTERVAL"
-	case debug = "DEBUG"
-	case error = "ERROR"
-	case assert = "ASSERT"
-	case fault = "FAULT"
+public enum LogType : Int {
+	case trace
+	case info
+	case interval
+	case debug
+	case error
+	case assert
+	case fault
 	
 	private static let icons: [LogType : String] = [
-		.trace : "🏁",
+		.trace : "◽️",
 		.info : "✅",
-		.interval : "⏱",
+		.interval : "🕒",
 		.debug : "▶️",
 		.error : "⚠️",
 		.assert : "🅰️",
@@ -48,13 +37,27 @@ public enum LogType : String {
 	var icon: String {
 		Self.icons[self]!
 	}
+	
+	private static let titles: [LogType : String] = [
+		.trace : "TRACE",
+		.info : "INFO",
+		.interval : "INTERVAL",
+		.debug : "DEBUG",
+		.error : "ERROR",
+		.assert : "ASSERT",
+		.fault : "FAULT",
+	]
+	
+	var title: String {
+		Self.titles[self]!
+	}
 }
 
 public struct LogMessage {
 	let category: String
 	let text: String
 	let type: LogType
-	let time: String
+	let time: Date
 	let fileName: String
 	let function: String
 	let line: UInt
@@ -180,9 +183,6 @@ public protocol LogOutput {
 	@discardableResult func intervalEnd(interval: LogInterval) -> String
 }
 
-//public class FileOutput : LogOutput {
-//}
-
 //public class RestOutput : LogOutput {
 //}
 
@@ -196,35 +196,43 @@ public protocol LogOutput {
 //}
 
 public class DLog {
-	public static let disabled = DLog(category: "DISABLED", outputs: [])
+	public static let disabled = DLog(category: "DISABLED")
+	public static let adaptive = DLog(outputs: AdaptiveOutput())
 	
-	let category: String
 	private let outputs: [LogOutput]
 	private var scopes = [LogScope]()
 	private var intervals = [LogInterval]()
 	
-	//private var level = .debug
+	let category: String
+	var logLevel: LogType
 	
 	private var enabled : Bool  {
 		get { outputs.count > 0 }
 	}
 	
-	public init(category: String = "DLOG", outputs: [LogOutput] = [AdaptiveOutput()]) {
+	static var isDebug : Bool {
+		var info = kinfo_proc()
+		var mib : [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_PID, getpid()]
+		var size = MemoryLayout<kinfo_proc>.stride
+		let junk = sysctl(&mib, UInt32(mib.count), &info, &size, nil, 0)
+		//assertfa(junk == 0, "sysctl failed")
+		return (info.kp_proc.p_flag & P_TRACED) != 0
+	}
+	
+	public init(category: String = "DLOG", outputs: LogOutput...) {
 		self.category = category
 		self.outputs = outputs
+		logLevel = Self.isDebug ? .trace : .error
 	}
 	
 	private func log(_ text: String, type: LogType, file: String, function: String, line: UInt) {
-		guard enabled else { return }
-		
-		let fileName = NSString(string: file).lastPathComponent
-		let time = debugDateFormatter.string(from: Date())
+		guard enabled && type.rawValue >= logLevel.rawValue else { return }
 		
 		let message = LogMessage(category: category,
 								 text: text,
 								 type: type,
-								 time: time,
-								 fileName: fileName,
+								 time: Date(),
+								 fileName: NSString(string: file).lastPathComponent,
 								 function: function,
 								 line: line,
 								 scopes: scopes)
@@ -261,12 +269,10 @@ public class DLog {
 	}
 	
 	func end(interval: LogInterval) {
-		guard enabled else { return }
+		guard enabled && logLevel.rawValue <= LogType.interval.rawValue else { return }
 		
 		outputs.forEach { $0.intervalEnd(interval: interval) }
 	}
-	
-	// MARK: - public
 	
 	public func trace(_ text: String = "", file: String = #file, function: String = #function, line: UInt = #line) {
 		log(text != "" ? text : function, type: .trace, file: file, function: function, line: line)

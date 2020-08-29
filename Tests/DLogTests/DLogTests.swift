@@ -1,6 +1,6 @@
 import Foundation
 import XCTest
-@testable import DebugKit
+@testable import DLog
 
 /// String errors
 extension String : LocalizedError {
@@ -11,7 +11,8 @@ func asyncAfter(_ sec: Double = 0.25, closure: @escaping (() -> Void) ) {
 	DispatchQueue.global().asyncAfter(deadline: .now() + sec, execute: closure)
 }
 
-final class DebugKitTests: XCTestCase {
+
+final class DLogTests: XCTestCase {
 	
 	func wait(count: Int, timeout: TimeInterval = 1, name: String = #function, closure: ([XCTestExpectation]) -> Void) {
 		let expectations = (0..<count).map { _ in expectation(description: name) }
@@ -27,15 +28,19 @@ final class DebugKitTests: XCTestCase {
 		}
 	}
 	
-//	override func setUp() {
-//		super.setUp()
-//	}
+	var log: DLog!
+	
+	override func setUp() {
+		super.setUp()
+		
+		//let log = DLog.adaptive
+		//let log = DLog(outputs: [OSLogOutput()])
+		//let log = DLog.disabled
+		//let log = DLog(outputs: FileOutput(filePath: "/tmp/dlog.txt", output: ColoredOutput()))
+		log = DLog(outputs: NetOutput(), StandardOutput())
+	}
 	
 	// Tests
-	
-	let log = DLog() // Adaptive
-	//let log = DLog(outputs: [OSLogOutput()])
-	//let log = DLog.disabled
 	
 	func test_LogTypes() {
 		log.trace()
@@ -65,7 +70,7 @@ final class DebugKitTests: XCTestCase {
 			self.log.trace("scope1 end")
 		}
 		
-		log.trace("no scope")
+		self.log.trace("no scope")
 	}
 	
 	func test_ScopeDoubleEnter() {
@@ -81,25 +86,24 @@ final class DebugKitTests: XCTestCase {
 		scope1.leave()
 	}
 
-	
 	func test_ScopeCreate() {
-		wait { exp in
+		wait(timeout: 3) { exp in
 			
-			let scope1 = log.scope("Scope-1")
-			let scope2 = log.scope("Scope-2")
-			let scope3 = log.scope("Scope-3")
+			let scope1 = self.log.scope("Scope-1")
+			let scope2 = self.log.scope("Scope-2")
+			let scope3 = self.log.scope("Scope-3")
 			
-			log.trace("no scope")
+			self.log.trace("no scope")
 			
 			scope1.enter()
 			
-			log.info("scope1 start")
+			self.log.info("scope1 start")
 			
 			scope2.enter()
 			
-			log.info("scope2 start")
+			self.log.info("scope2 start")
 			
-			asyncAfter {
+			asyncAfter(2) {
 				scope3.enter()
 				
 				self.log.debug("scope3 start")

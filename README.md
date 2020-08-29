@@ -1,2 +1,2 @@
-# DebugKit
+# DLog
 Debug tools for Swift

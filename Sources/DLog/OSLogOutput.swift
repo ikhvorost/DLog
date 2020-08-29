@@ -41,8 +41,8 @@ public class OSLogOutput : LogOutput {
 		.info : .info,
 		.debug : .debug,
 		.error : .error,
+		.assert : .fault,
 		.fault : .fault,
-		.assert : .fault
 	]
 	
 	var log: OSLog?
@@ -54,6 +54,8 @@ public class OSLogOutput : LogOutput {
 		}
 		return log!
 	}
+	
+	// MARK: - LogOutput
 	
 	public func log(message: LogMessage) -> String {
 		let log = oslog(category: message.category)

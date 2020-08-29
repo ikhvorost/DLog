@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-	name: "DebugKit",
+	name: "DLog",
 	platforms: [
 		.iOS(.v10),
 		.macOS(.v10_12),
@@ -12,11 +12,14 @@ let package = Package(
 		.watchOS(.v3)
 	],
 	products: [
-		.library(name: "DebugKit", targets: ["DebugKit"]),
+		.library(name: "DLog", targets: ["DLog"]),
+		.executable(name: "DLogNetService", targets: ["DLogNetService"])
 	],
 	targets: [
-		.target(name: "DebugKit"),
-		.testTarget(name: "DebugKitTests", dependencies: ["DebugKit"]),
+		.target(name: "DLog"),
+		.target(name: "DLogNetService"),
+		.testTarget(name: "DLogTests", dependencies: ["DLog"]),
 	],
 	swiftLanguageVersions: [.v5]
 )
+
