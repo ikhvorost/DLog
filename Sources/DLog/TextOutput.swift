@@ -8,7 +8,6 @@
 import Foundation
 
 public class TextOutput : LogOutput {
-	
 	static let dateFormatter: DateFormatter = {
 		let dateFormatter = DateFormatter()
 		dateFormatter.dateFormat = "HH:mm:ss.SSS"
@@ -46,7 +45,11 @@ public class TextOutput : LogOutput {
 	
 	// MARK: - LogOutput
 	
-	override func log(message: LogMessage) -> String {
+	override func log(message: LogMessage) -> String? {
+		if output != nil {
+			output.log(message: message)
+		}
+
 		var padding = ""
 		if let maxlevel = message.scopes.last?.level {
 			for level in 1...maxlevel {
@@ -59,18 +62,29 @@ public class TextOutput : LogOutput {
 		return "\(time) [\(message.category)] \(padding) \(message.type.icon) [\(message.type.title)] <\(message.fileName):\(message.line)> \(message.text)"
 	}
 	
-	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String {
+	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
+		if output != nil {
+			output.scopeEnter(scope: scope, scopes: scopes)
+		}
 		return writeScope(scope: scope, scopes: scopes, start: true)
 	}
 	
-	override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String {
+	override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
+		if output != nil {
+			output.scopeLeave(scope: scope, scopes: scopes)
+		}
+		
 		return writeScope(scope: scope, scopes: scopes, start: false)
 	}
 	
 	override func intervalBegin(interval: LogInterval) {
 	}
 	
-	override func intervalEnd(interval: LogInterval) -> String {
+	override func intervalEnd(interval: LogInterval) -> String? {
+		if output != nil {
+			output.intervalEnd(interval: interval)
+		}
+		
 		let duration = stringFromTime(interval: interval.duration)
 		let minDuration = stringFromTime(interval: interval.minDuration)
 		let maxDuration = stringFromTime(interval: interval.maxDuration)

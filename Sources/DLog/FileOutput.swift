@@ -7,7 +7,6 @@
 
 import Foundation
 
-
 class FileOutput : LogOutput {
 	let file: FileHandle?
 	
@@ -27,30 +26,32 @@ class FileOutput : LogOutput {
 		file?.closeFile()
 	}
 	
-	func write(_ text: String) -> String {
-		let data = (text + "\n").data(using: .utf8)!
-		file?.write(data)
+	func write(_ text: String?) -> String? {
+		if let str = text, !str.isEmpty {
+			let data = (str + "\n").data(using: .utf8)!
+			file?.write(data)
+		}
 		return text
 	}
 	
 	// MARK: - LogOutput
 	
-	public override func log(message: LogMessage) -> String {
+	override func log(message: LogMessage) -> String? {
 		write(output.log(message: message))
 	}
 	
-	public override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String {
+	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
 		write(output.scopeEnter(scope: scope, scopes: scopes))
 	}
 	
-	public override func scopeLeave(scope: LogScope, scopes: [LogScope])  -> String {
+	override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
 		write(output.scopeLeave(scope: scope, scopes: scopes))
 	}
 	
-	public override func intervalBegin(interval: LogInterval) {
+	override func intervalBegin(interval: LogInterval) {
 	}
 	
-	public override func intervalEnd(interval: LogInterval) -> String {
+	override func intervalEnd(interval: LogInterval) -> String? {
 		write(output.intervalEnd(interval: interval))
 	}
 }

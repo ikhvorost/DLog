@@ -85,72 +85,72 @@ public class ColoredOutput : TextOutput {
 		text.insert(contentsOf: items, at: r.lowerBound)
 	}
 	
-	private func paint(_ text: String) -> String {
-		var t = text
+	private func paint(_ text: String?) -> String? {
+		guard var str = text, !str.isEmpty else { return text }
 		
-		let nsrange = NSRange(text.startIndex..<text.endIndex, in: text)
+		let nsrange = NSRange(str.startIndex..<str.endIndex, in: str)
 		
 		// Log
-		if let match = Self.logRegex.firstMatch(in: text, options: [], range: nsrange) {
+		if let match = Self.logRegex.firstMatch(in: str, options: [], range: nsrange) {
 			assert(match.numberOfRanges == 7)
 			
 			let typeRange = match.range(at: 4)
-			let type = text[Range(typeRange, in: text)!]
+			let type = str[Range(typeRange, in: str)!]
 			let tag = Self.tags[String(type)]!
 			
 			let textRange = match.range(at: 6)
-			insert(text: &t, range: textRange, codes: [tag.textColor])
+			insert(text: &str, range: textRange, codes: [tag.textColor])
 			
 			let locationRange = match.range(at: 5)
-			insert(text: &t, range: locationRange, codes: [.dim, tag.textColor])
+			insert(text: &str, range: locationRange, codes: [.dim, tag.textColor])
 			
 			//let typeRange = match.range(at: 4)
-			insert(text: &t, range: typeRange, codes: tag.colors)
+			insert(text: &str, range: typeRange, codes: tag.colors)
 			
 			let iconRange = match.range(at: 3)
-			t = t.replacingCharacters(in: Range(iconRange, in: t)!, with: "")
+			str = str.replacingCharacters(in: Range(iconRange, in: str)!, with: "")
 			
 			let categoryRange = match.range(at: 2)
-			insert(text: &t, range: categoryRange, codes: [.textBlue])
+			insert(text: &str, range: categoryRange, codes: [.textBlue])
 			
 			let timeRange = match.range(at: 1)
-			insert(text: &t, range: timeRange, codes: [.dim])
+			insert(text: &str, range: timeRange, codes: [.dim])
 		}
 		// Scope
-		else if let match = Self.scopeRegex.firstMatch(in: text, options: [], range: nsrange) {
+		else if let match = Self.scopeRegex.firstMatch(in: str, options: [], range: nsrange) {
 			assert(match.numberOfRanges == 4)
 			
 			let scopeRange = match.range(at: 3)
-			insert(text: &t, range: scopeRange, codes: [.textMagenta])
+			insert(text: &str, range: scopeRange, codes: [.textMagenta])
 			
 			let categoryRange = match.range(at: 2)
-			insert(text: &t, range: categoryRange, codes: [.textBlue])
+			insert(text: &str, range: categoryRange, codes: [.textBlue])
 			
 			let timeRange = match.range(at: 1)
-			insert(text: &t, range: timeRange, codes: [.dim])
+			insert(text: &str, range: timeRange, codes: [.dim])
 		}
 
-		return t
+		return str
 	}
 	
 	// MARK: - LogOutput
 	
-	override func log(message: LogMessage) -> String {
+	override func log(message: LogMessage) -> String? {
 		paint(super.log(message: message))
 	}
 	
-	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String {
+	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
 		paint(super.scopeEnter(scope: scope, scopes: scopes))
 	}
 	
-	override func scopeLeave(scope: LogScope, scopes: [LogScope])  -> String {
+	override func scopeLeave(scope: LogScope, scopes: [LogScope])  -> String? {
 		paint(super.scopeLeave(scope: scope, scopes: scopes))
 	}
 	
 	override func intervalBegin(interval: LogInterval) {
 	}
 	
-	override func intervalEnd(interval: LogInterval) -> String {
+	override func intervalEnd(interval: LogInterval) -> String? {
 		paint(super.intervalEnd(interval: interval))
 	}
 }

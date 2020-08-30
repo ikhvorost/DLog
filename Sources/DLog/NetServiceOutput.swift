@@ -17,7 +17,7 @@ class NetServiceOutput : LogOutput {
 		
 		super.init()
 		
-		self.output = ColoredOutput()
+		output = ColoredOutput()
 		
 		service.delegate = self
 		service.resolve(withTimeout: 3)
@@ -27,15 +27,17 @@ class NetServiceOutput : LogOutput {
 		outputStream?.close()
 	}
 	
-	func send(_ text: String) -> String {
-		DispatchQueue.main.async {
-			guard let stream = self.outputStream else {
-				self.buffer += (self.buffer.isEmpty ? "" : "\n") + text
-				return
+	func send(_ text: String?) -> String? {
+		if let str = text, !str.isEmpty {
+			DispatchQueue.main.async {
+				guard let stream = self.outputStream else {
+					self.buffer += (self.buffer.isEmpty ? "" : "\n") + str
+					return
+				}
+				
+				let str = str + "\n"
+				stream.write(str, maxLength: str.lengthOfBytes(using: .utf8))
 			}
-			
-			let str = text + "\n"
-			stream.write(str, maxLength: str.lengthOfBytes(using: .utf8))
 		}
 		
 		return text
@@ -43,22 +45,22 @@ class NetServiceOutput : LogOutput {
 	
 	// MARK: - LogOutput
 	
-	override func log(message: LogMessage) -> String {
+	override func log(message: LogMessage) -> String? {
 		send(output.log(message: message))
 	}
 	
-	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String {
+	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
 		send(output.scopeEnter(scope: scope, scopes: scopes))
 	}
 	
-	override func scopeLeave(scope: LogScope, scopes: [LogScope])  -> String {
+	override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
 		send(output.scopeLeave(scope: scope, scopes: scopes))
 	}
 	
 	override func intervalBegin(interval: LogInterval) {
 	}
 	
-	override func intervalEnd(interval: LogInterval) -> String {
+	override func intervalEnd(interval: LogInterval) -> String? {
 		send(output.intervalEnd(interval: interval))
 	}
 	

@@ -173,28 +173,34 @@ public class LogInterval {
 	}
 }
 
+public class LogOutput : NSObject {
+	var output: LogOutput!
+	
+	@discardableResult
+	func log(message: LogMessage) -> String? { nil }
+	
+	@discardableResult
+	func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? { nil }
+	@discardableResult
+	func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? { nil }
+	
+	func intervalBegin(interval: LogInterval) {}
+	@discardableResult
+	func intervalEnd(interval: LogInterval) -> String? { nil }
+}
+
 // Forward pipe
 precedencegroup ForwardPipe {
 	associativity: left
 }
 infix operator => : ForwardPipe
 
-public class LogOutput : NSObject {
-	var output: LogOutput!
-	
+extension LogOutput {
 	// Forward pipe
 	static func => (left: LogOutput, right: LogOutput) -> LogOutput {
 		right.output = left
 		return right
 	}
-
-	@discardableResult func log(message: LogMessage) -> String { "" }
-	
-	@discardableResult func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String { "" }
-	@discardableResult func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String { "" }
-	
-	func intervalBegin(interval: LogInterval) {}
-	@discardableResult func intervalEnd(interval: LogInterval) -> String { "" }
 }
 
 //public class RestOutput : LogOutput {

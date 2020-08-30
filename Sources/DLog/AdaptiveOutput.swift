@@ -8,11 +8,12 @@
 import Foundation
 
 public class AdaptiveOutput : LogOutput {
+	
 	static var isTerminal : Bool {
 		return ProcessInfo.processInfo.environment["_"] != nil
 	}
 	
-	public override init() {
+	override init() {
 		super.init()
 		
 		if DLog.isDebug {
@@ -25,15 +26,15 @@ public class AdaptiveOutput : LogOutput {
 
 	// MARK: - LogOutput
 	
-	override func log(message: LogMessage) -> String {
+	override func log(message: LogMessage) -> String? {
 		output.log(message: message)
 	}
 	
-	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String {
+	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
 		output.scopeEnter(scope: scope, scopes: scopes)
 	}
 	
-	override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String {
+	override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
 		output.scopeLeave(scope: scope, scopes: scopes)
 	}
 	
@@ -41,7 +42,7 @@ public class AdaptiveOutput : LogOutput {
 		output.intervalBegin(interval: interval)
 	}
 	
-	override func intervalEnd(interval: LogInterval) -> String {
+	override func intervalEnd(interval: LogInterval) -> String? {
 		output.intervalEnd(interval: interval)
 	}
 }
