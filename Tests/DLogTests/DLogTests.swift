@@ -48,10 +48,10 @@ final class DLogTests: XCTestCase {
 		
 		//let log = DLog.adaptive
 		//let log = DLog.disabled
-		//log = DLog(outputs: TextOutput() >> FileOutput(filePath: "/users/iurii/dlog.txt"))
-		//log = DLog(outputs: TextOutput() >> StandardOutput())
-		log = DLog(outputs: TextOutput() => FilterOutput(type: .info) => StandardOutput())
-		//log = DLog(outputs: ColoredOutput() >> NetServiceOutput())
+		log = DLog(output: TextOutput() => StandardOutput() => FileOutput(filePath: "/users/iurii/dlog.txt"))
+		//log = DLog(outputs: TextOutput() => StandardOutput())
+		//log = DLog(outputs: TextOutput() => FilterOutput(type: .info) => StandardOutput())
+		//log = DLog(outputs: ColoredOutput() => NetServiceOutput())
 	}
 	
 	// Tests

@@ -173,10 +173,10 @@ public class LogInterval {
 	}
 }
 
+// Forward pipe
 precedencegroup ForwardPipe {
-    associativity: left
+	associativity: left
 }
-
 infix operator => : ForwardPipe
 
 public class LogOutput : NSObject {
@@ -213,19 +213,14 @@ public class LogOutput : NSObject {
 //}
 
 public class DLog {
-	public static let disabled = DLog(category: "DISABLED")
-	public static let adaptive = DLog(outputs: AdaptiveOutput())
+	public static let disabled = DLog(output: nil)
+	public static let adaptive = DLog(output: AdaptiveOutput())
 	
-	private let outputs: [LogOutput]
+	private let category: String
+	private var logLevel: LogType
+	private let output: LogOutput?
 	private var scopes = [LogScope]()
 	private var intervals = [LogInterval]()
-	
-	let category: String
-	var logLevel: LogType
-	
-	private var enabled : Bool  {
-		get { outputs.count > 0 }
-	}
 	
 	static var isDebug : Bool {
 		var info = kinfo_proc()
@@ -236,14 +231,14 @@ public class DLog {
 		return (info.kp_proc.p_flag & P_TRACED) != 0
 	}
 	
-	public init(category: String = "DLOG", outputs: LogOutput...) {
+	public init(category: String = "DLOG", output: LogOutput?) {
 		self.category = category
-		self.outputs = outputs
+		self.output = output
 		logLevel = Self.isDebug ? .trace : .error
 	}
 	
 	private func log(_ text: String, type: LogType, file: String, function: String, line: UInt) {
-		guard enabled && type.rawValue >= logLevel.rawValue else { return }
+		guard let out = output, type.rawValue >= logLevel.rawValue else { return }
 		
 		let message = LogMessage(category: category,
 								 text: text,
@@ -253,42 +248,40 @@ public class DLog {
 								 function: function,
 								 line: line,
 								 scopes: scopes)
-		outputs.forEach {
-			$0.log(message: message)
-		}
+		out.log(message: message)
 	}
 	
 	func enter(scope: LogScope) {
-		guard enabled else { return }
+		guard let out = output else { return }
 		
 		if let last = scopes.last {
 			scope.level = last.level + 1
 		}
 		scopes.append(scope)
 	
-		outputs.forEach { $0.scopeEnter(scope: scope, scopes: scopes) }
+		out.scopeEnter(scope: scope, scopes: scopes)
 	}
 	
 	func leave(scope: LogScope) {
-		guard enabled else { return }
+		guard let out = output else { return }
 		
 		if scopes.contains(where: { $0.uid == scope.uid }) {
-			outputs.forEach { $0.scopeLeave(scope: scope, scopes: scopes) }
+			out.scopeLeave(scope: scope, scopes: scopes)
 		
 			scopes.removeAll { $0.uid == scope.uid }
 		}
 	}
 	
 	func begin(interval: LogInterval) {
-		guard enabled else { return }
+		guard let out = output else { return }
 	
-		outputs.forEach { $0.intervalBegin(interval: interval) }
+		out.intervalBegin(interval: interval)
 	}
 	
 	func end(interval: LogInterval) {
-		guard enabled && logLevel.rawValue <= LogType.interval.rawValue else { return }
+		guard let out = output, logLevel.rawValue <= LogType.interval.rawValue else { return }
 		
-		outputs.forEach { $0.intervalEnd(interval: interval) }
+		out.intervalEnd(interval: interval)
 	}
 	
 	public func trace(_ text: String = "", file: String = #file, function: String = #function, line: UInt = #line) {
