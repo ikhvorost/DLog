@@ -11,11 +11,11 @@ class FileOutput : LogOutput {
 	let file: FileHandle?
 	
 	init(filePath: String) {
-		if !FileManager.default.fileExists(atPath: filePath) {
-			FileManager.default.createFile(atPath: filePath, contents: nil, attributes: nil)
-		}
+		let fileManager = FileManager.default
+		try? fileManager.removeItem(atPath: filePath)
+		fileManager.createFile(atPath: filePath, contents: nil, attributes: nil)
+		
 		file = FileHandle(forWritingAtPath: filePath)
-		file?.seekToEndOfFile()
 		
 		super.init()
 		
