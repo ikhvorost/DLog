@@ -46,6 +46,7 @@ final class DLogTests: XCTestCase {
 		log.trace()
 		log.info("info")
 		log.interval("interval") {}
+		log.scope("scope") {}
 		log.debug("debug")
 		log.error("error")
 		log.assert(false, "assert text")

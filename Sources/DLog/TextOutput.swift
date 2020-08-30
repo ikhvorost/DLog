@@ -45,10 +45,8 @@ public class TextOutput : LogOutput {
 	
 	// MARK: - LogOutput
 	
-	override func log(message: LogMessage) -> String? {
-		if output != nil {
-			output.log(message: message)
-		}
+	override public func log(message: LogMessage) -> String? {
+		super.log(message: message)
 
 		var padding = ""
 		if let maxlevel = message.scopes.last?.level {
@@ -62,28 +60,22 @@ public class TextOutput : LogOutput {
 		return "\(time) [\(message.category)] \(padding) \(message.type.icon) [\(message.type.title)] <\(message.fileName):\(message.line)> \(message.text)"
 	}
 	
-	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
-		if output != nil {
-			output.scopeEnter(scope: scope, scopes: scopes)
-		}
+	override public func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
+		super.scopeEnter(scope: scope, scopes: scopes)
 		return writeScope(scope: scope, scopes: scopes, start: true)
 	}
 	
-	override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
-		if output != nil {
-			output.scopeLeave(scope: scope, scopes: scopes)
-		}
-		
+	override public func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
+		super.scopeLeave(scope: scope, scopes: scopes)
 		return writeScope(scope: scope, scopes: scopes, start: false)
 	}
 	
-	override func intervalBegin(interval: LogInterval) {
+	override public func intervalBegin(interval: LogInterval) {
+		super.intervalBegin(interval: interval)
 	}
 	
-	override func intervalEnd(interval: LogInterval) -> String? {
-		if output != nil {
-			output.intervalEnd(interval: interval)
-		}
+	override public func intervalEnd(interval: LogInterval) -> String? {
+		super.intervalEnd(interval: interval)
 		
 		let duration = stringFromTime(interval: interval.duration)
 		let minDuration = stringFromTime(interval: interval.minDuration)
@@ -92,6 +84,6 @@ public class TextOutput : LogOutput {
 		let text = "[\(interval.name)] Count: \(interval.count), Total: \(duration)s, Min: \(minDuration)s, Max: \(maxDuration)s, Avg: \(avgDuration)s"
 		
 		let message = LogMessage(category: interval.category, text: text, type: .interval, time: Date(), fileName: interval.file, function: interval.function, line: interval.line, scopes: interval.scopes)
-		return log(message: message)
+		return super.log(message: message)
 	}
 }

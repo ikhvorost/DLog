@@ -46,22 +46,19 @@ class NetServiceOutput : LogOutput {
 	// MARK: - LogOutput
 	
 	override func log(message: LogMessage) -> String? {
-		send(output.log(message: message))
+		send(super.log(message: message))
 	}
 	
 	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
-		send(output.scopeEnter(scope: scope, scopes: scopes))
+		send(super.scopeEnter(scope: scope, scopes: scopes))
 	}
 	
 	override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
-		send(output.scopeLeave(scope: scope, scopes: scopes))
-	}
-	
-	override func intervalBegin(interval: LogInterval) {
+		send(super.scopeLeave(scope: scope, scopes: scopes))
 	}
 	
 	override func intervalEnd(interval: LogInterval) -> String? {
-		send(output.intervalEnd(interval: interval))
+		send(super.intervalEnd(interval: interval))
 	}
 	
 }

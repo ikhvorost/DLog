@@ -135,22 +135,19 @@ public class ColoredOutput : TextOutput {
 	
 	// MARK: - LogOutput
 	
-	override func log(message: LogMessage) -> String? {
+	override public func log(message: LogMessage) -> String? {
 		paint(super.log(message: message))
 	}
 	
-	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
+	override public func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
 		paint(super.scopeEnter(scope: scope, scopes: scopes))
 	}
 	
-	override func scopeLeave(scope: LogScope, scopes: [LogScope])  -> String? {
+	override public func scopeLeave(scope: LogScope, scopes: [LogScope])  -> String? {
 		paint(super.scopeLeave(scope: scope, scopes: scopes))
 	}
 	
-	override func intervalBegin(interval: LogInterval) {
-	}
-	
-	override func intervalEnd(interval: LogInterval) -> String? {
+	override public func intervalEnd(interval: LogInterval) -> String? {
 		paint(super.intervalEnd(interval: interval))
 	}
 }

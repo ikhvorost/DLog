@@ -57,28 +57,32 @@ public class OSLogOutput : LogOutput {
 	
 	// MARK: - LogOutput
 	
-	override func log(message: LogMessage) -> String? {
+	override public func log(message: LogMessage) -> String? {
 		let log = oslog(category: message.category)
 		
 		let location = "<\(message.fileName):\(message.line)>"
 		let type = Self.types[message.type]!
 		os_log("%s %s %s", dso: Self.dso, log: log, type: type, message.type.icon, location, message.text)
 		
-		return ""
+		return super.log(message: message)
 	}
 	
-	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
+	override public func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
 		let activity = _os_activity_create(Self.dso, strdup(scope.name), Self.OS_ACTIVITY_CURRENT, OS_ACTIVITY_FLAG_DEFAULT)
 		os_activity_scope_enter(activity, &scope.os_state)
-		return ""
+		
+		return super.scopeEnter(scope: scope, scopes: scopes)
 	}
 	
-	override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
+	override public func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
 		os_activity_scope_leave(&scope.os_state);
-		return ""
+		
+		return super.scopeLeave(scope: scope, scopes: scopes)
 	}
 	
-	override func intervalBegin(interval: LogInterval) {
+	override public func intervalBegin(interval: LogInterval) {
+		super.intervalBegin(interval: interval)
+		
 		guard #available(macOS 10.14, iOS 12.0, watchOS 5.0, tvOS 12.0, *) else { return }
 		
 		let log = oslog(category: interval.category)
@@ -89,11 +93,11 @@ public class OSLogOutput : LogOutput {
 		os_signpost(.begin, log: log, name: interval.name, signpostID: interval.signpostID!)
 	}
 	
-	override func intervalEnd(interval: LogInterval) -> String? {
-		guard #available(macOS 10.14, iOS 12.0, watchOS 5.0, tvOS 12.0, *) else { return "" }
-		
-		let log = oslog(category: interval.category)
-		os_signpost(.end, log: log, name: interval.name, signpostID: interval.signpostID!)
-		return ""
+	override public func intervalEnd(interval: LogInterval) -> String? {
+		if #available(macOS 10.14, iOS 12.0, watchOS 5.0, tvOS 12.0, *) {
+			let log = oslog(category: interval.category)
+			os_signpost(.end, log: log, name: interval.name, signpostID: interval.signpostID!)
+		}
+		return super.intervalEnd(interval: interval)
 	}
 }

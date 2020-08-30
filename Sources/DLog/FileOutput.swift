@@ -37,21 +37,18 @@ class FileOutput : LogOutput {
 	// MARK: - LogOutput
 	
 	override func log(message: LogMessage) -> String? {
-		write(output.log(message: message))
+		write(super.log(message: message))
 	}
 	
 	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
-		write(output.scopeEnter(scope: scope, scopes: scopes))
+		write(super.scopeEnter(scope: scope, scopes: scopes))
 	}
 	
 	override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
-		write(output.scopeLeave(scope: scope, scopes: scopes))
-	}
-	
-	override func intervalBegin(interval: LogInterval) {
+		write(super.scopeLeave(scope: scope, scopes: scopes))
 	}
 	
 	override func intervalEnd(interval: LogInterval) -> String? {
-		write(output.intervalEnd(interval: interval))
+		write(super.intervalEnd(interval: interval))
 	}
 }

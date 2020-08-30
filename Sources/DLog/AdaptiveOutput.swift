@@ -23,26 +23,4 @@ public class AdaptiveOutput : LogOutput {
 			output = Self.isTerminal ? ColoredOutput() : OSLogOutput()
 		}
 	}
-
-	// MARK: - LogOutput
-	
-	override func log(message: LogMessage) -> String? {
-		output.log(message: message)
-	}
-	
-	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
-		output.scopeEnter(scope: scope, scopes: scopes)
-	}
-	
-	override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
-		output.scopeLeave(scope: scope, scopes: scopes)
-	}
-	
-	override func intervalBegin(interval: LogInterval) {
-		output.intervalBegin(interval: interval)
-	}
-	
-	override func intervalEnd(interval: LogInterval) -> String? {
-		output.intervalEnd(interval: interval)
-	}
 }

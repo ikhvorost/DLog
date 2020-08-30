@@ -173,20 +173,35 @@ public class LogInterval {
 	}
 }
 
+/// Base output class
 public class LogOutput : NSObject {
 	var output: LogOutput!
 	
 	@discardableResult
-	func log(message: LogMessage) -> String? { nil }
+	public func log(message: LogMessage) -> String? {
+		return output != nil ? output.log(message: message) : nil
+	}
 	
 	@discardableResult
-	func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? { nil }
-	@discardableResult
-	func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? { nil }
+	public func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
+		return output != nil ? output.scopeEnter(scope: scope, scopes: scopes) : nil
+	}
 	
-	func intervalBegin(interval: LogInterval) {}
 	@discardableResult
-	func intervalEnd(interval: LogInterval) -> String? { nil }
+	public func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
+		return output != nil ? output.scopeLeave(scope: scope, scopes: scopes) : nil
+	}
+	
+	public func intervalBegin(interval: LogInterval) {
+		if output != nil {
+			output.intervalBegin(interval: interval)
+		}
+	}
+	
+	@discardableResult
+	public func intervalEnd(interval: LogInterval) -> String? {
+		return output != nil ? output.intervalEnd(interval: interval) : nil
+	}
 }
 
 // Forward pipe

@@ -22,6 +22,6 @@ class FilterOutput : LogOutput {
 	}
 	
 	override func log(message: LogMessage) -> String? {
-		return message.type == type ? output.log(message: message) : nil
+		return message.type == type ? super.log(message: message) : nil
 	}
 }

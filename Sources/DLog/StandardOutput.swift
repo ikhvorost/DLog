@@ -24,22 +24,19 @@ public class StandardOutput : LogOutput {
 	
 	// MARK: - LogOutput
 	
-	override func log(message: LogMessage) -> String? {
-		echo(output.log(message: message))
+	override public func log(message: LogMessage) -> String? {
+		echo(super.log(message: message))
 	}
 	
-	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
-		echo(output.scopeEnter(scope: scope, scopes: scopes))
+	override public func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
+		echo(super.scopeEnter(scope: scope, scopes: scopes))
 	}
 	
-	override func scopeLeave(scope: LogScope, scopes: [LogScope])  -> String? {
-		echo(output.scopeLeave(scope: scope, scopes: scopes))
+	override public func scopeLeave(scope: LogScope, scopes: [LogScope])  -> String? {
+		echo(super.scopeLeave(scope: scope, scopes: scopes))
 	}
 	
-	override func intervalBegin(interval: LogInterval) {
-	}
-	
-	override func intervalEnd(interval: LogInterval) -> String? {
-		echo(output.intervalEnd(interval: interval))
+	override public func intervalEnd(interval: LogInterval) -> String? {
+		echo(super.intervalEnd(interval: interval))
 	}
 }
