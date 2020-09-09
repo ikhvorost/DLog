@@ -5,23 +5,34 @@
 //  Created by Iurii Khvorost on 30.08.2020.
 //
 
+
 import Foundation
 
+// https://academy.realm.io/posts/nspredicate-cheatsheet/
+
+
 class FilterOutput : LogOutput {
-//	let category: String
-//	let text: String
-	let type: LogType?
-//	let time: Date
-//	let fileName: String
-//	let function: String
-//	let line: UInt
-//	let scopes: [LogScope]
+	let predicate: NSPredicate
 	
-	init(type: LogType?) {
-		self.type = type
+	init(query: String) {
+		predicate = NSPredicate(format: query)
 	}
 	
 	override func log(message: LogMessage) -> String? {
-		return message.type == type ? super.log(message: message) : nil
+		predicate.evaluate(with: message)
+			? super.log(message: message)
+			: nil
+	}
+	
+	override public func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
+		predicate.evaluate(with: scope)
+			? super.scopeEnter(scope: scope, scopes: scopes)
+			: nil
+	}
+	
+	override public func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
+		predicate.evaluate(with: scope)
+			? super.scopeLeave(scope: scope, scopes: scopes)
+			: nil
 	}
 }

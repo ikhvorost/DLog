@@ -24,8 +24,21 @@ public class TextOutput : LogOutput {
 		let ms = String(format:"%.03f", interval).suffix(3)
 		return Self.dateComponentsFormatter.string(from: interval)! + ".\(ms)"
 	}
+	
+	private func textMessage(message: LogMessage) -> String {
+		var padding = ""
+		if let maxlevel = message.scopes.last?.level {
+			for level in 1...maxlevel {
+				let scope = message.scopes.first(where: { $0.level == level })
+				padding += scope != nil ? "|\t" : "\t"
+			}
+		}
+		
+		let time = Self.dateFormatter.string(from: message.time)
+		return "\(time) [\(message.category)] \(padding)\(message.type.icon) [\(message.type.title)] <\(message.fileName):\(message.line)> \(message.text)"
+	}
 
-	private func writeScope(scope: LogScope, scopes: [LogScope], start: Bool) -> String {
+	private func textScope(scope: LogScope, scopes: [LogScope], start: Bool) -> String {
 		let time = Self.dateFormatter.string(from: Date())
 		
 		var padding = ""
@@ -40,34 +53,24 @@ public class TextOutput : LogOutput {
 			ms = "(\(stringFromTime(interval: -interval))s)"
 		}
 		
-		return "\(time) [\(scope.category)] \(padding) [\(scope.name)] \(ms ?? "")"
+		return "\(time) [\(scope.category)] \(padding) [\(scope.text)] \(ms ?? "")"
 	}
 	
 	// MARK: - LogOutput
 	
 	override public func log(message: LogMessage) -> String? {
 		super.log(message: message)
-
-		var padding = ""
-		if let maxlevel = message.scopes.last?.level {
-			for level in 1...maxlevel {
-				let scope = message.scopes.first(where: { $0.level == level })
-				padding += scope != nil ? "|\t" : "\t"
-			}
-		}
-		
-		let time = Self.dateFormatter.string(from: message.time)
-		return "\(time) [\(message.category)] \(padding) \(message.type.icon) [\(message.type.title)] <\(message.fileName):\(message.line)> \(message.text)"
+		return textMessage(message: message)
 	}
 	
 	override public func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
 		super.scopeEnter(scope: scope, scopes: scopes)
-		return writeScope(scope: scope, scopes: scopes, start: true)
+		return textScope(scope: scope, scopes: scopes, start: true)
 	}
 	
 	override public func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
 		super.scopeLeave(scope: scope, scopes: scopes)
-		return writeScope(scope: scope, scopes: scopes, start: false)
+		return textScope(scope: scope, scopes: scopes, start: false)
 	}
 	
 	override public func intervalBegin(interval: LogInterval) {
@@ -83,7 +86,14 @@ public class TextOutput : LogOutput {
 		let avgDuration = stringFromTime(interval: interval.avgDuration)
 		let text = "[\(interval.name)] Count: \(interval.count), Total: \(duration)s, Min: \(minDuration)s, Max: \(maxDuration)s, Avg: \(avgDuration)s"
 		
-		let message = LogMessage(category: interval.category, text: text, type: .interval, time: Date(), fileName: interval.file, function: interval.function, line: interval.line, scopes: interval.scopes)
-		return super.log(message: message)
+		let message = LogMessage(category: interval.category,
+								 text: text,
+								 type: .interval,
+								 time: Date(),
+								 fileName: interval.file,
+								 functionName: interval.function,
+								 line: interval.line,
+								 scopes: interval.scopes)
+		return textMessage(message: message)
 	}
 }

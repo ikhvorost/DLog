@@ -12,13 +12,19 @@ let package = Package(
 		.watchOS(.v3)
 	],
 	products: [
-		.library(name: "DLog", targets: ["DLog"]),
-		.executable(name: "DLogNetService", targets: ["DLogNetService"])
+		.library(
+			name: "DLog",
+			targets: ["DLog"]),
+		.executable(
+			name: "DLogNetService",
+			targets: ["DLogNetService"])
 	],
 	targets: [
 		.target(name: "DLog"),
 		.target(name: "DLogNetService"),
-		.testTarget(name: "DLogTests", dependencies: ["DLog"]),
+		.testTarget(
+			name: "DLogTests",
+			dependencies: ["DLog"]),
 	],
 	swiftLanguageVersions: [.v5]
 )

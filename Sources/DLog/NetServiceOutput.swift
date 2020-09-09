@@ -10,6 +10,7 @@ import Foundation
 class NetServiceOutput : LogOutput {
 	let service: NetService
 	var outputStream : OutputStream?
+	// TODO: file cache
 	var buffer = ""
 	
 	init(serviceName: String = "DLog") {

@@ -11,10 +11,12 @@ import os.activity
 // .tracev3
 // stored /var/db/diagnostics/ with support in /var/db/uuidtext
 
-// Tasks
-// - Text ouput + Console/Terminal/File output/FTP/REST etc
+// TODO: filtering predicate
+// TODO: log category
+// TODO: theread safe
+// TODO: TextOutput with color
 
-
+@objc
 public enum LogType : Int {
 	case trace
 	case info
@@ -52,32 +54,50 @@ public enum LogType : Int {
 		Self.titles[self]!
 	}
 }
-
-public struct LogMessage {
+@objcMembers
+public class FilterItem : NSObject {
 	let category: String
 	let text: String
-	let type: LogType
-	let time: Date
 	let fileName: String
-	let function: String
+	let functionName: String
 	let line: UInt
-	let scopes: [LogScope]
+	
+	public init(category: String, text: String, fileName: String, functionName: String, line: UInt) {
+		self.category = category
+		self.text = text
+		self.fileName = fileName
+		self.functionName = functionName
+		self.line = line
+	}
 }
 
-public class LogScope {
+public class LogMessage : FilterItem {
+	let type: LogType
+	let time: Date
+	let scopes: [LogScope]
+	
+	public init(category: String, text: String, type: LogType, time: Date, fileName: String, functionName: String, line: UInt, scopes: [LogScope]) {
+		self.type = type
+		self.time = time
+		self.scopes = scopes
+		
+		super.init(category: category, text: text, fileName: fileName, functionName: functionName, line: line)
+	}
+}
+
+@objcMembers
+public class LogScope : FilterItem {
 	let uid = UUID()
 	weak var log: DLog?
 	var level: Int = 1
-	let name: String
 	var time: Date?
-	let category: String
 	var os_state = os_activity_scope_state_s()
 	var entered = false
 	
-	init(log: DLog, name: String, category: String) {
+	init(log: DLog, category: String, text: String, fileName: String, functionName: String, line: UInt) {
 		self.log = log
-		self.name = name
-		self.category = category
+		
+		super.init(category: category, text: text, fileName: fileName, functionName: functionName, line: line)
 	}
 	
 	deinit {
@@ -108,6 +128,7 @@ public class LogInterval {
 	let file: String
 	let function: String
 	let line: UInt
+	
 	let scopes: [LogScope]
 	
 	var startTime: Date?
@@ -179,17 +200,23 @@ public class LogOutput : NSObject {
 	
 	@discardableResult
 	public func log(message: LogMessage) -> String? {
-		return output != nil ? output.log(message: message) : nil
+		return output != nil
+			? output.log(message: message)
+			: nil
 	}
 	
 	@discardableResult
 	public func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
-		return output != nil ? output.scopeEnter(scope: scope, scopes: scopes) : nil
+		return output != nil
+			? output.scopeEnter(scope: scope, scopes: scopes)
+			: nil
 	}
 	
 	@discardableResult
 	public func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
-		return output != nil ? output.scopeLeave(scope: scope, scopes: scopes) : nil
+		return output != nil
+			? output.scopeLeave(scope: scope, scopes: scopes)
+			: nil
 	}
 	
 	public func intervalBegin(interval: LogInterval) {
@@ -200,7 +227,9 @@ public class LogOutput : NSObject {
 	
 	@discardableResult
 	public func intervalEnd(interval: LogInterval) -> String? {
-		return output != nil ? output.intervalEnd(interval: interval) : nil
+		return output != nil
+			? output.intervalEnd(interval: interval)
+			: nil
 	}
 }
 
@@ -235,10 +264,10 @@ extension LogOutput {
 
 public class DLog {
 	public static let disabled = DLog(output: nil)
+	public static let standard = DLog(output: StandardOutput())
 	public static let adaptive = DLog(output: AdaptiveOutput())
 	
 	private let category: String
-	private var logLevel: LogType
 	private let output: LogOutput?
 	private var scopes = [LogScope]()
 	private var intervals = [LogInterval]()
@@ -255,21 +284,21 @@ public class DLog {
 	public init(category: String = "DLOG", output: LogOutput?) {
 		self.category = category
 		self.output = output
-		logLevel = Self.isDebug ? .trace : .error
 	}
 	
-	private func log(_ text: String, type: LogType, file: String, function: String, line: UInt) {
-		guard let out = output, type.rawValue >= logLevel.rawValue else { return }
+	@discardableResult
+	private func log(_ text: String, type: LogType, file: String, function: String, line: UInt) -> String? {
+		guard let out = output else { return nil }
 		
 		let message = LogMessage(category: category,
 								 text: text,
 								 type: type,
 								 time: Date(),
 								 fileName: NSString(string: file).lastPathComponent,
-								 function: function,
+								 functionName: function,
 								 line: line,
 								 scopes: scopes)
-		out.log(message: message)
+		return out.log(message: message)
 	}
 	
 	func enter(scope: LogScope) {
@@ -300,40 +329,50 @@ public class DLog {
 	}
 	
 	func end(interval: LogInterval) {
-		guard let out = output, logLevel.rawValue <= LogType.interval.rawValue else { return }
+		guard let out = output else { return }
 		
 		out.intervalEnd(interval: interval)
 	}
 	
-	public func trace(_ text: String = "", file: String = #file, function: String = #function, line: UInt = #line) {
-		log(text != "" ? text : function, type: .trace, file: file, function: function, line: line)
-	}
-	
-	public func info(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) {
-		log(text, type: .info, file: file, function: function, line: line)
-	}
-	
-	public func debug(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) {
-		log(text, type: .debug, file: file, function: function, line: line)
-	}
-	
-	public func error(_ error: Error, file: String = #file, function: String = #function, line: UInt = #line) {
-		log(error.localizedDescription, type: .error, file: file, function: function, line: line)
-	}
-	
-	public func fault(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) {
-		log(text, type: .fault, file: file, function: function, line: line)
-	}
-	
-	public func assert(_ value: Bool, _ text: String = " ", file: String = #file, function: String = #function, line: UInt = #line) {
-		if !value {
-			log(text, type: .assert, file: file, function: function, line: line)
-		}
+	@discardableResult
+	public func trace(_ text: String? = nil, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+		log(text ?? function, type: .trace, file: file, function: function, line: line)
 	}
 	
 	@discardableResult
-	public func scope(_ name: String, closure: (() -> Void)? = nil) -> LogScope {
-		let scope = LogScope(log: self, name: name, category: category)
+	public func info(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+		log(text, type: .info, file: file, function: function, line: line)
+	}
+	
+	@discardableResult
+	public func debug(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+		log(text, type: .debug, file: file, function: function, line: line)
+	}
+	
+	@discardableResult
+	public func error(_ error: Error, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+		log(error.localizedDescription, type: .error, file: file, function: function, line: line)
+	}
+	
+	@discardableResult
+	public func fault(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+		log(text, type: .fault, file: file, function: function, line: line)
+	}
+	
+	@discardableResult
+	public func assert(_ value: Bool, _ text: String = " ", file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+		guard !value else { return nil }
+		return log(text, type: .assert, file: file, function: function, line: line)
+	}
+	
+	@discardableResult
+	public func scope(_ text: String, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogScope {
+		let scope = LogScope(log: self,
+							 category: category,
+							 text: text,
+							 fileName: NSString(string: file).lastPathComponent,
+							 functionName: function,
+							 line: line)
 		
 		guard closure != nil else {
 			return scope
