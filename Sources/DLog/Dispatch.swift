@@ -7,6 +7,31 @@
 
 import Foundation
 
+func synchronized<T : AnyObject, U>(_ obj: T, closure: () -> U) -> U {
+	objc_sync_enter(obj)
+	defer {
+		objc_sync_exit(obj)
+	}
+	return closure()
+}
+
+@propertyWrapper
+class Atomic<T> {
+    private var value: T
+
+    init(wrappedValue value: T) {
+        self.value = value
+    }
+
+    var wrappedValue: T {
+		get {
+			synchronized(self) { value }
+		}
+		set {
+			synchronized(self) { value = newValue }
+		}
+    }
+}
 
 public extension DispatchQueue {
     private static var _onceTracker = [String]()

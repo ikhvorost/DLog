@@ -15,7 +15,7 @@ public class StandardOutput : LogOutput {
 		output = TextOutput()
 	}
 	
-	func echo(_ text: String?) -> String? {
+	private func echo(_ text: String?) -> String? {
 		if let str = text, !str.isEmpty {
 			print(str)
 		}

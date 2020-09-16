@@ -9,7 +9,7 @@ import Foundation
 
 public class AdaptiveOutput : LogOutput {
 	
-	static var isTerminal : Bool {
+	private static var isTerminal : Bool {
 		return ProcessInfo.processInfo.environment["_"] != nil
 	}
 	

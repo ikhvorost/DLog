@@ -26,15 +26,15 @@ public class OSLogOutput : LogOutput {
 	//	in6_addr %{network:in6_addr}.16P fe80::f:86ff:fee9:5c16
 	
 	// Handle to dynamic shared object
-	static var dso = UnsafeMutableRawPointer(mutating: #dsohandle)
+	private static var dso = UnsafeMutableRawPointer(mutating: #dsohandle)
 	
 	// Load the symbol dynamically, since it is not exposed to Swift...
 	// see activity.h and dlfcn.h
 	// https://nsscreencast.com/episodes/347-activity-tracing-in-swift
 	// https://gist.github.com/zwaldowski/49f61292757f86d7d036a529f2d04f0c
-	static let RTLD_DEFAULT = UnsafeMutableRawPointer(bitPattern: -2)
-	static let OS_ACTIVITY_NONE = unsafeBitCast(dlsym(RTLD_DEFAULT, "_os_activity_none"), to: os_activity_t.self)
-	static let OS_ACTIVITY_CURRENT = unsafeBitCast(dlsym(RTLD_DEFAULT, "_os_activity_current"), to: os_activity_t.self)
+	private static let RTLD_DEFAULT = UnsafeMutableRawPointer(bitPattern: -2)
+	private static let OS_ACTIVITY_NONE = unsafeBitCast(dlsym(RTLD_DEFAULT, "_os_activity_none"), to: os_activity_t.self)
+	private static let OS_ACTIVITY_CURRENT = unsafeBitCast(dlsym(RTLD_DEFAULT, "_os_activity_current"), to: os_activity_t.self)
 	
 	static let types: [LogType : OSLogType] = [
 		.trace : .default,
@@ -45,14 +45,16 @@ public class OSLogOutput : LogOutput {
 		.fault : .fault,
 	]
 
-	var log: OSLog?
+	private var log: OSLog?
 	
 	private func oslog(category: String) -> OSLog {
-		if log == nil {
-			let subsystem = Bundle.main.bundleIdentifier ?? ""
-			log = OSLog(subsystem: subsystem, category: category)
+		synchronized(self) {
+			if log == nil {
+				let subsystem = Bundle.main.bundleIdentifier ?? ""
+				log = OSLog(subsystem: subsystem, category: category)
+			}
+			return log!
 		}
-		return log!
 	}
 	
 	// MARK: - LogOutput

@@ -10,10 +10,7 @@ extension String : LocalizedError {
 
 extension String {
     func match(_ pattern: String) -> Bool {
-        guard let regex = try? NSRegularExpression(pattern: pattern) else { return false }
-		let range = NSRange(startIndex..<endIndex, in: self)
-        let firstMatch = regex.firstMatch(in: self, options: [], range: range)
-		return firstMatch != nil
+		self.range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil
     }
 }
 
@@ -35,26 +32,6 @@ final class DLogTests: XCTestCase {
 		wait(count: 1, timeout: timeout, name: name) { expectations in
 			closure(expectations[0])
 		}
-	}
-	
-	override func setUp() {
-		super.setUp()
-		
-		//let log = DLog.adaptive
-		//let log = DLog.disabled
-		//log = DLog(output: TextOutput() => StandardOutput() => ColoredOutput() => FileOutput(filePath: "/users/iurii/dlog.txt"))
-		//log = DLog(output: TextOutput() => StandardOutput())
-		
-		// Filter
-		//let category: String
-		//log = DLog(output: TextOutput() => FilterOutput(query: "text CONTAINS[c] 'Scope1'") => StandardOutput())
-		//log = DLog(output: TextOutput() => FilterOutput(query: "type >= \(LogType.error.rawValue)") => StandardOutput())
-		//log = DLog(output: TextOutput() => FilterOutput(query: "fileName = 'DLogTests.swift'") => StandardOutput())
-		//log = DLog(output: TextOutput() => FilterOutput(query: "functionName = 'test_LogTypes()'") => StandardOutput())
-		//log = DLog(output: TextOutput() => FilterOutput(query: "line = 58") => StandardOutput())
-		
-		// Net
-		//log = DLog(output: ColoredOutput() => NetServiceOutput())
 	}
 	
 	//MARK: Tests -
@@ -178,6 +155,68 @@ final class DLogTests: XCTestCase {
 				
 				exp.fulfill()
 			}
+		}
+	}
+	
+	func test_File() {
+		//log = DLog(output: TextOutput() => StandardOutput() => ColoredOutput() => FileOutput(filePath: "/users/iurii/dlog.txt"))
+	}
+	
+	func test_Filter() {
+		// Filter
+		
+		//let category: String
+		
+		// Text
+		//let log = DLog(output: TextOutput() => FilterOutput(query: "text CONTAINS[c] 'hello'") => StandardOutput())
+		let log = DLog(output: TextOutput() => FilterOutput { $0.text.lowercased().contains("hello") } => StandardOutput())
+		XCTAssertNotNil(log.info("hello world"))
+		XCTAssertNil(log.info("start"))
+		log.scope("Hello") {
+			XCTAssertNotNil(log.info("hello"))
+			XCTAssertNil(log.info("start"))
+		}
+		
+		log.scope("Start") {
+			XCTAssertNotNil(log.info("hello"))
+			XCTAssertNil(log.info("start"))
+		}
+		
+		// Type
+		//log = DLog(output: TextOutput() => FilterOutput(query: "type >= \(LogType.error.rawValue)") => StandardOutput())
+		
+		// File name
+		//log = DLog(output: TextOutput() => FilterOutput(query: "fileName = 'DLogTests.swift'") => StandardOutput())
+		
+		// Func name
+		//log = DLog(output: TextOutput() => FilterOutput(query: "functionName = 'test_LogTypes()'") => StandardOutput())
+		
+		// Line
+		//log = DLog(output: TextOutput() => FilterOutput(query: "line = 58") => StandardOutput())
+	}
+	
+	func test_NetConsole() {
+		// Net
+		//log = DLog(output: ColoredOutput() => NetServiceOutput())
+	}
+	
+	func test_Concurent() {
+		let log = DLog.standard
+		
+		let queue = DispatchQueue(label: "Concurent", attributes: .concurrent)
+		
+		
+		for i in 0..<10 {
+			//let scope = log.scope("Scope")
+			queue.async {
+				log.interval("Concurent") {  }
+				log.info("\(i)")
+			}
+		}
+		
+		wait(timeout: 1) { exp in
+			sleep(1)
+			exp.fulfill()
 		}
 	}
 }

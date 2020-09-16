@@ -7,11 +7,12 @@
 
 import Foundation
 
+// TODO: file cache
 class NetServiceOutput : LogOutput {
-	let service: NetService
-	var outputStream : OutputStream?
-	// TODO: file cache
-	var buffer = ""
+	private let service: NetService
+	private let queue = DispatchQueue(label: "NetServiceOutput")
+	private var outputStream : OutputStream?
+	private var buffer = ""
 	
 	init(serviceName: String = "DLog") {
 		service = NetService(domain: "local.", type: "_dlog._tcp.", name: serviceName)
@@ -28,9 +29,9 @@ class NetServiceOutput : LogOutput {
 		outputStream?.close()
 	}
 	
-	func send(_ text: String?) -> String? {
+	private func send(_ text: String?) -> String? {
 		if let str = text, !str.isEmpty {
-			DispatchQueue.main.async {
+			queue.async {
 				guard let stream = self.outputStream else {
 					self.buffer += (self.buffer.isEmpty ? "" : "\n") + str
 					return

@@ -12,10 +12,19 @@ import Foundation
 
 
 class FilterOutput : LogOutput {
-	let predicate: NSPredicate
+	private let predicate: NSPredicate
 	
 	init(query: String) {
 		predicate = NSPredicate(format: query)
+	}
+	
+	init(block: @escaping (FilterItem) -> Bool) {
+		predicate = NSPredicate { (obj, _) in
+			if let item = obj as? FilterItem {
+				return block(item)
+			}
+			return true
+		}
 	}
 	
 	override func log(message: LogMessage) -> String? {

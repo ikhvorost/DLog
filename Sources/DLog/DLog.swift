@@ -11,10 +11,12 @@ import os.activity
 // .tracev3
 // stored /var/db/diagnostics/ with support in /var/db/uuidtext
 
-// TODO: filtering predicate
-// TODO: log category
-// TODO: theread safe
-// TODO: TextOutput with color
+// TODO:
+// - thread safe
+// - filtering predicate
+// - log category
+// - TextOutput with color
+// - reconnection net console
 
 @objc
 public enum LogType : Int {
@@ -194,6 +196,8 @@ public class LogInterval {
 	}
 }
 
+// TODO: Rest, ftp, sql, json, slack
+
 /// Base output class
 public class LogOutput : NSObject {
 	var output: LogOutput!
@@ -247,30 +251,17 @@ extension LogOutput {
 	}
 }
 
-//public class RestOutput : LogOutput {
-//}
-
-//public class FTPOutput : LogOutput {
-//}
-
-//public class SQLOutput : LogOutput {
-//}
-
-//public class JSONOutput : LogOutput {
-//}
-
-//public class SlackOutput : LogOutput {
-//}
-
 public class DLog {
 	public static let disabled = DLog(output: nil)
 	public static let standard = DLog(output: StandardOutput())
 	public static let adaptive = DLog(output: AdaptiveOutput())
-	
+	public static let oslog = DLog(output: OSLogOutput())
+
 	private let category: String
 	private let output: LogOutput?
-	private var scopes = [LogScope]()
-	private var intervals = [LogInterval]()
+	
+	@Atomic private var scopes = [LogScope]()
+	@Atomic private var intervals = [LogInterval]()
 	
 	static var isDebug : Bool {
 		var info = kinfo_proc()

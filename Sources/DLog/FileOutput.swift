@@ -8,7 +8,8 @@
 import Foundation
 
 class FileOutput : LogOutput {
-	let file: FileHandle?
+	private let file: FileHandle?
+	private let queue = DispatchQueue(label: "FileOutput")
 	
 	init(filePath: String) {
 		let fileManager = FileManager.default
@@ -26,10 +27,12 @@ class FileOutput : LogOutput {
 		file?.closeFile()
 	}
 	
-	func write(_ text: String?) -> String? {
+	private func write(_ text: String?) -> String? {
 		if let str = text, !str.isEmpty {
-			let data = (str + "\n").data(using: .utf8)!
-			file?.write(data)
+			queue.async {
+				let data = (str + "\n").data(using: .utf8)!
+				self.file?.write(data)
+			}
 		}
 		return text
 	}
