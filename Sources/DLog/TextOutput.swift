@@ -26,6 +26,9 @@ public class TextOutput : LogOutput {
 	}
 	
 	private func textMessage(message: LogMessage) -> String {
+		assert(message.time != nil)
+		let time = message.time != nil ? Self.dateFormatter.string(from: message.time!) : ""
+		
 		var padding = ""
 		if let maxlevel = message.scopes.last?.level {
 			for level in 1...maxlevel {
@@ -33,13 +36,11 @@ public class TextOutput : LogOutput {
 				padding += scope != nil ? "|\t" : "\t"
 			}
 		}
-		
-		let time = Self.dateFormatter.string(from: message.time)
 		return "\(time) [\(message.category)] \(padding)\(message.type.icon) [\(message.type.title)] <\(message.fileName):\(message.line)> \(message.text)"
 	}
 
 	private func textScope(scope: LogScope, scopes: [LogScope], start: Bool) -> String {
-		let time = Self.dateFormatter.string(from: Date())
+		let time = Self.dateFormatter.string(from: scope.time!)
 		
 		var padding = ""
 		for level in 1..<scope.level {
@@ -65,11 +66,13 @@ public class TextOutput : LogOutput {
 	
 	override public func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
 		super.scopeEnter(scope: scope, scopes: scopes)
+
 		return textScope(scope: scope, scopes: scopes, start: true)
 	}
 	
 	override public func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
 		super.scopeLeave(scope: scope, scopes: scopes)
+		
 		return textScope(scope: scope, scopes: scopes, start: false)
 	}
 	
@@ -86,14 +89,16 @@ public class TextOutput : LogOutput {
 		let avgDuration = stringFromTime(interval: interval.avgDuration)
 		let text = "[\(interval.name)] Count: \(interval.count), Total: \(duration)s, Min: \(minDuration)s, Max: \(maxDuration)s, Avg: \(avgDuration)s"
 		
-		let message = LogMessage(category: interval.category,
-								 text: text,
-								 type: .interval,
-								 time: Date(),
-								 fileName: interval.file,
-								 functionName: interval.function,
-								 line: interval.line,
-								 scopes: interval.scopes)
-		return textMessage(message: message)
+		let message = LogMessage(
+			time: Date(),
+			category: interval.category,
+			type: .interval,
+			fileName: interval.fileName,
+			funcName: interval.funcName,
+			line: interval.line,
+			text: text,
+			scopes: interval.scopes)
+		
+		return log(message: message)
 	}
 }

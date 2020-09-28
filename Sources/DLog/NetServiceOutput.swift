@@ -8,7 +8,7 @@
 import Foundation
 
 // TODO: file cache
-class NetServiceOutput : LogOutput {
+public class NetServiceOutput : LogOutput {
 	private let service: NetService
 	private let queue = DispatchQueue(label: "NetServiceOutput")
 	private var outputStream : OutputStream?
@@ -47,19 +47,19 @@ class NetServiceOutput : LogOutput {
 	
 	// MARK: - LogOutput
 	
-	override func log(message: LogMessage) -> String? {
+	public override func log(message: LogMessage) -> String? {
 		send(super.log(message: message))
 	}
 	
-	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
+	public override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
 		send(super.scopeEnter(scope: scope, scopes: scopes))
 	}
 	
-	override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
+	public override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
 		send(super.scopeLeave(scope: scope, scopes: scopes))
 	}
 	
-	override func intervalEnd(interval: LogInterval) -> String? {
+	public override func intervalEnd(interval: LogInterval) -> String? {
 		send(super.intervalEnd(interval: interval))
 	}
 	
@@ -67,7 +67,7 @@ class NetServiceOutput : LogOutput {
 
 extension NetServiceOutput : NetServiceDelegate {
 	
-	func netServiceDidResolveAddress(_ sender: NetService) {
+	public func netServiceDidResolveAddress(_ sender: NetService) {
 		print(#function)
 		
 		if sender.getInputStream(nil, outputStream: &outputStream) {
@@ -84,11 +84,11 @@ extension NetServiceOutput : NetServiceDelegate {
 		}
 	}
 	
-	func netService(_ sender: NetService, didNotResolve errorDict: [String : NSNumber]) {
+	public func netService(_ sender: NetService, didNotResolve errorDict: [String : NSNumber]) {
 		print(errorDict)
 	}
 	
-	func netServiceDidStop(_ sender: NetService) {
+	public func netServiceDidStop(_ sender: NetService) {
 		//print(sender)
 	}
 }

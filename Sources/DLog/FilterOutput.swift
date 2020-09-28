@@ -11,37 +11,42 @@ import Foundation
 // https://academy.realm.io/posts/nspredicate-cheatsheet/
 
 
-class FilterOutput : LogOutput {
+public class FilterOutput : LogOutput {
 	private let predicate: NSPredicate
 	
+	// "text CONTAINS[c] 'hello'"
 	init(query: String) {
 		predicate = NSPredicate(format: query)
 	}
 	
-	init(block: @escaping (FilterItem) -> Bool) {
+	init(block: @escaping (LogItem) -> Bool) {
 		predicate = NSPredicate { (obj, _) in
-			if let item = obj as? FilterItem {
+			if let item = obj as? LogItem {
 				return block(item)
 			}
 			return true
 		}
 	}
 	
-	override func log(message: LogMessage) -> String? {
-		predicate.evaluate(with: message)
-			? super.log(message: message)
-			: nil
+	// MARK: - LogOutput
+	
+	public override func log(message: LogMessage) -> String? {
+		let text = super.log(message: message)
+		return predicate.evaluate(with: message) ? text : nil
 	}
 	
 	override public func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
-		predicate.evaluate(with: scope)
-			? super.scopeEnter(scope: scope, scopes: scopes)
-			: nil
+		let text = super.scopeEnter(scope: scope, scopes: scopes)
+		return predicate.evaluate(with: scope) ? text : nil
 	}
 	
 	override public func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
-		predicate.evaluate(with: scope)
-			? super.scopeLeave(scope: scope, scopes: scopes)
-			: nil
+		let text = super.scopeLeave(scope: scope, scopes: scopes)
+		return predicate.evaluate(with: scope) ? text : nil
+	}
+	
+	override public func intervalEnd(interval: LogInterval) -> String? {
+		let text = super.intervalEnd(interval: interval)
+		return predicate.evaluate(with: interval) ? text : nil
 	}
 }

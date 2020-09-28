@@ -7,7 +7,7 @@
 
 import Foundation
 
-class FileOutput : LogOutput {
+public class FileOutput : LogOutput {
 	private let file: FileHandle?
 	private let queue = DispatchQueue(label: "FileOutput")
 	
@@ -39,19 +39,19 @@ class FileOutput : LogOutput {
 	
 	// MARK: - LogOutput
 	
-	override func log(message: LogMessage) -> String? {
+	public override func log(message: LogMessage) -> String? {
 		write(super.log(message: message))
 	}
 	
-	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
+	public override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
 		write(super.scopeEnter(scope: scope, scopes: scopes))
 	}
 	
-	override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
+	public override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
 		write(super.scopeLeave(scope: scope, scopes: scopes))
 	}
 	
-	override func intervalEnd(interval: LogInterval) -> String? {
+	public override func intervalEnd(interval: LogInterval) -> String? {
 		write(super.intervalEnd(interval: interval))
 	}
 }

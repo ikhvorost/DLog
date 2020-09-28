@@ -2,6 +2,7 @@ import Foundation
 import XCTest
 @testable import DLog
 
+// MARK: - Utils
 
 /// String errors
 extension String : LocalizedError {
@@ -14,8 +15,54 @@ extension String {
     }
 }
 
+extension DispatchSemaphore {
+	static func Lock() -> DispatchSemaphore {
+		return DispatchSemaphore(value: 0)
+	}
+	
+	static func Mutex() -> DispatchSemaphore {
+		return DispatchSemaphore(value: 1)
+	}
+}
+
 func asyncAfter(_ sec: Double = 0.25, closure: @escaping (() -> Void) ) {
 	DispatchQueue.global().asyncAfter(deadline: .now() + sec, execute: closure)
+}
+
+/// Get text from stdout
+func stdoutText(_ block: () -> Void) -> String {
+	var result = ""
+	
+    // Save original output
+    let original = dup(STDOUT_FILENO);
+
+    setvbuf(stdout, nil, _IONBF, 0)
+	let pipe = Pipe()
+    dup2(pipe.fileHandleForWriting.fileDescriptor, STDOUT_FILENO)
+	
+	let lock = DispatchSemaphore.Lock()
+    
+    pipe.fileHandleForReading.readabilityHandler = { handle in
+		if let text = String(data: handle.availableData, encoding: .utf8) {
+			// Print to stderr because stdout is piped
+			fputs(text, stderr)
+			
+			result = text
+			
+			lock.signal()
+		}
+    }
+    
+    block()
+	
+	_ = lock.wait(timeout: .now() + 1)
+    
+    // Revert
+    fflush(stdout)
+    dup2(original, STDOUT_FILENO)
+    close(original)
+	
+	return result
 }
 
 final class DLogTests: XCTestCase {
@@ -39,20 +86,24 @@ final class DLogTests: XCTestCase {
 	func test_Disabled() {
 		let log = DLog.disabled
 		
-		XCTAssert(log.trace() == nil)
-		XCTAssert(log.debug("debug") == nil)
-		XCTAssert(log.fault("fatal") == nil)
+		XCTAssert(
+			stdoutText {
+				log.trace()
+				log.debug("debug")
+				log.fault("fatal")
+			} == ""
+		)
 	}
 	
 	func test_LogTypes() {
-		let log = DLog.standard
+		let log = DLog()
 		
 		XCTAssert(log.trace()!.match(#"\[DLOG\] ◽️ \[TRACE\] <DLogTests.swift:[0-9]+> test_LogTypes"#))
 		XCTAssert(log.info("info")!.match(#"\[DLOG\] ✅ \[INFO\] <DLogTests.swift:[0-9]+> info"#))
 		XCTAssert(log.debug("debug")!.match(#"\[DLOG\] ▶️ \[DEBUG\] <DLogTests.swift:[0-9]+> debug"#))
 		XCTAssert(log.error("error")!.match(#"\[DLOG\] ⚠️ \[ERROR\] <DLogTests.swift:[0-9]+> error"#))
 	
-		XCTAssert(log.assert(false, "assert text")!.match(#"\[DLOG\] 🅰️ \[ASSERT\] <DLogTests.swift:[0-9]+> assert text"#))
+		XCTAssert(log.assert(false)!.match(#"\[DLOG\] 🅰️ \[ASSERT\] <DLogTests.swift:[0-9]+>"#))
 		XCTAssert(log.assert(true, "assert text") == nil)
 		
 		XCTAssert(log.fault("fatal error")!.match(#"\[DLOG\] 🆘 \[FAULT\] <DLogTests.swift:[0-9]+> fatal error"#))
@@ -70,7 +121,7 @@ final class DLogTests: XCTestCase {
 	}
 	
 	func test_ScopeStack() {
-		let log = DLog.standard
+		let log = DLog()
 		
 		log.scope("scope1") {
 			XCTAssert(log.info("scope1 start")!.match(#"\[DLOG\] \|\t✅ \[INFO\] <DLogTests.swift:[0-9]+> scope1 start"#))
@@ -92,7 +143,7 @@ final class DLogTests: XCTestCase {
 	}
 	
 	func test_ScopeDoubleEnter() {
-		let log = DLog.standard
+		let log = DLog()
 		
 		let scope1 = log.scope("My Scope")
 		
@@ -108,7 +159,7 @@ final class DLogTests: XCTestCase {
 	}
 
 	func test_ScopeCreate() {
-		let log = DLog.standard
+		let log = DLog()
 			
 		let scope1 = log.scope("Scope-1")
 		let scope2 = log.scope("Scope-2")
@@ -143,7 +194,7 @@ final class DLogTests: XCTestCase {
 
 	
 	func test_IntervalCreate() {
-		let log = DLog.standard
+		let log = DLog()
 		
 		wait { exp in
 			let interval = log.interval("Interval 1")
@@ -163,36 +214,43 @@ final class DLogTests: XCTestCase {
 	}
 	
 	func test_Filter() {
-		// Filter
+		// Time
+		let timeLog = DLog(.text => .filter { $0.time != nil } => .stdout)
+		XCTAssertNotNil(timeLog.info("info"))
 		
-		//let category: String
-		
-		// Text
-		//let log = DLog(output: TextOutput() => FilterOutput(query: "text CONTAINS[c] 'hello'") => StandardOutput())
-		let log = DLog(output: TextOutput() => FilterOutput { $0.text.lowercased().contains("hello") } => StandardOutput())
-		XCTAssertNotNil(log.info("hello world"))
-		XCTAssertNil(log.info("start"))
-		log.scope("Hello") {
-			XCTAssertNotNil(log.info("hello"))
-			XCTAssertNil(log.info("start"))
-		}
-		
-		log.scope("Start") {
-			XCTAssertNotNil(log.info("hello"))
-			XCTAssertNil(log.info("start"))
-		}
+		// Category
+		let categoryLog = DLog(.text => .filter { $0.category == "DLOG" } => .stdout)
+		XCTAssertNotNil(categoryLog.info("info"))
 		
 		// Type
-		//log = DLog(output: TextOutput() => FilterOutput(query: "type >= \(LogType.error.rawValue)") => StandardOutput())
+		let typeLog = DLog(.text => .filter { $0.type == .debug } => .stdout)
+		XCTAssertNil(typeLog.info("info"))
+		XCTAssertNotNil(typeLog.debug("debug"))
+		XCTAssert(stdoutText { typeLog.scope("scope") {} } == "")
 		
 		// File name
-		//log = DLog(output: TextOutput() => FilterOutput(query: "fileName = 'DLogTests.swift'") => StandardOutput())
+		let fileLog = DLog(.text => .filter { $0.fileName == "DLogTests.swift" } => .stdout)
+		XCTAssertNotNil(fileLog.info("info"))
 		
 		// Func name
-		//log = DLog(output: TextOutput() => FilterOutput(query: "functionName = 'test_LogTypes()'") => StandardOutput())
+		let funcLog = DLog(.text => .filter { $0.funcName == "test_Filter()" } => .stdout)
+		XCTAssertNotNil(funcLog.info("info"))
 		
 		// Line
-		//log = DLog(output: TextOutput() => FilterOutput(query: "line = 58") => StandardOutput())
+		let lineLog = DLog(.text => .filter { $0.line > #line } => .stdout)
+		XCTAssertNotNil(lineLog.info("info"))
+		
+		// Text
+		let textLog = DLog(.text => .filter { $0.text.contains("hello") } => .stdout)
+		XCTAssertNotNil(textLog.info("hello world"))
+		XCTAssertNotNil(textLog.debug("hello"))
+		XCTAssertNil(textLog.info("info"))
+		XCTAssert(stdoutText { textLog.interval("interval") { Thread.sleep(forTimeInterval: 0.3) } } == "" )
+		XCTAssert(stdoutText { textLog.interval("hello interval") { Thread.sleep(forTimeInterval: 0.3) } } != "")
+		XCTAssert(stdoutText { textLog.scope("scope") {} } == "")
+		XCTAssert(stdoutText { textLog.scope("scope hello") {} } != "")
+		
+		Thread.sleep(forTimeInterval: 0.3)
 	}
 	
 	func test_NetConsole() {
@@ -201,7 +259,7 @@ final class DLogTests: XCTestCase {
 	}
 	
 	func test_Concurent() {
-		let log = DLog.standard
+		let log = DLog()
 		
 		let queue = DispatchQueue(label: "Concurent", attributes: .concurrent)
 		
