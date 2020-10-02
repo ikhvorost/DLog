@@ -30,8 +30,8 @@ func asyncAfter(_ sec: Double = 0.25, closure: @escaping (() -> Void) ) {
 }
 
 /// Get text from stdout
-func stdoutText(_ block: () -> Void) -> String {
-	var result = ""
+func stdoutText(_ block: () -> Void) -> String? {
+	var result: String?
 	
     // Save original output
     let original = dup(STDOUT_FILENO);
@@ -86,7 +86,7 @@ final class DLogTests: XCTestCase {
 	func test_Disabled() {
 		let log = DLog.disabled
 		
-		XCTAssert(
+		XCTAssertNil(
 			stdoutText {
 				log.trace()
 				log.info("info")
@@ -96,7 +96,7 @@ final class DLogTests: XCTestCase {
 				log.assert(false, "assert")
 				log.scope("scope") {}
 				log.interval("interval") {}
-			} == ""
+			}
 		)
 	}
 	
@@ -121,7 +121,7 @@ final class DLogTests: XCTestCase {
 			XCTAssert("\(interval.name)" == "My Interval")
 		}
 		
-		XCTAssert(stdoutText { log.scope("My Scope"){} }.match(#"\[My Scope\]"#))
+		XCTAssert(stdoutText { log.scope("My Scope"){} }?.match(#"\[My Scope\]"#) == true)
 	}
 	
 	func test_Category() {
@@ -135,8 +135,8 @@ final class DLogTests: XCTestCase {
 		XCTAssert(netLog.error("error")!.match(#"\[NET\]"#))
 		XCTAssert(netLog.fault("fault")!.match(#"\[NET\]"#))
 		XCTAssert(netLog.assert(false, "assert")!.match(#"\[NET\]"#))
-		XCTAssert(stdoutText { netLog.scope("scope") { } }.match(#"\[NET\]"#) )
-		XCTAssert(stdoutText { netLog.interval("interval") { } }.match(#"\[NET\]"#) )
+		XCTAssert(stdoutText { netLog.scope("scope") { } }?.match(#"\[NET\]"#) == true)
+		XCTAssert(stdoutText { netLog.interval("interval") { } }?.match(#"\[NET\]"#) == true)
 	}
 	
 	func test_ScopeStack() {
@@ -245,9 +245,10 @@ final class DLogTests: XCTestCase {
 		
 		// Type
 		let typeLog = DLog(.text => .filter { $0.type == .debug } => .stdout)
+		XCTAssertNil(typeLog.trace())
 		XCTAssertNil(typeLog.info("info"))
 		XCTAssertNotNil(typeLog.debug("debug"))
-		XCTAssert(stdoutText { typeLog.scope("scope") {} } == "")
+		XCTAssertNil(stdoutText { typeLog.scope("scope") {} })
 		
 		// File name
 		let fileLog = DLog(.text => .filter { $0.fileName == "DLogTests.swift" } => .stdout)
@@ -266,10 +267,10 @@ final class DLogTests: XCTestCase {
 		XCTAssertNotNil(textLog.info("hello world"))
 		XCTAssertNotNil(textLog.debug("hello"))
 		XCTAssertNil(textLog.info("info"))
-		XCTAssert(stdoutText { textLog.interval("interval") { Thread.sleep(forTimeInterval: 0.3) } } == "" )
-		XCTAssert(stdoutText { textLog.interval("hello interval") { Thread.sleep(forTimeInterval: 0.3) } } != "")
-		XCTAssert(stdoutText { textLog.scope("scope") {} } == "")
-		XCTAssert(stdoutText { textLog.scope("scope hello") {} } != "")
+		XCTAssertNil(stdoutText { textLog.interval("interval") { Thread.sleep(forTimeInterval: 0.3) } })
+		XCTAssertNotNil(stdoutText { textLog.interval("hello interval") { Thread.sleep(forTimeInterval: 0.3) } })
+		XCTAssertNil(stdoutText { textLog.scope("scope") {} })
+		XCTAssertNotNil(stdoutText { textLog.scope("scope hello") {} })
 		
 		Thread.sleep(forTimeInterval: 0.3)
 	}
