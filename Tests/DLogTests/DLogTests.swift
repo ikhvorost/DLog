@@ -89,8 +89,13 @@ final class DLogTests: XCTestCase {
 		XCTAssert(
 			stdoutText {
 				log.trace()
+				log.info("info")
 				log.debug("debug")
+				log.error("error")
 				log.fault("fatal")
+				log.assert(false, "assert")
+				log.scope("scope") {}
+				log.interval("interval") {}
 			} == ""
 		)
 	}
@@ -116,8 +121,22 @@ final class DLogTests: XCTestCase {
 			XCTAssert("\(interval.name)" == "My Interval")
 		}
 		
-		let scope = log.scope("My Scope") {}
-		XCTAssert(scope.text == "My Scope")
+		XCTAssert(stdoutText { log.scope("My Scope"){} }.match(#"\[My Scope\]"#))
+	}
+	
+	func test_Category() {
+		let log = DLog()
+		XCTAssert(log.trace()!.match(#"\[DLOG\]"#))
+		
+		let netLog = log["NET"]
+		XCTAssert(netLog.trace()!.match(#"\[NET\]"#))
+		XCTAssert(netLog.info("info")!.match(#"\[NET\]"#))
+		XCTAssert(netLog.debug("debug")!.match(#"\[NET\]"#))
+		XCTAssert(netLog.error("error")!.match(#"\[NET\]"#))
+		XCTAssert(netLog.fault("fault")!.match(#"\[NET\]"#))
+		XCTAssert(netLog.assert(false, "assert")!.match(#"\[NET\]"#))
+		XCTAssert(stdoutText { netLog.scope("scope") { } }.match(#"\[NET\]"#) )
+		XCTAssert(stdoutText { netLog.interval("interval") { } }.match(#"\[NET\]"#) )
 	}
 	
 	func test_ScopeStack() {
@@ -219,8 +238,10 @@ final class DLogTests: XCTestCase {
 		XCTAssertNotNil(timeLog.info("info"))
 		
 		// Category
-		let categoryLog = DLog(.text => .filter { $0.category == "DLOG" } => .stdout)
-		XCTAssertNotNil(categoryLog.info("info"))
+		let categoryLog = DLog(.text => .filter { $0.category == "NET" } => .stdout)
+		XCTAssertNil(categoryLog.info("info"))
+		let netLog = categoryLog["NET"]
+		XCTAssertNotNil(netLog.info("info"))
 		
 		// Type
 		let typeLog = DLog(.text => .filter { $0.type == .debug } => .stdout)

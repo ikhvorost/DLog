@@ -41,20 +41,20 @@ public class OSLogOutput : LogOutput {
 		.info : .info,
 		.debug : .debug,
 		.error : .error,
-		.assert : .fault,
 		.fault : .fault,
+		.assert : .fault,
 	]
 
-	private var log: OSLog?
+	@Atomic private var logs = [String : OSLog]()
 	
 	private func oslog(category: String) -> OSLog {
-		synchronized(self) {
-			if log == nil {
-				let subsystem = Bundle.main.bundleIdentifier ?? ""
-				log = OSLog(subsystem: subsystem, category: category)
-			}
-			return log!
+		if let log = logs[category] {
+			return log
 		}
+		let subsystem = Bundle.main.bundleIdentifier ?? ""
+		let log = OSLog(subsystem: subsystem, category: category)
+		logs[category] = log
+		return log
 	}
 	
 	// MARK: - LogOutput
