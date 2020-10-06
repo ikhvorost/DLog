@@ -26,10 +26,10 @@ public class AdaptiveOutput : LogOutput {
 		super.init()
 		
 		if Self.isDebug {
-			output = StandardOutput()
+			output = .stdout
 		}
 		else {
-			output = Self.isTerminal ? ColoredOutput() : OSLogOutput()
+			output = Self.isTerminal ? .textColor : .oslog
 		}
 	}
 }

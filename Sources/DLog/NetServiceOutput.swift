@@ -19,7 +19,7 @@ public class NetServiceOutput : LogOutput {
 		
 		super.init()
 		
-		output = ColoredOutput()
+		output = .textColor
 		
 		service.delegate = self
 		service.resolve(withTimeout: 3)

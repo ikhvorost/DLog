@@ -14,8 +14,9 @@ import os.activity
 // TODO:
 // + thread safe
 // + filtering predicate
-// - log category
-// - TextOutput with color
+// + log category
+// + TextOutput with color
+// - trace stack
 // - reconnection net console
 // - cache net log
 // - Rest, ftp, sql, json, slack
@@ -190,11 +191,12 @@ public class LogInterval : LogItem {
 /// Base output class
 public class LogOutput : NSObject {
 	public static var text: TextOutput { TextOutput() }
+	public static var textColor: TextOutput { TextOutput(color: true) }
 	public static var stdout: StandardOutput { StandardOutput() }
 	public static var adaptive: AdaptiveOutput { AdaptiveOutput() }
 	public static var oslog: OSLogOutput { OSLogOutput() }
-	
 	public static func filter(_ block: @escaping (LogItem) -> Bool) -> FilterOutput { FilterOutput(block: block) }
+	public static func file(_ filePath: String) -> FileOutput { FileOutput(filePath: filePath) }
 
 	var output: LogOutput!
 	

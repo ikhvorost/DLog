@@ -7,7 +7,72 @@
 
 import Foundation
 
+// https://www.lihaoyi.com/post/BuildyourownCommandLinewithANSIescapecodes.html
+// http://jonasjacek.github.io/colors/
+// https://misc.flogisoft.com/bash/tip_colors_and_formatting
+enum ANSIEscapeCode: String {
+	case reset = "\u{001b}[0m"
+	case clear = "\u{001b}c"
+	
+	case bold = "\u{001b}[1m"
+	case dim = "\u{001b}[2m"
+	case underline = "\u{001b}[4m"
+	case blink = "\u{001b}[5m"
+	case reversed = "\u{001b}[7m"
+	
+	// 8 colors
+	case textBlack = "\u{001B}[30m"
+	case textRed = "\u{001B}[31m"
+	case textGreen = "\u{001B}[32m"
+	case textYellow = "\u{001B}[33m"
+	case textBlue = "\u{001B}[34m"
+	case textMagenta = "\u{001B}[35m"
+	case textCyan = "\u{001B}[36m"
+	case textWhite = "\u{001B}[37m"
+	
+	case backgroundBlack = "\u{001b}[40m"
+	case backgrounRed = "\u{001b}[41m"
+	case backgroundGreen = "\u{001b}[42m"
+	case backgroundYellow = "\u{001b}[43m"
+	case backgroundBlue = "\u{001b}[44m"
+	case backgroundMagenta = "\u{001b}[45m"
+	case backgroundCyan = "\u{001b}[46m"
+	case backgroundWhite = "\u{001b}[47m"
+}
+
+private extension String {
+	func color(_ codes: [ANSIEscapeCode]) -> String {
+		return codes.map { $0.rawValue }.joined() + self + ANSIEscapeCode.reset.rawValue
+	}
+	
+	func color(_ code: ANSIEscapeCode) -> String {
+		return color([code])
+	}
+}
+
 public class TextOutput : LogOutput {
+	private struct Tag {
+		let textColor: ANSIEscapeCode
+		let colors: [ANSIEscapeCode]
+	}
+	
+	private static let tags: [LogType : Tag] = [
+		.trace : Tag(textColor: .textWhite, colors: [.backgroundWhite, .textBlack]),
+		.info : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textWhite]),
+		.debug : Tag(textColor: .textCyan, colors: [.backgroundCyan, .textBlack]),
+		.error : Tag(textColor: .textYellow, colors: [.backgroundYellow, .textBlack]),
+		.fault : Tag(textColor: .textRed, colors: [.backgrounRed, .textWhite, .blink]),
+		.assert : Tag(textColor: .textRed, colors: [.backgrounRed, .textWhite]),
+		.interval : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textBlack]),
+		// .scope
+	]
+	
+	let color: Bool
+	
+	init(color: Bool = false) {
+		self.color = color
+	}
+	
 	static let dateFormatter: DateFormatter = {
 		let dateFormatter = DateFormatter()
 		dateFormatter.dateFormat = "HH:mm:ss.SSS"
@@ -36,7 +101,15 @@ public class TextOutput : LogOutput {
 				padding += scope != nil ? "|\t" : "\t"
 			}
 		}
-		return "\(time) [\(message.category)] \(padding)\(message.type.icon) [\(message.type.title)] <\(message.fileName):\(message.line)> \(message.text)"
+		
+		if color, let tag = Self.tags[message.type] {
+			let tagText = " \(message.type.title) ".color(tag.colors)
+			let location = "<\(message.fileName):\(message.line)>".color([.dim, tag.textColor])
+			return "\(time.color(.dim)) \(message.category.color(.textBlue)) \(padding)\(tagText) \(location) \(message.text.color(tag.textColor))"
+		}
+		else {
+			return "\(time) [\(message.category)] \(padding)\(message.type.icon) [\(message.type.title)] <\(message.fileName):\(message.line)> \(message.text)"
+		}
 	}
 
 	private func textScope(scope: LogScope, scopes: [LogScope], start: Bool) -> String {
@@ -54,7 +127,12 @@ public class TextOutput : LogOutput {
 			ms = "(\(stringFromTime(interval: -interval))s)"
 		}
 		
-		return "\(time) [\(scope.category)] \(padding) [\(scope.text)] \(ms ?? "")"
+		if color {
+			return "\(time.color(.dim)) \(scope.category.color(.textBlue)) \(padding) [\(scope.text.color(.textMagenta))] \(ms ?? "")"
+		}
+		else {
+			return "\(time) [\(scope.category)] \(padding) [\(scope.text)] \(ms ?? "")"
+		}
 	}
 	
 	// MARK: - LogOutput

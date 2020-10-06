@@ -25,6 +25,10 @@ extension DispatchSemaphore {
 	}
 }
 
+func delay(_ sec: Double = 0.25) {
+	usleep(useconds_t(sec * 1000000))
+}
+
 func asyncAfter(_ sec: Double = 0.25, closure: @escaping (() -> Void) ) {
 	DispatchQueue.global().asyncAfter(deadline: .now() + sec, execute: closure)
 }
@@ -228,10 +232,6 @@ final class DLogTests: XCTestCase {
 		}
 	}
 	
-	func test_File() {
-		//log = DLog(output: TextOutput() => StandardOutput() => ColoredOutput() => FileOutput(filePath: "/users/iurii/dlog.txt"))
-	}
-	
 	func test_Filter() {
 		// Time
 		let timeLog = DLog(.text => .filter { $0.time != nil } => .stdout)
@@ -273,6 +273,34 @@ final class DLogTests: XCTestCase {
 		XCTAssertNotNil(stdoutText { textLog.scope("scope hello") {} })
 		
 		Thread.sleep(forTimeInterval: 0.3)
+	}
+	
+	func test_File() {
+		let filePath = "dlog.txt"
+		let log = DLog(.text => .file(filePath))
+		log.trace()
+		
+		delay(0.1)
+		do {
+			let text = try String(contentsOfFile: filePath)
+			XCTAssert(text.match("\(#function)"))
+		}
+		catch {
+			XCTFail(error.localizedDescription)
+		}
+	}
+	
+	func test_Color() {
+		let log = DLog(.textColor => .stdout)
+		
+		XCTAssert(log.trace()!.contains(ANSIEscapeCode.reset.rawValue))
+		XCTAssert(log.info("info")!.contains(ANSIEscapeCode.reset.rawValue))
+		XCTAssert(log.debug("debug")!.contains(ANSIEscapeCode.reset.rawValue))
+		XCTAssert(log.error("error")!.contains(ANSIEscapeCode.reset.rawValue))
+		XCTAssert(log.assert(false, "assert")!.contains(ANSIEscapeCode.reset.rawValue))
+		XCTAssert(log.fault("fault")!.contains(ANSIEscapeCode.reset.rawValue))
+		XCTAssert(stdoutText { log.interval("interval"){} }?.contains(ANSIEscapeCode.reset.rawValue) == true)
+		XCTAssert(stdoutText { log.scope("scope"){}  }?.contains(ANSIEscapeCode.reset.rawValue) == true)
 	}
 	
 	func test_NetConsole() {
