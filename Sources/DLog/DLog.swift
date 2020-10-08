@@ -65,13 +65,13 @@ public enum LogType : Int {
 
 @objcMembers
 public class LogItem : NSObject {
-	var time: Date?
-	let category: String
-	let type: LogType
-	let fileName: String
-	let funcName: String
-	let line: UInt
-	let text: String
+	public var time: Date?
+	public let category: String
+	public let type: LogType
+	public let fileName: String
+	public let funcName: String
+	public let line: UInt
+	public let text: String
 	
 	public init(time: Date? = nil, category: String, type: LogType, fileName: String, funcName: String, line: UInt, text: String) {
 		self.time = time
@@ -244,7 +244,7 @@ infix operator => : ForwardPipe
 
 extension LogOutput {
 	// Forward pipe
-	static func => (left: LogOutput, right: LogOutput) -> LogOutput {
+	public static func => (left: LogOutput, right: LogOutput) -> LogOutput {
 		right.output = left
 		return right
 	}
@@ -310,7 +310,7 @@ public class DLog {
 	@Atomic private var scopes = [LogScope]()
 	@Atomic private var intervals = [LogInterval]()
 	
-	subscript(category: String) -> LogCategory {
+	public subscript(category: String) -> LogCategory {
 		if let log = categories[category] {
 			return log
 		}
