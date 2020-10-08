@@ -16,9 +16,9 @@ import os.activity
 // + filtering predicate
 // + log category
 // + TextOutput with color
-// - trace stack
 // - reconnection net console
 // - cache net log
+// - trace stack
 // - Rest, ftp, sql, json, slack
 
 
@@ -197,6 +197,7 @@ public class LogOutput : NSObject {
 	public static var oslog: OSLogOutput { OSLogOutput() }
 	public static func filter(_ block: @escaping (LogItem) -> Bool) -> FilterOutput { FilterOutput(block: block) }
 	public static func file(_ filePath: String) -> FileOutput { FileOutput(filePath: filePath) }
+	public static func net(_ name: String = "DLog") -> NetOutput { NetOutput(name: name) }
 
 	var output: LogOutput!
 	

@@ -79,7 +79,7 @@ final class DLogTests: XCTestCase {
 		wait(for: expectations, timeout: timeout)
 	}
 	
-	func wait(timeout: TimeInterval = 1, name: String = #function, closure: (XCTestExpectation) -> Void) {
+	func wait(_ timeout: TimeInterval = 1, name: String = #function, closure: (XCTestExpectation) -> Void) {
 		wait(count: 1, timeout: timeout, name: name) { expectations in
 			closure(expectations[0])
 		}
@@ -304,8 +304,15 @@ final class DLogTests: XCTestCase {
 	}
 	
 	func test_NetConsole() {
-		// Net
-		//log = DLog(output: ColoredOutput() => NetServiceOutput())
+		wait(100) { exp in
+			let log = DLog(.textColor => .net())
+			log.trace()
+		
+			asyncAfter(99) {
+				log.trace()
+				exp.fulfill()
+			}
+		}
 	}
 	
 	func test_Concurent() {
@@ -322,7 +329,7 @@ final class DLogTests: XCTestCase {
 			}
 		}
 		
-		wait(timeout: 1) { exp in
+		wait { exp in
 			sleep(1)
 			exp.fulfill()
 		}

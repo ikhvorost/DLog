@@ -1,6 +1,7 @@
 import Foundation
 
-class DLogNetService : NSObject {
+class DLogNetConsole : NSObject {
+	let name: String
 	let service: NetService
 	var inputStream: InputStream?
 	
@@ -8,6 +9,7 @@ class DLogNetService : NSObject {
 	var buffer = [UInt8](repeating: 0, count: bufferSize)
 	
 	init(name: String = "DLog") {
+		self.name = name
 		service = NetService(domain: "local.", type:"_dlog._tcp.", name: name, port: 0)
 		super.init()
 		
@@ -16,53 +18,33 @@ class DLogNetService : NSObject {
 	}
 }
 
-extension DLogNetService : NetServiceDelegate {
+extension DLogNetConsole : NetServiceDelegate {
 	func netServiceDidPublish(_ sender: NetService) {
-		print("Domain:", sender.domain, "Type:", sender.type, "Port:", sender.port)
+		print("[Published] Name:", name, "Domain:", sender.domain, "Type:", sender.type, "Port:", sender.port)
 	}
 
 	func netService(_ sender: NetService, didNotPublish errorDict: [String : NSNumber]) {
-		print(errorDict)
+		print("[Error]", errorDict)
 	}
-	
-	func netService(_ sender: NetService, didNotResolve errorDict: [String : NSNumber]) {
-		print(errorDict)
-	}
-	
+
 	func netService(_ sender: NetService, didAcceptConnectionWith inputStream: InputStream, outputStream: OutputStream) {
-		/* IP address
-		print(sender.addresses)
-		if let data = sender.addresses?.first {
-			var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
-			data.withUnsafeBytes { (pointer: UnsafeRawBufferPointer) -> Void in
-					let sockaddrPtr = pointer.bindMemory(to: sockaddr.self)
-					guard let unsafePtr = sockaddrPtr.baseAddress else { return }
-					guard getnameinfo(unsafePtr, socklen_t(data.count), &hostname, socklen_t(hostname.count), nil, 0, NI_NUMERICHOST) == 0 else {
-						return
-					}
-			}
-			let ipAddress = String(cString:hostname)
-			print(ipAddress)
-			
-			print("Accept:", ipAddress)
+		// IP address
+		if let addr = sender.addresses?.first {
+			//https://stackoverflow.com/questions/12558305/how-to-get-ip-address-from-netservice/18428117
+			print("[Connected]", addr)
 		}
-		// */
+		else {
+			print("[Connected] localhost")
+		}
 		
 		self.inputStream = inputStream
 		inputStream.delegate = self
 		inputStream.schedule(in: .current, forMode: .default)
 		inputStream.open()
-		
-		// Clear
-		print("\u{001b}c")
-	}
-	
-	func netServiceDidStop(_ sender: NetService) {
-		//print(#function)
 	}
 }
 
-extension DLogNetService : StreamDelegate {
+extension DLogNetConsole : StreamDelegate {
 	
 	func stream(_ aStream: Stream, handle eventCode: Stream.Event) {
 		if eventCode == .hasBytesAvailable {
@@ -82,8 +64,8 @@ extension DLogNetService : StreamDelegate {
 }
 
 // Run
-let service = DLogNetService()
+let service = DLogNetConsole()
 
-print("DLog Net Service v.1.0")
+print("DLog NetConsole v.1.0")
 RunLoop.current.run()
 

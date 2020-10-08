@@ -16,12 +16,12 @@ let package = Package(
 			name: "DLog",
 			targets: ["DLog"]),
 		.executable(
-			name: "DLogNetService",
-			targets: ["DLogNetService"])
+			name: "DLogNetConsole",
+			targets: ["DLogNetConsole"])
 	],
 	targets: [
 		.target(name: "DLog"),
-		.target(name: "DLogNetService"),
+		.target(name: "DLogNetConsole"),
 		.testTarget(
 			name: "DLogTests",
 			dependencies: ["DLog"]),
