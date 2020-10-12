@@ -1,6 +1,6 @@
 import Foundation
 
-class DLogNetConsole : NSObject {
+class NetConsole : NSObject {
 	let name: String
 	let service: NetService
 	var inputStream: InputStream?
@@ -16,25 +16,29 @@ class DLogNetConsole : NSObject {
 		service.delegate = self
 		service.publish(options: .listenForConnections)
 	}
+	
+	private func log(_ text: String) {
+		print("[NetConsole]", text)
+	}
 }
 
-extension DLogNetConsole : NetServiceDelegate {
+extension NetConsole : NetServiceDelegate {
 	func netServiceDidPublish(_ sender: NetService) {
-		print("[Published] Name:", name, "Domain:", sender.domain, "Type:", sender.type, "Port:", sender.port)
+		log("Published name: \(name), domain: \(sender.domain), type: \(sender.type), port: \(sender.port)")
 	}
 
 	func netService(_ sender: NetService, didNotPublish errorDict: [String : NSNumber]) {
-		print("[Error]", errorDict)
+		log("Error: \(errorDict)")
 	}
 
 	func netService(_ sender: NetService, didAcceptConnectionWith inputStream: InputStream, outputStream: OutputStream) {
 		// IP address
 		if let addr = sender.addresses?.first {
 			//https://stackoverflow.com/questions/12558305/how-to-get-ip-address-from-netservice/18428117
-			print("[Connected]", addr)
+			log("Connected \(addr)")
 		}
 		else {
-			print("[Connected] localhost")
+			log("Connected localhost")
 		}
 		
 		self.inputStream = inputStream
@@ -44,7 +48,7 @@ extension DLogNetConsole : NetServiceDelegate {
 	}
 }
 
-extension DLogNetConsole : StreamDelegate {
+extension NetConsole : StreamDelegate {
 	
 	func stream(_ aStream: Stream, handle eventCode: Stream.Event) {
 		if eventCode == .hasBytesAvailable {
@@ -59,12 +63,17 @@ extension DLogNetConsole : StreamDelegate {
 				}
 			}
 		}
+		else if eventCode == .errorOccurred {
+			if let error = aStream.streamError {
+				log("Error: \(error.localizedDescription)")
+			}
+		}
 		
 	}
 }
 
 // Run
-let service = DLogNetConsole()
+let service = NetConsole()
 
 print("DLog NetConsole v.1.0")
 RunLoop.current.run()

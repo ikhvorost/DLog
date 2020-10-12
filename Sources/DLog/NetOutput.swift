@@ -7,6 +7,29 @@
 
 import Foundation
 
+private class LogBuffer {
+	private static let lines = 1024
+	
+	@Atomic private var stack = [String]()
+	
+	var text: String? {
+		stack.reduce(nil) { text, line in
+			"\(text ?? "")\(line)\n"
+		}
+	}
+	
+	func append(text: String) {
+		stack.append(text)
+		if stack.count > Self.lines {
+			_ = stack.removeFirst()
+		}
+	}
+	
+	func clear() {
+		stack.removeAll()
+	}
+}
+
 // TODO: file cache
 public class NetOutput : LogOutput {
 	private let name: String
@@ -14,7 +37,7 @@ public class NetOutput : LogOutput {
 	private var service: NetService?
 	private let queue = DispatchQueue(label: "NetOutput")
 	private var outputStream : OutputStream?
-	@Atomic private var buffer = ""
+	private let buffer = LogBuffer()
 	
 	init(name: String) {
 		self.name = name
@@ -32,20 +55,24 @@ public class NetOutput : LogOutput {
 	}
 	
 	@discardableResult
-	private func send(_ text: String?) -> String? {
+	private func send(_ text: String?, newline: Bool = true) -> String? {
 		if let str = text, !str.isEmpty {
 			queue.async {
-				guard let stream = self.outputStream else {
-					self.buffer += (self.buffer.isEmpty ? "" : "\n") + str
-					return
+				if let stream = self.outputStream {
+					let data = str + (newline ? "\n" : "")
+					stream.write(data, maxLength: data.lengthOfBytes(using: .utf8))
 				}
-				
-				let data = str + "\n"
-				stream.write(data, maxLength: data.lengthOfBytes(using: .utf8))
+				else {
+					self.buffer.append(text: str)
+				}
 			}
 		}
 		
 		return text
+	}
+	
+	private func log(_ text: String) {
+		print("[NetOutput] \(text)")
 	}
 	
 	// MARK: - LogOutput
@@ -75,7 +102,7 @@ extension NetOutput : NetServiceBrowserDelegate {
 			  service.getInputStream(nil, outputStream: &outputStream)
 		else { return }
 		
-		NSLog("[NetOutput] connected")
+		log("Connected")
 		
 		self.service = service
 		
@@ -91,7 +118,7 @@ extension NetOutput : NetServiceBrowserDelegate {
 		outputStream = nil
 		self.service = nil
 		
-		NSLog("[NetOutput] disconnected")
+		log("Disconnected")
 	}
 }
 
@@ -100,9 +127,14 @@ extension NetOutput : StreamDelegate {
 	
 	public func stream(_ aStream: Stream, handle eventCode: Stream.Event) {
 		if eventCode == .hasSpaceAvailable {
-			if !buffer.isEmpty {
-				send(buffer)
-				buffer = ""
+			if let text = buffer.text {
+				send(text, newline: false)
+				buffer.clear()
+			}
+		}
+		else if eventCode == .errorOccurred {
+			if let error = aStream.streamError {
+				log("Error: \(error.localizedDescription)")
 			}
 		}
 	}

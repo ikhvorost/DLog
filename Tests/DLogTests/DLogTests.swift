@@ -305,11 +305,14 @@ final class DLogTests: XCTestCase {
 	
 	func test_NetConsole() {
 		wait(100) { exp in
-			let log = DLog(.textColor => .net())
+			let log = DLog(.net)
 			log.trace()
+			log.info("info")
+			log.debug("debug")
 		
-			asyncAfter(99) {
-				log.trace()
+			asyncAfter(3) {
+				log.error("error")
+				log.assert(false)
 				exp.fulfill()
 			}
 		}
@@ -319,7 +322,6 @@ final class DLogTests: XCTestCase {
 		let log = DLog()
 		
 		let queue = DispatchQueue(label: "Concurent", attributes: .concurrent)
-		
 		
 		for i in 0..<10 {
 			//let scope = log.scope("Scope")

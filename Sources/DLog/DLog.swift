@@ -195,9 +195,11 @@ public class LogOutput : NSObject {
 	public static var stdout: StandardOutput { StandardOutput() }
 	public static var adaptive: AdaptiveOutput { AdaptiveOutput() }
 	public static var oslog: OSLogOutput { OSLogOutput() }
+	public static var net: NetOutput { net(name: "DLog") }
+	
 	public static func filter(_ block: @escaping (LogItem) -> Bool) -> FilterOutput { FilterOutput(block: block) }
 	public static func file(_ filePath: String) -> FileOutput { FileOutput(filePath: filePath) }
-	public static func net(_ name: String = "DLog") -> NetOutput { NetOutput(name: name) }
+	public static func net(name: String) -> NetOutput { NetOutput(name: name) }
 
 	var output: LogOutput!
 	
