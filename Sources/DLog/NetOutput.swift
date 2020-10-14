@@ -8,7 +8,7 @@
 import Foundation
 
 private class LogBuffer {
-	private static let lines = 1024
+	private static let linesCount = 1000
 	
 	@Atomic private var stack = [String]()
 	
@@ -20,7 +20,7 @@ private class LogBuffer {
 	
 	func append(text: String) {
 		stack.append(text)
-		if stack.count > Self.lines {
+		if stack.count > Self.linesCount {
 			_ = stack.removeFirst()
 		}
 	}
@@ -52,6 +52,7 @@ public class NetOutput : LogOutput {
 	
 	deinit {
 		outputStream?.close()
+		browser.stop()
 	}
 	
 	@discardableResult
@@ -105,6 +106,8 @@ extension NetOutput : NetServiceBrowserDelegate {
 		log("Connected")
 		
 		self.service = service
+		//self.service?.delegate = self
+		//self.service?.resolve(withTimeout: 10)
 		
 		CFWriteStreamSetDispatchQueue(outputStream, queue)
 		outputStream?.delegate = self
@@ -122,20 +125,34 @@ extension NetOutput : NetServiceBrowserDelegate {
 	}
 }
 
+//extension NetOutput : NetServiceDelegate {
+//
+//	public func netServiceDidResolveAddress(_ sender: NetService) {
+//		print(sender.addresses?.first)
+//	}
+//
+//}
 
 extension NetOutput : StreamDelegate {
 	
 	public func stream(_ aStream: Stream, handle eventCode: Stream.Event) {
-		if eventCode == .hasSpaceAvailable {
-			if let text = buffer.text {
-				send(text, newline: false)
-				buffer.clear()
-			}
-		}
-		else if eventCode == .errorOccurred {
-			if let error = aStream.streamError {
-				log("Error: \(error.localizedDescription)")
-			}
+		switch eventCode{
+			case .openCompleted:
+				log("Opened")
+			
+			case .hasSpaceAvailable:
+				if let text = buffer.text {
+					send(text, newline: false)
+					buffer.clear()
+				}
+				
+			case .errorOccurred:
+				if let error = aStream.streamError {
+					log("Error: \(error.localizedDescription)")
+				}
+			
+			default:
+				break
 		}
 	}
 }

@@ -1,5 +1,6 @@
 import Foundation
 
+
 class NetConsole : NSObject {
 	let name: String
 	let service: NetService
@@ -23,6 +24,7 @@ class NetConsole : NSObject {
 }
 
 extension NetConsole : NetServiceDelegate {
+	
 	func netServiceDidPublish(_ sender: NetService) {
 		log("Published name: \(name), domain: \(sender.domain), type: \(sender.type), port: \(sender.port)")
 	}
@@ -32,43 +34,53 @@ extension NetConsole : NetServiceDelegate {
 	}
 
 	func netService(_ sender: NetService, didAcceptConnectionWith inputStream: InputStream, outputStream: OutputStream) {
-		// IP address
-		if let addr = sender.addresses?.first {
-			//https://stackoverflow.com/questions/12558305/how-to-get-ip-address-from-netservice/18428117
-			log("Connected \(addr)")
-		}
-		else {
-			log("Connected localhost")
+		guard self.inputStream == nil else {
+			// Reject connection
+			inputStream.open(); outputStream.open()
+			inputStream.close(); outputStream.close()
+			return
 		}
 		
 		self.inputStream = inputStream
 		inputStream.delegate = self
 		inputStream.schedule(in: .current, forMode: .default)
 		inputStream.open()
+		
+		log("Connected")
 	}
 }
 
 extension NetConsole : StreamDelegate {
 	
 	func stream(_ aStream: Stream, handle eventCode: Stream.Event) {
-		if eventCode == .hasBytesAvailable {
-			guard let stream = inputStream else { return }
-			
-			while stream.hasBytesAvailable {
-				let count = stream.read(&buffer, maxLength: Self.bufferSize)
-				if count > 0 {
-					if let text = String(bytes: buffer[0..<count], encoding: .utf8) {
-						print(text, terminator: "")
+		switch eventCode {
+			case .openCompleted:
+				log("Opened")
+				
+			case .hasBytesAvailable:
+				guard let stream = inputStream else { return }
+				
+				while stream.hasBytesAvailable {
+					let count = stream.read(&buffer, maxLength: Self.bufferSize)
+					if count > 0 {
+						if let text = String(bytes: buffer[0..<count], encoding: .utf8) {
+							print(text, terminator: "")
+						}
 					}
 				}
-			}
+			
+			case .errorOccurred:
+				if let error = aStream.streamError {
+					log("Error: \(error.localizedDescription)")
+				}
+				
+			case .endEncountered:
+				inputStream = nil
+				log("Disconnected")
+				
+			default:
+				break;
 		}
-		else if eventCode == .errorOccurred {
-			if let error = aStream.streamError {
-				log("Error: \(error.localizedDescription)")
-			}
-		}
-		
 	}
 }
 
@@ -77,4 +89,3 @@ let service = NetConsole()
 
 print("DLog NetConsole v.1.0")
 RunLoop.current.run()
-

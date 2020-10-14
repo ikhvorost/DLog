@@ -310,13 +310,13 @@ final class DLogTests: XCTestCase {
 			log.info("info")
 			log.debug("debug")
 		
-			asyncAfter(3) {
+			asyncAfter(99) {
 				log.error("error")
 				log.assert(false)
 				exp.fulfill()
 			}
 		}
-	}
+	}	
 	
 	func test_Concurent() {
 		let log = DLog()
