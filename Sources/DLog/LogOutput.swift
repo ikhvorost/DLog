@@ -1,24 +1,42 @@
 //
-//  File.swift
-//  
+//  LogOutput
 //
-//  Created by Iurii Khvorost on 14.10.2020.
+//  Created by Iurii Khvorost <iurii.khvorost@gmail.com> on 2020/10/14.
+//  Copyright © 2020 Iurii Khvorost. All rights reserved.
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files (the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions:
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//  THE SOFTWARE.
 //
 
 import Foundation
 
 /// Base output class
 public class LogOutput : NSObject {
-	public static var text: TextOutput { TextOutput() }
-	public static var textColor: TextOutput { TextOutput(color: true) }
-	public static var stdout: StandardOutput { StandardOutput() }
-	public static var adaptive: AdaptiveOutput { AdaptiveOutput() }
-	public static var oslog: OSLogOutput { OSLogOutput() }
-	public static var net: NetOutput { net() }
+	public static var text: Text { Text() }
+	public static var coloredText: Text { Text(color: true) }
+	public static var stdout: Standard { Standard() }
+	public static var adaptive: Adaptive { Adaptive() }
+	public static var oslog: OSLog { OSLog() }
+	public static var net: Net { net() }
 	
-	public static func filter(_ block: @escaping (LogItem) -> Bool) -> FilterOutput { FilterOutput(block: block) }
-	public static func file(_ filePath: String) -> FileOutput { FileOutput(filePath: filePath) }
-	public static func net(name: String = "DLog", debug: Bool = false) -> NetOutput { NetOutput(name: name, debug: debug) }
+	public static func filter(_ block: @escaping (LogItem) -> Bool) -> Filter { Filter(block: block) }
+	public static func file(_ filePath: String) -> File { File(filePath: filePath) }
+	public static func net(name: String = "DLog", debug: Bool = false) -> Net { Net(name: name, debug: debug) }
 
 	var output: LogOutput!
 	

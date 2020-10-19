@@ -27,7 +27,6 @@ extension DispatchSemaphore {
 
 func delay(_ sec: Double = 0.25) {
 	Thread.sleep(forTimeInterval: sec)
-	//usleep(useconds_t(sec * 1000000))
 }
 
 func asyncAfter(_ sec: Double = 0.25, closure: @escaping (() -> Void) ) {
@@ -292,7 +291,7 @@ final class DLogTests: XCTestCase {
 	}
 	
 	func test_Color() {
-		let log = DLog(.textColor => .stdout)
+		let log = DLog(.coloredText => .stdout)
 		
 		XCTAssert(log.trace()!.contains(ANSIEscapeCode.reset.rawValue))
 		XCTAssert(log.info("info")!.contains(ANSIEscapeCode.reset.rawValue))
@@ -344,7 +343,7 @@ final class DLogTests: XCTestCase {
 						=> .oslog
 						=> .file("dlog.txt")
 						=> .filter { $0.type == .debug }
-						=> .textColor
+						=> .coloredText
 						=> .net(debug: true))
 		
 		let time = Date()

@@ -1,37 +1,41 @@
 //
-//  File.swift
-//  
+//  OSLog
 //
-//  Created by Iurii Khvorost on 03.08.2020.
+//  Created by Iurii Khvorost <iurii.khvorost@gmail.com> on 2020/08/03.
+//  Copyright © 2020 Iurii Khvorost. All rights reserved.
 //
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files (the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions:
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//  THE SOFTWARE.
+//
+
 
 import Foundation
 import os
 import os.log
 import os.activity
 
-public class OSLogOutput : LogOutput {
-	
-	// Formatters
-	//	Type Format String Example Output
-	//	time_t %{time_t}d 2016-01-12 19:41:37
-	//	timeval %{timeval}.*P 2016-01-12 19:41:37.774236
-	//	timespec %{timespec}.*P 2016-01-12 19:41:37.774236823
-	//	errno %{errno}d Broken pipe
-	//	uuid_t %{uuid_t}.16P
-	//	%{uuid_t}.*P 10742E39-0657-41F8-AB99-878C5EC2DCAA
-	//	sockaddr %{network:sockaddr}.*P fe80::f:86ff:fee9:5c16
-	//	17.43.23.87
-	//	in_addr %{network:in_addr}d 17.43.23.87
-	//	in6_addr %{network:in6_addr}.16P fe80::f:86ff:fee9:5c16
+
+public class OSLog : LogOutput {
 	
 	// Handle to dynamic shared object
 	private static var dso = UnsafeMutableRawPointer(mutating: #dsohandle)
 	
-	// Load the symbol dynamically, since it is not exposed to Swift...
-	// see activity.h and dlfcn.h
-	// https://nsscreencast.com/episodes/347-activity-tracing-in-swift
-	// https://gist.github.com/zwaldowski/49f61292757f86d7d036a529f2d04f0c
+	// Load the symbol dynamically, since it is not exposed to Swift.
 	private static let RTLD_DEFAULT = UnsafeMutableRawPointer(bitPattern: -2)
 	private static let OS_ACTIVITY_NONE = unsafeBitCast(dlsym(RTLD_DEFAULT, "_os_activity_none"), to: os_activity_t.self)
 	private static let OS_ACTIVITY_CURRENT = unsafeBitCast(dlsym(RTLD_DEFAULT, "_os_activity_current"), to: os_activity_t.self)
@@ -45,14 +49,14 @@ public class OSLogOutput : LogOutput {
 		.assert : .fault,
 	]
 
-	@Atomic private var logs = [String : OSLog]()
+	@Atomic private var logs = [String : os.OSLog]()
 	
-	private func oslog(category: String) -> OSLog {
+	private func oslog(category: String) -> os.OSLog {
 		if let log = logs[category] {
 			return log
 		}
 		let subsystem = Bundle.main.bundleIdentifier ?? ""
-		let log = OSLog(subsystem: subsystem, category: category)
+		let log = os.OSLog(subsystem: subsystem, category: category)
 		logs[category] = log
 		return log
 	}
