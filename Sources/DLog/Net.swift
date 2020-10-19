@@ -103,19 +103,19 @@ public class Net : LogOutput {
 	
 	// MARK: - LogOutput
 	
-	public override func log(message: LogMessage) -> String? {
+	override func log(message: LogMessage) -> String? {
 		send(super.log(message: message))
 	}
 	
-	public override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
+	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
 		send(super.scopeEnter(scope: scope, scopes: scopes))
 	}
 	
-	public override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
+	override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
 		send(super.scopeLeave(scope: scope, scopes: scopes))
 	}
 	
-	public override func intervalEnd(interval: LogInterval) -> String? {
+	override func intervalEnd(interval: LogInterval) -> String? {
 		send(super.intervalEnd(interval: interval))
 	}
 }

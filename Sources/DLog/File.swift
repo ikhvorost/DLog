@@ -59,19 +59,19 @@ public class File : LogOutput {
 	
 	// MARK: - LogOutput
 	
-	public override func log(message: LogMessage) -> String? {
+	override func log(message: LogMessage) -> String? {
 		write(super.log(message: message))
 	}
 	
-	public override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
+	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
 		write(super.scopeEnter(scope: scope, scopes: scopes))
 	}
 	
-	public override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
+	override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
 		write(super.scopeLeave(scope: scope, scopes: scopes))
 	}
 	
-	public override func intervalEnd(interval: LogInterval) -> String? {
+	override func intervalEnd(interval: LogInterval) -> String? {
 		write(super.intervalEnd(interval: interval))
 	}
 }

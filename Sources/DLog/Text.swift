@@ -154,28 +154,28 @@ public class Text : LogOutput {
 	
 	// MARK: - LogOutput
 	
-	override public func log(message: LogMessage) -> String? {
+	override func log(message: LogMessage) -> String? {
 		super.log(message: message)
 		return textMessage(message: message)
 	}
 	
-	override public func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
+	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
 		super.scopeEnter(scope: scope, scopes: scopes)
 
 		return textScope(scope: scope, scopes: scopes, start: true)
 	}
 	
-	override public func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
+	override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
 		super.scopeLeave(scope: scope, scopes: scopes)
 		
 		return textScope(scope: scope, scopes: scopes, start: false)
 	}
 	
-	override public func intervalBegin(interval: LogInterval) {
+	override func intervalBegin(interval: LogInterval) {
 		super.intervalBegin(interval: interval)
 	}
 	
-	override public func intervalEnd(interval: LogInterval) -> String? {
+	override func intervalEnd(interval: LogInterval) -> String? {
 		super.intervalEnd(interval: interval)
 		
 		let duration = stringFromTime(interval: interval.duration)

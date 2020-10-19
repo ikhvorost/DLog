@@ -338,7 +338,6 @@ final class DLogTests: XCTestCase {
 	}
 	
 	func test_NonBlock() {
-		//let log = DLog(.stdout => .oslog)
 		let log = DLog(.stdout
 						=> .oslog
 						=> .file("dlog.txt")

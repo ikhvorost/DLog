@@ -41,34 +41,34 @@ public class LogOutput : NSObject {
 	var output: LogOutput!
 	
 	@discardableResult
-	public func log(message: LogMessage) -> String? {
+	func log(message: LogMessage) -> String? {
 		return output != nil
 			? output.log(message: message)
 			: nil
 	}
 	
 	@discardableResult
-	public func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
+	func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
 		return output != nil
 			? output.scopeEnter(scope: scope, scopes: scopes)
 			: nil
 	}
 	
 	@discardableResult
-	public func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
+	func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
 		return output != nil
 			? output.scopeLeave(scope: scope, scopes: scopes)
 			: nil
 	}
 	
-	public func intervalBegin(interval: LogInterval) {
+	func intervalBegin(interval: LogInterval) {
 		if output != nil {
 			output.intervalBegin(interval: interval)
 		}
 	}
 	
 	@discardableResult
-	public func intervalEnd(interval: LogInterval) -> String? {
+	func intervalEnd(interval: LogInterval) -> String? {
 		return output != nil
 			? output.intervalEnd(interval: interval)
 			: nil
@@ -82,7 +82,7 @@ precedencegroup ForwardPipe {
 infix operator => : ForwardPipe
 
 extension LogOutput {
-	// Forward pipe
+	// Forward pipeg
 	public static func => (left: LogOutput, right: LogOutput) -> LogOutput {
 		right.output = left
 		return right

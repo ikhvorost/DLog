@@ -47,22 +47,22 @@ public class Filter : LogOutput {
 	
 	// MARK: - LogOutput
 	
-	public override func log(message: LogMessage) -> String? {
+	override func log(message: LogMessage) -> String? {
 		let text = super.log(message: message)
 		return predicate.evaluate(with: message) ? text : nil
 	}
 	
-	override public func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
+	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
 		let text = super.scopeEnter(scope: scope, scopes: scopes)
 		return predicate.evaluate(with: scope) ? text : nil
 	}
 	
-	override public func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
+	override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
 		let text = super.scopeLeave(scope: scope, scopes: scopes)
 		return predicate.evaluate(with: scope) ? text : nil
 	}
 	
-	override public func intervalEnd(interval: LogInterval) -> String? {
+	override func intervalEnd(interval: LogInterval) -> String? {
 		let text = super.intervalEnd(interval: interval)
 		return predicate.evaluate(with: interval) ? text : nil
 	}

@@ -63,7 +63,7 @@ public class OSLog : LogOutput {
 	
 	// MARK: - LogOutput
 	
-	override public func log(message: LogMessage) -> String? {
+	override func log(message: LogMessage) -> String? {
 		let log = oslog(category: message.category)
 		
 		let location = "<\(message.fileName):\(message.line)>"
@@ -75,20 +75,20 @@ public class OSLog : LogOutput {
 		return super.log(message: message)
 	}
 	
-	override public func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
+	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
 		let activity = _os_activity_create(Self.dso, strdup(scope.text), Self.OS_ACTIVITY_CURRENT, OS_ACTIVITY_FLAG_DEFAULT)
 		os_activity_scope_enter(activity, &scope.os_state)
 		
 		return super.scopeEnter(scope: scope, scopes: scopes)
 	}
 	
-	override public func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
+	override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
 		os_activity_scope_leave(&scope.os_state);
 		
 		return super.scopeLeave(scope: scope, scopes: scopes)
 	}
 	
-	override public func intervalBegin(interval: LogInterval) {
+	override func intervalBegin(interval: LogInterval) {
 		super.intervalBegin(interval: interval)
 		
 		guard #available(macOS 10.14, iOS 12.0, watchOS 5.0, tvOS 12.0, *) else { return }
@@ -101,7 +101,7 @@ public class OSLog : LogOutput {
 		os_signpost(.begin, log: log, name: interval.name, signpostID: interval.signpostID!)
 	}
 	
-	override public func intervalEnd(interval: LogInterval) -> String? {
+	override func intervalEnd(interval: LogInterval) -> String? {
 		if #available(macOS 10.14, iOS 12.0, watchOS 5.0, tvOS 12.0, *) {
 			let log = oslog(category: interval.category)
 			os_signpost(.end, log: log, name: interval.name, signpostID: interval.signpostID!)
