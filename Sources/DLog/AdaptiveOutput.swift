@@ -29,7 +29,9 @@ public class AdaptiveOutput : LogOutput {
 			output = .stdout
 		}
 		else {
-			output = Self.isTerminal ? .textColor : .oslog
+			output = Self.isTerminal
+				? .textColor => .stdout
+				: .net
 		}
 	}
 }

@@ -26,7 +26,8 @@ extension DispatchSemaphore {
 }
 
 func delay(_ sec: Double = 0.25) {
-	usleep(useconds_t(sec * 1000000))
+	Thread.sleep(forTimeInterval: sec)
+	//usleep(useconds_t(sec * 1000000))
 }
 
 func asyncAfter(_ sec: Double = 0.25, closure: @escaping (() -> Void) ) {
@@ -120,7 +121,7 @@ final class DLogTests: XCTestCase {
 		for _ in 0..<10 {
 			let i = TimeInterval.random(in: 0.1...0.3)
 			let interval = log.interval("My Interval") {
-				Thread.sleep(forTimeInterval: i)
+				delay(i)
 			}
 			XCTAssert("\(interval.name)" == "My Interval")
 		}
@@ -267,12 +268,12 @@ final class DLogTests: XCTestCase {
 		XCTAssertNotNil(textLog.info("hello world"))
 		XCTAssertNotNil(textLog.debug("hello"))
 		XCTAssertNil(textLog.info("info"))
-		XCTAssertNil(stdoutText { textLog.interval("interval") { Thread.sleep(forTimeInterval: 0.3) } })
+		XCTAssertNil(stdoutText { textLog.interval("interval") { delay(0.3) } })
 		XCTAssertNotNil(stdoutText { textLog.interval("hello interval") { Thread.sleep(forTimeInterval: 0.3) } })
 		XCTAssertNil(stdoutText { textLog.scope("scope") {} })
 		XCTAssertNotNil(stdoutText { textLog.scope("scope hello") {} })
 		
-		Thread.sleep(forTimeInterval: 0.3)
+		//delay(0.3)
 	}
 	
 	func test_File() {
@@ -304,13 +305,13 @@ final class DLogTests: XCTestCase {
 	}
 	
 	func test_NetConsole() {
-		wait(100) { exp in
+		wait(5) { exp in
 			let log = DLog(.net)
 			log.trace()
 			log.info("info")
 			log.debug("debug")
 		
-			asyncAfter(99) {
+			asyncAfter(4) {
 				log.error("error")
 				log.assert(false)
 				exp.fulfill()
@@ -332,8 +333,56 @@ final class DLogTests: XCTestCase {
 		}
 		
 		wait { exp in
-			sleep(1)
+			delay(1)
 			exp.fulfill()
+		}
+	}
+	
+	func test_NonBlock() {
+		//let log = DLog(.stdout => .oslog)
+		let log = DLog(.stdout
+						=> .oslog
+						=> .file("dlog.txt")
+						=> .filter { $0.type == .debug }
+						=> .textColor
+						=> .net(debug: true))
+		
+		let time = Date()
+		
+		log.trace()
+		log.info("info")
+		log.debug("debug")
+		log.error("error")
+		log.scope("scope") {
+			log.assert(false)
+		}
+		log.interval("interval") {
+			log.fault("fault")
+		}
+		
+		let interval = -time.timeIntervalSinceNow
+		print("Interval: \(interval)")
+		XCTAssert(interval < 0.01)
+		
+		wait { exp in
+			asyncAfter(0.5) {
+				exp.fulfill()
+			}
+		}
+	}
+	
+	func test_Adaptive() {
+		let log = DLog(.adaptive)
+		
+		log.trace()
+		log.info("info")
+		log.debug("debug")
+		log.error("error")
+		log.scope("scope") {
+			log.assert(false)
+		}
+		log.interval("interval") {
+			log.fault("fault")
 		}
 	}
 }

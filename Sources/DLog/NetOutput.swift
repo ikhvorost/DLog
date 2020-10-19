@@ -30,24 +30,28 @@ private class LogBuffer {
 	}
 }
 
-// TODO: file cache
 public class NetOutput : LogOutput {
+	private static let type = "_dlog._tcp"
+	private static let domain = "local."
+	
 	private let name: String
+	private let debug: Bool
 	private let browser = NetServiceBrowser()
 	private var service: NetService?
 	private let queue = DispatchQueue(label: "NetOutput")
 	private var outputStream : OutputStream?
 	private let buffer = LogBuffer()
 	
-	init(name: String) {
+	init(name: String, debug: Bool) {
 		self.name = name
+		self.debug = debug
 		
 		super.init()
 		
 		output = .textColor
 		
 		browser.delegate = self
-		browser.searchForServices(ofType: "_dlog._tcp", inDomain: "local.")
+		browser.searchForServices(ofType: Self.type, inDomain: Self.domain)
 	}
 	
 	deinit {
@@ -73,6 +77,7 @@ public class NetOutput : LogOutput {
 	}
 	
 	private func log(_ text: String) {
+		guard debug else { return }
 		print("[NetOutput] \(text)")
 	}
 	
@@ -96,6 +101,18 @@ public class NetOutput : LogOutput {
 }
 
 extension NetOutput : NetServiceBrowserDelegate {
+	
+	public func netServiceBrowserWillSearch(_ browser: NetServiceBrowser) {
+		log("Begin search name:'\(name)', type:'\(Self.type)', domain:'\(Self.domain)'")
+	}
+	
+	public func netServiceBrowserDidStopSearch(_ browser: NetServiceBrowser) {
+		log("Stop search")
+	}
+	
+	public func netServiceBrowser(_ browser: NetServiceBrowser, didNotSearch errorDict: [String : NSNumber]) {
+		log("Error: \(errorDict)")
+	}
 	
 	public func netServiceBrowser(_ browser: NetServiceBrowser, didFind service: NetService, moreComing: Bool) {
 		guard service.name == self.name,
@@ -138,7 +155,7 @@ extension NetOutput : StreamDelegate {
 	public func stream(_ aStream: Stream, handle eventCode: Stream.Event) {
 		switch eventCode{
 			case .openCompleted:
-				log("Opened")
+				log("Output stream is opened")
 			
 			case .hasSpaceAvailable:
 				if let text = buffer.text {

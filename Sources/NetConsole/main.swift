@@ -29,17 +29,32 @@ import ArgumentParser
 
 
 class Service : NSObject {
+	
+	enum ANSIEscapeCode: String {
+		case reset = "\u{001b}[0m"
+		case clear = "\u{001b}c"
+		
+		case bold = "\u{001b}[1m"
+		case dim = "\u{001b}[2m"
+		case underline = "\u{001b}[4m"
+		case blink = "\u{001b}[5m"
+		case reversed = "\u{001b}[7m"
+	}
+	
 	let name: String
 	let debug: Bool
+	let autoClear: Bool
+	
 	let service: NetService
 	var inputStream: InputStream?
 	
 	static let bufferSize = 1024
 	var buffer = [UInt8](repeating: 0, count: bufferSize)
 	
-	init(name: String, debug: Bool) {
+	init(name: String, debug: Bool, autoClear: Bool) {
 		self.name = name
 		self.debug = debug
+		self.autoClear = autoClear
 		
 		service = NetService(domain: "local.", type:"_dlog._tcp.", name: name, port: 0)
 		super.init()
@@ -50,7 +65,13 @@ class Service : NSObject {
 	
 	private func log(_ text: String) {
 		guard debug else { return }
-		print("[NetConsole]", text)
+		
+		print("\(ANSIEscapeCode.dim.rawValue)[NetConsole]", text, ANSIEscapeCode.reset.rawValue)
+	}
+	
+	private func reject(inputStream: InputStream, outputStream: OutputStream) {
+		inputStream.open(); outputStream.open()
+		inputStream.close(); outputStream.close()
 	}
 }
 
@@ -66,9 +87,7 @@ extension Service : NetServiceDelegate {
 
 	func netService(_ sender: NetService, didAcceptConnectionWith inputStream: InputStream, outputStream: OutputStream) {
 		guard self.inputStream == nil else {
-			// Reject connection
-			inputStream.open(); outputStream.open()
-			inputStream.close(); outputStream.close()
+			reject(inputStream: inputStream, outputStream: outputStream)
 			return
 		}
 		
@@ -76,6 +95,10 @@ extension Service : NetServiceDelegate {
 		inputStream.delegate = self
 		inputStream.schedule(in: .current, forMode: .default)
 		inputStream.open()
+		
+		if autoClear {
+			print(ANSIEscapeCode.clear.rawValue)
+		}
 		
 		log("Connected")
 	}
@@ -86,7 +109,7 @@ extension Service : StreamDelegate {
 	func stream(_ aStream: Stream, handle eventCode: Stream.Event) {
 		switch eventCode {
 			case .openCompleted:
-				log("Opened")
+				log("Input stream is opened")
 				
 			case .hasBytesAvailable:
 				guard let stream = inputStream else { return }
@@ -107,7 +130,7 @@ extension Service : StreamDelegate {
 				
 			case .endEncountered:
 				inputStream = nil
-				log("Disconnected")
+				log("Input stream is ended")
 				
 			default:
 				break;
@@ -115,9 +138,11 @@ extension Service : StreamDelegate {
 	}
 }
 
+let info = "NetConsole for DLog v.1.0"
+
 struct NetConsole: ParsableCommand {
 	
-	static let configuration = CommandConfiguration(abstract: "NetConsole for DLog v.1.0")
+	static let configuration = CommandConfiguration(abstract: info)
 	
 	@Option(
 		name: [.long, .short],
@@ -126,12 +151,19 @@ struct NetConsole: ParsableCommand {
 	
 	@Flag(
 		name: [.long, .short],
+		help: "Clear a terminal on new connection.")
+	var autoClear = false
+	
+	@Flag(
+		name: [.long, .short],
 		help: "Enable debug messages.")
 	var debug = false
 	
 	func run() throws {
-		let _ = Service(name: name ?? "DLog", debug: debug)
+		print(info)
+		let _ = Service(name: name ?? "DLog", debug: debug, autoClear: autoClear)
 		RunLoop.current.run()
 	}
 }
+
 NetConsole.main()

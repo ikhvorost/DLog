@@ -177,6 +177,6 @@ public class TextOutput : LogOutput {
 			text: text,
 			scopes: interval.scopes)
 		
-		return log(message: message)
+		return textMessage(message: message)
 	}
 }

@@ -63,6 +63,8 @@ public class OSLogOutput : LogOutput {
 		let log = oslog(category: message.category)
 		
 		let location = "<\(message.fileName):\(message.line)>"
+		
+		assert(Self.types[message.type] != nil)
 		let type = Self.types[message.type]!
 		os_log("%s %s %s", dso: Self.dso, log: log, type: type, message.type.icon, location, message.text)
 		
