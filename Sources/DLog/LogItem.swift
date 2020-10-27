@@ -38,7 +38,7 @@ public enum LogType : Int {
 	case fault
 	
 	private static let icons: [LogType : String] = [
-		.trace : "◽️",
+		.trace : "⚛️",
 		.info : "✅",
 		.debug : "▶️",
 		.error : "⚠️",

@@ -46,7 +46,7 @@ public class Adaptive : LogOutput {
 		super.init()
 		
 		if Self.isDebug {
-			output = .stdout
+			output = (.emojiText => .stdout)
 		}
 		else {
 			output = Self.isTerminal

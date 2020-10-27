@@ -104,28 +104,45 @@ final class DLogTests: XCTestCase {
 		)
 	}
 	
-	func test_LogTypes() {
+	func test_PlainText() {
 		let log = DLog()
 		
-		XCTAssert(log.trace()!.match(#"\[DLOG\] ◽️ \[TRACE\] <DLogTests.swift:[0-9]+> test_LogTypes"#))
+		XCTAssert(log.trace()!.match(#"\[DLOG\] \[TRACE\] <DLogTests.swift:[0-9]+>"#))
+		XCTAssert(log.info("info")!.match(#"\[DLOG\] \[INFO\] <DLogTests.swift:[0-9]+> info"#))
+		XCTAssert(log.debug("debug")!.match(#"\[DLOG\] \[DEBUG\] <DLogTests.swift:[0-9]+> debug"#))
+		XCTAssert(log.error("error")!.match(#"\[DLOG\] \[ERROR\] <DLogTests.swift:[0-9]+> error"#))
+		XCTAssert(log.assert(false)!.match(#"\[DLOG\] \[ASSERT\] <DLogTests.swift:[0-9]+>"#))
+		XCTAssert(log.assert(true, "assert text") == nil)
+		XCTAssert(log.fault("fatal error")!.match(#"\[DLOG\] \[FAULT\] <DLogTests.swift:[0-9]+> fatal error"#))
+		XCTAssert(stdoutText { log.interval("My Interval") { delay()} }?.match(#"\[My Interval\]"#) == true)
+		XCTAssert(stdoutText { log.scope("My Scope"){ delay() } }?.match(#"\[My Scope\]"#) == true)
+	}
+	
+	func test_EmojiText() {
+		let log = DLog(.emojiText => .stdout)
+		
+		XCTAssert(log.trace()!.match(#"\[DLOG\] ⚛️ \[TRACE\] <DLogTests.swift:[0-9]+>"#))
 		XCTAssert(log.info("info")!.match(#"\[DLOG\] ✅ \[INFO\] <DLogTests.swift:[0-9]+> info"#))
 		XCTAssert(log.debug("debug")!.match(#"\[DLOG\] ▶️ \[DEBUG\] <DLogTests.swift:[0-9]+> debug"#))
 		XCTAssert(log.error("error")!.match(#"\[DLOG\] ⚠️ \[ERROR\] <DLogTests.swift:[0-9]+> error"#))
-	
 		XCTAssert(log.assert(false)!.match(#"\[DLOG\] 🅰️ \[ASSERT\] <DLogTests.swift:[0-9]+>"#))
 		XCTAssert(log.assert(true, "assert text") == nil)
-		
 		XCTAssert(log.fault("fatal error")!.match(#"\[DLOG\] 🆘 \[FAULT\] <DLogTests.swift:[0-9]+> fatal error"#))
+		XCTAssert(stdoutText { log.interval("My Interval") { delay() } }?.match(#"🕒 \[INTERVAL\]"#) == true)
+		XCTAssert(stdoutText { log.scope("My Scope"){ delay() } }?.match(#"\[My Scope\]"#) == true)
+	}
+	
+	func test_ColoredText() {
+		let log = DLog(.coloredText => .stdout)
 		
-		for _ in 0..<10 {
-			let i = TimeInterval.random(in: 0.1...0.3)
-			let interval = log.interval("My Interval") {
-				delay(i)
-			}
-			XCTAssert("\(interval.name)" == "My Interval")
-		}
-		
-		XCTAssert(stdoutText { log.scope("My Scope"){} }?.match(#"\[My Scope\]"#) == true)
+		XCTAssert(log.trace()!.contains(ANSIEscapeCode.reset.rawValue))
+		XCTAssert(log.info("info")!.contains(ANSIEscapeCode.reset.rawValue))
+		XCTAssert(log.debug("debug")!.contains(ANSIEscapeCode.reset.rawValue))
+		XCTAssert(log.error("error")!.contains(ANSIEscapeCode.reset.rawValue))
+		XCTAssert(log.assert(false, "assert")!.contains(ANSIEscapeCode.reset.rawValue))
+		XCTAssert(log.fault("fault")!.contains(ANSIEscapeCode.reset.rawValue))
+		XCTAssert(stdoutText { log.interval("interval"){ delay() } }?.contains(ANSIEscapeCode.reset.rawValue) == true)
+		XCTAssert(stdoutText { log.scope("scope"){ delay() } }?.contains(ANSIEscapeCode.reset.rawValue) == true)
 	}
 	
 	func test_Category() {
@@ -288,19 +305,6 @@ final class DLogTests: XCTestCase {
 		catch {
 			XCTFail(error.localizedDescription)
 		}
-	}
-	
-	func test_Color() {
-		let log = DLog(.coloredText => .stdout)
-		
-		XCTAssert(log.trace()!.contains(ANSIEscapeCode.reset.rawValue))
-		XCTAssert(log.info("info")!.contains(ANSIEscapeCode.reset.rawValue))
-		XCTAssert(log.debug("debug")!.contains(ANSIEscapeCode.reset.rawValue))
-		XCTAssert(log.error("error")!.contains(ANSIEscapeCode.reset.rawValue))
-		XCTAssert(log.assert(false, "assert")!.contains(ANSIEscapeCode.reset.rawValue))
-		XCTAssert(log.fault("fault")!.contains(ANSIEscapeCode.reset.rawValue))
-		XCTAssert(stdoutText { log.interval("interval"){} }?.contains(ANSIEscapeCode.reset.rawValue) == true)
-		XCTAssert(stdoutText { log.scope("scope"){}  }?.contains(ANSIEscapeCode.reset.rawValue) == true)
 	}
 	
 	func test_NetConsole() {

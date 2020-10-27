@@ -28,7 +28,8 @@ import Foundation
 /// Base output class
 public class LogOutput : NSObject {
 	public static var text: Text { Text() }
-	public static var coloredText: Text { Text(color: true) }
+	public static var emojiText: Text { Text(mode: .emoji) }
+	public static var coloredText: Text { Text(mode: .colored) }
 	public static var stdout: Standard { Standard() }
 	public static var adaptive: Adaptive { Adaptive() }
 	public static var oslog: OSLog { OSLog() }

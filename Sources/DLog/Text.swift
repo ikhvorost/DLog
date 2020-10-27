@@ -84,10 +84,16 @@ public class Text : LogOutput {
 		// .scope
 	]
 	
-	let color: Bool
+	public enum Mode {
+		case plain
+		case emoji
+		case colored
+	}
 	
-	init(color: Bool = false) {
-		self.color = color
+	let mode: Mode
+	
+	init(mode: Mode = .plain) {
+		self.mode = mode
 	}
 	
 	static let dateFormatter: DateFormatter = {
@@ -119,13 +125,20 @@ public class Text : LogOutput {
 			}
 		}
 		
-		if color, let tag = Self.tags[message.type] {
-			let tagText = " \(message.type.title) ".color(tag.colors)
-			let location = "<\(message.fileName):\(message.line)>".color([.dim, tag.textColor])
-			return "\(time.color(.dim)) \(message.category.color(.textBlue)) \(padding)\(tagText) \(location) \(message.text.color(tag.textColor))"
-		}
-		else {
-			return "\(time) [\(message.category)] \(padding)\(message.type.icon) [\(message.type.title)] <\(message.fileName):\(message.line)> \(message.text)"
+		switch mode {
+			case .colored:
+				guard let tag = Self.tags[message.type] else { fallthrough }
+				
+				let tagText = " \(message.type.title) ".color(tag.colors)
+				let location = "<\(message.fileName):\(message.line)>".color([.dim, tag.textColor])
+				return "\(time.color(.dim)) \(message.category.color(.textBlue)) \(padding)\(tagText) \(location) \(message.text.color(tag.textColor))"
+				
+			case .plain:
+				return "\(time) [\(message.category)] \(padding)[\(message.type.title)] <\(message.fileName):\(message.line)> \(message.text)"
+				
+			case .emoji:
+				return "\(time) [\(message.category)] \(padding)\(message.type.icon) [\(message.type.title)] <\(message.fileName):\(message.line)> \(message.text)"
+				
 		}
 	}
 
@@ -144,11 +157,12 @@ public class Text : LogOutput {
 			ms = "(\(stringFromTime(interval: -interval))s)"
 		}
 		
-		if color {
-			return "\(time.color(.dim)) \(scope.category.color(.textBlue)) \(padding) [\(scope.text.color(.textMagenta))] \(ms ?? "")"
-		}
-		else {
-			return "\(time) [\(scope.category)] \(padding) [\(scope.text)] \(ms ?? "")"
+		switch mode {
+			case .emoji, .plain:
+				return "\(time) [\(scope.category)] \(padding) [\(scope.text)] \(ms ?? "")"
+				
+			case .colored:
+				return "\(time.color(.dim)) \(scope.category.color(.textBlue)) \(padding) [\(scope.text.color(.textMagenta))] \(ms ?? "")"
 		}
 	}
 	
