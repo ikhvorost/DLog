@@ -143,7 +143,7 @@ public class Text : LogOutput {
 	}
 
 	private func textScope(scope: LogScope, scopes: [LogScope], start: Bool) -> String {
-		let time = Self.dateFormatter.string(from: scope.time!)
+		let time = Self.dateFormatter.string(from: start ? scope.time! : Date())
 		
 		var padding = ""
 		for level in 1..<scope.level {
