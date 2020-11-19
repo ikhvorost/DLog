@@ -34,7 +34,7 @@ Flexible and powerful logger for Swift. DLog supports emoji and colored text out
 
 By default `DLog` provides basic text console output:
 
-```
+``` swift
 // Import the package
 import DLog
 
@@ -61,7 +61,7 @@ Where:
 
 Log the current function name or a message (if it is provided) to help debug problems during the development:
 
-```
+``` swift
 let log = DLog()
 
 func startup() {
@@ -81,7 +81,7 @@ Outputs:
 
 Log an information message and helpful data:
 
-```
+``` swift
 let log = DLog()
 
 let uuid = UUID().uuidString
@@ -97,7 +97,7 @@ Outputs:
 
 Log a debug message to help debug problems during the development:
 
-```
+``` swift
 let log = DLog()
 
 let session = URLSession(configuration: .default)
@@ -119,7 +119,7 @@ Outputs:
 
 Log an error that occurred during the execution of your code.
 
-```
+``` swift
 let log = DLog()
 
 let fromURL = URL(fileURLWithPath: "/path/to/old")
@@ -141,7 +141,7 @@ Outputs:
 
 Sanity check and log a message (if it is provided) when a condition is false.
 
-```
+``` swift
 let log = DLog()
 
 let user = "John"
@@ -162,7 +162,7 @@ Outputs:
 
 Log a critical bug that occurred during the execution in your code.
 
-```
+``` swift
 let log = DLog()
 
 guard let modelURL = Bundle.main.url(forResource: "DataModel", withExtension:"momd") else {
@@ -180,7 +180,7 @@ Outputs:
 
 `scope` provides a mechanism for grouping and labeling work that's done in your program, so that can see all log messages related to the defined scope of your code.
 
-```
+``` swift
 let log = DLog()
 
 log.scope("Loading") {
@@ -207,7 +207,7 @@ Where:
 
 It's possible to `enter` and `leave` a scope asynchronously:
 
-```
+``` swift
 let log = DLog()
 
 let scope = log.scope("Request")
@@ -238,7 +238,7 @@ Outputs:
 
 Scopes can be nested one into one and that implements a stack of scopes:
 
-```
+``` swift
 let log = DLog()
 
 log.scope("Loading") {
@@ -279,7 +279,7 @@ Outputs:
 
 `interval` measures performance of your code by time durations and logs a detailed message with accumulated statistics:
 
-```
+``` swift
 let log = DLog()
 
 for _ in 0...10 {
@@ -315,7 +315,7 @@ Where:
 
 To measure asynchronous tasks you can use `begin` and `end` methods:
 
-```
+``` swift
 let log = DLog()
 
 let interval = log.interval("Video")
@@ -341,7 +341,7 @@ Outputs:
 
 You can define category name to differentiate unique areas and parts of your app and DLog uses this value to categorize and filter related log messages. For example, you might define separate strings for your app’s user interface, data model, and networking code.
 
-```
+``` swift
 let log = DLog()
 let tableLog = log["TABLE"]
 let netLog = log["NET"]
@@ -369,7 +369,7 @@ It supports thee modes:
 - `.emoji` - text with type icons for info, debug etc. (useful for XCode console)
 - `.colored` - colored text with ANSI escape codes (useful for Terminal and files)
 
-```
+``` swift
 let outputs = [
 	"Plain" : Text(),
 	"Emoji" : Text(.emoji),
@@ -410,7 +410,7 @@ Colored text in Terminal:
 
 You can also use shortcuts to create the logger with Text outputs:
 
-```
+``` swift
 let logPlain = DLog(.text)
 let logEmoji = DLog(.textEmoji)
 let logColored = DLog(.textColored)
@@ -418,7 +418,7 @@ let logColored = DLog(.textColored)
 
 ### Standard
 
-`Standard` is output to standard 
+`Standard` is output to standard
 
 
 ### File
@@ -433,13 +433,13 @@ let logColored = DLog(.textColored)
 
 By default DLog prints text log messages to Standard Output stream and next initialisations are equal:
 
-```
+``` swift
 DLog() == DLog(Standard()) == DLog(.stdout) == DLog(.text => .stdout)
 ```
 Where `=>` is pipeline operator which defines a combined output from two outputs where the first one is a source and second is a target.
 
 You can combine any needed outputs together:
-```
+``` swift
 // All log messages will be written as colored text (with escape codes) to the file
 
 let log = DLog(.coloredText => .file(path))
@@ -447,7 +447,7 @@ let log = DLog(.coloredText => .file(path))
 
 Also this allows the creation of a chained output from multiple outputs one by one by:
 
-```
+``` swift
 // All log messages will be written:
 // 1) as plain text to stdout
 // 2) as colored text (with escape codes) to the file
@@ -459,7 +459,7 @@ let log = DLog(.text => .stdout => .coloredText => .file(path))
 
 `.filter` represents a pipe output that can filter log messages by next available fields: `time`, `category`, `type`, `fileName`, `funcName`, `line` and `text`. You can inject it to your pipline to log needed data only. For example:
 
-```
+``` swift
 // Log messages from 'NET' category only
 
 let log = DLog(.text => .filter { $0.category == "NET" } => .stdout)
@@ -474,7 +474,7 @@ Outputs:
 
 ```
 
-```
+``` swift
 // Log debug messages only
 
 let log = DLog(.text => .filter { $0.type == .debug } => .stdout)
@@ -488,7 +488,7 @@ Outputs:
 23:43:55.594 [DLOG] [DEBUG] <Package.playground:11> debug
 ```
 
-```
+``` swift
 // Log messages that contain "hello" only
 
 let log = DLog(.text => .filter { $0.text.contains("hello") } => .stdout)
@@ -506,7 +506,7 @@ Outputs:
 
 `DLog.disabled` is the shared disabled logger constant that prevents DLog from logging any messages. It's useful when you want to turn off logging for some build configuration, preference, condition etc.
 
-```
+``` swift
 // Logging is enabled for `Debug` build configuration only
 
 #if DEBUG
