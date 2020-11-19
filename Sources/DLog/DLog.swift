@@ -52,7 +52,11 @@ class Atomic<T> {
 }
 
 public class DLog {
+	/// The shared disabled log.
+	///
+	/// Using this constant prevents logging a message.
 	public static let disabled = DLog(nil)
+	
 	public static let category = "DLOG"
 	
 	private let output: LogOutput?

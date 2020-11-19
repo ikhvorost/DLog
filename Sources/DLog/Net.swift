@@ -68,7 +68,7 @@ public class Net : LogOutput {
 		
 		super.init()
 		
-		output = .coloredText
+		output = .textColored
 		
 		browser.delegate = self
 		browser.searchForServices(ofType: Self.type, inDomain: Self.domain)

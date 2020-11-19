@@ -119,7 +119,7 @@ final class DLogTests: XCTestCase {
 	}
 	
 	func test_EmojiText() {
-		let log = DLog(.emojiText => .stdout)
+		let log = DLog(.textEmoji => .stdout)
 		
 		XCTAssert(log.trace()!.match(#"\[DLOG\] ⚛️ \[TRACE\] <DLogTests.swift:[0-9]+>"#))
 		XCTAssert(log.info("info")!.match(#"\[DLOG\] ✅ \[INFO\] <DLogTests.swift:[0-9]+> info"#))
@@ -133,7 +133,7 @@ final class DLogTests: XCTestCase {
 	}
 	
 	func test_ColoredText() {
-		let log = DLog(.coloredText => .stdout)
+		let log = DLog(.textColored => .stdout)
 		
 		XCTAssert(log.trace()!.contains(ANSIEscapeCode.reset.rawValue))
 		XCTAssert(log.info("info")!.contains(ANSIEscapeCode.reset.rawValue))
@@ -346,7 +346,7 @@ final class DLogTests: XCTestCase {
 						=> .oslog
 						=> .file("dlog.txt")
 						=> .filter { $0.type == .debug }
-						=> .coloredText
+						=> .textColored
 						=> .net(debug: true))
 		
 		let time = Date()

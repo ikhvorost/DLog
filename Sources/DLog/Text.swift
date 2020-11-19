@@ -92,7 +92,7 @@ public class Text : LogOutput {
 	
 	let mode: Mode
 	
-	init(mode: Mode = .plain) {
+	public init(_ mode: Mode = .plain) {
 		self.mode = mode
 	}
 	
@@ -137,7 +137,7 @@ public class Text : LogOutput {
 				return "\(time) [\(message.category)] \(padding)[\(message.type.title)] <\(message.fileName):\(message.line)> \(message.text)"
 				
 			case .emoji:
-				return "\(time) [\(message.category)] \(padding)\(message.type.icon) [\(message.type.title)] <\(message.fileName):\(message.line)> \(message.text)"
+				return "\(time) [\(message.category)] \(padding)\(message.type.icon) <\(message.fileName):\(message.line)> \(message.text)"
 				
 		}
 	}

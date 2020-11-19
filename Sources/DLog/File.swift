@@ -40,7 +40,7 @@ public class File : LogOutput {
 		
 		super.init()
 		
-		output = Text()
+		output = .text
 	}
 	
 	deinit {
