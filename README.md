@@ -43,9 +43,11 @@ let log = DLog()
 
 // Log debug message
 log.debug("Hello DLog!")
+```
 
 Outputs:
 
+```
 21:03:52.276 [DLOG] [DEBUG] <Package.playground:4> Hello DLog!
 ```
 Where:
