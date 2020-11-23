@@ -408,7 +408,7 @@ Colored
 
 Colored text in Terminal:
 
-![DLog colored text](dlog-text-colored.png =920x103)
+<img src="dlog-text-colored.png" width="600">\
 
 You can also use shortcuts to create the logger with Text outputs:
 
