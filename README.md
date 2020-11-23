@@ -408,7 +408,7 @@ Colored
 
 Colored text in Terminal:
 
-![DLog colored text](dlog-text-colored.png)
+![DLog colored text](dlog-text-colored.png =920x103)
 
 You can also use shortcuts to create the logger with Text outputs:
 
@@ -420,7 +420,7 @@ let logColored = DLog(.textColored)
 
 ### Standard
 
-`Standard` is output to standard
+`Standard` is output to standard `stdout` and `stderr`
 
 
 ### File
