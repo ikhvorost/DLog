@@ -29,14 +29,30 @@ import Foundation
 
 public class Standard : LogOutput {
 	
-	override init() {
+	public enum Mode {
+		case out
+		case err
+	}
+	
+	let mode: Mode
+	
+	public init(_ mode: Mode = .out) {
+		self.mode = mode
+		
 		super.init()
-		output = Text()
+		
+		output = .text
 	}
 	
 	private func echo(_ text: String?) -> String? {
 		if let str = text, !str.isEmpty {
-			print(str)
+			switch mode {
+				case .out:
+					fputs(str + "\n", Darwin.stdout)
+					
+				case .err:
+					fputs(str + "\n", Darwin.stderr)
+			}
 		}
 		return text
 	}

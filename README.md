@@ -4,7 +4,7 @@
 ![Platform: iOS 8+/macOS10.11](https://img.shields.io/badge/platform-iOS%20|%20macOS%20|%20tvOS%20|%20watchOS%20|%20Linux-blue.svg?style=flat)
 [![SPM compatible](https://img.shields.io/badge/SPM-compatible-4BC51D.svg?style=flat)](https://swift.org/package-manager/)
 
-Flexible and powerful logger for Swift. DLog supports emoji and colored text output, oslog, pipelines, filtering, scopes, intervals and more.
+DLog supports emoji and colored text output, oslog, pipelines, filtering, scopes, intervals and more.
 
 - [Getting started](#getting-started)
 - [Log levels](#log-levels)
@@ -364,7 +364,7 @@ Outputs:
 
 ### Text
 
-`Text` is base output that generates text representation of log messages. It doesn't deliver text to any target destination (stdout, file etc.) and usually other outputs use it.
+`Text` is base source output that generates text representation of log messages. It doesn't deliver text to any target outputs (stdout, file etc.) and usually other outputs use it.
 
 It supports thee modes:
 - `.plain` - universal plain text
@@ -410,7 +410,7 @@ Colored text in Terminal:
 
 <img src="dlog-text-colored.png" width="600"><br>
 
-You can also use shortcuts to create the logger with Text outputs:
+You can also use shortcuts for `Text` to create loggers:
 
 ``` swift
 let logPlain = DLog(.text)
@@ -420,7 +420,32 @@ let logColored = DLog(.textColored)
 
 ### Standard
 
-`Standard` outputs text logs to `stdout` and `stderr`.
+`Standard` is a target output that can output text messages to POSIX streams with two modes:
+- `.out` - Standard Output (stdout)
+- `.err` - Standard Error (stderr)
+
+``` swift
+let logStdOut = DLog(Standard(.out)) // Or Standard()
+let logStdErr = DLog(Standard(.err))
+```
+
+You can also use shortcuts for `Standard` to create loggers:
+
+``` swift
+let logStdOut = DLog(.stdout)
+let logStdErr = DLog(.stderr)
+```
+
+By default `Standard` gets text messages from `Text` output and then writes them to the streams:
+
+``` swift
+let log = DLog(.stderr)
+log.info("It's Error stream")
+```
+Outputs:
+```
+18:03:34.617 [DLOG] [INFO] <Package.playground:6> It's Error stream
+```
 
 
 ### File
@@ -459,7 +484,9 @@ let log = DLog(.text => .stdout => .coloredText => .file(path))
 
 ## Filter
 
-`.filter` represents a pipe output that can filter log messages by next available fields: `time`, `category`, `type`, `fileName`, `funcName`, `line` and `text`. You can inject it to your pipline to log needed data only. Examples:
+`.filter` represents a pipe output that can filter log messages by next available fields: `time`, `category`, `type`, `fileName`, `funcName`, `line` and `text`. You can inject it to your pipline to log needed data only.
+
+Examples:
 
 1) Log messages from 'NET' category only
 ``` swift
