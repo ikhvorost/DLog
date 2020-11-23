@@ -72,9 +72,9 @@ func startup() {
 }
 
 startup()
-
+```
 Outputs:
-
+```
 23:02:52.601 [DLOG] [TRACE] <Package.playground:7> Start
 23:02:52.603 [DLOG] [TRACE] <Package.playground:8> startup()
 ```
@@ -88,9 +88,9 @@ let log = DLog()
 
 let uuid = UUID().uuidString
 log.info("uuid: \(uuid)")
-
+```
 Outputs:
-
+```
 00:09:51.211 [DLOG] [INFO] <Package.playground:17> uuid: 833D821A-B1FD-4403-A8A2-9380F1E95864
 
 ```
@@ -110,9 +110,9 @@ session.dataTask(with: URL(string: "https://apple.com")!) { data, response, erro
 	log.debug("\(http.url!.absoluteString): \(http.statusCode) - \(text)")
 }
 .resume()
-
+```
 Outputs:
-
+```
 00:27:50.575 [DLOG] [DEBUG] <Package.playground:23> https://www.apple.com/: 200 - no error
 
 ```
@@ -132,9 +132,9 @@ do {
 catch {
 	log.error(error)
 }
-
+```
 Outputs:
-
+```
 23:28:26.635 [DLOG] [ERROR] <Package.playground:13> “old” couldn’t be moved to “to” because either the former doesn’t exist, or the folder containing the latter doesn’t exist.
 
 ```
@@ -152,9 +152,9 @@ let password = ""
 log.assert(user.isEmpty == false, "User is empty")
 log.assert(password.isEmpty == false)
 log.assert(password.isEmpty == false, "Password is empty")
-
+```
 Outputs:
-
+```
 23:16:51.929 [DLOG] [ASSERT] <Package.playground:10>
 23:16:51.931 [DLOG] [ASSERT] <Package.playground:11> Password is empty
 ```
@@ -171,9 +171,9 @@ guard let modelURL = Bundle.main.url(forResource: "DataModel", withExtension:"mo
 	log.fault("Error loading model from bundle")
 	abort()
 }
-
+```
 Outputs:
-
+```
 22:39:48.016 [DLOG] [FAULT] <Package.playground:9> Error loading model from bundle
 
 ```
@@ -194,9 +194,9 @@ log.scope("Loading") {
 		}
 	}
 }
-
+```
 Outputs:
-
+```
 00:24:53.077 [DLOG] ┌ [Loading]
 00:24:53.079 [DLOG] |	[INFO] <Package.playground:14> File: .../data.json
 00:24:53.106 [DLOG] |	[DEBUG] <Package.playground:17> Loaded 83 bytes
@@ -228,9 +228,9 @@ session.dataTask(with: URL(string: "https://apple.com")!) { data, response, erro
 	scope.leave()
 }
 .resume()
-
+```
 Outputs:
-
+```
 00:15:47.773 [DLOG] ┌ [Request]
 00:15:48.175 [DLOG] |	[DEBUG] <Package.playground:15> https://www.apple.com/ - HTTP 200
 00:15:48.176 [DLOG] |	[DEBUG] <Package.playground:16> Loaded: 73097 bytes
@@ -261,9 +261,9 @@ log.scope("Loading") {
 		}
 	}
 }
-
+```
 Outputs:
-
+```
 23:14:19.612 [DLOG] ┌ [Loading]
 23:14:19.613 [DLOG] |	[INFO] <Package.playground:15> File: .../data.json
 23:14:19.636 [DLOG] |	[DEBUG] <Package.playground:18> Loaded 83 bytes
@@ -290,9 +290,9 @@ for _ in 0...10 {
 		arr.sort()
 	}
 }
-
+```
 Outputs:
-
+```
 23:34:10.569 [DLOG] [INTERVAL] <Package.playground:9> [Sort] Count: 1, Total: 0.307s, Min: 0.307s, Max: 0.307s, Avg: 0.307s
 23:34:10.819 [DLOG] [INTERVAL] <Package.playground:9> [Sort] Count: 2, Total: 0.550s, Min: 0.243s, Max: 0.307s, Avg: 0.275s
 23:34:11.079 [DLOG] [INTERVAL] <Package.playground:9> [Sort] Count: 3, Total: 0.808s, Min: 0.243s, Max: 0.307s, Avg: 0.269s
@@ -331,9 +331,9 @@ asset.loadValuesAsynchronously(forKeys: ["duration"]) {
 	}
 	interval.end()
 }
-
+```
 Outputs:
-
+```
 00:42:25.885 [DLOG] [INFO] <Package.playground:16> Duration: 155000
 00:42:25.888 [DLOG] [INTERVAL] <Package.playground:9> [Video] Count: 1, Total: 0.390s, Min: 0.390s, Max: 0.390s, Avg: 0.390s
 
@@ -351,9 +351,9 @@ let netLog = log["NET"]
 log.debug("Refresh")
 netLog.debug("Successfully fetched recordings.")
 tableLog.debug("Updating with network response.")
-
+```
 Outputs:
-
+```
 23:45:18.096 [DLOG] [DEBUG] <Package.playground:12> Refresh
 23:45:18.099 [NET] [DEBUG] <Package.playground:13> Successfully fetched recordings.
 23:45:18.099 [TABLE] [DEBUG] <Package.playground:14> Updating with network response.
@@ -387,9 +387,9 @@ for (name, output) in outputs {
 	print(log.fault("fatal")!)
 	print("")
 }
-
+```
 Outputs:
-
+```
 Plain
 16:42:36.976 [DLOG] [INFO] <Package.playground:17> info
 16:42:36.978 [DLOG] [DEBUG] <Package.playground:18> debug
@@ -408,7 +408,7 @@ Colored
 
 Colored text in Terminal:
 
-<img src="dlog-text-colored.png" width="600">\
+<img src="dlog-text-colored.png" width="600"><br>
 
 You can also use shortcuts to create the logger with Text outputs:
 
@@ -420,7 +420,7 @@ let logColored = DLog(.textColored)
 
 ### Standard
 
-`Standard` is output to standard `stdout` and `stderr`
+`Standard` outputs text logs to `stdout` and `stderr`.
 
 
 ### File
@@ -459,48 +459,44 @@ let log = DLog(.text => .stdout => .coloredText => .file(path))
 
 ## Filter
 
-`.filter` represents a pipe output that can filter log messages by next available fields: `time`, `category`, `type`, `fileName`, `funcName`, `line` and `text`. You can inject it to your pipline to log needed data only. For example:
+`.filter` represents a pipe output that can filter log messages by next available fields: `time`, `category`, `type`, `fileName`, `funcName`, `line` and `text`. You can inject it to your pipline to log needed data only. Examples:
 
+1) Log messages from 'NET' category only
 ``` swift
-// Log messages from 'NET' category only
-
 let log = DLog(.text => .filter { $0.category == "NET" } => .stdout)
 
 categoryLog.info("info")
 let netLog = categoryLog["NET"]
 netLog.info("info")
-
+```
 Outputs:
-
+```
 23:37:32.582 [NET] [INFO] <Package.playground:11> info
 
 ```
-
+2) Log debug messages only
 ``` swift
-// Log debug messages only
-
 let log = DLog(.text => .filter { $0.type == .debug } => .stdout)
 
 log.trace()
 log.info("info")
 log.debug("debug")
-
+```
 Outputs:
-
+```
 23:43:55.594 [DLOG] [DEBUG] <Package.playground:11> debug
 ```
 
+3) Log messages that contain "hello" only
 ``` swift
-// Log messages that contain "hello" only
-
 let log = DLog(.text => .filter { $0.text.contains("hello") } => .stdout)
 
 log.info("hello world")
 log.debug("debug")
 log.info("info")
-
+```
 Outputs:
-
+```
 23:49:01.047 [DLOG] [INFO] <Package.playground:9> hello world
 ```
 
