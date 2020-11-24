@@ -36,12 +36,12 @@ public class Standard : LogOutput {
 	
 	let mode: Mode
 	
-	public init(_ mode: Mode = .out) {
+	public init(_ mode: Mode = .out, source: LogOutput = .text) {
 		self.mode = mode
 		
 		super.init()
 		
-		output = .text
+		self.source = source
 	}
 	
 	private func echo(_ text: String?) -> String? {

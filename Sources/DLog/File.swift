@@ -31,7 +31,7 @@ public class File : LogOutput {
 	private let file: FileHandle?
 	private let queue = DispatchQueue(label: "FileOutput")
 	
-	init(filePath: String) {
+	init(filePath: String, source: LogOutput = .text) {
 		let fileManager = FileManager.default
 		try? fileManager.removeItem(atPath: filePath)
 		fileManager.createFile(atPath: filePath, contents: nil, attributes: nil)
@@ -40,7 +40,7 @@ public class File : LogOutput {
 		
 		super.init()
 		
-		output = .text
+		self.source = source
 	}
 	
 	deinit {

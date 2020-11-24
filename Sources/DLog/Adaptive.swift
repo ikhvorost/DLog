@@ -46,10 +46,10 @@ public class Adaptive : LogOutput {
 		super.init()
 		
 		if Self.isDebug {
-			output = (.textEmoji => .stdout)
+			source = (.textEmoji => .stdout)
 		}
 		else {
-			output = Self.isTerminal
+			source = Self.isTerminal
 				? .textColored => .stdout
 				: .net
 		}

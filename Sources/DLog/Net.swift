@@ -62,13 +62,13 @@ public class Net : LogOutput {
 	private var outputStream : OutputStream?
 	private let buffer = LogBuffer()
 	
-	init(name: String, debug: Bool) {
+	init(name: String, debug: Bool, source: LogOutput = .textColored) {
 		self.name = name
 		self.debug = debug
 		
 		super.init()
 		
-		output = .textColored
+		self.source = source
 		
 		browser.delegate = self
 		browser.searchForServices(ofType: Self.type, inDomain: Self.domain)

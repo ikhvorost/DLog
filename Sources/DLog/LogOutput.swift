@@ -40,39 +40,39 @@ public class LogOutput : NSObject {
 	public static func file(_ filePath: String) -> File { File(filePath: filePath) }
 	public static func net(name: String = "DLog", debug: Bool = false) -> Net { Net(name: name, debug: debug) }
 
-	var output: LogOutput!
+	var source: LogOutput!
 	
 	@discardableResult
 	func log(message: LogMessage) -> String? {
-		return output != nil
-			? output.log(message: message)
+		return source != nil
+			? source.log(message: message)
 			: nil
 	}
 	
 	@discardableResult
 	func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
-		return output != nil
-			? output.scopeEnter(scope: scope, scopes: scopes)
+		return source != nil
+			? source.scopeEnter(scope: scope, scopes: scopes)
 			: nil
 	}
 	
 	@discardableResult
 	func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
-		return output != nil
-			? output.scopeLeave(scope: scope, scopes: scopes)
+		return source != nil
+			? source.scopeLeave(scope: scope, scopes: scopes)
 			: nil
 	}
 	
 	func intervalBegin(interval: LogInterval) {
-		if output != nil {
-			output.intervalBegin(interval: interval)
+		if source != nil {
+			source.intervalBegin(interval: interval)
 		}
 	}
 	
 	@discardableResult
 	func intervalEnd(interval: LogInterval) -> String? {
-		return output != nil
-			? output.intervalEnd(interval: interval)
+		return source != nil
+			? source.intervalEnd(interval: interval)
 			: nil
 	}
 }
@@ -86,7 +86,7 @@ infix operator => : ForwardPipe
 extension LogOutput {
 	// Forward pipeg
 	public static func => (left: LogOutput, right: LogOutput) -> LogOutput {
-		right.output = left
+		right.source = left
 		return right
 	}
 }

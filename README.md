@@ -364,7 +364,7 @@ Outputs:
 
 ### Text
 
-`Text` is base source output that generates text representation of log messages. It doesn't deliver text to any target outputs (stdout, file etc.) and usually other outputs use it.
+`Text` is a source output that generates text representation of log messages. It doesn't deliver text to any target outputs (stdout, file etc.) and usually other outputs use it.
 
 It supports thee modes:
 - `.plain` - universal plain text
@@ -410,7 +410,7 @@ Colored text in Terminal:
 
 <img src="dlog-text-colored.png" width="600"><br>
 
-You can also use shortcuts for `Text` to create loggers:
+You can also use shortcuts for `Text` output to create loggers:
 
 ``` swift
 let logPlain = DLog(.text)
@@ -425,28 +425,32 @@ let logColored = DLog(.textColored)
 - `.err` - Standard Error (stderr)
 
 ``` swift
-let logStdOut = DLog(Standard(.out)) // Or Standard()
-let logStdErr = DLog(Standard(.err))
+let logOut = DLog(Standard(.out)) // Or Standard()
+let logErr = DLog(Standard(.err))
 ```
 
 You can also use shortcuts for `Standard` to create loggers:
 
 ``` swift
-let logStdOut = DLog(.stdout)
-let logStdErr = DLog(.stderr)
+let logOut = DLog(.stdout)
+let logErr = DLog(.stderr)
+
+logOut.info("It's output stream")
+logErr.info("It's error stream")
 ```
 
-By default `Standard` gets text messages from `Text` output and then writes them to the streams:
+By default `Standard` gets `plain` text messages from `Text` source output and then writes them to the streams but you can specify an other source:
 
 ``` swift
-let log = DLog(.stderr)
-log.info("It's Error stream")
+let output = Standard(source: .textEmoji)
+let log = DLog(output)
+
+log.info("Emoji")
 ```
 Outputs:
 ```
-18:03:34.617 [DLOG] [INFO] <Package.playground:6> It's Error stream
+21:28:37.989 [DLOG] ✅ <Package.playground:7> Emoji
 ```
-
 
 ### File
 
@@ -543,11 +547,11 @@ Outputs:
 
 ## Installation
 
-### Swift Package Manager (SPM)
+### XCode project
 
 Select `Xcode` > `File` > `Swift Packages` > `Add Package Dependency...` > Paste `https://github.com/ikhvorost/DLog.git` and then `import DLog` in source files.
 
-For Swift packages:
+### Swift Package
 
 ``` swift
 let package = Package(
