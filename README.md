@@ -22,8 +22,8 @@ DLog supports emoji and colored text output, oslog, pipelines, filtering, scopes
 	- [Standard](#standard)
 	- [File](#file)
 	- [OSLog](#oslog)
-	- [Adaptive](#adaptive)
 	- [Net](#net)
+	- [Adaptive](#adaptive)
 - [Pipeline](#pipeline)
 - [Filter](#filter)
 - [`DLog.disabled`](#dlogdisabled)
@@ -439,7 +439,7 @@ logOut.info("It's output stream")
 logErr.info("It's error stream")
 ```
 
-By default `Standard` gets `plain` text messages from `Text` source output and then writes them to the streams but you can specify an other source:
+By default `Standard` uses `Text(.plain)` or `.text` output as a source to write text to the streams but you can set other:
 
 ``` swift
 let output = Standard(source: .textEmoji)
@@ -454,18 +454,47 @@ Outputs:
 
 ### File
 
+`File` is a target output that writes text messages to a file by a provided path:
+
+``` swift
+let output = File(path: "/users/user/dlog.txt")
+let log = DLog(output)
+
+log.info("It's a file")
+```
+
+By default `File` output clears content of a opened file but if you want to append data to the existed file you should set `append` parameter to `true`:
+
+``` swift
+let output = File(path: "/users/user/dlog.txt", append: true)
+```
+
+`File` output uses `Text(.plain)` or `.text` as a source by default but you can set other:
+
+``` swift
+let output = File(path: "/users/user/dlog.txt", source: .textColored)
+let log = DLog(output)
+
+log.scope("File") {
+	log.info("It's a file")
+}
+```
+dlog.txt:
+
+<img src="dlog-file-colored.png" width="600"><br>
+
 ### OSLog
 
-### Adaptive
-
 ### Net
+
+### Adaptive
 
 ## Pipeline
 
 By default DLog prints text log messages to Standard Output stream and next initialisations are equal:
 
 ``` swift
-DLog() == DLog(Standard()) == DLog(.stdout) == DLog(.text => .stdout)
+DLog() <=> DLog(Standard()) <=> DLog(.stdout) <=> DLog(.text => .stdout)
 ```
 Where `=>` is pipeline operator which defines a combined output from two outputs where the first one is a source and second is a target.
 
@@ -496,7 +525,7 @@ Examples:
 ``` swift
 let log = DLog(.text => .filter { $0.category == "NET" } => .stdout)
 
-categoryLog.info("info")
+log.info("info")
 let netLog = categoryLog["NET"]
 netLog.info("info")
 ```

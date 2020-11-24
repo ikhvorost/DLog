@@ -31,12 +31,24 @@ public class File : LogOutput {
 	private let file: FileHandle?
 	private let queue = DispatchQueue(label: "FileOutput")
 	
-	init(filePath: String, source: LogOutput = .text) {
+	public init(path: String, append: Bool = false, source: LogOutput = .text) {
 		let fileManager = FileManager.default
-		try? fileManager.removeItem(atPath: filePath)
-		fileManager.createFile(atPath: filePath, contents: nil, attributes: nil)
+		if append == false {
+			try? fileManager.removeItem(atPath: path)
+		}
 		
-		file = FileHandle(forWritingAtPath: filePath)
+		if fileManager.fileExists(atPath: path) == false {
+			let dir = NSString(string: path).deletingLastPathComponent
+			try? fileManager.createDirectory(atPath: dir, withIntermediateDirectories: true, attributes: nil)
+			
+			fileManager.createFile(atPath: path, contents: nil, attributes: nil)
+		}
+		
+		file = FileHandle(forWritingAtPath: path)
+		
+		if append {
+			file?.seekToEndOfFile()
+		}
 		
 		super.init()
 		

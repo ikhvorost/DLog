@@ -37,7 +37,7 @@ public class LogOutput : NSObject {
 	public static var net: Net { net() }
 	
 	public static func filter(_ block: @escaping (LogItem) -> Bool) -> Filter { Filter(block: block) }
-	public static func file(_ filePath: String) -> File { File(filePath: filePath) }
+	public static func file(_ path: String) -> File { File(path: path) }
 	public static func net(name: String = "DLog", debug: Bool = false) -> Net { Net(name: name, debug: debug) }
 
 	var source: LogOutput!
