@@ -50,9 +50,7 @@ public class File : LogOutput {
 			file?.seekToEndOfFile()
 		}
 		
-		super.init()
-		
-		self.source = source
+		super.init(source: source)
 	}
 	
 	deinit {

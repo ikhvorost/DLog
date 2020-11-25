@@ -51,6 +51,11 @@ public class OSLog : LogOutput {
 
 	@Atomic private var logs = [String : os.OSLog]()
 	
+	// OSLog.`default`
+	public init() {
+		super.init(source: nil)
+	}
+	
 	private func oslog(category: String) -> os.OSLog {
 		if let log = logs[category] {
 			return log

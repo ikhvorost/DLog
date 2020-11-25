@@ -39,9 +39,7 @@ public class Standard : LogOutput {
 	public init(_ mode: Mode = .out, source: LogOutput = .text) {
 		self.mode = mode
 		
-		super.init()
-		
-		self.source = source
+		super.init(source: source)
 	}
 	
 	private func echo(_ text: String?) -> String? {

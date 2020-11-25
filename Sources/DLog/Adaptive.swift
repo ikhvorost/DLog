@@ -42,16 +42,18 @@ public class Adaptive : LogOutput {
 		return ProcessInfo.processInfo.environment["_"] != nil
 	}
 	
-	override init() {
-		super.init()
+	public init() {
+		var src: LogOutput!
 		
 		if Self.isDebug {
-			source = (.textEmoji => .stdout)
+			src = (.textEmoji => .stdout)
 		}
 		else {
-			source = Self.isTerminal
+			src = Self.isTerminal
 				? .textColored => .stdout
 				: .net
 		}
+		
+		super.init(source: src)
 	}
 }

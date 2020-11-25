@@ -42,6 +42,10 @@ public class LogOutput : NSObject {
 
 	var source: LogOutput!
 	
+	init(source: LogOutput!) {
+		self.source = source
+	}
+	
 	@discardableResult
 	func log(message: LogMessage) -> String? {
 		return source != nil

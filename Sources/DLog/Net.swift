@@ -66,9 +66,7 @@ public class Net : LogOutput {
 		self.name = name
 		self.debug = debug
 		
-		super.init()
-		
-		self.source = source
+		super.init(source: source)
 		
 		browser.delegate = self
 		browser.searchForServices(ofType: Self.type, inDomain: Self.domain)

@@ -94,6 +94,7 @@ public class Text : LogOutput {
 	
 	public init(_ mode: Mode = .plain) {
 		self.mode = mode
+		super.init(source: nil)
 	}
 	
 	static let dateFormatter: DateFormatter = {
