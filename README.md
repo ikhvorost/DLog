@@ -408,7 +408,7 @@ Colored
 
 Colored text in Terminal:
 
-<img src="images/dlog-text-colored.png" width="600" alt="DLog: Colored log in Terminal"><br>
+<img src="Images/dlog-text-colored.png" width="600" alt="DLog: Colored log in Terminal"><br>
 
 You can also use shortcuts `.text`, `.textEmoji` and `.textColored` to create the output:
 
@@ -488,7 +488,7 @@ log.scope("File") {
 ```
 File "dlog.txt":
 
-<img src="images/dlog-file-colored.png" width="600" alt="DLog: Colored text in a file."><br>
+<img src="Images/dlog-file-colored.png" width="600" alt="DLog: Colored text in a file."><br>
 
 ### OSLog
 
@@ -522,7 +522,7 @@ log.fault("fault")
 
 Console.app:
 
-<img src="images/dlog-oslog-console.png" alt="DLog: Logs in Console.app"><br>
+<img src="Images/dlog-oslog-console.png" alt="DLog: Logs in Console.app"><br>
 
 The `scope` maps to the system logger's activities:
 
@@ -541,7 +541,7 @@ log.scope("Loading") {
 
 Console.app:
 
-<img src="images/dlog-oslog-console-activity.png" alt="DLog: Activities in Console.app"><br>
+<img src="Images/dlog-oslog-console-activity.png" alt="DLog: Activities in Console.app"><br>
 
 The `interval` maps to to the system logger's signposts:
 
@@ -559,7 +559,7 @@ for _ in 0..<10 {
 
 Instruments.app:
 
-<img src="images/dlog-oslog-instruments-signpost.png" alt="DLog: Signposts in Instruments.app"><br>
+<img src="Images/dlog-oslog-instruments-signpost.png" alt="DLog: Signposts in Instruments.app"><br>
 
 
 ### Net
