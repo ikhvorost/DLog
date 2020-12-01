@@ -48,11 +48,12 @@ public class OSLog : LogOutput {
 		.fault : .fault,
 		.assert : .fault,
 	]
-
+	
+	private var subsystem: String
 	@Atomic private var logs = [String : os.OSLog]()
 	
-	// OSLog.`default`
-	public init() {
+	public init(subsystem: String = "com.dlog.logger") {
+		self.subsystem = subsystem
 		super.init(source: nil)
 	}
 	
@@ -60,7 +61,6 @@ public class OSLog : LogOutput {
 		if let log = logs[category] {
 			return log
 		}
-		let subsystem = Bundle.main.bundleIdentifier ?? ""
 		let log = os.OSLog(subsystem: subsystem, category: category)
 		logs[category] = log
 		return log
@@ -75,7 +75,8 @@ public class OSLog : LogOutput {
 		
 		assert(Self.types[message.type] != nil)
 		let type = Self.types[message.type]!
-		os_log("%s %s %s", dso: Self.dso, log: log, type: type, message.type.icon, location, message.text)
+		os_log("%{public}@ %{public}@ %{public}@", dso: Self.dso, log: log, type: type, message.type.icon, location, message.text)
+	
 		
 		return super.log(message: message)
 	}

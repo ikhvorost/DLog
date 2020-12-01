@@ -144,8 +144,8 @@ public class DLog {
 	}
 	
 	@discardableResult
-	public func error(_ error: Error, category: String = DLog.category, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		log(error.localizedDescription, type: .error, category: category, file: file, function: function, line: line)
+	public func error(_ error: String, category: String = DLog.category, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+		log(error, type: .error, category: category, file: file, function: function, line: line)
 	}
 	
 	@discardableResult

@@ -29,22 +29,22 @@ import Foundation
 
 public class Standard : LogOutput {
 	
-	public enum Mode {
+	public enum Stream {
 		case out
 		case err
 	}
 	
-	let mode: Mode
+	let stream: Stream
 	
-	public init(_ mode: Mode = .out, source: LogOutput = .text) {
-		self.mode = mode
+	public init(stream: Stream = .out, source: LogOutput = .text) {
+		self.stream = stream
 		
 		super.init(source: source)
 	}
 	
 	private func echo(_ text: String?) -> String? {
 		if let str = text, !str.isEmpty {
-			switch mode {
+			switch stream {
 				case .out:
 					fputs(str + "\n", Darwin.stdout)
 					

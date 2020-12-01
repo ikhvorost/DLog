@@ -27,8 +27,8 @@
 import Foundation
 
 
-public class LogCategory {
-	let log: DLog
+public class LogCategory { // protocol?
+	let log: DLog // weak?
 	let category: String
 	
 	public init(log: DLog, category: String) {
@@ -52,7 +52,7 @@ public class LogCategory {
 	}
 	
 	@discardableResult
-	public func error(_ error: Error, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+	public func error(_ error: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
 		log.error(error, category: category, file: file, function: function, line: line)
 	}
 	

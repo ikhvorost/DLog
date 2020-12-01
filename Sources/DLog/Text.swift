@@ -84,16 +84,16 @@ public class Text : LogOutput {
 		// .scope
 	]
 	
-	public enum Mode {
+	public enum Style {
 		case plain
 		case emoji
 		case colored
 	}
 	
-	let mode: Mode
+	let style: Style
 	
-	public init(_ mode: Mode = .plain) {
-		self.mode = mode
+	public init(style: Style = .plain) {
+		self.style = style
 		super.init(source: nil)
 	}
 	
@@ -126,7 +126,7 @@ public class Text : LogOutput {
 			}
 		}
 		
-		switch mode {
+		switch style {
 			case .colored:
 				guard let tag = Self.tags[message.type] else { fallthrough }
 				
@@ -158,7 +158,7 @@ public class Text : LogOutput {
 			ms = "(\(stringFromTime(interval: -interval))s)"
 		}
 		
-		switch mode {
+		switch style {
 			case .emoji, .plain:
 				return "\(time) [\(scope.category)] \(padding) [\(scope.text)] \(ms ?? "")"
 				

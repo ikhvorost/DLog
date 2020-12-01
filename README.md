@@ -366,16 +366,16 @@ Outputs:
 
 `Text` is a source output that generates text representation of log messages. It doesn't deliver text to any target outputs (stdout, file etc.) and usually other outputs use it.
 
-It supports thee modes:
+It supports thee styles:
 - `.plain` - universal plain text
 - `.emoji` - text with type icons for info, debug etc. (useful for XCode console)
 - `.colored` - colored text with ANSI escape codes (useful for Terminal and files)
 
 ``` swift
 let outputs = [
-	"Plain" : Text(),
-	"Emoji" : Text(.emoji),
-	"Colored" : Text(.colored),
+	"Plain" : Text(style: .plain),
+	"Emoji" : Text(style: .emoji),
+	"Colored" : Text(style: .colored),
 ]
 
 for (name, output) in outputs {
@@ -410,7 +410,7 @@ Colored text in Terminal:
 
 <img src="dlog-text-colored.png" width="600"><br>
 
-You can also use shortcuts for `Text` output to create loggers:
+You can also use shortcuts `.text`, `.textEmoji` and `.textColored` to create the output:
 
 ``` swift
 let logPlain = DLog(.text)
@@ -420,16 +420,16 @@ let logColored = DLog(.textColored)
 
 ### Standard
 
-`Standard` is a target output that can output text messages to POSIX streams with two modes:
+`Standard` is a target output that can output text messages to POSIX streams:
 - `.out` - Standard Output (stdout)
 - `.err` - Standard Error (stderr)
 
 ``` swift
-let logOut = DLog(Standard(.out)) // Or Standard()
-let logErr = DLog(Standard(.err))
+let logOut = DLog(Standard(stream: .out)) // Or Standard()
+let logErr = DLog(Standard(stream: .err))
 ```
 
-You can also use shortcuts for `Standard` to create loggers:
+You can also use shortcuts `.stdout` and `.stderr` to create the output to the logger:
 
 ``` swift
 let logOut = DLog(.stdout)
@@ -439,7 +439,7 @@ logOut.info("It's output stream")
 logErr.info("It's error stream")
 ```
 
-By default `Standard` uses `Text(.plain)` or `.text` output as a source to write text to the streams but you can set other:
+By default `Standard` uses `Text(style: .plain)` or `.text` output as a source to write text to the streams but you can set other:
 
 ``` swift
 let output = Standard(source: .textEmoji)
@@ -469,7 +469,14 @@ By default `File` output clears content of a opened file but if you want to appe
 let output = File(path: "/users/user/dlog.txt", append: true)
 ```
 
-`File` output uses `Text(.plain)` or `.text` as a source by default but you can set other:
+You can also use `.file` shortcut to create the output:
+
+```
+let log1 = DLog(.file("dlog1.txt"))
+let log2 = DLog(.file("dlog2.txt", append: true))
+```
+
+`File` output uses `Text(style: .plain)` or `.text` as a source by default but you can set other:
 
 ``` swift
 let output = File(path: "/users/user/dlog.txt", source: .textColored)
@@ -479,11 +486,81 @@ log.scope("File") {
 	log.info("It's a file")
 }
 ```
-dlog.txt:
+File "dlog.txt":
 
 <img src="dlog-file-colored.png" width="600"><br>
 
 ### OSLog
+
+`OSLog` output logs messages to the Unified Logging System (https://developer.apple.com/documentation/os/logging) that captures telemetry from your app for debugging and performance analysis and then you can use various tools to retrieve log information such as: `Console` app, command line tool `log` etc.
+
+To create `OSLog` you can use subsystem strings that identify major functional areas of your app, and you specify them in reverse DNS notation—for example, `com.your_company.your_subsystem_name`. `OSLog` uses `com.dlog.logger` subsystem By default:
+
+``` swift
+let output1 = OSLog() // subsystem = "com.dlog.logger"
+let output1 = OSLog(subsystem: "com.company.app") // subsystem = "com.company.app"
+```
+
+You can also use `.oslog` shortcut to create the output for the logger:
+
+``` swift
+let log1 = DLog(.oslog)
+let log2 = DLog(.oslog("com.company.app"))
+```
+
+All DLog's methods map to the system logger ones:
+
+``` swift
+let log = DLog(.oslog)
+
+log.trace("trace")
+log.info("info")
+log.debug("debug")
+log.error("error")
+log.fault("fault")
+```
+
+Console.app:
+
+<img src="dlog-oslog-console.png"><br>
+
+The `scope` maps to the system logger's activities:
+
+``` swift
+let log = DLog(.oslog)
+
+log.scope("Loading") {
+	log.info("start")
+	log.scope("Parsing") {
+		log.debug("Parsed 1000 items")
+	}
+	log.info("finish")
+}
+
+```
+
+Console.app:
+
+<img src="dlog-oslog-console-activity.png"><br>
+
+The `interval` maps to to the system logger'a signposts:
+
+``` swift
+let log = DLog(.oslog)
+
+for _ in 0..<10 {
+	log.interval("Sorting") {
+		let delay = [0.1, 0.2, 0.3].randomElement()!
+		Thread.sleep(forTimeInterval: delay)
+		log.debug("Sorted")
+	}
+}
+```
+
+Instruments.app:
+
+<img src="dlog-oslog-instruments-signpost.png"><br>
+
 
 ### Net
 

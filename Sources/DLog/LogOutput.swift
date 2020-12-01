@@ -27,17 +27,22 @@ import Foundation
 
 /// Base output class
 public class LogOutput : NSObject {
-	public static var text: Text { Text() }
-	public static var textEmoji: Text { Text(.emoji) }
-	public static var textColored: Text { Text(.colored) }
-	public static var stdout: Standard { Standard() }
-	public static var stderr: Standard { Standard(.err) }
+	public static var text: Text { Text(style: .plain) }
+	public static var textEmoji: Text { Text(style: .emoji) }
+	public static var textColored: Text { Text(style: .colored) }
+	
+	public static var stdout: Standard { Standard(stream: .out) }
+	public static var stderr: Standard { Standard(stream: .err) }
+	
 	public static var adaptive: Adaptive { Adaptive() }
+	
 	public static var oslog: OSLog { OSLog() }
+	public static func oslog(_ subsystem: String) -> OSLog { OSLog(subsystem: subsystem) }
+	
 	public static var net: Net { net() }
 	
 	public static func filter(_ block: @escaping (LogItem) -> Bool) -> Filter { Filter(block: block) }
-	public static func file(_ path: String) -> File { File(path: path) }
+	public static func file(_ path: String, append: Bool = false) -> File { File(path: path, append: append) }
 	public static func net(name: String = "DLog", debug: Bool = false) -> Net { Net(name: name, debug: debug) }
 
 	var source: LogOutput!
