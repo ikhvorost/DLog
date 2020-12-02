@@ -4,6 +4,8 @@
 ![Platform: iOS 8+/macOS10.11](https://img.shields.io/badge/platform-iOS%20|%20macOS%20|%20tvOS%20|%20watchOS%20|%20Linux-blue.svg?style=flat)
 [![SPM compatible](https://img.shields.io/badge/SPM-compatible-4BC51D.svg?style=flat)](https://swift.org/package-manager/)
 
+<p align="center"><img src="Images/dlog.png" alt="Logger for Swift"></p>
+
 DLog supports emoji and colored text output, oslog, pipelines, filtering, scopes, intervals and more.
 
 - [Getting started](#getting-started)
