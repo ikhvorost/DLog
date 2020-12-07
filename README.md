@@ -182,7 +182,7 @@ Outputs:
 
 ## Scope
 
-`scope` provides a mechanism for grouping and labeling work that's done in your program, so that can see all log messages related to the defined scope of your code.
+`scope` provides a mechanism for grouping and labeling work that's done in your program, so that can see all log messages related to the defined scope of your code. Simply saying it builds a tree:
 
 ``` swift
 let log = DLog()
@@ -494,9 +494,9 @@ File "dlog.txt":
 
 ### OSLog
 
-`OSLog` output logs messages to the Unified Logging System (https://developer.apple.com/documentation/os/logging) that captures telemetry from your app for debugging and performance analysis and then you can use various tools to retrieve log information such as: `Console` app, command line tool `log` etc.
+`OSLog` outputs messages to the Unified Logging System (https://developer.apple.com/documentation/os/logging) that captures telemetry from your app for debugging and performance analysis and then you can use various tools to retrieve log information such as: `Console` app, command line tool `log` etc.
 
-To create `OSLog` you can use subsystem strings that identify major functional areas of your app, and you specify them in reverse DNS notation—for example, `com.your_company.your_subsystem_name`. `OSLog` uses `com.dlog.logger` subsystem By default:
+To create `OSLog` you can use subsystem strings that identify major functional areas of your app, and you specify them in reverse DNS notation—for example, `com.your_company.your_subsystem_name`. `OSLog` uses `com.dlog.logger` subsystem by default:
 
 ``` swift
 let output1 = OSLog() // subsystem = "com.dlog.logger"
@@ -565,6 +565,64 @@ Instruments.app:
 
 
 ### Net
+
+`Net` sends log messages to command line tool `NetConsole` than can be run on your machine as a service. The console is provided as executable in DLog package and to run it just call `swift run` command inside the the package folder and `NetConsole` start listening for incoming messages:
+
+``` shell
+$ swift run
+> [39/39] Linking NetConsole
+> NetConsole for DLog v.1.0
+```
+
+`Net` output connects to `NetConsole` and sends your log messages and it uses `Text(.colored)` or `.textColored` by default:
+
+``` swift
+let log = DLog(Net())
+
+log.scope("Main") {
+	log.trace("Start")
+	log.scope("Subtask") {
+		log.info("Validation")
+		log.error("Token is invalid")
+		log.debug("Retry")
+	}
+	log.info("Close connection")
+}
+```
+
+Terminal:
+<p><img src="Images/dlog-net-console.png" alt="DLog: NetConsole"></p>
+
+And you can also use `.net` shortcut to create the output for the logger.
+
+To connect to a specific instance of the service in your network you should provide an unique name to both the service and the output, by default is used "DLog":
+
+Terminal:
+``` shell
+swift run NetConsole -n "MyLogger"
+```
+
+Swift:
+``` swift
+let log = DLog(.net("MyLogger"))
+```
+
+For more params you can look at help:
+
+``` shell
+swift run NetConsole --help
+OVERVIEW: NetConsole for DLog v.1.0
+
+USAGE: net-console [--name <name>] [--auto-clear] [--debug]
+
+OPTIONS:
+  -n, --name <name>       The name by which the service is identified to the network. The name must be unique and by default it equals
+                          "DLog". If you pass the empty string (""), the system automatically advertises your service using the computer
+                          name as the service name.
+  -a, --auto-clear        Clear a terminal on new connection.
+  -d, --debug             Enable debug messages.
+  -h, --help              Show help information.
+```
 
 ### Adaptive
 

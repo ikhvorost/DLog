@@ -62,7 +62,7 @@ public class Net : LogOutput {
 	private var outputStream : OutputStream?
 	private let buffer = LogBuffer()
 	
-	init(name: String, debug: Bool, source: LogOutput = .textColored) {
+	public init(name: String = "DLog", debug: Bool = false, source: LogOutput = .textColored) {
 		self.name = name
 		self.debug = debug
 		
