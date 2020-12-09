@@ -25,16 +25,8 @@
 
 import Foundation
 
-// https://academy.realm.io/posts/nspredicate-cheatsheet/
-
-
 public class Filter : LogOutput {
 	private let predicate: NSPredicate
-	
-	// "text CONTAINS[c] 'hello'"
-	//init(query: String) {
-	//	predicate = NSPredicate(format: query)
-	//}
 	
 	init(block: @escaping (LogItem) -> Bool) {
 		predicate = NSPredicate { (obj, _) in

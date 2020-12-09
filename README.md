@@ -25,10 +25,9 @@ DLog supports emoji and colored text output, oslog, pipelines, filtering, scopes
 	- [File](#file)
 	- [OSLog](#oslog)
 	- [Net](#net)
-	- [Adaptive](#adaptive)
 - [Pipeline](#pipeline)
 - [Filter](#filter)
-- [`DLog.disabled`](#dlogdisabled)
+- [`.disabled`](#disabled)
 - [Installation](#installation)
 - [License](#license)
 
@@ -279,7 +278,7 @@ Outputs:
 
 ```
 
-## Intervals
+## Interval
 
 `interval` measures performance of your code by time durations and logs a detailed message with accumulated statistics:
 
@@ -403,9 +402,9 @@ Emoji
 16:42:36.979 [DLOG] 🆘 <Package.playground:19> fatal
 
 Colored
-[2m16:42:36.979[0m [34mDLOG[0m [42m[37m INFO [0m [2m[32m<Package.playground:17>[0m [32minfo[0m
-[2m16:42:36.979[0m [34mDLOG[0m [46m[30m DEBUG [0m [2m[36m<Package.playground:18>[0m [36mdebug[0m
-[2m16:42:36.979[0m [34mDLOG[0m [41m[37m[5m FAULT [0m [2m[31m<Package.playground:19>[0m [31mfatal[0m
+[2m16:42:36.979[0m [34mDLOG[0m [42m[37m INFO [0m [2m[32m<Package.playground:17>[0m [32minfo[0m
+[2m16:42:36.979[0m [34mDLOG[0m [46m[30m DEBUG [0m [2m[36m<Package.playground:18>[0m [36mdebug[0m
+[2m16:42:36.979[0m [34mDLOG[0m [41m[37m[5m FAULT [0m [2m[31m<Package.playground:19>[0m [31mfatal[0m
 ```
 
 Colored text in Terminal:
@@ -415,9 +414,7 @@ Colored text in Terminal:
 You can also use shortcuts `.text`, `.textEmoji` and `.textColored` to create the output:
 
 ``` swift
-let logPlain = DLog(.text)
 let logEmoji = DLog(.textEmoji)
-let logColored = DLog(.textColored)
 ```
 
 ### Standard
@@ -434,14 +431,11 @@ let logErr = DLog(Standard(stream: .err))
 You can also use shortcuts `.stdout` and `.stderr` to create the output to the logger:
 
 ``` swift
-let logOut = DLog(.stdout)
-let logErr = DLog(.stderr)
-
-logOut.info("It's output stream")
-logErr.info("It's error stream")
+let log = DLog(.stderr)
+log.info("It's error stream")
 ```
 
-By default `Standard` uses `Text(style: .plain)` or `.text` output as a source to write text to the streams but you can set other:
+By default `Standard` uses `Text(style: .plain)` output as a source to write text to the streams but you can set other:
 
 ``` swift
 let output = Standard(source: .textEmoji)
@@ -473,12 +467,11 @@ let output = File(path: "/users/user/dlog.txt", append: true)
 
 You can also use `.file` shortcut to create the output:
 
-```
-let log1 = DLog(.file("dlog1.txt"))
-let log2 = DLog(.file("dlog2.txt", append: true))
+``` swift
+let log = DLog(.file("dlog.txt"))
 ```
 
-`File` output uses `Text(style: .plain)` or `.text` as a source by default but you can set other:
+`File` output uses `Text(style: .plain)` as a source by default but you can set other:
 
 ``` swift
 let output = File(path: "/users/user/dlog.txt", source: .textColored)
@@ -494,13 +487,13 @@ File "dlog.txt":
 
 ### OSLog
 
-`OSLog` outputs messages to the Unified Logging System (https://developer.apple.com/documentation/os/logging) that captures telemetry from your app for debugging and performance analysis and then you can use various tools to retrieve log information such as: `Console` app, command line tool `log` etc.
+`OSLog` is a target output that writes messages to the Unified Logging System (https://developer.apple.com/documentation/os/logging) that captures telemetry from your app for debugging and performance analysis and then you can use various tools to retrieve log information such as: `Console` app, command line tool `log` etc.
 
 To create `OSLog` you can use subsystem strings that identify major functional areas of your app, and you specify them in reverse DNS notation—for example, `com.your_company.your_subsystem_name`. `OSLog` uses `com.dlog.logger` subsystem by default:
 
 ``` swift
 let output1 = OSLog() // subsystem = "com.dlog.logger"
-let output1 = OSLog(subsystem: "com.company.app") // subsystem = "com.company.app"
+let output2 = OSLog(subsystem: "com.company.app") // subsystem = "com.company.app"
 ```
 
 You can also use `.oslog` shortcut to create the output for the logger:
@@ -510,7 +503,7 @@ let log1 = DLog(.oslog)
 let log2 = DLog(.oslog("com.company.app"))
 ```
 
-All DLog's methods map to the system logger ones:
+`trace`, `info`, `debug`, `error` and `fault` methods map to the system logger ones:
 
 ``` swift
 let log = DLog(.oslog)
@@ -566,7 +559,7 @@ Instruments.app:
 
 ### Net
 
-`Net` sends log messages to command line tool `NetConsole` than can be run on your machine as a service. The console is provided as executable in DLog package and to run it just call `swift run` command inside the the package folder and `NetConsole` start listening for incoming messages:
+`Net` is a target output that sends log messages to `NetConsole` service that can be run from a command line on your machine. The console is provided as executable with DLog package and to run it just call `swift run` command inside the the package's folder and it starts listening for incoming messages:
 
 ``` shell
 $ swift run
@@ -574,7 +567,7 @@ $ swift run
 > NetConsole for DLog v.1.0
 ```
 
-`Net` output connects to `NetConsole` and sends your log messages and it uses `Text(.colored)` or `.textColored` by default:
+Then the output connects and sends your log messages to `NetConsole`:
 
 ``` swift
 let log = DLog(Net())
@@ -593,9 +586,19 @@ log.scope("Main") {
 Terminal:
 <p><img src="Images/dlog-net-console.png" alt="DLog: NetConsole"></p>
 
+By default `Net` uses `Text(style: .colored)` output as a source but you can set other:
+
+``` swift
+let log = DLog(Net(source: .textEmoji))
+```
+
 And you can also use `.net` shortcut to create the output for the logger.
 
-To connect to a specific instance of the service in your network you should provide an unique name to both the service and the output, by default is used "DLog":
+``` swift
+let log = DLog(.net)
+```
+
+To connect to a specific instance of the service in your network you should provide an unique name to both the service and the output ("DLog" is used by default):
 
 Terminal:
 ``` shell
@@ -624,15 +627,45 @@ OPTIONS:
   -h, --help              Show help information.
 ```
 
-### Adaptive
-
 ## Pipeline
 
-By default DLog prints text log messages to Standard Output stream and next initialisations are equal:
+As described above `File`, `Net` and `Standard` outputs have `source` parameter in their initializers to set a source output that is very useful if we want to change default outputs:
 
 ``` swift
-DLog() <=> DLog(Standard()) <=> DLog(.stdout) <=> DLog(.text => .stdout)
+let std = Standard(stream: .out, source: .textEmoji)
+let log = DLog(std)
 ```
+
+Actually any output has `source` property to set:
+
+``` swift
+let std = Standard()
+std.source = .textEmoji
+let log = DLog(std)
+```
+
+So that it's possible to make a linked list of outputs:
+
+``` swift
+let text: LogOutput = .textEmoji
+
+let std = Standard()
+std.source = text
+
+let file = File(path: "dlog.txt")
+file.source = std
+
+let log = DLog(file)
+```
+
+Where `text` is a source for `std` and `std` is a source for `file`: text --> std --> file. And now each text message will be sent to both `std` and `file` outputs consecutive.
+
+Lets rewrite this shorter:
+
+``` swift
+let log = DLog(.textEmoji => .stdout => .file("dlog.txt"))
+```
+
 Where `=>` is pipeline operator which defines a combined output from two outputs where the first one is a source and second is a target.
 
 You can combine any needed outputs together:
@@ -697,9 +730,9 @@ Outputs:
 23:49:01.047 [DLOG] [INFO] <Package.playground:9> hello world
 ```
 
-## `DLog.disabled`
+## `.disabled`
 
-`DLog.disabled` is the shared disabled logger constant that prevents DLog from logging any messages. It's useful when you want to turn off logging for some build configuration, preference, condition etc.
+It is the shared disabled logger constant that prevents DLog from logging any messages. It's useful when you want to turn off logging for some build configuration, preference, condition etc.
 
 ``` swift
 // Logging is enabled for `Debug` build configuration only

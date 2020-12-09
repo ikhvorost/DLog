@@ -54,6 +54,7 @@ public class OSLog : LogOutput {
 	
 	public init(subsystem: String = "com.dlog.logger") {
 		self.subsystem = subsystem
+		
 		super.init(source: nil)
 	}
 	

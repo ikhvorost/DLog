@@ -94,6 +94,7 @@ public class Text : LogOutput {
 	
 	public init(style: Style = .plain) {
 		self.style = style
+		
 		super.init(source: nil)
 	}
 	

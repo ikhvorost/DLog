@@ -34,8 +34,6 @@ public class LogOutput : NSObject {
 	public static var stdout: Standard { Standard(stream: .out) }
 	public static var stderr: Standard { Standard(stream: .err) }
 	
-	public static var adaptive: Adaptive { Adaptive() }
-	
 	public static var oslog: OSLog { OSLog() }
 	public static func oslog(_ subsystem: String) -> OSLog { OSLog(subsystem: subsystem) }
 	
@@ -45,9 +43,9 @@ public class LogOutput : NSObject {
 	public static func file(_ path: String, append: Bool = false) -> File { File(path: path, append: append) }
 	public static func net(_ name: String) -> Net { Net(name: name) }
 
-	var source: LogOutput!
+	public var source: LogOutput!
 	
-	init(source: LogOutput!) {
+	init(source: LogOutput?) {
 		self.source = source
 	}
 	
