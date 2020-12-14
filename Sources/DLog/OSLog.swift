@@ -98,8 +98,6 @@ public class OSLog : LogOutput {
 	override func intervalBegin(interval: LogInterval) {
 		super.intervalBegin(interval: interval)
 		
-		guard #available(macOS 10.14, iOS 12.0, watchOS 5.0, tvOS 12.0, *) else { return }
-		
 		let log = oslog(category: interval.category)
 		if interval.signpostID == nil {
 			interval.signpostID = OSSignpostID(log: log)
@@ -109,10 +107,8 @@ public class OSLog : LogOutput {
 	}
 	
 	override func intervalEnd(interval: LogInterval) -> String? {
-		if #available(macOS 10.14, iOS 12.0, watchOS 5.0, tvOS 12.0, *) {
-			let log = oslog(category: interval.category)
-			os_signpost(.end, log: log, name: interval.name, signpostID: interval.signpostID!)
-		}
+		let log = oslog(category: interval.category)
+		os_signpost(.end, log: log, name: interval.name, signpostID: interval.signpostID!)
 		return super.intervalEnd(interval: interval)
 	}
 }
