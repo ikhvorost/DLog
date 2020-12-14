@@ -33,7 +33,7 @@ func asyncAfter(_ sec: Double = 0.25, closure: @escaping (() -> Void) ) {
 	DispatchQueue.global().asyncAfter(deadline: .now() + sec, execute: closure)
 }
 
-/// Get text from stdout
+/// Get text from stdout with delay
 func stdoutText(_ block: () -> Void) -> String? {
 	var result: String?
 	
@@ -44,22 +44,18 @@ func stdoutText(_ block: () -> Void) -> String? {
 	let pipe = Pipe()
     dup2(pipe.fileHandleForWriting.fileDescriptor, STDOUT_FILENO)
 	
-	let lock = DispatchSemaphore.Lock()
-    
     pipe.fileHandleForReading.readabilityHandler = { handle in
 		if let text = String(data: handle.availableData, encoding: .utf8) {
 			// Print to stderr because stdout is piped
 			fputs(text, stderr)
 			
-			result = text
-			
-			lock.signal()
+			result = (result != nil) ? (result! + text) : text
 		}
     }
     
     block()
 	
-	_ = lock.wait(timeout: .now() + 1)
+	delay()
     
     // Revert
     fflush(stdout)
@@ -107,8 +103,8 @@ final class DLogTests: XCTestCase {
 		XCTAssert(log.assert(false, "assert")!.match(#"\#(categoryTag) \#(AssertTag) \#(Location) assert"#))
 		XCTAssert(log.fault("fault")!.match(#"\#(categoryTag) \#(FaultTag) \#(Location) fault"#))
 		
-		XCTAssert(stdoutText { log.scope("scope") {}; delay() }!.match(#"\#(categoryTag) └ \[scope\] \(0\.[0-9]{3}s\)"#))
-		XCTAssert(stdoutText { log.interval("signpost") { delay(1) }; delay() }!.match(#"\#(categoryTag) \[INTERVAL\] \#(Location) \[signpost\] Count: 1, Total: 1\.[0-9]{3}s, Min: 1\.[0-9]{3}s, Max: 1\.[0-9]{3}s, Avg: 1\.[0-9]{3}s"#))
+		XCTAssert(stdoutText { log.scope("scope") { delay() } }!.match(#"\#(categoryTag) └ \[scope\] \(0\.[0-9]{3}s\)"#))
+		XCTAssert(stdoutText { log.interval("signpost") { delay() } }!.match(#"\#(categoryTag) \[INTERVAL\] \#(Location) \[signpost\] Count: 1, Total: 0\.[0-9]{3}s, Min: 0\.[0-9]{3}s, Max: 0\.[0-9]{3}s, Avg: 0\.[0-9]{3}s"#))
 	}
 	
 	func test_Log() {
@@ -200,9 +196,9 @@ final class DLogTests: XCTestCase {
 		
 		XCTAssert(stdoutText {
 			log.interval("signpost") {
-				delay(1)
+				delay()
 			}
-		}!.match(#"\[signpost\] Count: 1, Total: 1\.[0-9]{3}s, Min: 1\.[0-9]{3}s, Max: 1\.[0-9]{3}s, Avg: 1\.[0-9]{3}s"#))
+		}!.match(#"\[signpost\] Count: 1, Total: 0\.[0-9]{3}s, Min: 0\.[0-9]{3}s, Max: 0\.[0-9]{3}s, Avg: 0\.[0-9]{3}s"#))
 	}
 	
 	func test_IntervalBeginEnd() {
@@ -211,19 +207,19 @@ final class DLogTests: XCTestCase {
 		XCTAssert(stdoutText {
 			let interval = log.interval("signpost")
 			interval.begin()
-			delay(1)
+			delay()
 			interval.end()
-		}!.match(#"\[signpost\] Count: 1, Total: 1\.[0-9]{3}s, Min: 1\.[0-9]{3}s, Max: 1\.[0-9]{3}s, Avg: 1\.[0-9]{3}s"#))
+		}!.match(#"\[signpost\] Count: 1, Total: 0\.[0-9]{3}s, Min: 0\.[0-9]{3}s, Max: 0\.[0-9]{3}s, Avg: 0\.[0-9]{3}s"#))
 		
 		// Double begin/end
 		XCTAssert(stdoutText {
 			let interval = log.interval("signpost")
 			interval.begin()
 			interval.begin()
-			delay(1)
+			delay()
 			interval.end()
 			interval.end()
-		}!.match(#"\[signpost\] Count: 1, Total: 1\.[0-9]{3}s, Min: 1\.[0-9]{3}s, Max: 1\.[0-9]{3}s, Avg: 1\.[0-9]{3}s"#))
+		}!.match(#"\[signpost\] Count: 1, Total: 0\.[0-9]{3}s, Min: 0\.[0-9]{3}s, Max: 0\.[0-9]{3}s, Avg: 0\.[0-9]{3}s"#))
 		
 	}
 	
