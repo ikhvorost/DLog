@@ -102,7 +102,7 @@ public class LogScope : LogItem {
 	let uid = UUID()
 	var level: Int = 1
 	var os_state = os_activity_scope_state_s()
-	var entered = false
+	@Atomic var entered = false
 	
 	init(log: DLog, category: String, fileName: String, funcName: String, line: UInt, text: String) {
 		self.log = log
@@ -115,7 +115,7 @@ public class LogScope : LogItem {
 	
 	public func enter() {
 		guard !entered else { return }
-		entered = true
+		entered.toggle()
 		
 		time = Date()
 		log.enter(scope: self)
@@ -123,7 +123,8 @@ public class LogScope : LogItem {
 	
 	public func leave() {
 		guard entered else { return }
-		entered = false
+		entered.toggle()
+		
 		log.leave(scope: self)
 	}
 }
@@ -132,6 +133,7 @@ public class LogInterval : LogItem {
 	weak var log: DLog!
 	let name: StaticString
 	let scopes: [LogScope]
+	@Atomic var begun = false
 	
 	var count = 0
 	var duration: TimeInterval = 0
@@ -160,18 +162,18 @@ public class LogInterval : LogItem {
 	}
 	
 	public func begin() {
-		guard time == nil else { return }
+		guard !begun else { return }
+		begun.toggle()
 	
 		time = Date()
-		
 		log.begin(interval: self)
 	}
 	
 	public func end() {
-		guard let time = time else { return }
+		guard begun, let time = time else { return }
+		begun.toggle()
 		
-		let timeInterval = time.timeIntervalSinceNow
-		let interval = -timeInterval
+		let interval = -time.timeIntervalSinceNow
 		count += 1
 		duration += interval
 		if minDuration == 0 || minDuration > interval {
@@ -182,12 +184,9 @@ public class LogInterval : LogItem {
 		}
 		avgDuration = duration / Double(count)
 		
-		self.time = nil
-		
 		log.end(interval: self)
 	}
 	
-	public func event() {
-		
-	}
+//	public func event() {
+//	}
 }

@@ -139,7 +139,7 @@ public class Text : LogOutput {
 				return "\(time) [\(message.category)] \(padding)[\(message.type.title)] <\(message.fileName):\(message.line)> \(message.text)"
 				
 			case .emoji:
-				return "\(time) [\(message.category)] \(padding)\(message.type.icon) <\(message.fileName):\(message.line)> \(message.text)"
+				return "\(time) [\(message.category)] \(padding)\(message.type.icon) [\(message.type.title)] <\(message.fileName):\(message.line)> \(message.text)"
 				
 		}
 	}

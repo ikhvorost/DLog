@@ -69,6 +69,16 @@ func stdoutText(_ block: () -> Void) -> String? {
 	return result
 }
 
+// Patterns
+let CategoryTag = #"\[DLOG\]"#
+let TraceTag = #"\[TRACE\]"#
+let InfoTag = #"\[INFO\]"#
+let DebugTag = #"\[DEBUG\]"#
+let ErrorTag = #"\[ERROR\]"#
+let AssertTag = #"\[ASSERT\]"#
+let FaultTag = #"\[FAULT\]"#
+let Location = "<DLogTests.swift:[0-9]+>"
+
 final class DLogTests: XCTestCase {
 	
 	func wait(count: Int, timeout: TimeInterval = 1, name: String = #function, closure: ([XCTestExpectation]) -> Void) {
@@ -85,101 +95,82 @@ final class DLogTests: XCTestCase {
 		}
 	}
 	
-	//MARK: Tests -
+	// MARK: Tests -
 	
-	func test_Disabled() {
-		let log = DLog.disabled
+	func testAll(_ log: LogProtocol, categoryTag: String = CategoryTag) {
 		
-		XCTAssertNil(
-			stdoutText {
-				log.trace()
-				log.info("info")
-				log.debug("debug")
-				log.error("error")
-				log.fault("fatal")
-				log.assert(false, "assert")
-				log.scope("scope") {}
-				log.interval("interval") {}
-			}
-		)
+		XCTAssert(log.trace()!.match(#"\#(categoryTag) \#(TraceTag) \#(Location) testAll()"#))
+		XCTAssert(log.info("info")!.match(#"\#(categoryTag) \#(InfoTag) \#(Location) info"#))
+		XCTAssert(log.debug("debug")!.match(#"\#(categoryTag) \#(DebugTag) \#(Location) debug"#))
+		XCTAssert(log.error("error")!.match(#"\#(categoryTag) \#(ErrorTag) \#(Location) error"#))
+		XCTAssertNil(log.assert(true, "assert"))
+		XCTAssert(log.assert(false, "assert")!.match(#"\#(categoryTag) \#(AssertTag) \#(Location) assert"#))
+		XCTAssert(log.fault("fault")!.match(#"\#(categoryTag) \#(FaultTag) \#(Location) fault"#))
+		
+		XCTAssert(stdoutText { log.scope("scope") {}; delay() }!.match(#"\#(categoryTag) └ \[scope\] \(0\.[0-9]{3}s\)"#))
+		XCTAssert(stdoutText { log.interval("signpost") { delay(1) }; delay() }!.match(#"\#(categoryTag) \[INTERVAL\] \#(Location) \[signpost\] Count: 1, Total: 1\.[0-9]{3}s, Min: 1\.[0-9]{3}s, Max: 1\.[0-9]{3}s, Avg: 1\.[0-9]{3}s"#))
 	}
 	
-	func test_PlainText() {
+	func test_Log() {
+		testAll(DLog())
+	}
+	
+	// MARK: - Scope
+	
+	func test_Scope() {
 		let log = DLog()
 		
-		XCTAssert(log.trace()!.match(#"\[DLOG\] \[TRACE\] <DLogTests.swift:[0-9]+>"#))
-		XCTAssert(log.info("info")!.match(#"\[DLOG\] \[INFO\] <DLogTests.swift:[0-9]+> info"#))
-		XCTAssert(log.debug("debug")!.match(#"\[DLOG\] \[DEBUG\] <DLogTests.swift:[0-9]+> debug"#))
-		XCTAssert(log.error("error")!.match(#"\[DLOG\] \[ERROR\] <DLogTests.swift:[0-9]+> error"#))
-		XCTAssert(log.assert(false)!.match(#"\[DLOG\] \[ASSERT\] <DLogTests.swift:[0-9]+>"#))
-		XCTAssert(log.assert(true, "assert text") == nil)
-		XCTAssert(log.fault("fatal error")!.match(#"\[DLOG\] \[FAULT\] <DLogTests.swift:[0-9]+> fatal error"#))
-		XCTAssert(stdoutText { log.interval("My Interval") { delay()} }?.match(#"\[My Interval\]"#) == true)
-		XCTAssert(stdoutText { log.scope("My Scope"){ delay() } }?.match(#"\[My Scope\]"#) == true)
-	}
-	
-	func test_EmojiText() {
-		let log = DLog(.textEmoji => .stdout)
-		
-		XCTAssert(log.trace()!.match(#"\[DLOG\] ⚛️ \[TRACE\] <DLogTests.swift:[0-9]+>"#))
-		XCTAssert(log.info("info")!.match(#"\[DLOG\] ✅ \[INFO\] <DLogTests.swift:[0-9]+> info"#))
-		XCTAssert(log.debug("debug")!.match(#"\[DLOG\] ▶️ \[DEBUG\] <DLogTests.swift:[0-9]+> debug"#))
-		XCTAssert(log.error("error")!.match(#"\[DLOG\] ⚠️ \[ERROR\] <DLogTests.swift:[0-9]+> error"#))
-		XCTAssert(log.assert(false)!.match(#"\[DLOG\] 🅰️ \[ASSERT\] <DLogTests.swift:[0-9]+>"#))
-		XCTAssert(log.assert(true, "assert text") == nil)
-		XCTAssert(log.fault("fatal error")!.match(#"\[DLOG\] 🆘 \[FAULT\] <DLogTests.swift:[0-9]+> fatal error"#))
-		XCTAssert(stdoutText { log.interval("My Interval") { delay() } }?.match(#"🕒 \[INTERVAL\]"#) == true)
-		XCTAssert(stdoutText { log.scope("My Scope"){ delay() } }?.match(#"\[My Scope\]"#) == true)
-	}
-	
-	func test_ColoredText() {
-		let log = DLog(.textColored => .stdout)
-		
-		XCTAssert(log.trace()!.contains(ANSIEscapeCode.reset.rawValue))
-		XCTAssert(log.info("info")!.contains(ANSIEscapeCode.reset.rawValue))
-		XCTAssert(log.debug("debug")!.contains(ANSIEscapeCode.reset.rawValue))
-		XCTAssert(log.error("error")!.contains(ANSIEscapeCode.reset.rawValue))
-		XCTAssert(log.assert(false, "assert")!.contains(ANSIEscapeCode.reset.rawValue))
-		XCTAssert(log.fault("fault")!.contains(ANSIEscapeCode.reset.rawValue))
-		XCTAssert(stdoutText { log.interval("interval"){ delay() } }?.contains(ANSIEscapeCode.reset.rawValue) == true)
-		XCTAssert(stdoutText { log.scope("scope"){ delay() } }?.contains(ANSIEscapeCode.reset.rawValue) == true)
-	}
-	
-	func test_Category() {
-		let log = DLog()
-		XCTAssert(log.trace()!.match(#"\[DLOG\]"#))
-		
-		let netLog = log["NET"]
-		XCTAssert(netLog.trace()!.match(#"\[NET\]"#))
-		XCTAssert(netLog.info("info")!.match(#"\[NET\]"#))
-		XCTAssert(netLog.debug("debug")!.match(#"\[NET\]"#))
-		XCTAssert(netLog.error("error")!.match(#"\[NET\]"#))
-		XCTAssert(netLog.fault("fault")!.match(#"\[NET\]"#))
-		XCTAssert(netLog.assert(false, "assert")!.match(#"\[NET\]"#))
-		XCTAssert(stdoutText { netLog.scope("scope") { } }?.match(#"\[NET\]"#) == true)
-		XCTAssert(stdoutText { netLog.interval("interval") { } }?.match(#"\[NET\]"#) == true)
+		XCTAssert(stdoutText { log.scope("scope") {} }!.match(#"\[scope\]"#))
 	}
 	
 	func test_ScopeStack() {
 		let log = DLog()
 		
 		log.scope("scope1") {
-			XCTAssert(log.info("scope1 start")!.match(#"\[DLOG\] \|\t✅ \[INFO\] <DLogTests.swift:[0-9]+> scope1 start"#))
+			XCTAssert(log.info("scope1 start")!.match(#"\#(CategoryTag) \|\t\#(InfoTag) \#(Location) scope1 start"#))
 			
 			log.scope("scope2") {
-				XCTAssert(log.debug("scope2 start")!.match(#"\[DLOG\] \|\t\|\t▶️ \[DEBUG\] <DLogTests.swift:[0-9]+> scope2 start"#))
+				XCTAssert(log.debug("scope2 start")!.match(#"\#(CategoryTag) \|\t\|\t\#(DebugTag) \#(Location) scope2 start"#))
 				
 				log.scope("scope3") {
-					XCTAssert(log.error("scope3")!.match(#"\[DLOG\] \|\t\|\t\|\t⚠️ \[ERROR\] <DLogTests.swift:[0-9]+> scope3"#))
+					XCTAssert(log.error("scope3")!.match(#"\#(CategoryTag) \|\t\|\t\|\t\#(ErrorTag) \#(Location) scope3"#))
 				}
 				
-				XCTAssert(log.fault("scope2")!.match(#"\[DLOG\] \|\t\|\t🆘 \[FAULT\] <DLogTests.swift:[0-9]+> scope2"#))
+				XCTAssert(log.fault("scope2")!.match(#"\#(CategoryTag) \|\t\|\t\#(FaultTag) \#(Location) scope2"#))
 			}
 			
-			XCTAssert(log.trace("scope1 end")!.match(#"\[DLOG\] \|\t◽️ \[TRACE\] <DLogTests.swift:[0-9]+> scope1 end"#))
+			XCTAssert(log.trace("scope1 end")!.match(#"\#(CategoryTag) \|\t\#(TraceTag) \#(Location) scope1 end"#))
 		}
 		
-		XCTAssert(log.trace("no scope")!.match(#"\[DLOG\] ◽️ \[TRACE\] <DLogTests.swift:[0-9]+> no scope"#))
+		XCTAssert(log.trace("no scope")!.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) no scope"#))
+	}
+	
+	func test_ScopeEnterLeave() {
+		let log = DLog()
+			
+		let scope1 = log.scope("Scope-1")
+		let scope2 = log.scope("Scope-2")
+		let scope3 = log.scope("Scope-3")
+		
+		log.trace("no scope")
+		
+		scope1.enter()
+		XCTAssert(log.info("scope1 start")!.match(#"\#(CategoryTag) \|\t\#(InfoTag) \#(Location) scope1 start"#))
+		
+		scope2.enter()
+		XCTAssert(log.info("scope2 start")!.match(#"\#(CategoryTag) \|\t\|\t\#(InfoTag) \#(Location) scope2 start"#))
+		
+		scope3.enter()
+		XCTAssert(log.info("scope3 start")!.match(#"\#(CategoryTag) \|\t\|\t\|\t\#(InfoTag) \#(Location) scope3 start"#))
+		
+		scope1.leave()
+		XCTAssert(log.debug("scope1 ended")!.match(#"\#(CategoryTag) \t\|\t\|\t\#(DebugTag) \#(Location) scope1 ended"#))
+		
+		scope2.leave()
+		XCTAssert(log.error("scope2 ended")!.match(#"\#(CategoryTag) \t\t\|\t\#(ErrorTag) \#(Location) scope2 ended"#))
+		
+		scope3.leave()
+		XCTAssert(log.fault("scope3 ended")!.match(#"\#(CategoryTag) \#(FaultTag) \#(Location) scope3 ended"#))
 	}
 	
 	func test_ScopeDoubleEnter() {
@@ -190,64 +181,105 @@ final class DLogTests: XCTestCase {
 		scope1.enter()
 		scope1.enter()
 		
-		XCTAssert(log.trace()!.match(#"\[DLOG\] \|\t◽️ \[TRACE\] <DLogTests.swift:[0-9]+> test_ScopeDoubleEnter()"#))
+		XCTAssert(log.trace()!.match(#"\#(CategoryTag) \|\t\#(TraceTag) \#(Location) test_ScopeDoubleEnter()"#))
 		
 		scope1.leave()
 		scope1.leave()
-		
-		XCTAssert(log.trace()!.match(#"\[DLOG\] ◽️ \[TRACE\] <DLogTests.swift:[0-9]+> test_ScopeDoubleEnter"#))
-	}
-
-	func test_ScopeCreate() {
-		let log = DLog()
-			
-		let scope1 = log.scope("Scope-1")
-		let scope2 = log.scope("Scope-2")
-		let scope3 = log.scope("Scope-3")
-		
-		log.trace("no scope")
 		
 		scope1.enter()
-		
-		XCTAssert(log.info("scope1 start")!.match(#"\[DLOG\] \|\t✅ \[INFO\] <DLogTests.swift:[0-9]+> scope1 start"#))
-		
-		scope2.enter()
-		
-		XCTAssert(log.info("scope2 start")!.match(#"\[DLOG\] \|\t\|\t✅ \[INFO\] <DLogTests.swift:[0-9]+> scope2 start"#))
-		
-		scope3.enter()
-		
-		XCTAssert(log.info("scope3 start")!.match(#"\[DLOG\] \|\t\|\t\|\t✅ \[INFO\] <DLogTests.swift:[0-9]+> scope3 start"#))
-		
+		XCTAssert(log.trace()!.match(#"\#(CategoryTag) \|\t\#(TraceTag) \#(Location) test_ScopeDoubleEnter()"#))
 		scope1.leave()
 		
-		XCTAssert(log.debug("scope1 ended")!.match(#"\[DLOG\] \t\|\t\|\t▶️ \[DEBUG\] <DLogTests.swift:[0-9]+> scope1 ended"#))
-		
-		scope2.leave()
-		
-		XCTAssert(log.error("scope2 ended")!.match(#"\[DLOG\] \t\t\|\t⚠️ \[ERROR\] <DLogTests.swift:[0-9]+> scope2 ended"#))
-		
-		scope3.leave()
-		
-		XCTAssert(log.fault("scope3 ended")!.match(#"\[DLOG\] 🆘 \[FAULT\] <DLogTests.swift:[0-9]+> scope3 ended"#))
+		XCTAssert(log.trace()!.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) test_ScopeDoubleEnter"#))
 	}
 
+	// MARK: - Interval
 	
-	func test_IntervalCreate() {
+	func test_Interval() {
 		let log = DLog()
 		
-		wait { exp in
-			let interval = log.interval("Interval 1")
-			
-			interval.begin()
-			
-			asyncAfter {
-				interval.end()
-				
-				exp.fulfill()
+		XCTAssert(stdoutText {
+			log.interval("signpost") {
+				delay(1)
 			}
-		}
+		}!.match(#"\[signpost\] Count: 1, Total: 1\.[0-9]{3}s, Min: 1\.[0-9]{3}s, Max: 1\.[0-9]{3}s, Avg: 1\.[0-9]{3}s"#))
 	}
+	
+	func test_IntervalBeginEnd() {
+		let log = DLog()
+		
+		XCTAssert(stdoutText {
+			let interval = log.interval("signpost")
+			interval.begin()
+			delay(1)
+			interval.end()
+		}!.match(#"\[signpost\] Count: 1, Total: 1\.[0-9]{3}s, Min: 1\.[0-9]{3}s, Max: 1\.[0-9]{3}s, Avg: 1\.[0-9]{3}s"#))
+		
+		// Double begin/end
+		XCTAssert(stdoutText {
+			let interval = log.interval("signpost")
+			interval.begin()
+			interval.begin()
+			delay(1)
+			interval.end()
+			interval.end()
+		}!.match(#"\[signpost\] Count: 1, Total: 1\.[0-9]{3}s, Min: 1\.[0-9]{3}s, Max: 1\.[0-9]{3}s, Avg: 1\.[0-9]{3}s"#))
+		
+	}
+	
+	// MARK: - Category
+	
+	func test_Category() {
+		let log = DLog()
+		let netLog = log["NET"]
+		
+		testAll(netLog, categoryTag: #"\[NET\]"#)
+	}
+	
+	// MARK: - Text
+	
+	func test_textPlain() {
+		let log = DLog()
+		
+		testAll(log)
+	}
+	
+	func test_textEmoji() {
+		let log = DLog(.textEmoji => .stdout)
+		
+		XCTAssert(log.trace()!.match(#"\#(CategoryTag) ⚛️ \#(TraceTag) \#(Location) test_textEmoji()"#))
+		XCTAssert(log.info("info")!.match(#"\#(CategoryTag) ✅ \#(InfoTag) \#(Location) info"#))
+		XCTAssert(log.debug("debug")!.match(#"\#(CategoryTag) ▶️ \#(DebugTag) \#(Location) debug"#))
+		XCTAssert(log.error("error")!.match(#"\#(CategoryTag) ⚠️ \#(ErrorTag) \#(Location) error"#))
+		XCTAssert(log.assert(false)!.match(#"\#(CategoryTag) 🅰️ \#(AssertTag) \#(Location)"#))
+		XCTAssert(log.fault("fatal")!.match(#"\#(CategoryTag) 🆘 \#(FaultTag) \#(Location) fatal"#))
+		
+		XCTAssert(stdoutText { log.scope("My Scope") {} }!.match(#"\[My Scope\]"#))
+		XCTAssert(stdoutText { log.interval("My Interval") {} }!.match(#"🕒 \[INTERVAL\]"#))
+	}
+	
+	func test_textColored() {
+		let log = DLog(.textColored => .stdout)
+		
+		XCTAssert(log.trace()!.contains(ANSIEscapeCode.reset.rawValue))
+		XCTAssert(log.info("info")!.contains(ANSIEscapeCode.reset.rawValue))
+		XCTAssert(log.debug("debug")!.contains(ANSIEscapeCode.reset.rawValue))
+		XCTAssert(log.error("error")!.contains(ANSIEscapeCode.reset.rawValue))
+		XCTAssert(log.assert(false, "assert")!.contains(ANSIEscapeCode.reset.rawValue))
+		XCTAssert(log.fault("fault")!.contains(ANSIEscapeCode.reset.rawValue))
+		
+		XCTAssert(stdoutText { log.scope("scope") {} }!.contains(ANSIEscapeCode.reset.rawValue))
+		XCTAssert(stdoutText { log.interval("interval") {} }!.contains(ANSIEscapeCode.reset.rawValue))
+	}
+	
+	// MARK: - Standard
+	
+	func test_stdOut() {
+		let log = DLog(.stdout)
+	}
+	
+	
+	// MARK: - Filter
 	
 	func test_Filter() {
 		// Time
@@ -307,6 +339,28 @@ final class DLogTests: XCTestCase {
 		}
 	}
 	
+	func test_Disabled() {
+		let log = DLog.disabled
+		
+		XCTAssertNil(
+			stdoutText {
+				log.trace()
+				log.info("info")
+				log.debug("debug")
+				log.error("error")
+				log.fault("fatal")
+				log.assert(false, "assert")
+				log.scope("scope") { }
+				log.interval("interval") { }
+			}
+		)
+		
+		wait(count: 2) { exps in
+			log.scope("scope") { exps[0].fulfill() }
+			log.interval("interval") { exps[1].fulfill() }
+		}
+	}
+	
 	func test_NetConsole() {
 		wait(5) { exp in
 			let log = DLog(.net)
@@ -321,6 +375,9 @@ final class DLogTests: XCTestCase {
 			}
 		}
 	}	
+	
+	// MARK: - Thread safe
+	// categories, scopes, interavls
 	
 	func test_Concurent() {
 		let log = DLog()
@@ -347,7 +404,7 @@ final class DLogTests: XCTestCase {
 						=> .file("dlog.txt")
 						=> .filter { $0.type == .debug }
 						=> .textColored
-						=> .net(debug: true))
+						=> .net)
 		
 		let time = Date()
 		
@@ -364,27 +421,12 @@ final class DLogTests: XCTestCase {
 		
 		let interval = -time.timeIntervalSinceNow
 		print("Interval: \(interval)")
-		XCTAssert(interval < 0.01)
+		XCTAssert(interval < 0.1)
 		
 		wait { exp in
 			asyncAfter(0.5) {
 				exp.fulfill()
 			}
-		}
-	}
-	
-	func test_Adaptive() {
-		let log = DLog(.adaptive)
-		
-		log.trace()
-		log.info("info")
-		log.debug("debug")
-		log.error("error")
-		log.scope("scope") {
-			log.assert(false)
-		}
-		log.interval("interval") {
-			log.fault("fault")
 		}
 	}
 }

@@ -128,6 +128,26 @@ public class DLog {
 		out.intervalEnd(interval: interval)
 	}
 	
+	private func interval(id: String, name: StaticString, category: String, file: String, function: String, line: UInt, scopes: [LogScope]) -> LogInterval {
+		if let interval = intervals.first(where: { $0.id == id }) {
+			return interval
+		}
+		else {
+			let interval = LogInterval(log: self,
+									   category: category,
+									   fileName: file,
+									   funcName: function,
+									   line: line,
+									   name: name,
+									   scopes: scopes)
+			intervals.append(interval)
+			return interval
+		}
+	}
+}
+
+extension DLog : LogProtocol {
+	
 	@discardableResult
 	public func trace(_ text: String? = nil, category: String = DLog.category, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
 		log(text ?? function, type: .trace, category: category, file: file, function: function, line: line)
@@ -144,8 +164,8 @@ public class DLog {
 	}
 	
 	@discardableResult
-	public func error(_ error: String, category: String = DLog.category, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		log(error, type: .error, category: category, file: file, function: function, line: line)
+	public func error(_ text: String, category: String = DLog.category, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+		log(text, type: .error, category: category, file: file, function: function, line: line)
 	}
 	
 	@discardableResult
@@ -180,23 +200,6 @@ public class DLog {
 		scope.leave()
 		
 		return scope
-	}
-	
-	private func interval(id: String, name: StaticString, category: String, file: String, function: String, line: UInt, scopes: [LogScope]) -> LogInterval {
-		if let interval = intervals.first(where: { $0.id == id }) {
-			return interval
-		}
-		else {
-			let interval = LogInterval(log: self,
-									   category: category,
-									   fileName: file,
-									   funcName: function,
-									   line: line,
-									   name: name,
-									   scopes: scopes)
-			intervals.append(interval)
-			return interval
-		}
 	}
 	
 	@discardableResult
