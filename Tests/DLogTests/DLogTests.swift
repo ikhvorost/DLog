@@ -1,6 +1,6 @@
 import Foundation
 import XCTest
-@testable import DLog
+/*@testable*/ import DLog
 
 // MARK: - Utils
 
@@ -103,7 +103,7 @@ final class DLogTests: XCTestCase {
 	
 	func testAll(_ log: LogProtocol, categoryTag: String = CategoryTag) {
 		
-		XCTAssert(log.trace()?.match(#"\#(categoryTag) \#(TraceTag) \#(Location) \#(#function)"#) == true)
+		XCTAssert(log.trace()?.match(#"\#(categoryTag) \#(TraceTag) \#(Location) testAll"#) == true)
 		XCTAssert(log.info("info")?.match(#"\#(categoryTag) \#(InfoTag) \#(Location) info"#) == true)
 		XCTAssert(log.debug("debug")?.match(#"\#(categoryTag) \#(DebugTag) \#(Location) debug"#) == true)
 		XCTAssert(log.error("error")?.match(#"\#(categoryTag) \#(ErrorTag) \#(Location) error"#) == true)
@@ -197,6 +197,21 @@ final class DLogTests: XCTestCase {
 		
 		XCTAssert(log.trace()?.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) \#(#function)"#) == true)
 	}
+	
+	func test_ScopeDuration() {
+		let log = DLog()
+		
+		var scope = log.scope("scope1") {
+			delay()
+		}
+		XCTAssert(0.25 <= scope.duration && scope.duration <= 0.26)
+		
+		scope = log.scope("scope2")
+		scope.enter()
+		delay()
+		scope.leave()
+		XCTAssert(0.25 <= scope.duration && scope.duration <= 0.26)
+	}
 
 	// MARK: - Interval
 	
@@ -230,6 +245,28 @@ final class DLogTests: XCTestCase {
 			interval.end()
 		}?.match(#"\[signpost\] Count: 1, Total: 0\.[0-9]{3}s, Min: 0\.[0-9]{3}s, Max: 0\.[0-9]{3}s, Avg: 0\.[0-9]{3}s"#) == true)
 		
+	}
+	
+	func test_IntervalStatistics() {
+		let log = DLog()
+		
+		let interval = log.interval("signpost") {
+			delay()
+		}
+		XCTAssert(interval.count == 1)
+		XCTAssert(0.25 <= interval.duration && interval.duration <= 0.26)
+		XCTAssert(0.25 <= interval.minDuration && interval.minDuration <= 0.26)
+		XCTAssert(0.25 <= interval.maxDuration && interval.maxDuration <= 0.26)
+		XCTAssert(0.25 <= interval.avgDuration && interval.avgDuration <= 0.26)
+		
+		interval.begin()
+		delay()
+		interval.end()
+		XCTAssert(interval.count == 2)
+		XCTAssert(0.5 <= interval.duration && interval.duration <= 0.51)
+		XCTAssert(0.25 <= interval.minDuration && interval.minDuration <= 0.26)
+		XCTAssert(0.25 <= interval.maxDuration && interval.maxDuration <= 0.26)
+		XCTAssert(0.25 <= interval.avgDuration && interval.avgDuration <= 0.26)
 	}
 	
 	// MARK: - Category
@@ -266,15 +303,16 @@ final class DLogTests: XCTestCase {
 	func test_textColored() {
 		let log = DLog(.textColored => .stdout)
 		
-		XCTAssert(log.trace()?.contains(ANSIEscapeCode.reset.rawValue) == true)
-		XCTAssert(log.info("info")?.contains(ANSIEscapeCode.reset.rawValue) == true)
-		XCTAssert(log.debug("debug")?.contains(ANSIEscapeCode.reset.rawValue) == true)
-		XCTAssert(log.error("error")?.contains(ANSIEscapeCode.reset.rawValue) == true)
-		XCTAssert(log.assert(false, "assert")?.contains(ANSIEscapeCode.reset.rawValue) == true)
-		XCTAssert(log.fault("fault")?.contains(ANSIEscapeCode.reset.rawValue) == true)
+		let reset = "\u{001b}[0m"
+		XCTAssert(log.trace()?.contains(reset) == true)
+		XCTAssert(log.info("info")?.contains(reset) == true)
+		XCTAssert(log.debug("debug")?.contains(reset) == true)
+		XCTAssert(log.error("error")?.contains(reset) == true)
+		XCTAssert(log.assert(false, "assert")?.contains(reset) == true)
+		XCTAssert(log.fault("fault")?.contains(reset) == true)
 		
-		XCTAssert(read_stdout { log.scope("scope") {} }?.contains(ANSIEscapeCode.reset.rawValue) == true)
-		XCTAssert(read_stdout { log.interval("interval") {} }?.contains(ANSIEscapeCode.reset.rawValue) == true)
+		XCTAssert(read_stdout { log.scope("scope") {} }?.contains(reset) == true)
+		XCTAssert(read_stdout { log.interval("interval") {} }?.contains(reset) == true)
 	}
 	
 	// MARK: - Standard
@@ -305,6 +343,8 @@ final class DLogTests: XCTestCase {
 			XCTFail(error.localizedDescription)
 		}
 	}
+	
+	// MARK: - OSLog, NetConsole
 	
 	// MARK: - Filter
 	
@@ -347,9 +387,9 @@ final class DLogTests: XCTestCase {
 		XCTAssertNotNil(read_stdout { textLog.interval("hello interval") { Thread.sleep(forTimeInterval: 0.3) } })
 		XCTAssertNil(read_stdout { textLog.scope("scope") {} })
 		XCTAssertNotNil(read_stdout { textLog.scope("scope hello") {} })
-		
-		//delay(0.3)
 	}
+	
+	// MARK: - Disabled
 	
 	func test_Disabled() {
 		let log = DLog.disabled
@@ -373,20 +413,6 @@ final class DLogTests: XCTestCase {
 		}
 	}
 	
-	func test_NetConsole() {
-		wait(5) { exp in
-			let log = DLog(.net)
-			log.trace()
-			log.info("info")
-			log.debug("debug")
-		
-			asyncAfter(4) {
-				log.error("error")
-				log.assert(false)
-				exp.fulfill()
-			}
-		}
-	}	
 	
 	// MARK: - Thread safe
 	// categories, scopes, interavls
@@ -397,48 +423,36 @@ final class DLogTests: XCTestCase {
 		let queue = DispatchQueue(label: "Concurent", attributes: .concurrent)
 		
 		for i in 0..<10 {
-			//let scope = log.scope("Scope")
 			queue.async {
-				log.interval("Concurent") {  }
-				log.info("\(i)")
+				log.scope("Concurent") { log.debug("\(i)") }
+			}
+			queue.async {
+				log.interval("Concurent") { log.debug("\(i)") }
 			}
 		}
 		
-		wait { exp in
-			delay(1)
-			exp.fulfill()
-		}
+		delay(1)
 	}
 	
 	func test_NonBlock() {
-		let log = DLog(.stdout
-						=> .oslog
+		let log = DLog(.text
+						=> .stdout
 						=> .file("dlog.txt")
+						=> .oslog
 						=> .filter { $0.type == .debug }
-						=> .textColored
 						=> .net)
 		
-		let time = Date()
-		
-		log.trace()
-		log.info("info")
-		log.debug("debug")
-		log.error("error")
-		log.scope("scope") {
+		let scope = log.scope("test") {
+			log.trace()
+			log.info("info")
+			log.debug("debug")
+			log.error("error")
 			log.assert(false)
-		}
-		log.interval("interval") {
 			log.fault("fault")
+			log.scope("scope") {  }
+			log.interval("interval") {  }
 		}
 		
-		let interval = -time.timeIntervalSinceNow
-		print("Interval: \(interval)")
-		XCTAssert(interval < 0.1)
-		
-		wait { exp in
-			asyncAfter(0.5) {
-				exp.fulfill()
-			}
-		}
+		XCTAssert(scope.duration < 0.02)
 	}
 }

@@ -98,11 +98,13 @@ public class LogMessage : LogItem {
 }
 
 public class LogScope : LogItem {
-	weak var log: DLog!
+	let log: DLog
 	let uid = UUID()
 	var level: Int = 1
 	var os_state = os_activity_scope_state_s()
 	@Atomic var entered = false
+	
+	private(set) public var duration: TimeInterval = 0
 	
 	init(log: DLog, category: String, fileName: String, funcName: String, line: UInt, text: String) {
 		self.log = log
@@ -125,21 +127,25 @@ public class LogScope : LogItem {
 		guard entered else { return }
 		entered.toggle()
 		
+		if let t = time {
+			duration = -t.timeIntervalSinceNow
+		}
+		
 		log.leave(scope: self)
 	}
 }
 
 public class LogInterval : LogItem {
-	weak var log: DLog!
+	let log: DLog
 	let name: StaticString
 	let scopes: [LogScope]
 	@Atomic var begun = false
 	
-	var count = 0
-	var duration: TimeInterval = 0
-	var minDuration: TimeInterval = 0
-	var maxDuration: TimeInterval = 0
-	var avgDuration: TimeInterval = 0
+	private(set) public var count = 0
+	private(set) public var duration: TimeInterval = 0
+	private(set) public var minDuration: TimeInterval = 0
+	private(set) public var maxDuration: TimeInterval = 0
+	private(set) public var avgDuration: TimeInterval = 0
 	
 	var id : String {
 		"\(fileName):\(line)"

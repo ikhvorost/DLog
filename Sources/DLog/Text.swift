@@ -144,8 +144,20 @@ public class Text : LogOutput {
 		}
 	}
 
-	private func textScope(scope: LogScope, scopes: [LogScope], start: Bool) -> String {
-		let time = Self.dateFormatter.string(from: start ? scope.time! : Date())
+	private func textScope(scope: LogScope, scopes: [LogScope]) -> String {
+		guard let scopeTime = scope.time else {
+			return ""
+		}
+		
+		var start = true
+		var time = Self.dateFormatter.string(from: scopeTime)
+		var ms: String?
+		
+		if scope.duration > 0 {
+			start = false
+			time = Self.dateFormatter.string(from: scopeTime.addingTimeInterval(scope.duration))
+			ms = "(\(stringFromTime(interval: scope.duration))s)"
+		}
 		
 		var padding = ""
 		for level in 1..<scope.level {
@@ -153,11 +165,6 @@ public class Text : LogOutput {
 			padding += scope != nil ? "|\t" : "\t"
 		}
 		padding += start ? "┌" : "└"
-		
-		var ms: String?
-		if !start, let interval = scope.time?.timeIntervalSinceNow {
-			ms = "(\(stringFromTime(interval: -interval))s)"
-		}
 		
 		switch style {
 			case .emoji, .plain:
@@ -178,13 +185,13 @@ public class Text : LogOutput {
 	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
 		super.scopeEnter(scope: scope, scopes: scopes)
 
-		return textScope(scope: scope, scopes: scopes, start: true)
+		return textScope(scope: scope, scopes: scopes)
 	}
 	
 	override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
 		super.scopeLeave(scope: scope, scopes: scopes)
 		
-		return textScope(scope: scope, scopes: scopes, start: false)
+		return textScope(scope: scope, scopes: scopes)
 	}
 	
 	override func intervalBegin(interval: LogInterval) {
