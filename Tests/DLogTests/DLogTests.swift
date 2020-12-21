@@ -329,7 +329,7 @@ final class DLogTests: XCTestCase {
 	
 	func test_File() {
 		let filePath = "dlog.txt"
-		let log = DLog(.text => .file(filePath))
+		let log = DLog(.textPlain => .file(filePath))
 		log.trace()
 		
 		delay(0.1)
@@ -350,36 +350,36 @@ final class DLogTests: XCTestCase {
 	
 	func test_Filter() {
 		// Time
-		let timeLog = DLog(.text => .filter { $0.time != nil } => .stdout)
+		let timeLog = DLog(.textPlain => .filter { $0.time != nil } => .stdout)
 		XCTAssertNotNil(timeLog.info("info"))
 		
 		// Category
-		let categoryLog = DLog(.text => .filter { $0.category == "NET" } => .stdout)
+		let categoryLog = DLog(.textPlain => .filter { $0.category == "NET" } => .stdout)
 		XCTAssertNil(categoryLog.info("info"))
 		let netLog = categoryLog["NET"]
 		XCTAssertNotNil(netLog.info("info"))
 		
 		// Type
-		let typeLog = DLog(.text => .filter { $0.type == .debug } => .stdout)
+		let typeLog = DLog(.textPlain => .filter { $0.type == .debug } => .stdout)
 		XCTAssertNil(typeLog.trace())
 		XCTAssertNil(typeLog.info("info"))
 		XCTAssertNotNil(typeLog.debug("debug"))
 		XCTAssertNil(read_stdout { typeLog.scope("scope") {} })
 		
 		// File name
-		let fileLog = DLog(.text => .filter { $0.fileName == "DLogTests.swift" } => .stdout)
+		let fileLog = DLog(.textPlain => .filter { $0.fileName == "DLogTests.swift" } => .stdout)
 		XCTAssertNotNil(fileLog.info("info"))
 		
 		// Func name
-		let funcLog = DLog(.text => .filter { $0.funcName == "test_Filter()" } => .stdout)
+		let funcLog = DLog(.textPlain => .filter { $0.funcName == "test_Filter()" } => .stdout)
 		XCTAssertNotNil(funcLog.info("info"))
 		
 		// Line
-		let lineLog = DLog(.text => .filter { $0.line > #line } => .stdout)
+		let lineLog = DLog(.textPlain => .filter { $0.line > #line } => .stdout)
 		XCTAssertNotNil(lineLog.info("info"))
 		
 		// Text
-		let textLog = DLog(.text => .filter { $0.text.contains("hello") } => .stdout)
+		let textLog = DLog(.textPlain => .filter { $0.text.contains("hello") } => .stdout)
 		XCTAssertNotNil(textLog.info("hello world"))
 		XCTAssertNotNil(textLog.debug("hello"))
 		XCTAssertNil(textLog.info("info"))
@@ -435,7 +435,7 @@ final class DLogTests: XCTestCase {
 	}
 	
 	func test_NonBlock() {
-		let log = DLog(.text
+		let log = DLog(.textPlain
 						=> .stdout
 						=> .file("dlog.txt")
 						=> .oslog

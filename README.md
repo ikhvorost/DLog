@@ -411,7 +411,7 @@ Colored text in Terminal:
 
 <img src="Images/dlog-text-colored.png" width="600" alt="DLog: Colored log in Terminal"><br>
 
-You can also use shortcuts `.text`, `.textEmoji` and `.textColored` to create the output:
+You can also use shortcuts `.textPlain`, `.textEmoji` and `.textColored` to create the output:
 
 ``` swift
 let logEmoji = DLog(.textEmoji)
@@ -682,7 +682,7 @@ Also this allows the creation of a chained output from multiple outputs one by o
 // 1) as plain text to stdout
 // 2) as colored text (with escape codes) to the file
 
-let log = DLog(.text => .stdout => .coloredText => .file(path))
+let log = DLog(.textPlain => .stdout => .coloredText => .file(path))
 ```
 
 ## Filter
@@ -693,7 +693,7 @@ Examples:
 
 1) Log messages from 'NET' category only
 ``` swift
-let log = DLog(.text => .filter { $0.category == "NET" } => .stdout)
+let log = DLog(.textPlain => .filter { $0.category == "NET" } => .stdout)
 
 log.info("info")
 let netLog = categoryLog["NET"]
@@ -706,7 +706,7 @@ Outputs:
 ```
 2) Log debug messages only
 ``` swift
-let log = DLog(.text => .filter { $0.type == .debug } => .stdout)
+let log = DLog(.textPlain => .filter { $0.type == .debug } => .stdout)
 
 log.trace()
 log.info("info")
@@ -719,7 +719,7 @@ Outputs:
 
 3) Log messages that contain "hello" only
 ``` swift
-let log = DLog(.text => .filter { $0.text.contains("hello") } => .stdout)
+let log = DLog(.textPlain => .filter { $0.text.contains("hello") } => .stdout)
 
 log.info("hello world")
 log.debug("debug")
@@ -738,7 +738,7 @@ It is the shared disabled logger constant that prevents DLog from logging any me
 // Logging is enabled for `Debug` build configuration only
 
 #if DEBUG
-	let log = DLog(.text => .file(path))
+	let log = DLog(.textPlain => .file(path))
 #else
 	let log = DLog.disabled
 #endif

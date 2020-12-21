@@ -27,7 +27,7 @@ import Foundation
 
 /// Base output class
 public class LogOutput : NSObject {
-	public static var text: Text { Text(style: .plain) }
+	public static var textPlain: Text { Text(style: .plain) }
 	public static var textEmoji: Text { Text(style: .emoji) }
 	public static var textColored: Text { Text(style: .colored) }
 	

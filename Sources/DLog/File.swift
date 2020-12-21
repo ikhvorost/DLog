@@ -31,7 +31,7 @@ public class File : LogOutput {
 	private let file: FileHandle?
 	private let queue = DispatchQueue(label: "File")
 	
-	public init(path: String, append: Bool = false, source: LogOutput = .text) {
+	public init(path: String, append: Bool = false, source: LogOutput = .textPlain) {
 		let fileManager = FileManager.default
 		if append == false {
 			try? fileManager.removeItem(atPath: path)

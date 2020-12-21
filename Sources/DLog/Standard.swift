@@ -36,7 +36,7 @@ public class Standard : LogOutput {
 	
 	let stream: Stream
 	
-	public init(stream: Stream = .out, source: LogOutput = .text) {
+	public init(stream: Stream = .out, source: LogOutput = .textPlain) {
 		self.stream = stream
 		
 		super.init(source: source)
