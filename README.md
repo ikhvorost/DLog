@@ -672,7 +672,7 @@ You can combine any needed outputs together:
 ``` swift
 // All log messages will be written as colored text (with escape codes) to the file
 
-let log = DLog(.coloredText => .file(path))
+let log = DLog(.textColored => .file(path))
 ```
 
 Also this allows the creation of a chained output from multiple outputs one by one by:
@@ -682,7 +682,7 @@ Also this allows the creation of a chained output from multiple outputs one by o
 // 1) as plain text to stdout
 // 2) as colored text (with escape codes) to the file
 
-let log = DLog(.textPlain => .stdout => .coloredText => .file(path))
+let log = DLog(.textPlain => .stdout => .textColored => .file(path))
 ```
 
 ## Filter

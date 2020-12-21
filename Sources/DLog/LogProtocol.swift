@@ -64,7 +64,7 @@ extension LogProtocol {
 	}
 	
 	@discardableResult
-	public func assert(_ value: Bool, _ text: String, category: String = DLog.category, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+	public func assert(_ value: Bool, _ text: String = "", category: String = DLog.category, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
 		assert(value, text, category: category, file: file, function: function, line: line)
 	}
 	

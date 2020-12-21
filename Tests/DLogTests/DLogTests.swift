@@ -108,6 +108,7 @@ final class DLogTests: XCTestCase {
 		XCTAssert(log.debug("debug")?.match(#"\#(categoryTag) \#(DebugTag) \#(Location) debug"#) == true)
 		XCTAssert(log.error("error")?.match(#"\#(categoryTag) \#(ErrorTag) \#(Location) error"#) == true)
 		XCTAssertNil(log.assert(true, "assert"))
+		XCTAssert(log.assert(false)?.match(#"\#(categoryTag) \#(AssertTag) \#(Location)"#) == true)
 		XCTAssert(log.assert(false, "assert")?.match(#"\#(categoryTag) \#(AssertTag) \#(Location) assert"#) == true)
 		XCTAssert(log.fault("fault")?.match(#"\#(categoryTag) \#(FaultTag) \#(Location) fault"#) == true)
 		
@@ -443,6 +444,16 @@ final class DLogTests: XCTestCase {
 						=> .net)
 		
 		let scope = log.scope("test") {
+			let netLog = log["NET"]
+			netLog.trace()
+			netLog.info("info")
+			netLog.debug("debug")
+			netLog.error("error")
+			netLog.assert(false)
+			netLog.fault("fault")
+			netLog.scope("scope") {  }
+			netLog.interval("interval") {  }
+			
 			log.trace()
 			log.info("info")
 			log.debug("debug")
@@ -453,6 +464,6 @@ final class DLogTests: XCTestCase {
 			log.interval("interval") {  }
 		}
 		
-		XCTAssert(scope.duration < 0.02)
+		XCTAssert(scope.duration < 0.03)
 	}
 }
