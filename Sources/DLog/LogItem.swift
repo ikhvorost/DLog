@@ -153,7 +153,6 @@ public class LogInterval : LogItem {
 	
 	// SignpostID
 	private var _signpostID: Any? = nil
-	@available(OSX 10.14, iOS 12.0, watchOS 5.0, tvOS 12.0, *)
 	var signpostID: OSSignpostID? {
 		set { _signpostID = newValue }
 		get { _signpostID as? OSSignpostID }

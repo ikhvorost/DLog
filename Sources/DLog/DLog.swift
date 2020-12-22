@@ -98,21 +98,26 @@ public class DLog {
 	func enter(scope: LogScope) {
 		guard let out = output else { return }
 		
-		if let last = scopes.last {
-			scope.level = last.level + 1
+		synchronized(self) {
+			if let last = scopes.last {
+				scope.level = last.level + 1
+			}
+			scopes.append(scope)
+		
+			out.scopeEnter(scope: scope, scopes: scopes)
 		}
-		scopes.append(scope)
-	
-		out.scopeEnter(scope: scope, scopes: scopes)
 	}
 	
 	func leave(scope: LogScope) {
 		guard let out = output else { return }
 		
-		if scopes.contains(where: { $0.uid == scope.uid }) {
-			out.scopeLeave(scope: scope, scopes: scopes)
-		
-			scopes.removeAll { $0.uid == scope.uid }
+		synchronized(self) {
+			
+			if scopes.contains(where: { $0.uid == scope.uid }) {
+				out.scopeLeave(scope: scope, scopes: scopes)
+			
+				scopes.removeAll { $0.uid == scope.uid }
+			}
 		}
 	}
 	
@@ -148,39 +153,32 @@ public class DLog {
 
 extension DLog : LogProtocol {
 	
-	@discardableResult
-	public func trace(_ text: String? = nil, category: String = DLog.category, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+	public func trace(_ text: String?, category: String, file: String, function: String, line: UInt) -> String? {
 		log(text ?? function, type: .trace, category: category, file: file, function: function, line: line)
 	}
 	
-	@discardableResult
-	public func info(_ text: String, category: String = DLog.category, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+	public func info(_ text: String, category: String, file: String, function: String, line: UInt) -> String? {
 		log(text, type: .info, category: category, file: file, function: function, line: line)
 	}
 	
-	@discardableResult
-	public func debug(_ text: String, category: String = DLog.category, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+	public func debug(_ text: String, category: String, file: String, function: String, line: UInt) -> String? {
 		log(text, type: .debug, category: category, file: file, function: function, line: line)
 	}
 	
-	@discardableResult
-	public func error(_ text: String, category: String = DLog.category, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+	public func error(_ text: String, category: String, file: String, function: String, line: UInt) -> String? {
 		log(text, type: .error, category: category, file: file, function: function, line: line)
 	}
 	
-	@discardableResult
-	public func fault(_ text: String, category: String = DLog.category, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+	public func fault(_ text: String, category: String, file: String, function: String, line: UInt) -> String? {
 		log(text, type: .fault, category: category, file: file, function: function, line: line)
 	}
 	
-	@discardableResult
-	public func assert(_ value: Bool, _ text: String = "", category: String = DLog.category, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+	public func assert(_ value: Bool, _ text: String = "", category: String, file: String, function: String, line: UInt) -> String? {
 		guard !value else { return nil }
 		return log(text, type: .assert, category: category, file: file, function: function, line: line)
 	}
 	
-	@discardableResult
-	public func scope(_ text: String, category: String = DLog.category, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogScope {
+	public func scope(_ text: String, category: String, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogScope {
 		let fileName = NSString(string: file).lastPathComponent
 		let scope = LogScope(log: self,
 							 category: category,
@@ -202,8 +200,7 @@ extension DLog : LogProtocol {
 		return scope
 	}
 	
-	@discardableResult
-	public func interval(_ name: StaticString, category: String = DLog.category, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval {
+	public func interval(_ name: StaticString, category: String, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
 		let fileName = NSString(string: file).lastPathComponent
 		let id = "\(fileName):\(line)"
 		

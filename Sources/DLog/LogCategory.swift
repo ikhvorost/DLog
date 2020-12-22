@@ -39,43 +39,35 @@ public class LogCategory {
 
 extension LogCategory: LogProtocol {
 	
-	@discardableResult
-	public func trace(_ text: String? = nil, category: String = "", file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+	public func trace(_ text: String?, category: String, file: String, function: String, line: UInt) -> String? {
 		log.trace(text, category: self.category, file: file, function: function, line: line)
 	}
 	
-	@discardableResult
-	public func info(_ text: String, category: String = "", file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+	public func info(_ text: String, category: String, file: String, function: String, line: UInt) -> String? {
 		log.info(text, category: self.category, file: file, function: function, line: line)
 	}
 		
-	@discardableResult
-	public func debug(_ text: String, category: String = "", file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+	public func debug(_ text: String, category: String, file: String, function: String, line: UInt) -> String? {
 		log.debug(text, category: self.category, file: file, function: function, line: line)
 	}
 	
-	@discardableResult
-	public func error(_ text: String, category: String = "", file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+	public func error(_ text: String, category: String, file: String, function: String, line: UInt) -> String? {
 		log.error(text, category: self.category, file: file, function: function, line: line)
 	}
 	
-	@discardableResult
-	public func fault(_ text: String, category: String = "", file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+	public func fault(_ text: String, category: String, file: String, function: String, line: UInt) -> String? {
 		log.fault(text, category: self.category, file: file, function: function, line: line)
 	}
 	
-	@discardableResult
-	public func assert(_ value: Bool, _ text: String, category: String = "", file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+	public func assert(_ value: Bool, _ text: String, category: String, file: String, function: String, line: UInt) -> String? {
 		log.assert(value, text, category: self.category, file: file, function: function, line: line)
 	}
 	
-	@discardableResult
-	public func scope(_ text: String, category: String = "", file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogScope {
+	public func scope(_ text: String, category: String, file: String, function: String, line: UInt, closure: (() -> Void)? = nil) -> LogScope {
 		log.scope(text, category: self.category, file: file, function: function, line: line, closure: closure)
 	}
 	
-	@discardableResult
-	public func interval(_ name: StaticString, category: String = "", file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval {
+	public func interval(_ name: StaticString, category: String, file: String, function: String, line: UInt, closure: (() -> Void)? = nil) -> LogInterval {
 		log.interval(name, category: self.category, file: file, function: function, line: line, closure: closure)
 	}
 }
