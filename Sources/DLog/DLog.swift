@@ -57,7 +57,8 @@ public class DLog {
 	/// Using this constant prevents logging a message.
 	public static let disabled = DLog(nil)
 	
-	public static let category = "DLOG"
+	// LogProtocol
+	public var category = "DLOG"
 	
 	private let output: LogOutput?
 	
@@ -76,23 +77,6 @@ public class DLog {
 	
 	public init(_ output: LogOutput? = .stdout) {
 		self.output = output
-	}
-	
-	@discardableResult
-	private func log(_ text: String, type: LogType, category: String, file: String, function: String, line: UInt) -> String? {
-		guard let out = output else { return nil }
-		
-		let fileName = NSString(string: file).lastPathComponent
-		let message = LogMessage(
-			time: Date(),
-			category: category,
-			type: type,
-			fileName: fileName,
-			funcName: function,
-			line: line,
-			text: text,
-			scopes: scopes)
-		return out.log(message: message)
 	}
 	
 	func enter(scope: LogScope) {
@@ -153,29 +137,20 @@ public class DLog {
 
 extension DLog : LogProtocol {
 	
-	public func trace(_ text: String?, category: String, file: String, function: String, line: UInt) -> String? {
-		log(text ?? function, type: .trace, category: category, file: file, function: function, line: line)
-	}
-	
-	public func info(_ text: String, category: String, file: String, function: String, line: UInt) -> String? {
-		log(text, type: .info, category: category, file: file, function: function, line: line)
-	}
-	
-	public func debug(_ text: String, category: String, file: String, function: String, line: UInt) -> String? {
-		log(text, type: .debug, category: category, file: file, function: function, line: line)
-	}
-	
-	public func error(_ text: String, category: String, file: String, function: String, line: UInt) -> String? {
-		log(text, type: .error, category: category, file: file, function: function, line: line)
-	}
-	
-	public func fault(_ text: String, category: String, file: String, function: String, line: UInt) -> String? {
-		log(text, type: .fault, category: category, file: file, function: function, line: line)
-	}
-	
-	public func assert(_ value: Bool, _ text: String = "", category: String, file: String, function: String, line: UInt) -> String? {
-		guard !value else { return nil }
-		return log(text, type: .assert, category: category, file: file, function: function, line: line)
+	public func log(_ text: String, type: LogType, category: String, file: String, function: String, line: UInt) -> String? {
+		guard let out = output else { return nil }
+		
+		let fileName = NSString(string: file).lastPathComponent
+		let message = LogMessage(
+			time: Date(),
+			category: category,
+			type: type,
+			fileName: fileName,
+			funcName: function,
+			line: line,
+			text: text,
+			scopes: scopes)
+		return out.log(message: message)
 	}
 	
 	public func scope(_ text: String, category: String, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogScope {

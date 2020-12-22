@@ -26,12 +26,9 @@
 import Foundation
 
 public protocol LogProtocol {
-	func trace(_ text: String?, category: String, file: String, function: String, line: UInt) -> String?
-	func info(_ text: String, category: String, file: String, function: String, line: UInt) -> String?
-	func debug(_ text: String, category: String, file: String, function: String, line: UInt) -> String?
-	func error(_ text: String, category: String, file: String, function: String, line: UInt) -> String?
-	func fault(_ text: String, category: String, file: String, function: String, line: UInt) -> String?
-	func assert(_ value: Bool, _ text: String, category: String, file: String, function: String, line: UInt) -> String?
+	var category: String { get }
+	
+	func log(_ text: String, type: LogType, category: String, file: String, function: String, line: UInt) -> String?
 	func scope(_ text: String, category: String, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogScope
 	func interval(_ name: StaticString, category: String, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval
 }
@@ -39,42 +36,43 @@ public protocol LogProtocol {
 extension LogProtocol {
 	
 	@discardableResult
-	public func trace(_ text: String? = nil, category: String = DLog.category, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		trace(text, category: category, file: file, function: function, line: line)
+	public func trace(_ text: String? = nil, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+		log(text ?? function, type: .trace, category: category, file: file, function: function, line: line)
 	}
 	
 	@discardableResult
-	public func info(_ text: String, category: String = DLog.category, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		info(text, category: category, file: file, function: function, line: line)
+	public func info(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+		log(text, type: .info, category: category, file: file, function: function, line: line)
 	}
 		
 	@discardableResult
-	public func debug(_ text: String, category: String = DLog.category, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		debug(text, category: category, file: file, function: function, line: line)
+	public func debug(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+		log(text, type: .debug, category: category, file: file, function: function, line: line)
 	}
 	
 	@discardableResult
-	public func error(_ text: String, category: String = DLog.category, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		error(text, category: category, file: file, function: function, line: line)
+	public func error(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+		log(text, type: .error, category: category, file: file, function: function, line: line)
 	}
 	
 	@discardableResult
-	public func fault(_ text: String, category: String = DLog.category, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		fault(text, category: category, file: file, function: function, line: line)
+	public func fault(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+		log(text, type: .fault, category: category, file: file, function: function, line: line)
 	}
 	
 	@discardableResult
-	public func assert(_ value: Bool, _ text: String = "", category: String = DLog.category, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		assert(value, text, category: category, file: file, function: function, line: line)
+	public func assert(_ value: Bool, _ text: String = "", file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+		guard !value else { return nil }
+		return log(text, type: .assert, category: category, file: file, function: function, line: line)
 	}
 	
 	@discardableResult
-	public func scope(_ text: String, category: String = DLog.category, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogScope {
+	public func scope(_ text: String, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogScope {
 		scope(text, category: category, file: file, function: function, line: line, closure: closure)
 	}
 	
 	@discardableResult
-	public func interval(_ name: StaticString, category: String = DLog.category, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval {
+	public func interval(_ name: StaticString, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval {
 		interval(name, category: category, file: file, function: function, line: line, closure: closure)
 	}
 	
