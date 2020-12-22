@@ -40,9 +40,9 @@ public class Filter : LogOutput {
 	
 	// MARK: - LogOutput
 	
-	override func log(message: LogMessage) -> String? {
-		let text = super.log(message: message)
-		return predicate.evaluate(with: message) ? text : nil
+	override func log(item: LogItem, scopes: [LogScope]) -> String? {
+		let text = super.log(item: item, scopes: scopes)
+		return predicate.evaluate(with: item) ? text : nil
 	}
 	
 	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
@@ -55,8 +55,8 @@ public class Filter : LogOutput {
 		return predicate.evaluate(with: scope) ? text : nil
 	}
 	
-	override func intervalEnd(interval: LogInterval) -> String? {
-		let text = super.intervalEnd(interval: interval)
+	override func intervalEnd(interval: LogInterval, scopes: [LogScope]) -> String? {
+		let text = super.intervalEnd(interval: interval, scopes: scopes)
 		return predicate.evaluate(with: interval) ? text : nil
 	}
 }

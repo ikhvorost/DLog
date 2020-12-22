@@ -101,8 +101,8 @@ public class Net : LogOutput {
 	
 	// MARK: - LogOutput
 	
-	override func log(message: LogMessage) -> String? {
-		send(super.log(message: message))
+	override func log(item: LogItem, scopes: [LogScope]) -> String? {
+		send(super.log(item: item, scopes: scopes))
 	}
 	
 	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
@@ -113,8 +113,8 @@ public class Net : LogOutput {
 		send(super.scopeLeave(scope: scope, scopes: scopes))
 	}
 	
-	override func intervalEnd(interval: LogInterval) -> String? {
-		send(super.intervalEnd(interval: interval))
+	override func intervalEnd(interval: LogInterval, scopes: [LogScope]) -> String? {
+		send(super.intervalEnd(interval: interval, scopes: scopes))
 	}
 }
 

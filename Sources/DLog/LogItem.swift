@@ -88,15 +88,6 @@ public class LogItem : NSObject {
 	}
 }
 
-public class LogMessage : LogItem {
-	let scopes: [LogScope]
-	
-	public init(time: Date, category: String, type: LogType, fileName: String, funcName: String, line: UInt, text: String, scopes: [LogScope]) {
-		self.scopes = scopes
-		super.init(time: time, category: category, type: type, fileName: fileName, funcName: funcName, line: line, text: text)
-	}
-}
-
 public class LogScope : LogItem {
 	let log: DLog
 	let uid = UUID()
@@ -138,7 +129,6 @@ public class LogScope : LogItem {
 public class LogInterval : LogItem {
 	let log: DLog
 	let name: StaticString
-	let scopes: [LogScope]
 	@Atomic var begun = false
 	
 	private(set) public var count = 0
@@ -158,10 +148,9 @@ public class LogInterval : LogItem {
 		get { _signpostID as? OSSignpostID }
 	}
 	
-	init(log: DLog, category: String, fileName: String, funcName: String, line: UInt, name: StaticString, scopes: [LogScope]) {
+	init(log: DLog, category: String, fileName: String, funcName: String, line: UInt, name: StaticString) {
 		self.log = log
 		self.name = name
-		self.scopes = scopes
 		
 		super.init(category: category, type: .interval, fileName: fileName, funcName: funcName, line: line, text: "\(name)")
 	}

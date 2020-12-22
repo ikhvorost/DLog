@@ -69,17 +69,17 @@ public class OSLog : LogOutput {
 	
 	// MARK: - LogOutput
 	
-	override func log(message: LogMessage) -> String? {
-		let log = oslog(category: message.category)
+	override func log(item: LogItem, scopes: [LogScope]) -> String? {
+		let log = oslog(category: item.category)
 		
-		let location = "<\(message.fileName):\(message.line)>"
+		let location = "<\(item.fileName):\(item.line)>"
 		
-		assert(Self.types[message.type] != nil)
-		let type = Self.types[message.type]!
-		os_log("%{public}@ %{public}@ %{public}@", dso: Self.dso, log: log, type: type, message.type.icon, location, message.text)
+		assert(Self.types[item.type] != nil)
+		let type = Self.types[item.type]!
+		os_log("%{public}@ %{public}@ %{public}@", dso: Self.dso, log: log, type: type, item.type.icon, location, item.text)
 	
 		
-		return super.log(message: message)
+		return super.log(item: item, scopes: scopes)
 	}
 	
 	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
@@ -106,9 +106,9 @@ public class OSLog : LogOutput {
 		os_signpost(.begin, log: log, name: interval.name, signpostID: interval.signpostID!)
 	}
 	
-	override func intervalEnd(interval: LogInterval) -> String? {
+	override func intervalEnd(interval: LogInterval, scopes: [LogScope]) -> String? {
 		let log = oslog(category: interval.category)
 		os_signpost(.end, log: log, name: interval.name, signpostID: interval.signpostID!)
-		return super.intervalEnd(interval: interval)
+		return super.intervalEnd(interval: interval, scopes: scopes)
 	}
 }

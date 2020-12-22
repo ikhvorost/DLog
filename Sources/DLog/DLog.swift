@@ -54,7 +54,7 @@ class Atomic<T> {
 public class DLog {
 	/// The shared disabled log.
 	///
-	/// Using this constant prevents logging a message.
+	/// Using this constant prevents logging.
 	public static let disabled = DLog(nil)
 	
 	// LogProtocol
@@ -114,7 +114,7 @@ public class DLog {
 	func end(interval: LogInterval) {
 		guard let out = output else { return }
 		
-		out.intervalEnd(interval: interval)
+		out.intervalEnd(interval: interval, scopes: scopes)
 	}
 	
 	private func interval(id: String, name: StaticString, category: String, file: String, function: String, line: UInt, scopes: [LogScope]) -> LogInterval {
@@ -127,8 +127,7 @@ public class DLog {
 									   fileName: file,
 									   funcName: function,
 									   line: line,
-									   name: name,
-									   scopes: scopes)
+									   name: name)
 			intervals.append(interval)
 			return interval
 		}
@@ -141,16 +140,15 @@ extension DLog : LogProtocol {
 		guard let out = output else { return nil }
 		
 		let fileName = NSString(string: file).lastPathComponent
-		let message = LogMessage(
+		let item = LogItem(
 			time: Date(),
 			category: category,
 			type: type,
 			fileName: fileName,
 			funcName: function,
 			line: line,
-			text: text,
-			scopes: scopes)
-		return out.log(message: message)
+			text: text)
+		return out.log(item: item, scopes: scopes)
 	}
 	
 	public func scope(_ text: String, category: String, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogScope {

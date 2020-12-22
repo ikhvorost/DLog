@@ -57,8 +57,8 @@ public class Standard : LogOutput {
 	
 	// MARK: - LogOutput
 	
-	override func log(message: LogMessage) -> String? {
-		echo(super.log(message: message))
+	override func log(item: LogItem, scopes: [LogScope]) -> String? {
+		echo(super.log(item: item, scopes: scopes))
 	}
 	
 	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
@@ -69,7 +69,7 @@ public class Standard : LogOutput {
 		echo(super.scopeLeave(scope: scope, scopes: scopes))
 	}
 	
-	override func intervalEnd(interval: LogInterval) -> String? {
-		echo(super.intervalEnd(interval: interval))
+	override func intervalEnd(interval: LogInterval, scopes: [LogScope]) -> String? {
+		echo(super.intervalEnd(interval: interval, scopes: scopes))
 	}
 }

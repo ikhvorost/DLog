@@ -107,9 +107,11 @@ final class DLogTests: XCTestCase {
 		XCTAssert(log.info("info")?.match(#"\#(categoryTag) \#(InfoTag) \#(Location) info"#) == true)
 		XCTAssert(log.debug("debug")?.match(#"\#(categoryTag) \#(DebugTag) \#(Location) debug"#) == true)
 		XCTAssert(log.error("error")?.match(#"\#(categoryTag) \#(ErrorTag) \#(Location) error"#) == true)
+		
 		XCTAssertNil(log.assert(true, "assert"))
 		XCTAssert(log.assert(false)?.match(#"\#(categoryTag) \#(AssertTag) \#(Location)"#) == true)
 		XCTAssert(log.assert(false, "assert")?.match(#"\#(categoryTag) \#(AssertTag) \#(Location) assert"#) == true)
+		
 		XCTAssert(log.fault("fault")?.match(#"\#(categoryTag) \#(FaultTag) \#(Location) fault"#) == true)
 		
 		XCTAssert(read_stdout { log.scope("scope") { delay() } }?.match(#"\#(categoryTag) └ \[scope\] \(0\.[0-9]{3}s\)"#) == true)
@@ -154,29 +156,29 @@ final class DLogTests: XCTestCase {
 	func test_ScopeEnterLeave() {
 		let log = DLog()
 			
-		let scope1 = log.scope("Scope-1")
-		let scope2 = log.scope("Scope-2")
-		let scope3 = log.scope("Scope-3")
+		let scope1 = log.scope("scope 1")
+		let scope2 = log.scope("scope 2")
+		let scope3 = log.scope("scope 3")
 		
 		log.trace("no scope")
 		
 		scope1.enter()
-		XCTAssert(log.info("scope1 start")?.match(#"\#(CategoryTag) \|\t\#(InfoTag) \#(Location) scope1 start"#) == true)
+		XCTAssert(log.info("1")?.match(#"\#(CategoryTag) \|\t\#(InfoTag) \#(Location) 1"#) == true)
 		
 		scope2.enter()
-		XCTAssert(log.info("scope2 start")?.match(#"\#(CategoryTag) \|\t\|\t\#(InfoTag) \#(Location) scope2 start"#) == true)
+		XCTAssert(log.info("2")?.match(#"\#(CategoryTag) \|\t\|\t\#(InfoTag) \#(Location) 2"#) == true)
 		
 		scope3.enter()
-		XCTAssert(log.info("scope3 start")?.match(#"\#(CategoryTag) \|\t\|\t\|\t\#(InfoTag) \#(Location) scope3 start"#) == true)
+		XCTAssert(log.info("3")?.match(#"\#(CategoryTag) \|\t\|\t\|\t\#(InfoTag) \#(Location) 3"#) == true)
 		
 		scope1.leave()
-		XCTAssert(log.debug("scope1 ended")?.match(#"\#(CategoryTag) \t\|\t\|\t\#(DebugTag) \#(Location) scope1 ended"#) == true)
+		XCTAssert(log.debug("3")?.match(#"\#(CategoryTag) \t\|\t\|\t\#(DebugTag) \#(Location) 3"#) == true)
 		
 		scope2.leave()
-		XCTAssert(log.error("scope2 ended")?.match(#"\#(CategoryTag) \t\t\|\t\#(ErrorTag) \#(Location) scope2 ended"#) == true)
+		XCTAssert(log.error("3")?.match(#"\#(CategoryTag) \t\t\|\t\#(ErrorTag) \#(Location) 3"#) == true)
 		
 		scope3.leave()
-		XCTAssert(log.fault("scope3 ended")?.match(#"\#(CategoryTag) \#(FaultTag) \#(Location) scope3 ended"#) == true)
+		XCTAssert(log.fault("no scope")?.match(#"\#(CategoryTag) \#(FaultTag) \#(Location) no scope"#) == true)
 	}
 	
 	func test_ScopeDoubleEnter() {
@@ -250,7 +252,7 @@ final class DLogTests: XCTestCase {
 	
 	func test_IntervalStatistics() {
 		let log = DLog()
-		
+
 		let interval = log.interval("signpost") {
 			delay()
 		}
@@ -425,10 +427,10 @@ final class DLogTests: XCTestCase {
 		
 		for i in 0..<10 {
 			queue.async {
-				log.scope("Concurent") { log.debug("\(i)") }
+				log.scope("Stack \(i)") { log.debug("\(i)"); delay(); }
 			}
 			queue.async {
-				log.interval("Concurent") { log.debug("\(i)") }
+				//log.interval("Signpost") { delay(); log.debug("\(i)") }
 			}
 		}
 		
@@ -452,7 +454,7 @@ final class DLogTests: XCTestCase {
 			netLog.assert(false)
 			netLog.fault("fault")
 			netLog.scope("scope") {  }
-			netLog.interval("interval") {  }
+			netLog.interval("signpost") {  }
 			
 			log.trace()
 			log.info("info")
@@ -461,7 +463,7 @@ final class DLogTests: XCTestCase {
 			log.assert(false)
 			log.fault("fault")
 			log.scope("scope") {  }
-			log.interval("interval") {  }
+			log.interval("signpost") {  }
 		}
 		
 		XCTAssert(scope.duration < 0.03)

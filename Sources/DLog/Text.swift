@@ -115,32 +115,31 @@ public class Text : LogOutput {
 		return Self.dateComponentsFormatter.string(from: interval)! + ".\(ms)"
 	}
 	
-	private func textMessage(message: LogMessage) -> String {
-		assert(message.time != nil)
-		let time = message.time != nil ? Self.dateFormatter.string(from: message.time!) : ""
+	private func textMessage(item: LogItem, scopes: [LogScope]) -> String {
+		assert(item.time != nil)
+		let time = item.time != nil ? Self.dateFormatter.string(from: item.time!) : ""
 		
 		var padding = ""
-		if let maxlevel = message.scopes.last?.level {
+		if let maxlevel = scopes.last?.level {
 			for level in 1...maxlevel {
-				let scope = message.scopes.first(where: { $0.level == level })
+				let scope = scopes.first(where: { $0.level == level })
 				padding += scope != nil ? "|\t" : "\t"
 			}
 		}
 		
 		switch style {
 			case .colored:
-				guard let tag = Self.tags[message.type] else { fallthrough }
+				guard let tag = Self.tags[item.type] else { fallthrough }
 				
-				let tagText = " \(message.type.title) ".color(tag.colors)
-				let location = "<\(message.fileName):\(message.line)>".color([.dim, tag.textColor])
-				return "\(time.color(.dim)) \(message.category.color(.textBlue)) \(padding)\(tagText) \(location) \(message.text.color(tag.textColor))"
+				let tagText = " \(item.type.title) ".color(tag.colors)
+				let location = "<\(item.fileName):\(item.line)>".color([.dim, tag.textColor])
+				return "\(time.color(.dim)) \(item.category.color(.textBlue)) \(padding)\(tagText) \(location) \(item.text.color(tag.textColor))"
 				
 			case .plain:
-				return "\(time) [\(message.category)] \(padding)[\(message.type.title)] <\(message.fileName):\(message.line)> \(message.text)"
+				return "\(time) [\(item.category)] \(padding)[\(item.type.title)] <\(item.fileName):\(item.line)> \(item.text)"
 				
 			case .emoji:
-				return "\(time) [\(message.category)] \(padding)\(message.type.icon) [\(message.type.title)] <\(message.fileName):\(message.line)> \(message.text)"
-				
+				return "\(time) [\(item.category)] \(padding)\(item.type.icon) [\(item.type.title)] <\(item.fileName):\(item.line)> \(item.text)"
 		}
 	}
 
@@ -177,9 +176,9 @@ public class Text : LogOutput {
 	
 	// MARK: - LogOutput
 	
-	override func log(message: LogMessage) -> String? {
-		super.log(message: message)
-		return textMessage(message: message)
+	override func log(item: LogItem, scopes: [LogScope]) -> String? {
+		super.log(item: item, scopes: scopes)
+		return textMessage(item: item, scopes: scopes)
 	}
 	
 	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
@@ -198,8 +197,8 @@ public class Text : LogOutput {
 		super.intervalBegin(interval: interval)
 	}
 	
-	override func intervalEnd(interval: LogInterval) -> String? {
-		super.intervalEnd(interval: interval)
+	override func intervalEnd(interval: LogInterval, scopes: [LogScope]) -> String? {
+		super.intervalEnd(interval: interval, scopes: scopes)
 		
 		let duration = stringFromTime(interval: interval.duration)
 		let minDuration = stringFromTime(interval: interval.minDuration)
@@ -207,16 +206,15 @@ public class Text : LogOutput {
 		let avgDuration = stringFromTime(interval: interval.avgDuration)
 		let text = "[\(interval.name)] Count: \(interval.count), Total: \(duration)s, Min: \(minDuration)s, Max: \(maxDuration)s, Avg: \(avgDuration)s"
 		
-		let message = LogMessage(
+		let item = LogItem(
 			time: Date(),
 			category: interval.category,
 			type: .interval,
 			fileName: interval.fileName,
 			funcName: interval.funcName,
 			line: interval.line,
-			text: text,
-			scopes: interval.scopes)
+			text: text)
 		
-		return textMessage(message: message)
+		return textMessage(item: item, scopes: scopes)
 	}
 }

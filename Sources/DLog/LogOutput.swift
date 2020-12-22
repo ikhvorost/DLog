@@ -50,9 +50,9 @@ public class LogOutput : NSObject {
 	}
 	
 	@discardableResult
-	func log(message: LogMessage) -> String? {
+	func log(item: LogItem, scopes: [LogScope]) -> String? {
 		return source != nil
-			? source.log(message: message)
+			? source.log(item: item, scopes: scopes)
 			: nil
 	}
 	
@@ -77,9 +77,9 @@ public class LogOutput : NSObject {
 	}
 	
 	@discardableResult
-	func intervalEnd(interval: LogInterval) -> String? {
+	func intervalEnd(interval: LogInterval, scopes: [LogScope]) -> String? {
 		return source != nil
-			? source.intervalEnd(interval: interval)
+			? source.intervalEnd(interval: interval, scopes: scopes)
 			: nil
 	}
 }
