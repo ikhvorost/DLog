@@ -208,6 +208,18 @@ Where:
  - `[Loading]` - a name of the scope
  - `(0.028s)` - a time duration of the scope
 
+You can get duration value of a finished scope programatically:
+
+```
+let log = DLog()
+
+var scope = log.scope("scope") {
+	...
+}
+
+print(scope.duration)
+```
+
 It's possible to `enter` and `leave` a scope asynchronously:
 
 ``` swift
@@ -315,6 +327,22 @@ Where:
  - `Max` - the longest time duration
  - `Avg` - average time duration
 
+
+You can get all metrics values of an interval programatically:
+
+```
+let log = DLog()
+
+let interval = log.interval("signpost") {
+	...
+}
+
+print(interval.count)
+print(interval.duration)
+print(interval.minDuration)
+print(interval.maxDuration)
+print(interval.avgDuration)
+```
 
 To measure asynchronous tasks you can use `begin` and `end` methods:
 
