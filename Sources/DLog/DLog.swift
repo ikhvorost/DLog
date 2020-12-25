@@ -161,7 +161,7 @@ extension DLog : LogProtocol {
 		return out.log(item: item, scopes: scopes)
 	}
 	
-	public func scope(_ text: String, category: String, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogScope {
+	public func scope(_ text: String, category: String, file: String, function: String, line: UInt, closure: ((LogScope) -> Void)?) -> LogScope {
 		let fileName = NSString(string: file).lastPathComponent
 		let scope = LogScope(log: self,
 							 category: category,
@@ -173,7 +173,7 @@ extension DLog : LogProtocol {
 		if let block = closure {
 			scope.enter()
 		
-			block()
+			block(scope)
 		
 			scope.leave()
 		}

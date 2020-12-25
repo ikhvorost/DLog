@@ -102,20 +102,21 @@ final class DLogTests: XCTestCase {
 	// MARK: Tests -
 	
 	func testAll(_ log: LogProtocol, categoryTag: String = CategoryTag) {
+		let scope = #"(\|\t)?"#
 		
-		XCTAssert(log.trace()?.match(#"\#(categoryTag) \#(TraceTag) \#(Location) testAll"#) == true)
-		XCTAssert(log.info("info")?.match(#"\#(categoryTag) \#(InfoTag) \#(Location) info"#) == true)
-		XCTAssert(log.debug("debug")?.match(#"\#(categoryTag) \#(DebugTag) \#(Location) debug"#) == true)
-		XCTAssert(log.error("error")?.match(#"\#(categoryTag) \#(ErrorTag) \#(Location) error"#) == true)
+		XCTAssert(log.trace()?.match(#"\#(categoryTag) \#(scope)\#(TraceTag) \#(Location) testAll"#) == true)
+		XCTAssert(log.info("info")?.match(#"\#(categoryTag) \#(scope)\#(InfoTag) \#(Location) info"#) == true)
+		XCTAssert(log.debug("debug")?.match(#"\#(categoryTag) \#(scope)\#(DebugTag) \#(Location) debug"#) == true)
+		XCTAssert(log.error("error")?.match(#"\#(categoryTag) \#(scope)\#(ErrorTag) \#(Location) error"#) == true)
 		
 		XCTAssertNil(log.assert(true, "assert"))
-		XCTAssert(log.assert(false)?.match(#"\#(categoryTag) \#(AssertTag) \#(Location)"#) == true)
-		XCTAssert(log.assert(false, "assert")?.match(#"\#(categoryTag) \#(AssertTag) \#(Location) assert"#) == true)
+		XCTAssert(log.assert(false)?.match(#"\#(categoryTag) \#(scope)\#(AssertTag) \#(Location)"#) == true)
+		XCTAssert(log.assert(false, "assert")?.match(#"\#(categoryTag) \#(scope)\#(AssertTag) \#(Location) assert"#) == true)
 		
-		XCTAssert(log.fault("fault")?.match(#"\#(categoryTag) \#(FaultTag) \#(Location) fault"#) == true)
+		XCTAssert(log.fault("fault")?.match(#"\#(categoryTag) \#(scope)\#(FaultTag) \#(Location) fault"#) == true)
 		
-		XCTAssert(read_stdout { log.scope("scope") { delay() } }?.match(#"\#(categoryTag) └ \[scope\] \(0\.[0-9]{3}s\)"#) == true)
-		XCTAssert(read_stdout { log.interval("signpost") { delay() } }?.match(#"\#(categoryTag) \[INTERVAL\] \#(Location) \[signpost\] Count: 1, Total: 0\.[0-9]{3}s, Min: 0\.[0-9]{3}s, Max: 0\.[0-9]{3}s, Avg: 0\.[0-9]{3}s"#) == true)
+		XCTAssert(read_stdout { log.scope("scope") { delay() } }?.match(#"\#(categoryTag) \#(scope)└ \[scope\] \(0\.[0-9]{3}s\)"#) == true)
+		XCTAssert(read_stdout { log.interval("signpost") { delay() } }?.match(#"\#(categoryTag) \#(scope)\[INTERVAL\] \#(Location) \[signpost\] Count: 1, Total: 0\.[0-9]{3}s, Min: 0\.[0-9]{3}s, Max: 0\.[0-9]{3}s, Avg: 0\.[0-9]{3}s"#) == true)
 	}
 	
 	func test_Log() {
@@ -128,31 +129,33 @@ final class DLogTests: XCTestCase {
 	func test_Scope() {
 		let log = DLog()
 		
-		XCTAssert(read_stdout { log.scope("scope") {} }?.match(#"\[scope\]"#) == true)
+		log.scope("scope") {
+			self.testAll($0)
+		}
 	}
 	
 	func test_ScopeStack() {
 		let log = DLog()
 		
-		XCTAssert(log.debug("no scope")?.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) no scope"#) == true)
+		XCTAssert(log.debug("no scope")?.match(#"\[00\] \#(CategoryTag) \#(DebugTag) \#(Location) no scope"#) == true)
 		
 		log.scope("scope1") {
-			XCTAssert(log.info("scope1 start")?.match(#"\#(CategoryTag) \|\t\#(InfoTag) \#(Location) scope1 start"#) == true)
+			XCTAssert(log.info("scope1 start")?.match(#"\[01\] \#(CategoryTag) \|\t\#(InfoTag) \#(Location) scope1 start"#) == true)
 			
 			log.scope("scope2") {
-				XCTAssert(log.debug("scope2 start")?.match(#"\#(CategoryTag) \|\t\|\t\#(DebugTag) \#(Location) scope2 start"#) == true)
+				XCTAssert(log.debug("scope2 start")?.match(#"\[02\] \#(CategoryTag) \|\t\|\t\#(DebugTag) \#(Location) scope2 start"#) == true)
 				
 				log.scope("scope3") {
-					XCTAssert(log.error("scope3")?.match(#"\#(CategoryTag) \|\t\|\t\|\t\#(ErrorTag) \#(Location) scope3"#) == true)
+					XCTAssert(log.error("scope3")?.match(#"\[03\] \#(CategoryTag) \|\t\|\t\|\t\#(ErrorTag) \#(Location) scope3"#) == true)
 				}
 				
-				XCTAssert(log.fault("scope2")?.match(#"\#(CategoryTag) \|\t\|\t\#(FaultTag) \#(Location) scope2"#) == true)
+				XCTAssert(log.fault("scope2")?.match(#"\[02\] \#(CategoryTag) \|\t\|\t\#(FaultTag) \#(Location) scope2"#) == true)
 			}
 			
-			XCTAssert(log.trace("scope1 end")?.match(#"\#(CategoryTag) \|\t\#(TraceTag) \#(Location) scope1 end"#) == true)
+			XCTAssert(log.trace("scope1 end")?.match(#"\[01\] \#(CategoryTag) \|\t\#(TraceTag) \#(Location) scope1 end"#) == true)
 		}
 		
-		XCTAssert(log.trace("no scope")?.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) no scope"#) == true)
+		XCTAssert(log.trace("no scope")?.match(#"\[00\] \#(CategoryTag) \#(TraceTag) \#(Location) no scope"#) == true)
 	}
 	
 	func test_ScopeEnterLeave() {
@@ -208,7 +211,7 @@ final class DLogTests: XCTestCase {
 		
 		for i in 1...10 {
 			DispatchQueue.global().async {
-				log.scope("Scope \(i)") { log.debug("\(i)"); }
+				log.scope("Scope \(i)") { delay(); $0.debug("scope \(i)") }
 			}
 		}
 		
@@ -284,6 +287,18 @@ final class DLogTests: XCTestCase {
 		XCTAssert(0.25 <= interval.minDuration && interval.minDuration <= 0.26)
 		XCTAssert(0.25 <= interval.maxDuration && interval.maxDuration <= 0.26)
 		XCTAssert(0.25 <= interval.avgDuration && interval.avgDuration <= 0.26)
+	}
+	
+	func test_IntervalConcurent() {
+		let log = DLog()
+		
+		for i in 0..<10 {
+			DispatchQueue.global().async {
+				log.interval("Signpost") { delay(); log.debug("\(i)") }
+			}
+		}
+		
+		delay(1)
 	}
 	
 	// MARK: - Category
@@ -409,60 +424,43 @@ final class DLogTests: XCTestCase {
 	// MARK: - Disabled
 	
 	func test_Disabled() {
+		let test: (LogProtocol) -> Void = { log in
+			log.trace()
+			log.info("info")
+			log.debug("debug")
+			log.error("error")
+			log.fault("fatal")
+			log.assert(false, "assert")
+			log.scope("scope") { }
+			log.interval("interval") { }
+		}
+		
 		let log = DLog.disabled
+		let scope = log.scope("scope")
 		let netLog = log["NET"]
 		
 		XCTAssertNil(
 			read_stdout {
-				log.trace()
-				log.info("info")
-				log.debug("debug")
-				log.error("error")
-				log.fault("fatal")
-				log.assert(false, "assert")
-				log.scope("scope") { }
-				log.interval("interval") { }
-				
-				netLog.trace()
-				netLog.info("info")
-				netLog.debug("debug")
-				netLog.error("error")
-				netLog.fault("fatal")
-				netLog.assert(false, "assert")
-				netLog.scope("scope") { }
-				netLog.interval("interval") { }
+				test(log)
+				test(netLog)
+				test(scope)
 			}
 		)
 		
-		wait(count: 4) { exps in
+		wait(count: 5) { exps in
 			log.scope("scope") { exps[0].fulfill() }
 			log.interval("interval") { exps[1].fulfill() }
 			
-			netLog.scope("scope") { exps[2].fulfill() }
-			netLog.interval("interval") { exps[3].fulfill() }
+			scope.scope("child") { exps[2].fulfill() }
+			
+			netLog.scope("scope") { exps[3].fulfill() }
+			netLog.interval("interval") { exps[4].fulfill() }
 		}
 	}
 	
 	
 	// MARK: - Thread safe
 	// categories, scopes, interavls
-	
-	func test_Concurent() {
-		let log = DLog()
-		
-		let queue = DispatchQueue(label: "Concurent", attributes: .concurrent)
-		
-		for i in 0..<10 {
-			queue.async {
-				log.scope("Stack \(i)") { log.debug("\(i)"); delay(); }
-			}
-			queue.async {
-				//log.interval("Signpost") { delay(); log.debug("\(i)") }
-			}
-		}
-		
-		delay(1)
-	}
 	
 	func test_NonBlock() {
 		let log = DLog(.textPlain
@@ -493,6 +491,6 @@ final class DLogTests: XCTestCase {
 			log.interval("signpost") {  }
 		}
 		
-		XCTAssert(scope.duration < 0.03)
+		XCTAssert(scope.duration < 0.1)
 	}
 }

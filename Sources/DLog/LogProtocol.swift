@@ -30,7 +30,7 @@ public protocol LogProtocol {
 	var scope: LogScope? { get }
 	
 	func log(_ text: String, type: LogType, category: String, scope: LogScope?, file: String, function: String, line: UInt) -> String?
-	func scope(_ text: String, category: String, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogScope
+	func scope(_ text: String, category: String, file: String, function: String, line: UInt, closure: ((LogScope) -> Void)?) -> LogScope
 	func interval(_ name: StaticString, category: String, scope: LogScope?, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval
 }
 
@@ -68,8 +68,13 @@ extension LogProtocol {
 	}
 	
 	@discardableResult
-	public func scope(_ text: String, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogScope {
+	public func scope(_ text: String, file: String = #file, function: String = #function, line: UInt = #line, closure: ((LogScope) -> Void)? = nil) -> LogScope {
 		scope(text, category: category, file: file, function: function, line: line, closure: closure)
+	}
+	
+	@discardableResult
+	public func scope(_ text: String, file: String = #file, function: String = #function, line: UInt = #line, closure: @escaping (() -> Void)) -> LogScope {
+		scope(text, category: category, file: file, function: function, line: line, closure: { _ in closure() })
 	}
 	
 	@discardableResult

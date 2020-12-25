@@ -136,7 +136,7 @@ extension LogScope : LogProtocol {
 		log.log(text, type: type, category: category, scope: self, file: file, function: function, line: line)
 	}
 	
-	public func scope(_ text: String, category: String, file: String, function: String, line: UInt, closure: (() -> Void)? = nil) -> LogScope {
+	public func scope(_ text: String, category: String, file: String, function: String, line: UInt, closure: ((LogScope) -> Void)?) -> LogScope {
 		log.scope(text, category: category, file: file, function: function, line: line, closure: closure)
 	}
 	

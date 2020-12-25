@@ -125,8 +125,9 @@ public class Text : LogOutput {
 				let scope = scopes.first(where: { $0.level == level })
 				padding += scope != nil ? "|\t" : "\t"
 			}
-			padding += "[\(maxlevel)] "
 		}
+		
+		let level = String(format: "[%02d]", item.scope?.level ?? 0)
 		
 		switch style {
 			case .colored:
@@ -134,13 +135,13 @@ public class Text : LogOutput {
 				
 				let tagText = " \(item.type.title) ".color(tag.colors)
 				let location = "<\(item.fileName):\(item.line)>".color([.dim, tag.textColor])
-				return "\(time.color(.dim)) \(item.category.color(.textBlue)) \(padding)\(tagText) \(location) \(item.text.color(tag.textColor))"
+				return "\(time.color(.dim)) \(level.color(.dim)) \(item.category.color(.textBlue)) \(padding)\(tagText) \(location) \(item.text.color(tag.textColor))"
 				
 			case .plain:
-				return "\(time) [\(item.category)] \(padding)[\(item.type.title)] <\(item.fileName):\(item.line)> \(item.text)"
+				return "\(time) \(level) [\(item.category)] \(padding)[\(item.type.title)] <\(item.fileName):\(item.line)> \(item.text)"
 				
 			case .emoji:
-				return "\(time) [\(item.category)] \(padding)\(item.type.icon) [\(item.type.title)] <\(item.fileName):\(item.line)> \(item.text)"
+				return "\(time) \(level) [\(item.category)] \(padding)\(item.type.icon) [\(item.type.title)] <\(item.fileName):\(item.line)> \(item.text)"
 		}
 	}
 
@@ -164,14 +165,16 @@ public class Text : LogOutput {
 			let scope = scopes.first(where: { $0.level == level })
 			padding += scope != nil ? "|\t" : "\t"
 		}
-		padding += (start ? "┌" : "└") + " [\(scope.level)]"
+		padding += start ? "┌" : "└"
+		
+		let level = String(format: "[%02d]", scope.level)
 		
 		switch style {
 			case .emoji, .plain:
-				return "\(time) [\(scope.category)] \(padding) [\(scope.text)] \(ms ?? "")"
+				return "\(time) \(level) [\(scope.category)] \(padding) [\(scope.text)] \(ms ?? "")"
 				
 			case .colored:
-				return "\(time.color(.dim)) \(scope.category.color(.textBlue)) \(padding) [\(scope.text.color(.textMagenta))] \(ms ?? "")"
+				return "\(time.color(.dim)) \(level.color(.dim)) \(scope.category.color(.textBlue)) \(padding) [\(scope.text.color(.textMagenta))] \(ms ?? "")"
 		}
 	}
 	
