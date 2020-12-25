@@ -27,43 +27,44 @@ import Foundation
 
 public protocol LogProtocol {
 	var category: String { get }
+	var scope: LogScope? { get }
 	
-	func log(_ text: String, type: LogType, category: String, file: String, function: String, line: UInt) -> String?
+	func log(_ text: String, type: LogType, category: String, scope: LogScope?, file: String, function: String, line: UInt) -> String?
 	func scope(_ text: String, category: String, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogScope
-	func interval(_ name: StaticString, category: String, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval
+	func interval(_ name: StaticString, category: String, scope: LogScope?, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval
 }
 
 extension LogProtocol {
 	
 	@discardableResult
 	public func trace(_ text: String? = nil, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		log(text ?? function, type: .trace, category: category, file: file, function: function, line: line)
+		log(text ?? function, type: .trace, category: category, scope: scope, file: file, function: function, line: line)
 	}
 	
 	@discardableResult
 	public func info(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		log(text, type: .info, category: category, file: file, function: function, line: line)
+		log(text, type: .info, category: category, scope: scope, file: file, function: function, line: line)
 	}
 		
 	@discardableResult
 	public func debug(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		log(text, type: .debug, category: category, file: file, function: function, line: line)
+		log(text, type: .debug, category: category, scope: scope, file: file, function: function, line: line)
 	}
 	
 	@discardableResult
 	public func error(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		log(text, type: .error, category: category, file: file, function: function, line: line)
+		log(text, type: .error, category: category, scope: scope, file: file, function: function, line: line)
 	}
 	
 	@discardableResult
 	public func fault(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		log(text, type: .fault, category: category, file: file, function: function, line: line)
+		log(text, type: .fault, category: category, scope: scope, file: file, function: function, line: line)
 	}
 	
 	@discardableResult
 	public func assert(_ value: Bool, _ text: String = "", file: String = #file, function: String = #function, line: UInt = #line) -> String? {
 		guard !value else { return nil }
-		return log(text, type: .assert, category: category, file: file, function: function, line: line)
+		return log(text, type: .assert, category: category, scope: scope, file: file, function: function, line: line)
 	}
 	
 	@discardableResult
@@ -73,7 +74,7 @@ extension LogProtocol {
 	
 	@discardableResult
 	public func interval(_ name: StaticString, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval {
-		interval(name, category: category, file: file, function: function, line: line, closure: closure)
+		interval(name, category: category, scope: scope, file: file, function: function, line: line, closure: closure)
 	}
 	
 }

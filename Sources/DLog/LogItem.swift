@@ -71,15 +71,18 @@ public enum LogType : Int {
 public class LogItem : NSObject {
 	public var time: Date?
 	public let category: String
+	public let scope: LogScope?
 	public let type: LogType
 	public let fileName: String
 	public let funcName: String
 	public let line: UInt
 	public let text: String
+
 	
-	public init(time: Date? = nil, category: String, type: LogType, fileName: String, funcName: String, line: UInt, text: String) {
+	public init(time: Date? = nil, category: String, scope: LogScope?, type: LogType, fileName: String, funcName: String, line: UInt, text: String) {
 		self.time = time
 		self.category = category
+		self.scope = scope
 		self.type = type
 		self.fileName = fileName
 		self.funcName = funcName
@@ -90,6 +93,7 @@ public class LogItem : NSObject {
 
 public class LogScope : LogItem {
 	let log: DLog
+	
 	let uid = UUID()
 	var level: Int = 1
 	var os_state = os_activity_scope_state_s()
@@ -99,7 +103,7 @@ public class LogScope : LogItem {
 	
 	init(log: DLog, category: String, fileName: String, funcName: String, line: UInt, text: String) {
 		self.log = log
-		super.init(category: category, type: .scope, fileName: fileName, funcName: funcName, line: line, text: text)
+		super.init(category: category, scope: nil, type: .scope, fileName: fileName, funcName: funcName, line: line, text: text)
 	}
 	
 	deinit {
@@ -126,9 +130,25 @@ public class LogScope : LogItem {
 	}
 }
 
+extension LogScope : LogProtocol {
+	
+	public func log(_ text: String, type: LogType, category: String, scope: LogScope?, file: String, function: String, line: UInt) -> String?  {
+		log.log(text, type: type, category: category, scope: self, file: file, function: function, line: line)
+	}
+	
+	public func scope(_ text: String, category: String, file: String, function: String, line: UInt, closure: (() -> Void)? = nil) -> LogScope {
+		log.scope(text, category: category, file: file, function: function, line: line, closure: closure)
+	}
+	
+	public func interval(_ name: StaticString, category: String, scope: LogScope?, file: String, function: String, line: UInt, closure: (() -> Void)? = nil) -> LogInterval {
+		log.interval(name, category: category, scope: self, file: file, function: function, line: line, closure: closure)
+	}
+}
+
 public class LogInterval : LogItem {
 	let log: DLog
 	let name: StaticString
+	
 	@Atomic var begun = false
 	
 	private(set) public var count = 0
@@ -148,11 +168,11 @@ public class LogInterval : LogItem {
 		get { _signpostID as? OSSignpostID }
 	}
 	
-	init(log: DLog, category: String, fileName: String, funcName: String, line: UInt, name: StaticString) {
+	init(log: DLog, category: String, scope: LogScope?, fileName: String, funcName: String, line: UInt, name: StaticString) {
 		self.log = log
 		self.name = name
 		
-		super.init(category: category, type: .interval, fileName: fileName, funcName: funcName, line: line, text: "\(name)")
+		super.init(category: category, scope: scope, type: .interval, fileName: fileName, funcName: funcName, line: line, text: "\(name)")
 	}
 	
 	public func begin() {

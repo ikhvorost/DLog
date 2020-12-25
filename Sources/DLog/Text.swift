@@ -120,11 +120,12 @@ public class Text : LogOutput {
 		let time = item.time != nil ? Self.dateFormatter.string(from: item.time!) : ""
 		
 		var padding = ""
-		if let maxlevel = scopes.last?.level {
+		if let maxlevel = item.scope?.level {
 			for level in 1...maxlevel {
 				let scope = scopes.first(where: { $0.level == level })
 				padding += scope != nil ? "|\t" : "\t"
 			}
+			padding += "[\(maxlevel)] "
 		}
 		
 		switch style {
@@ -163,7 +164,7 @@ public class Text : LogOutput {
 			let scope = scopes.first(where: { $0.level == level })
 			padding += scope != nil ? "|\t" : "\t"
 		}
-		padding += start ? "┌" : "└"
+		padding += (start ? "┌" : "└") + " [\(scope.level)]"
 		
 		switch style {
 			case .emoji, .plain:
@@ -209,6 +210,7 @@ public class Text : LogOutput {
 		let item = LogItem(
 			time: Date(),
 			category: interval.category,
+			scope: interval.scope,
 			type: .interval,
 			fileName: interval.fileName,
 			funcName: interval.funcName,

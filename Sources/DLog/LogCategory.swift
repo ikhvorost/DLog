@@ -32,6 +32,9 @@ public class LogCategory {
 	
 	// LogProtocol
 	public var category: String
+	public var scope: LogScope? {
+		log.scope
+	}
 	
 	public init(log: DLog, category: String) {
 		self.log = log
@@ -41,15 +44,15 @@ public class LogCategory {
 
 extension LogCategory: LogProtocol {
 	
-	public func log(_ text: String, type: LogType, category: String, file: String, function: String, line: UInt) -> String?  {
-		log.log(text, type: type, category: category, file: file, function: function, line: line)
+	public func log(_ text: String, type: LogType, category: String, scope: LogScope?, file: String, function: String, line: UInt) -> String?  {
+		log.log(text, type: type, category: category, scope: scope, file: file, function: function, line: line)
 	}
 	
 	public func scope(_ text: String, category: String, file: String, function: String, line: UInt, closure: (() -> Void)? = nil) -> LogScope {
 		log.scope(text, category: category, file: file, function: function, line: line, closure: closure)
 	}
 	
-	public func interval(_ name: StaticString, category: String, file: String, function: String, line: UInt, closure: (() -> Void)? = nil) -> LogInterval {
-		log.interval(name, category: category, file: file, function: function, line: line, closure: closure)
+	public func interval(_ name: StaticString, category: String, scope: LogScope?, file: String, function: String, line: UInt, closure: (() -> Void)? = nil) -> LogInterval {
+		log.interval(name, category: category, scope: scope, file: file, function: function, line: line, closure: closure)
 	}
 }

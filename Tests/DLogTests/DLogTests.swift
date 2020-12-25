@@ -134,6 +134,8 @@ final class DLogTests: XCTestCase {
 	func test_ScopeStack() {
 		let log = DLog()
 		
+		XCTAssert(log.debug("no scope")?.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) no scope"#) == true)
+		
 		log.scope("scope1") {
 			XCTAssert(log.info("scope1 start")?.match(#"\#(CategoryTag) \|\t\#(InfoTag) \#(Location) scope1 start"#) == true)
 			
@@ -199,6 +201,18 @@ final class DLogTests: XCTestCase {
 		scope1.leave()
 		
 		XCTAssert(log.trace()?.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) \#(#function)"#) == true)
+	}
+	
+	func test_ScopeConcurent() {
+		let log = DLog()
+		
+		for i in 1...10 {
+			DispatchQueue.global().async {
+				log.scope("Scope \(i)") { log.debug("\(i)"); }
+			}
+		}
+		
+		delay(1)
 	}
 	
 	func test_ScopeDuration() {
@@ -396,6 +410,7 @@ final class DLogTests: XCTestCase {
 	
 	func test_Disabled() {
 		let log = DLog.disabled
+		let netLog = log["NET"]
 		
 		XCTAssertNil(
 			read_stdout {
@@ -407,12 +422,24 @@ final class DLogTests: XCTestCase {
 				log.assert(false, "assert")
 				log.scope("scope") { }
 				log.interval("interval") { }
+				
+				netLog.trace()
+				netLog.info("info")
+				netLog.debug("debug")
+				netLog.error("error")
+				netLog.fault("fatal")
+				netLog.assert(false, "assert")
+				netLog.scope("scope") { }
+				netLog.interval("interval") { }
 			}
 		)
 		
-		wait(count: 2) { exps in
+		wait(count: 4) { exps in
 			log.scope("scope") { exps[0].fulfill() }
 			log.interval("interval") { exps[1].fulfill() }
+			
+			netLog.scope("scope") { exps[2].fulfill() }
+			netLog.interval("interval") { exps[3].fulfill() }
 		}
 	}
 	
