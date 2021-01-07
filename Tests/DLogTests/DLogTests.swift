@@ -419,6 +419,24 @@ final class DLogTests: XCTestCase {
 		XCTAssertNotNil(read_stdout { textLog.interval("hello interval") { Thread.sleep(forTimeInterval: 0.3) } })
 		XCTAssertNil(read_stdout { textLog.scope("scope") {} })
 		XCTAssertNotNil(read_stdout { textLog.scope("scope hello") {} })
+		
+		// Scope
+		let scopeLog = DLog(.textPlain => .filter { ($0 as? LogScope)?.text == "Load" || $0.scope?.text == "Load" } => .stdout)
+		//let scopeLog = DLog(.textPlain => .filter { $0.scope?.level == 1 } => .stdout)
+		XCTAssertNil(scopeLog.info("info"))
+		XCTAssertNotNil(read_stdout {
+			scopeLog.scope("Load") {
+				XCTAssertNotNil(scopeLog.debug("load"))
+				XCTAssertNotNil(scopeLog.error("load"))
+				XCTAssertNil(read_stdout {
+					scopeLog.scope("Parse") {
+						XCTAssertNil(scopeLog.debug("parse"))
+						XCTAssertNil(scopeLog.error("parse"))
+					}
+				})
+			}
+		})
+		XCTAssertNil(scopeLog.fault("fault"))
 	}
 	
 	// MARK: - Disabled

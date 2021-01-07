@@ -78,7 +78,6 @@ public class LogItem : NSObject {
 	public let line: UInt
 	public let text: String
 
-	
 	public init(time: Date? = nil, category: String, scope: LogScope?, type: LogType, fileName: String, funcName: String, line: UInt, text: String) {
 		self.time = time
 		self.category = category
@@ -94,8 +93,9 @@ public class LogItem : NSObject {
 public class LogScope : LogItem {
 	let log: DLog
 	
+	internal(set) public var level: Int = 1
+	
 	let uid = UUID()
-	var level: Int = 1
 	var os_state = os_activity_scope_state_s()
 	@Atomic var entered = false
 	

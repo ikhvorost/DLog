@@ -715,7 +715,7 @@ let log = DLog(.textPlain => .stdout => .textColored => .file(path))
 
 ## Filter
 
-`.filter` represents a pipe output that can filter log messages by next available fields: `time`, `category`, `type`, `fileName`, `funcName`, `line` and `text`. You can inject it to your pipline to log needed data only.
+`.filter` represents a pipe output that can filter log messages by next available fields: `time`, `category`, `type`, `fileName`, `funcName`, `line`, `text` and by a specific scope. You can inject it to your pipeline to log needed data only.
 
 Examples:
 
@@ -756,6 +756,32 @@ log.info("info")
 Outputs:
 ```
 23:49:01.047 [DLOG] [INFO] <Package.playground:9> hello world
+```
+
+3) Log messages that are related to a specific scope:
+
+``` swift
+let log = DLog(.textPlain => .filter { ($0 as? LogScope)?.text == "Load" || $0.scope?.text == "Load" } => .stdout)
+
+log.info("info")
+log.scope("Load") {
+	log.debug("load")
+	log.error("load")
+	log.scope("Parse") {
+		log.debug("parse")
+		log.error("parse")
+	}
+}
+log.fault("fault")
+```
+
+Outputs:
+
+```
+17:22:57.418 [01] [DLOG] ┌ [Load]
+17:22:57.451 [01] [DLOG] |	[DEBUG] <DLog.playground:9> load
+17:22:57.451 [01] [DLOG] |	[ERROR] <DLog.playground:10> load
+17:22:57.520 [01] [DLOG] └ [Load] (0.102s)
 ```
 
 ## `.disabled`
