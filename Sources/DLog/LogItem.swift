@@ -28,43 +28,18 @@ import os.log
 
 @objc
 public enum LogType : Int {
+	// Levels
+	case `default`
 	case trace
-	case info
-	case interval
-	case scope
 	case debug
+	case info
+	case warning
 	case error
 	case assert
 	case fault
 	
-	private static let icons: [LogType : String] = [
-		.trace : "⚛️",
-		.info : "✅",
-		.debug : "▶️",
-		.error : "⚠️",
-		.assert : "🅰️",
-		.fault : "🆘",
-		.interval : "🕒",
-		.scope : "#️⃣",
-	]
-	
-	var icon: String {
-		Self.icons[self]!
-	}
-	
-	private static let titles: [LogType : String] = [
-		.trace : "TRACE",
-		.info : "INFO",
-		.interval : "INTERVAL",
-		.debug : "DEBUG",
-		.error : "ERROR",
-		.assert : "ASSERT",
-		.fault : "FAULT",
-	]
-	
-	var title: String {
-		Self.titles[self]!
-	}
+	internal case interval
+	case scope
 }
 
 @objcMembers

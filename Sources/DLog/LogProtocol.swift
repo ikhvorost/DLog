@@ -37,34 +37,44 @@ public protocol LogProtocol {
 extension LogProtocol {
 	
 	@discardableResult
+	public func log(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+		log(text, type: .default, category: category, scope: scope, file: file, function: function, line: line)
+	}
+	
+	@discardableResult
 	public func trace(_ text: String? = nil, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
 		log(text ?? function, type: .trace, category: category, scope: scope, file: file, function: function, line: line)
 	}
 	
-	@discardableResult
-	public func info(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		log(text, type: .info, category: category, scope: scope, file: file, function: function, line: line)
-	}
-		
 	@discardableResult
 	public func debug(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
 		log(text, type: .debug, category: category, scope: scope, file: file, function: function, line: line)
 	}
 	
 	@discardableResult
-	public func error(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		log(text, type: .error, category: category, scope: scope, file: file, function: function, line: line)
+	public func info(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+		log(text, type: .info, category: category, scope: scope, file: file, function: function, line: line)
 	}
 	
 	@discardableResult
-	public func fault(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		log(text, type: .fault, category: category, scope: scope, file: file, function: function, line: line)
+	public func warning(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+		log(text, type: .warning, category: category, scope: scope, file: file, function: function, line: line)
+	}
+		
+	@discardableResult
+	public func error(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+		log(text, type: .error, category: category, scope: scope, file: file, function: function, line: line)
 	}
 	
 	@discardableResult
 	public func assert(_ value: Bool, _ text: String = "", file: String = #file, function: String = #function, line: UInt = #line) -> String? {
 		guard !value else { return nil }
 		return log(text, type: .assert, category: category, scope: scope, file: file, function: function, line: line)
+	}
+	
+	@discardableResult
+	public func fault(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+		log(text, type: .fault, category: category, scope: scope, file: file, function: function, line: line)
 	}
 	
 	@discardableResult

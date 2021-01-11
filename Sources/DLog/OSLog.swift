@@ -41,12 +41,18 @@ public class OSLog : LogOutput {
 	private static let OS_ACTIVITY_CURRENT = unsafeBitCast(dlsym(RTLD_DEFAULT, "_os_activity_current"), to: os_activity_t.self)
 	
 	static let types: [LogType : OSLogType] = [
-		.trace : .default,
-		.info : .info,
+		.default : .default,
+		// Debug
+		.trace : .debug,
 		.debug : .debug,
+		// Info
+		.info : .info,
+		// Error
+		.warning : .error,
 		.error : .error,
-		.fault : .fault,
+		// Fault
 		.assert : .fault,
+		.fault : .fault,
 	]
 	
 	private var subsystem: String
@@ -76,9 +82,8 @@ public class OSLog : LogOutput {
 		
 		assert(Self.types[item.type] != nil)
 		let type = Self.types[item.type]!
-		os_log("%{public}@ %{public}@ %{public}@", dso: Self.dso, log: log, type: type, item.type.icon, location, item.text)
+		os_log("%{public}@ %{public}@", dso: Self.dso, log: log, type: type, location, item.text)
 	
-		
 		return super.log(item: item, scopes: scopes)
 	}
 	

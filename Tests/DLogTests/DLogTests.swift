@@ -75,12 +75,16 @@ func read_stderr(_ block: () -> Void) -> String? {
 
 // Patterns
 let CategoryTag = #"\[DLOG\]"#
+
+let LogTag = #"\[LOG\]"#
 let TraceTag = #"\[TRACE\]"#
-let InfoTag = #"\[INFO\]"#
 let DebugTag = #"\[DEBUG\]"#
+let InfoTag = #"\[INFO\]"#
+let WarningTag = #"\[WARNING\]"#
 let ErrorTag = #"\[ERROR\]"#
 let AssertTag = #"\[ASSERT\]"#
 let FaultTag = #"\[FAULT\]"#
+
 let Location = "<DLogTests.swift:[0-9]+>"
 
 final class DLogTests: XCTestCase {
@@ -104,15 +108,19 @@ final class DLogTests: XCTestCase {
 	func testAll(_ log: LogProtocol, categoryTag: String = CategoryTag) {
 		let scope = #"(\|\t)?"#
 		
+		XCTAssert(log.log("log")?.match(#"\#(categoryTag) \#(scope)\#(LogTag) \#(Location) log"#) == true)
+		
 		XCTAssert(log.trace()?.match(#"\#(categoryTag) \#(scope)\#(TraceTag) \#(Location) testAll"#) == true)
-		XCTAssert(log.info("info")?.match(#"\#(categoryTag) \#(scope)\#(InfoTag) \#(Location) info"#) == true)
 		XCTAssert(log.debug("debug")?.match(#"\#(categoryTag) \#(scope)\#(DebugTag) \#(Location) debug"#) == true)
+		
+		XCTAssert(log.info("info")?.match(#"\#(categoryTag) \#(scope)\#(InfoTag) \#(Location) info"#) == true)
+		
+		XCTAssert(log.warning("warning")?.match(#"\#(categoryTag) \#(scope)\#(WarningTag) \#(Location) warning"#) == true)
 		XCTAssert(log.error("error")?.match(#"\#(categoryTag) \#(scope)\#(ErrorTag) \#(Location) error"#) == true)
 		
 		XCTAssertNil(log.assert(true, "assert"))
 		XCTAssert(log.assert(false)?.match(#"\#(categoryTag) \#(scope)\#(AssertTag) \#(Location)"#) == true)
 		XCTAssert(log.assert(false, "assert")?.match(#"\#(categoryTag) \#(scope)\#(AssertTag) \#(Location) assert"#) == true)
-		
 		XCTAssert(log.fault("fault")?.match(#"\#(categoryTag) \#(scope)\#(FaultTag) \#(Location) fault"#) == true)
 		
 		XCTAssert(read_stdout { log.scope("scope") { delay() } }?.match(#"\#(categoryTag) \#(scope)└ \[scope\] \(0\.[0-9]{3}s\)"#) == true)
@@ -321,12 +329,18 @@ final class DLogTests: XCTestCase {
 	func test_textEmoji() {
 		let log = DLog(.textEmoji => .stdout)
 		
-		XCTAssert(log.trace()?.match(#"\#(CategoryTag) ⚛️ \#(TraceTag) \#(Location) \#(#function)"#) == true)
-		XCTAssert(log.info("info")?.match(#"\#(CategoryTag) ✅ \#(InfoTag) \#(Location) info"#) == true)
+		XCTAssert(log.log("log")?.match(#"\#(CategoryTag) ⚪️ \#(LogTag) \#(Location) log"#) == true)
+		
+		XCTAssert(log.trace()?.match(#"\#(CategoryTag) ⏺ \#(TraceTag) \#(Location) \#(#function)"#) == true)
 		XCTAssert(log.debug("debug")?.match(#"\#(CategoryTag) ▶️ \#(DebugTag) \#(Location) debug"#) == true)
-		XCTAssert(log.error("error")?.match(#"\#(CategoryTag) ⚠️ \#(ErrorTag) \#(Location) error"#) == true)
+		
+		XCTAssert(log.info("info")?.match(#"\#(CategoryTag) ✅ \#(InfoTag) \#(Location) info"#) == true)
+		
+		XCTAssert(log.warning("warning")?.match(#"\#(CategoryTag) ⚠️ \#(WarningTag) \#(Location) warning"#) == true)
+		XCTAssert(log.error("error")?.match(#"\#(CategoryTag) 🟡 \#(ErrorTag) \#(Location) error"#) == true)
+		
 		XCTAssert(log.assert(false)?.match(#"\#(CategoryTag) 🅰️ \#(AssertTag) \#(Location)"#) == true)
-		XCTAssert(log.fault("fatal")?.match(#"\#(CategoryTag) 🆘 \#(FaultTag) \#(Location) fatal"#) == true)
+		XCTAssert(log.fault("fault")?.match(#"\#(CategoryTag) 🔴 \#(FaultTag) \#(Location) fault"#) == true)
 		
 		XCTAssert(read_stdout { log.scope("My Scope") {} }?.match(#"\[My Scope\]"#) == true)
 		XCTAssert(read_stdout { log.interval("My Interval") {} }?.match(#"🕒 \[INTERVAL\]"#) == true)
@@ -443,9 +457,11 @@ final class DLogTests: XCTestCase {
 	
 	func test_Disabled() {
 		let test: (LogProtocol) -> Void = { log in
+			log.log("log")
 			log.trace()
-			log.info("info")
 			log.debug("debug")
+			log.info("info")
+			log.warning("warning")
 			log.error("error")
 			log.fault("fatal")
 			log.assert(false, "assert")
@@ -490,18 +506,22 @@ final class DLogTests: XCTestCase {
 		
 		let scope = log.scope("test") {
 			let netLog = log["NET"]
+			netLog.log("log")
 			netLog.trace()
-			netLog.info("info")
 			netLog.debug("debug")
+			netLog.info("info")
+			netLog.warning("warning")
 			netLog.error("error")
 			netLog.assert(false)
 			netLog.fault("fault")
 			netLog.scope("scope") {  }
 			netLog.interval("signpost") {  }
 			
+			log.log("log")
 			log.trace()
-			log.info("info")
 			log.debug("debug")
+			log.info("info")
+			log.warning("warning")
 			log.error("error")
 			log.assert(false)
 			log.fault("fault")

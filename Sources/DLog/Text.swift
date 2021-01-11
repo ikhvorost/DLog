@@ -67,6 +67,44 @@ private extension String {
 	}
 }
 
+private extension LogType {
+	static let icons: [LogType : String] = [
+		.default : "⚪️",
+		.trace : "⏺",
+		.debug : "▶️",
+		.info : "✅",
+		.warning: "⚠️",
+		.error : "🟡",
+		.assert : "🅰️",
+		.fault : "🔴",
+		
+		.interval : "🕒",
+		.scope : "",
+	]
+	
+	var icon: String {
+		Self.icons[self]!
+	}
+	
+	static let titles: [LogType : String] = [
+		.default : "LOG",
+		.trace : "TRACE",
+		.debug : "DEBUG",
+		.info : "INFO",
+		.warning : "WARNING",
+		.error : "ERROR",
+		.assert : "ASSERT",
+		.fault : "FAULT",
+		
+		.interval : "INTERVAL",
+		.scope: ""
+	]
+	
+	var title: String {
+		Self.titles[self]!
+	}
+}
+
 public class Text : LogOutput {
 	private struct Tag {
 		let textColor: ANSIEscapeCode
@@ -81,7 +119,7 @@ public class Text : LogOutput {
 		.fault : Tag(textColor: .textRed, colors: [.backgrounRed, .textWhite, .blink]),
 		.assert : Tag(textColor: .textRed, colors: [.backgrounRed, .textWhite]),
 		.interval : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textBlack]),
-		// .scope
+		//.scope :
 	]
 	
 	public enum Style {
