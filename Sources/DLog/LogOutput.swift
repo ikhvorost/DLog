@@ -37,11 +37,13 @@ public class LogOutput : NSObject {
 	public static var oslog: OSLog { OSLog() }
 	public static func oslog(_ subsystem: String) -> OSLog { OSLog(subsystem: subsystem) }
 	
-	public static var net: Net { Net() }
-	
 	public static func filter(_ block: @escaping (LogItem) -> Bool) -> Filter { Filter(block: block) }
 	public static func file(_ path: String, append: Bool = false) -> File { File(path: path, append: append) }
+	
+#if !os(watchOS)
+	public static var net: Net { Net() }
 	public static func net(_ name: String) -> Net { Net(name: name) }
+#endif
 
 	public var source: LogOutput!
 	

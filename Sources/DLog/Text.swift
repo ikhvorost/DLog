@@ -112,9 +112,11 @@ public class Text : LogOutput {
 	}
 	
 	private static let tags: [LogType : Tag] = [
-		.trace : Tag(textColor: .textWhite, colors: [.backgroundWhite, .textBlack]),
+		.default : Tag(textColor: .textWhite, colors: [.backgroundWhite, .textBlack]),
 		.info : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textWhite]),
+		.trace : Tag(textColor: .textCyan, colors: [.backgroundCyan, .textBlack]),
 		.debug : Tag(textColor: .textCyan, colors: [.backgroundCyan, .textBlack]),
+		.warning : Tag(textColor: .textYellow, colors: [.backgroundYellow, .textBlack]),
 		.error : Tag(textColor: .textYellow, colors: [.backgroundYellow, .textBlack]),
 		.fault : Tag(textColor: .textRed, colors: [.backgrounRed, .textWhite, .blink]),
 		.assert : Tag(textColor: .textRed, colors: [.backgrounRed, .textWhite]),

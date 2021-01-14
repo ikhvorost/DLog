@@ -38,7 +38,7 @@ public enum LogType : Int {
 	case assert
 	case fault
 	
-	internal case interval
+	case interval
 	case scope
 }
 

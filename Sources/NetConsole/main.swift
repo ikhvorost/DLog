@@ -51,6 +51,10 @@ class Service : NSObject {
 	static let bufferSize = 1024
 	var buffer = [UInt8](repeating: 0, count: bufferSize)
 	
+	deinit {
+		log("deinit")
+	}
+	
 	init(name: String, debug: Bool, autoClear: Bool) {
 		self.name = name
 		self.debug = debug
@@ -161,7 +165,8 @@ struct NetConsole: ParsableCommand {
 	
 	func run() throws {
 		print(info)
-		let _ = Service(name: name ?? "DLog", debug: debug, autoClear: autoClear)
+		
+		let _ = Service(name: name ?? "DLog", debug: true, autoClear: autoClear)
 		RunLoop.current.run()
 	}
 }
