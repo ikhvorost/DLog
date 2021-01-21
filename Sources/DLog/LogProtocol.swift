@@ -38,7 +38,7 @@ extension LogProtocol {
 	
 	@discardableResult
 	public func log(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		log(text, type: .default, category: category, scope: scope, file: file, function: function, line: line)
+		log(text, type: .log, category: category, scope: scope, file: file, function: function, line: line)
 	}
 	
 	@discardableResult

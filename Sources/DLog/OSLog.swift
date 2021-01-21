@@ -41,7 +41,7 @@ public class OSLog : LogOutput {
 	private static let OS_ACTIVITY_CURRENT = unsafeBitCast(dlsym(RTLD_DEFAULT, "_os_activity_current"), to: os_activity_t.self)
 	
 	static let types: [LogType : OSLogType] = [
-		.default : .default,
+		.log : .default,
 		// Debug
 		.trace : .debug,
 		.debug : .debug,

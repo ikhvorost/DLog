@@ -329,18 +329,18 @@ final class DLogTests: XCTestCase {
 	func test_textEmoji() {
 		let log = DLog(.textEmoji => .stdout)
 		
-		XCTAssert(log.log("log")?.match(#"\#(CategoryTag) ⚪️ \#(LogTag) \#(Location) log"#) == true)
+		XCTAssert(log.log("log")?.match(#"\#(CategoryTag) 💬 \#(LogTag) \#(Location) log"#) == true)
 		
-		XCTAssert(log.trace()?.match(#"\#(CategoryTag) ⏺ \#(TraceTag) \#(Location) \#(#function)"#) == true)
+		XCTAssert(log.trace()?.match(#"\#(CategoryTag) #️⃣ \#(TraceTag) \#(Location) \#(#function)"#) == true)
 		XCTAssert(log.debug("debug")?.match(#"\#(CategoryTag) ▶️ \#(DebugTag) \#(Location) debug"#) == true)
 		
 		XCTAssert(log.info("info")?.match(#"\#(CategoryTag) ✅ \#(InfoTag) \#(Location) info"#) == true)
 		
 		XCTAssert(log.warning("warning")?.match(#"\#(CategoryTag) ⚠️ \#(WarningTag) \#(Location) warning"#) == true)
-		XCTAssert(log.error("error")?.match(#"\#(CategoryTag) 🟡 \#(ErrorTag) \#(Location) error"#) == true)
+		XCTAssert(log.error("error")?.match(#"\#(CategoryTag) ⚠️ \#(ErrorTag) \#(Location) error"#) == true)
 		
 		XCTAssert(log.assert(false)?.match(#"\#(CategoryTag) 🅰️ \#(AssertTag) \#(Location)"#) == true)
-		XCTAssert(log.fault("fault")?.match(#"\#(CategoryTag) 🔴 \#(FaultTag) \#(Location) fault"#) == true)
+		XCTAssert(log.fault("fault")?.match(#"\#(CategoryTag) 🆘 \#(FaultTag) \#(Location) fault"#) == true)
 		
 		XCTAssert(read_stdout { log.scope("My Scope") {} }?.match(#"\[My Scope\]"#) == true)
 		XCTAssert(read_stdout { log.interval("My Interval") {} }?.match(#"🕒 \[INTERVAL\]"#) == true)

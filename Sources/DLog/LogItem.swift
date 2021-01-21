@@ -29,7 +29,7 @@ import os.log
 @objc
 public enum LogType : Int {
 	// Levels
-	case `default`
+	case log
 	case trace
 	case debug
 	case info

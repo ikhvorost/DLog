@@ -69,14 +69,14 @@ private extension String {
 
 private extension LogType {
 	static let icons: [LogType : String] = [
-		.default : "⚪️",
-		.trace : "⏺",
+		.log : "💬",
+		.trace : "#️⃣",
 		.debug : "▶️",
 		.info : "✅",
 		.warning: "⚠️",
-		.error : "🟡",
+		.error : "⚠️",
 		.assert : "🅰️",
-		.fault : "🔴",
+		.fault : "🆘",
 		
 		.interval : "🕒",
 		.scope : "",
@@ -87,7 +87,7 @@ private extension LogType {
 	}
 	
 	static let titles: [LogType : String] = [
-		.default : "LOG",
+		.log : "LOG",
 		.trace : "TRACE",
 		.debug : "DEBUG",
 		.info : "INFO",
@@ -112,7 +112,7 @@ public class Text : LogOutput {
 	}
 	
 	private static let tags: [LogType : Tag] = [
-		.default : Tag(textColor: .textWhite, colors: [.backgroundWhite, .textBlack]),
+		.log : Tag(textColor: .textWhite, colors: [.backgroundWhite, .textBlack]),
 		.info : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textWhite]),
 		.trace : Tag(textColor: .textCyan, colors: [.backgroundCyan, .textBlack]),
 		.debug : Tag(textColor: .textCyan, colors: [.backgroundCyan, .textBlack]),
