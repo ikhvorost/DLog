@@ -166,7 +166,7 @@ struct NetConsole: ParsableCommand {
 	func run() throws {
 		print(info)
 		
-		let _ = Service(name: name ?? "DLog", debug: true, autoClear: autoClear)
+		let _ = Service(name: name ?? "DLog", debug: debug, autoClear: autoClear)
 		RunLoop.current.run()
 	}
 }

@@ -587,10 +587,10 @@ Instruments.app:
 
 ### Net
 
-`Net` is a target output that sends log messages to `NetConsole` service that can be run from a command line on your machine. The console is provided as executable with DLog package and to run it just call `swift run` command inside the the package's folder and it starts listening for incoming messages:
+`Net` is a target output that sends log messages to `NetConsole` service that can be run from a command line on your machine. The service is provided as executable inside DLog package and to start it you should run `sh NetConsole.command` (or just click on NetConsole.command file) inside the package's folder and then the service starts listening for incoming messages:
 
-``` shell
-$ swift run
+```shell
+$ sh NetConsole.command # or 'xcrun --sdk macosx swift run'
 > [39/39] Linking NetConsole
 > NetConsole for DLog v.1.0
 ```
@@ -611,8 +611,19 @@ log.scope("Main") {
 }
 ```
 
+> **iOS 14**: Don't forget to make next changes in your Info.plist to support Bonjour:
+> ```xml
+> <key>NSLocalNetworkUsageDescription</key>
+> <string>Looking for local tcp Bonjour  service</string>
+> <key>NSBonjourServices</key>
+> <array>
+> 	<string>_dlog._tcp</string>
+> </array>
+> ```
+
 Terminal:
 <p><img src="Images/dlog-net-console.png" alt="DLog: NetConsole"></p>
+
 
 By default `Net` uses `Text(style: .colored)` output as a source but you can set other:
 
@@ -626,11 +637,11 @@ And you can also use `.net` shortcut to create the output for the logger.
 let log = DLog(.net)
 ```
 
-To connect to a specific instance of the service in your network you should provide an unique name to both the service and the output ("DLog" is used by default):
+To connect to a specific instance of the service in your network you should provide an unique name to both the service and the output ("DLog" is used by default). To run the NetConsole service with a specific name run next command:
 
 Terminal:
 ``` shell
-swift run NetConsole -n "MyLogger"
+sh NetConsole.command -n "MyLogger" # or 'xcrun --sdk macosx swift run NetConsole -n "MyLogger"'
 ```
 
 Swift:
@@ -641,7 +652,7 @@ let log = DLog(.net("MyLogger"))
 For more params you can look at help:
 
 ``` shell
-swift run NetConsole --help
+sh NetConsole.command --help  # or 'xcrun --sdk macosx swift run NetConsole --help'
 OVERVIEW: NetConsole for DLog v.1.0
 
 USAGE: net-console [--name <name>] [--auto-clear] [--debug]
