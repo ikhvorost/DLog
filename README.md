@@ -517,9 +517,11 @@ let log = DLog(output)
 
 log.info("Emoji")
 ```
+
 Outputs:
+
 ```
-21:28:37.989 [DLOG] ✅ <Package.playground:7> Emoji
+17:59:55.516 [00] [DLOG] ✅ [INFO] <DLog.playground:7> Emoji
 ```
 
 ### File
@@ -545,7 +547,7 @@ You can also use `.file` shortcut to create the output:
 let log = DLog(.file("dlog.txt"))
 ```
 
-`File` output uses `Text(style: .plain)` as a source by default but you can set other:
+`File` output uses `Text(style: .plain)` as a source by default but you can change it:
 
 ``` swift
 let output = File(path: "/users/user/dlog.txt", source: .textColored)
@@ -557,7 +559,7 @@ log.scope("File") {
 ```
 File "dlog.txt":
 
-<img src="Images/dlog-file-colored.png" width="600" alt="DLog: Colored text in a file."><br>
+<img src="Images/dlog-file-colored.png" alt="DLog: Colored text in a file."><br>
 
 ### OSLog
 
