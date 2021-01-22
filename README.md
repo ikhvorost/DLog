@@ -10,9 +10,11 @@ DLog supports emoji and colored text output, oslog, pipelines, filtering, scopes
 
 - [Getting started](#getting-started)
 - [Log levels](#log-levels)
-	- [`trace`](#trace)
+	- [`log`](#log)
 	- [`info`](#info)
+	- [`trace`](#trace)
 	- [`debug`](#debug)
+	- [`warning`](#warning)
 	- [`error`](#error)
 	- [`assert`](#assert)
 	- [`fault`](#fault)
@@ -36,48 +38,44 @@ DLog supports emoji and colored text output, oslog, pipelines, filtering, scopes
 By default `DLog` provides basic text console output:
 
 ``` swift
-// Import the package
+// Import DLog package
 import DLog
 
-// Create a logger
+// Create the logger
 let log = DLog()
 
-// Log debug message
-log.debug("Hello DLog!")
+// Log a message
+log.log("Hello DLog!")
 ```
 
 Outputs:
 
 ```
-21:03:52.276 [DLOG] [DEBUG] <Package.playground:4> Hello DLog!
+13:12:41.437 [00] [DLOG] [LOG] <DLog.playground:7> Hello DLog!
 ```
+
 Where:
-- `21:03:52.276` - timestamp (HH:mm:ss.SSS)
+- `13:12:41.437` - timestamp (HH:mm:ss.SSS)
+- `[00]` - global scope nesting level (see Scope)
 - `[DLOG]` - category tag ('DLOG' by default)
-- `[DEBUG]` - logging type tag
-- `<Package.playground:4>` - location (file:line)
+- `[LOG]` - log type tag
+- `<Package.playground:7>` - location (file:line)
 - `Hello DLog!` - message
 
 ## Log levels
 
-### `trace`
+### `log`
 
-Log the current function name or a message (if it is provided) to help debug problems during the development:
+Log a message:
 
 ``` swift
-let log = DLog()
-
-func startup() {
-	log.trace("Start")
-	log.trace()
-}
-
-startup()
+log.log("App start")
 ```
+
 Outputs:
+
 ```
-23:02:52.601 [DLOG] [TRACE] <Package.playground:7> Start
-23:02:52.603 [DLOG] [TRACE] <Package.playground:8> startup()
+13:36:59.086 [00] [DLOG] [LOG] <DLog.playground:7> App start
 ```
 
 ### `info`
@@ -85,15 +83,34 @@ Outputs:
 Log an information message and helpful data:
 
 ``` swift
-let log = DLog()
-
 let uuid = UUID().uuidString
 log.info("uuid: \(uuid)")
 ```
-Outputs:
-```
-00:09:51.211 [DLOG] [INFO] <Package.playground:17> uuid: 833D821A-B1FD-4403-A8A2-9380F1E95864
 
+Outputs:
+
+```
+13:37:54.934 [00] [DLOG] [INFO] <DLog.playground:8> uuid: 104B6491-B2A8-4043-A5C6-93CEB60864FA
+```
+
+### `trace`
+
+Log the current function name or a message (if it is provided) to help debug problems during the development:
+
+``` swift
+func startup() {
+	log.trace("Start")
+	log.trace()
+}
+
+startup()
+```
+
+Outputs:
+
+```
+13:38:31.903 [00] [DLOG] [TRACE] <DLog.playground:8> Start
+13:38:31.905 [00] [DLOG] [TRACE] <DLog.playground:9> startup()
 ```
 
 ### `debug`
@@ -101,8 +118,6 @@ Outputs:
 Log a debug message to help debug problems during the development:
 
 ``` swift
-let log = DLog()
-
 let session = URLSession(configuration: .default)
 session.dataTask(with: URL(string: "https://apple.com")!) { data, response, error in
 	guard let http = response as? HTTPURLResponse else { return }
@@ -112,10 +127,25 @@ session.dataTask(with: URL(string: "https://apple.com")!) { data, response, erro
 }
 .resume()
 ```
-Outputs:
-```
-00:27:50.575 [DLOG] [DEBUG] <Package.playground:23> https://www.apple.com/: 200 - no error
 
+Outputs:
+
+```
+13:39:41.662 [00] [DLOG] [DEBUG] <DLog.playground:12> https://www.apple.com/: 200 - no error
+```
+
+### `warning`
+
+Log a warning message that occurred during the execution of your code.
+
+``` swift
+log.warning("No Internet connection.")
+```
+
+Outputs:
+
+```
+13:44:49.992 [00] [DLOG] [WARNING] <DLog.playground:7> No Internet connection.
 ```
 
 ### `error`
@@ -123,21 +153,20 @@ Outputs:
 Log an error that occurred during the execution of your code.
 
 ``` swift
-let log = DLog()
-
-let fromURL = URL(fileURLWithPath: "/path/to/old")
-let toURL = URL(fileURLWithPath: "/path/to/new")
+let fromURL = URL(fileURLWithPath: "source.txt")
+let toURL = URL(fileURLWithPath: "destination.txt")
 do {
 	try FileManager.default.moveItem(at: fromURL, to: toURL)
 }
 catch {
-	log.error(error)
+	log.error(error.localizedDescription)
 }
 ```
-Outputs:
-```
-23:28:26.635 [DLOG] [ERROR] <Package.playground:13> “old” couldn’t be moved to “to” because either the former doesn’t exist, or the folder containing the latter doesn’t exist.
 
+Outputs:
+
+```
+13:53:20.398 [00] [DLOG] [ERROR] <DLog.playground:13> “source.txt” couldn’t be moved to “com.apple.dt.playground.stub.iOS_Simulator.DLog-AA29FA84-10A1-45D7-BAEC-FC5402BAFB0C” because either the former doesn’t exist, or the folder containing the latter doesn’t exist.
 ```
 
 ### `assert`
@@ -145,8 +174,6 @@ Outputs:
 Sanity check and log a message (if it is provided) when a condition is false.
 
 ``` swift
-let log = DLog()
-
 let user = "John"
 let password = ""
 
@@ -154,65 +181,63 @@ log.assert(user.isEmpty == false, "User is empty")
 log.assert(password.isEmpty == false)
 log.assert(password.isEmpty == false, "Password is empty")
 ```
-Outputs:
-```
-23:16:51.929 [DLOG] [ASSERT] <Package.playground:10>
-23:16:51.931 [DLOG] [ASSERT] <Package.playground:11> Password is empty
-```
 
+Outputs:
+
+```
+13:55:15.108 [00] [DLOG] [ASSERT] <DLog.playground:11>
+13:55:15.110 [00] [DLOG] [ASSERT] <DLog.playground:12> Password is empty
+```
 
 ### `fault`
 
 Log a critical bug that occurred during the execution in your code.
 
 ``` swift
-let log = DLog()
-
 guard let modelURL = Bundle.main.url(forResource: "DataModel", withExtension:"momd") else {
 	log.fault("Error loading model from bundle")
 	abort()
 }
 ```
-Outputs:
-```
-22:39:48.016 [DLOG] [FAULT] <Package.playground:9> Error loading model from bundle
 
+Outputs:
+
+```
+13:56:46.895 [00] [DLOG] [FAULT] <DLog.playground:8> Error loading model from bundle
 ```
 
 ## Scope
 
-`scope` provides a mechanism for grouping and labeling work that's done in your program, so that can see all log messages related to the defined scope of your code. Simply saying it builds a tree:
+`scope` provides a mechanism for grouping and labeling work that's done in your program, so that can see all log messages related to the defined scope of your code in a tree view:
 
 ``` swift
-let log = DLog()
-
 log.scope("Loading") {
-	let path = Bundle.main.path(forResource: "data", ofType: "json")!
-	log.info("File: \(path)")
-	if let file = FileHandle(forReadingAtPath: path) {
-		if let data = try? file.readToEnd() {
+	if let path = Bundle.main.path(forResource: "data", ofType: "json") {
+		log.info("File: \(path)")
+		if let data = try? String(contentsOfFile: path) {
 			log.debug("Loaded \(data.count) bytes")
 		}
 	}
 }
 ```
+
 Outputs:
+
 ```
-00:24:53.077 [DLOG] ┌ [Loading]
-00:24:53.079 [DLOG] |	[INFO] <Package.playground:14> File: .../data.json
-00:24:53.106 [DLOG] |	[DEBUG] <Package.playground:17> Loaded 83 bytes
-00:24:53.077 [DLOG] └ [Loading] (0.028s)
+14:41:31.175 [01] [DLOG] ┌ [Loading]
+14:41:31.176 [01] [DLOG] |	[INFO] <DLog.playground:9> File: .../data.json
+14:41:31.178 [01] [DLOG] |	[DEBUG] <DLog.playground:11> Loaded 33 bytes
+14:41:31.178 [01] [DLOG] └ [Loading] (0.003s)
 ```
 
 Where:
+ - `[01]` - global scope level
  - `[Loading]` - a name of the scope
  - `(0.028s)` - a time duration of the scope
 
 You can get duration value of a finished scope programatically:
 
 ```
-let log = DLog()
-
 var scope = log.scope("scope") {
 	...
 }
@@ -223,71 +248,92 @@ print(scope.duration)
 It's possible to `enter` and `leave` a scope asynchronously:
 
 ``` swift
-let log = DLog()
-
 let scope = log.scope("Request")
 scope.enter()
 
 let session = URLSession(configuration: .default)
 session.dataTask(with: URL(string: "https://apple.com")!) { data, response, error in
-	guard let data = data, let http = response as? HTTPURLResponse else {
+	defer {
 		scope.leave()
+	}
+
+	guard let data = data, let http = response as? HTTPURLResponse else {
 		return
 	}
 
 	log.debug("\(http.url!.absoluteString) - HTTP \(http.statusCode)")
 	log.debug("Loaded: \(data.count) bytes")
-
-	scope.leave()
 }
 .resume()
 ```
+
 Outputs:
-```
-00:15:47.773 [DLOG] ┌ [Request]
-00:15:48.175 [DLOG] |	[DEBUG] <Package.playground:15> https://www.apple.com/ - HTTP 200
-00:15:48.176 [DLOG] |	[DEBUG] <Package.playground:16> Loaded: 73097 bytes
-00:15:47.773 [DLOG] └ [Request] (0.403s)
 
 ```
+14:45:42.446 [01] [DLOG] ┌ [Request]
+14:45:44.094 [01] [DLOG] |	[DEBUG] <DLog.playground:21> https://www.apple.com/ - HTTP 200
+14:45:44.095 [01] [DLOG] |	[DEBUG] <DLog.playground:22> Loaded: 69836 bytes
+14:45:44.095 [01] [DLOG] └ [Request] (1.649s)
+```
 
-Scopes can be nested one into one and that implements a stack of scopes:
+Scopes can be nested one into one and that implements a global stack of scopes:
 
 ``` swift
-let log = DLog()
-
 log.scope("Loading") {
-	let path = Bundle.main.path(forResource: "data", ofType: "json")!
-	log.info("File: \(path)")
-	if let file = FileHandle(forReadingAtPath: path) {
-		if let data = try? file.readToEnd() {
+	if let url = Bundle.main.url(forResource: "data", withExtension: "json") {
+		log.info("File: \(url)")
+
+		if let data = try? Data(contentsOf: url) {
 			log.debug("Loaded \(data.count) bytes")
 
 			log.scope("Parsing") {
 				if let items = try? JSONDecoder().decode([Item].self, from: data) {
 					log.debug("Parsed \(items.count) items")
-					items.forEach {
-						log.info($0.name)
-					}
 				}
 			}
 		}
 	}
 }
 ```
-Outputs:
-```
-23:14:19.612 [DLOG] ┌ [Loading]
-23:14:19.613 [DLOG] |	[INFO] <Package.playground:15> File: .../data.json
-23:14:19.636 [DLOG] |	[DEBUG] <Package.playground:18> Loaded 83 bytes
-23:14:19.636 [DLOG] |	┌ [Parsing]
-23:14:19.659 [DLOG] |	|	[DEBUG] <Package.playground:21> Parsed 3 items
-23:14:19.680 [DLOG] |	|	[INFO] <Package.playground:23> First
-23:14:19.681 [DLOG] |	|	[INFO] <Package.playground:23> Second
-23:14:19.681 [DLOG] |	|	[INFO] <Package.playground:23> Third
-23:14:19.636 [DLOG] |	└ [Parsing] (0.046s)
-23:14:19.612 [DLOG] └ [Loading] (0.075s)
 
+Outputs:
+
+```
+15:11:11.502 [01] [DLOG] ┌ [Loading]
+15:11:11.503 [01] [DLOG] |	[INFO] <DLog.playground:13> File: .../data.json
+15:11:11.504 [01] [DLOG] |	[DEBUG] <DLog.playground:16> Loaded 121 bytes
+15:11:11.504 [02] [DLOG] |	┌ [Parsing]
+15:11:11.505 [02] [DLOG] |	|	[DEBUG] <DLog.playground:20> Parsed 3 items
+15:11:11.512 [02] [DLOG] |	└ [Parsing] (0.008s)
+15:11:11.530 [01] [DLOG] └ [Loading] (0.028s)
+```
+
+As you can see from the sample above the scopes have different scope nesting levels "Loading" - [01] and "Parsing" - [02] and it's useful for filtering.
+
+For multithreading logging with scopes you should pin your internal logs to the current scope because each log function will be attached to the top scope from the global stack and you messages can be shown under other scopes otherwise. With this approach you can also pin your messages to any needed scope:
+
+```
+log.scope("Loading") { scope1 in
+	scope1.log("Pinned to Loading")
+
+	scope1.scope("Parsing: Pinned to Loading") { scope2 in
+		scope2.debug("Pinned to Parsing")
+
+		scope1.info("Pinned to Loading")
+	}
+}
+```
+
+Outputs:
+
+```
+16:01:17.690 [01] [DLOG] ┌ [Loading]
+16:01:17.691 [01] [DLOG] |	[LOG] <DLog.playground:7> Pinned to Loading
+16:01:17.692 [02] [DLOG] |	┌ [Parsing: Pinned to Loading]
+16:01:17.692 [02] [DLOG] |	|	[DEBUG] <DLog.playground:10> Pinned to Parsing
+16:01:17.692 [01] [DLOG] |	[INFO] <DLog.playground:12> Pinned to Loading
+16:01:17.692 [02] [DLOG] |	└ [Parsing: Pinned to Loading] (0.000s)
+16:01:17.717 [01] [DLOG] └ [Loading] (0.027s)
 ```
 
 ## Interval
@@ -295,8 +341,6 @@ Outputs:
 `interval` measures performance of your code by time durations and logs a detailed message with accumulated statistics:
 
 ``` swift
-let log = DLog()
-
 for _ in 0...10 {
 	log.interval("Sort") {
 		var arr = (1...10000).map {_ in arc4random()}
@@ -304,19 +348,21 @@ for _ in 0...10 {
 	}
 }
 ```
+
 Outputs:
+
 ```
-23:34:10.569 [DLOG] [INTERVAL] <Package.playground:9> [Sort] Count: 1, Total: 0.307s, Min: 0.307s, Max: 0.307s, Avg: 0.307s
-23:34:10.819 [DLOG] [INTERVAL] <Package.playground:9> [Sort] Count: 2, Total: 0.550s, Min: 0.243s, Max: 0.307s, Avg: 0.275s
-23:34:11.079 [DLOG] [INTERVAL] <Package.playground:9> [Sort] Count: 3, Total: 0.808s, Min: 0.243s, Max: 0.307s, Avg: 0.269s
-23:34:11.346 [DLOG] [INTERVAL] <Package.playground:9> [Sort] Count: 4, Total: 1.072s, Min: 0.243s, Max: 0.307s, Avg: 0.268s
-23:34:11.608 [DLOG] [INTERVAL] <Package.playground:9> [Sort] Count: 5, Total: 1.334s, Min: 0.243s, Max: 0.307s, Avg: 0.267s
-23:34:11.850 [DLOG] [INTERVAL] <Package.playground:9> [Sort] Count: 6, Total: 1.574s, Min: 0.240s, Max: 0.307s, Avg: 0.262s
-23:34:12.094 [DLOG] [INTERVAL] <Package.playground:9> [Sort] Count: 7, Total: 1.817s, Min: 0.240s, Max: 0.307s, Avg: 0.260s
-23:34:12.353 [DLOG] [INTERVAL] <Package.playground:9> [Sort] Count: 8, Total: 2.074s, Min: 0.240s, Max: 0.307s, Avg: 0.259s
-23:34:12.597 [DLOG] [INTERVAL] <Package.playground:9> [Sort] Count: 9, Total: 2.317s, Min: 0.240s, Max: 0.307s, Avg: 0.257s
-23:34:12.842 [DLOG] [INTERVAL] <Package.playground:9> [Sort] Count: 10, Total: 2.561s, Min: 0.240s, Max: 0.307s, Avg: 0.256s
-23:34:13.077 [DLOG] [INTERVAL] <Package.playground:9> [Sort] Count: 11, Total: 2.794s, Min: 0.233s, Max: 0.307s, Avg: 0.254s
+16:08:28.484 [00] [DLOG] [INTERVAL] <DLog.playground:7> [Sort] Count: 1, Total: 0.306s, Min: 0.306s, Max: 0.306s, Avg: 0.306s
+16:08:28.785 [00] [DLOG] [INTERVAL] <DLog.playground:7> [Sort] Count: 2, Total: 0.598s, Min: 0.292s, Max: 0.306s, Avg: 0.299s
+16:08:29.131 [00] [DLOG] [INTERVAL] <DLog.playground:7> [Sort] Count: 3, Total: 0.943s, Min: 0.292s, Max: 0.345s, Avg: 0.314s
+16:08:29.432 [00] [DLOG] [INTERVAL] <DLog.playground:7> [Sort] Count: 4, Total: 1.242s, Min: 0.292s, Max: 0.345s, Avg: 0.310s
+16:08:29.698 [00] [DLOG] [INTERVAL] <DLog.playground:7> [Sort] Count: 5, Total: 1.506s, Min: 0.265s, Max: 0.345s, Avg: 0.301s
+16:08:29.974 [00] [DLOG] [INTERVAL] <DLog.playground:7> [Sort] Count: 6, Total: 1.781s, Min: 0.265s, Max: 0.345s, Avg: 0.297s
+16:08:30.244 [00] [DLOG] [INTERVAL] <DLog.playground:7> [Sort] Count: 7, Total: 2.049s, Min: 0.265s, Max: 0.345s, Avg: 0.293s
+16:08:30.505 [00] [DLOG] [INTERVAL] <DLog.playground:7> [Sort] Count: 8, Total: 2.309s, Min: 0.260s, Max: 0.345s, Avg: 0.289s
+16:08:30.778 [00] [DLOG] [INTERVAL] <DLog.playground:7> [Sort] Count: 9, Total: 2.581s, Min: 0.260s, Max: 0.345s, Avg: 0.287s
+16:08:31.040 [00] [DLOG] [INTERVAL] <DLog.playground:7> [Sort] Count: 10, Total: 2.841s, Min: 0.260s, Max: 0.345s, Avg: 0.284s
+16:08:31.328 [00] [DLOG] [INTERVAL] <DLog.playground:7> [Sort] Count: 11, Total: 3.128s, Min: 0.260s, Max: 0.345s, Avg: 0.284s
 ```
 
 Where:
@@ -331,8 +377,6 @@ Where:
 You can get all metrics values of an interval programatically:
 
 ```
-let log = DLog()
-
 let interval = log.interval("signpost") {
 	...
 }
@@ -347,8 +391,6 @@ print(interval.avgDuration)
 To measure asynchronous tasks you can use `begin` and `end` methods:
 
 ``` swift
-let log = DLog()
-
 let interval = log.interval("Video")
 interval.begin()
 
@@ -361,11 +403,12 @@ asset.loadValuesAsynchronously(forKeys: ["duration"]) {
 	interval.end()
 }
 ```
-Outputs:
-```
-00:42:25.885 [DLOG] [INFO] <Package.playground:16> Duration: 155000
-00:42:25.888 [DLOG] [INTERVAL] <Package.playground:9> [Video] Count: 1, Total: 0.390s, Min: 0.390s, Max: 0.390s, Avg: 0.390s
 
+Outputs:
+
+```
+00:42:25.885 [00] [DLOG] [INFO] <Package.playground:16> Duration: 155000
+00:42:25.888 [00] [DLOG] [INTERVAL] <Package.playground:9> [Video] Count: 1, Total: 0.390s, Min: 0.390s, Max: 0.390s, Avg: 0.390s
 ```
 
 ## Category
@@ -381,12 +424,13 @@ log.debug("Refresh")
 netLog.debug("Successfully fetched recordings.")
 tableLog.debug("Updating with network response.")
 ```
-Outputs:
-```
-23:45:18.096 [DLOG] [DEBUG] <Package.playground:12> Refresh
-23:45:18.099 [NET] [DEBUG] <Package.playground:13> Successfully fetched recordings.
-23:45:18.099 [TABLE] [DEBUG] <Package.playground:14> Updating with network response.
 
+Outputs:
+
+```
+16:21:10.777 [00] [DLOG] [DEBUG] <DLog.playground:9> Refresh
+16:21:10.779 [00] [NET] [DEBUG] <DLog.playground:10> Successfully fetched recordings.
+16:21:10.779 [00] [TABLE] [DEBUG] <DLog.playground:11> Updating with network response.
 ```
 
 ## Outputs
@@ -412,32 +456,60 @@ for (name, output) in outputs {
 
 	print(name)
 	print(log.info("info")!)
-	print(log.debug("debug")!)
+	print(log.error("error")!)
 	print(log.fault("fatal")!)
 	print("")
 }
 ```
+
 Outputs:
+
 ```
 Plain
-16:42:36.976 [DLOG] [INFO] <Package.playground:17> info
-16:42:36.978 [DLOG] [DEBUG] <Package.playground:18> debug
-16:42:36.978 [DLOG] [FAULT] <Package.playground:19> fatal
+16:25:38.303 [00] [DLOG] [INFO] <DLog.playground:16> info
+16:25:38.305 [00] [DLOG] [LOG] <DLog.playground:17> log
+16:25:38.311 [00] [DLOG] [FAULT] <DLog.playground:18> fatal
 
 Emoji
-16:42:36.978 [DLOG] ✅ <Package.playground:17> info
-16:42:36.979 [DLOG] ▶️ <Package.playground:18> debug
-16:42:36.979 [DLOG] 🆘 <Package.playground:19> fatal
+16:25:38.312 [00] [DLOG] ✅ [INFO] <DLog.playground:16> info
+16:25:38.312 [00] [DLOG] 💬 [LOG] <DLog.playground:17> log
+16:25:38.312 [00] [DLOG] 🆘 [FAULT] <DLog.playground:18> fatal
 
 Colored
-[2m16:42:36.979[0m [34mDLOG[0m [42m[37m INFO [0m [2m[32m<Package.playground:17>[0m [32minfo[0m
-[2m16:42:36.979[0m [34mDLOG[0m [46m[30m DEBUG [0m [2m[36m<Package.playground:18>[0m [36mdebug[0m
-[2m16:42:36.979[0m [34mDLOG[0m [41m[37m[5m FAULT [0m [2m[31m<Package.playground:19>[0m [31mfatal[0m
+[2m16:25:38.312[0m [2m[00][0m [34mDLOG[0m [42m[37m INFO [0m [2m[32m<DLog.playground:16>[0m [32minfo[0m
+[2m16:25:38.318[0m [2m[00][0m [34mDLOG[0m [47m[30m LOG [0m [2m[37m<DLog.playground:17>[0m [37mlog[0m
+[2m16:25:38.318[0m [2m[00][0m [34mDLOG[0m [41m[37m[5m FAULT [0m [2m[31m<DLog.playground:18>[0m [31mfatal[0m
 ```
 
 Colored text in Terminal:
 
-<img src="Images/dlog-text-colored.png" width="600" alt="DLog: Colored log in Terminal"><br>
+<style type="text/css">
+div.terminal {
+	margin-bottom: 16px;
+	padding: 16px;
+	background-color: #000000;
+}
+</style>
+<div class="terminal">
+<style type="text/css">
+   p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 14.0px Monaco; color: #13480c; background-color: #000000}
+   p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 14.0px Monaco; color: #4d4d4d; background-color: #000000}
+   p.p3 {margin: 0.0px 0.0px 0.0px 0.0px; font: 14.0px Monaco; color: #480e0a; background-color: #000000}
+   span.s1 {font-variant-ligatures: no-common-ligatures; color: #616161}
+   span.s2 {font-variant-ligatures: no-common-ligatures; color: #f2f2f2}
+   span.s3 {font-variant-ligatures: no-common-ligatures; color: #3f0cd4}
+   span.s4 {font-variant-ligatures: no-common-ligatures; color: #b2b2b2; background-color: #149902}
+   span.s5 {font-variant-ligatures: no-common-ligatures}
+   span.s6 {font-variant-ligatures: no-common-ligatures; color: #2fb41d}
+   span.s7 {font-variant-ligatures: no-common-ligatures; color: #000000; background-color: #b2b2b2}
+   span.s8 {font-variant-ligatures: no-common-ligatures; color: #c0c0c0}
+   span.s9 {font-variant-ligatures: no-common-ligatures; color: #b2b2b2; background-color: #850002}
+   span.s10 {font-variant-ligatures: no-common-ligatures; color: #b42419}
+ </style>
+<p class="p1"><span class="s1">16:34:15.421</span><span class="s2"> </span><span class="s1">[00]</span><span class="s2"> </span><span class="s3">DLOG</span><span class="s2"><span class="Apple-converted-space"> </span></span><span class="s4"> INFO<span class="Apple-converted-space"> </span></span><span class="s2"> </span><span class="s5">&lt;DLog.playground:16&gt;</span><span class="s2"> </span><span class="s6">info</span></p>
+<p class="p2"><span class="s1">16:34:15.422</span><span class="s2"> </span><span class="s1">[00]</span><span class="s2"> </span><span class="s3">DLOG</span><span class="s2"><span class="Apple-converted-space"> </span></span><span class="s7"> LOG<span class="Apple-converted-space"> </span></span><span class="s2"> </span><span class="s5">&lt;DLog.playground:17&gt;</span><span class="s2"> </span><span class="s8">log</span></p>
+<p class="p3"><span class="s1">16:34:15.422</span><span class="s2"> </span><span class="s1">[00]</span><span class="s2"> </span><span class="s3">DLOG</span><span class="s2"><span class="Apple-converted-space"> </span></span><span class="s9"> FAULT<span class="Apple-converted-space"> </span></span><span class="s2"> </span><span class="s5">&lt;DLog.playground:18&gt;</span><span class="s2"> </span><span class="s10">fatal</span></p>
+</div>
 
 You can also use shortcuts `.textPlain`, `.textEmoji` and `.textColored` to create the output:
 

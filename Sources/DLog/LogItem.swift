@@ -30,9 +30,9 @@ import os.log
 public enum LogType : Int {
 	// Levels
 	case log
+	case info
 	case trace
 	case debug
-	case info
 	case warning
 	case error
 	case assert
