@@ -483,6 +483,8 @@ Colored
 
 Colored text in Terminal:
 
+<span style="color:red; background-color:black">Hello<span>
+
 <style type="text/css">
 div.terminal {
 	margin-bottom: 16px;
