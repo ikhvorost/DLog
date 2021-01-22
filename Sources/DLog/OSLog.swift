@@ -58,10 +58,10 @@ public class OSLog : LogOutput {
 	private var subsystem: String
 	@Atomic private var logs = [String : os.OSLog]()
 	
-	public init(subsystem: String = "com.dlog.logger") {
+	public init(subsystem: String = "com.dlog.logger", source: LogOutput = .textPlain) {
 		self.subsystem = subsystem
 		
-		super.init(source: nil)
+		super.init(source: source)
 	}
 	
 	private func oslog(category: String) -> os.OSLog {

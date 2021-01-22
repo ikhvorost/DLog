@@ -563,7 +563,7 @@ File "dlog.txt":
 
 ### OSLog
 
-`OSLog` is a target output that writes messages to the Unified Logging System (https://developer.apple.com/documentation/os/logging) that captures telemetry from your app for debugging and performance analysis and then you can use various tools to retrieve log information such as: `Console` app, command line tool `log` etc.
+`OSLog` is a target output that writes messages to the Unified Logging System (https://developer.apple.com/documentation/os/logging) that captures telemetry from your app for debugging and performance analysis and then you can use various tools to retrieve log information such as: `Console` and `Instruments` apps, command line tool `log` etc.
 
 To create `OSLog` you can use subsystem strings that identify major functional areas of your app, and you specify them in reverse DNS notation—for example, `com.your_company.your_subsystem_name`. `OSLog` uses `com.dlog.logger` subsystem by default:
 
@@ -572,30 +572,33 @@ let output1 = OSLog() // subsystem = "com.dlog.logger"
 let output2 = OSLog(subsystem: "com.company.app") // subsystem = "com.company.app"
 ```
 
-You can also use `.oslog` shortcut to create the output for the logger:
+You can also use `.oslog` shortcut to create the output:
 
 ``` swift
 let log1 = DLog(.oslog)
 let log2 = DLog(.oslog("com.company.app"))
 ```
 
-`trace`, `info`, `debug`, `error` and `fault` methods map to the system logger ones:
+All DLog's methods map to the system logger ones with appropriate log levels e.g.:
 
 ``` swift
 let log = DLog(.oslog)
 
-log.trace("trace")
+log.log("log")
 log.info("info")
+log.trace("trace")
 log.debug("debug")
+log.warning("warning")
 log.error("error")
+log.assert(false, "assert")
 log.fault("fault")
 ```
 
-Console.app:
+Console.app with log levels:
 
 <img src="Images/dlog-oslog-console.png" alt="DLog: Logs in Console.app"><br>
 
-The `scope` maps to the system logger's activities:
+DLog's scopes map to the system logger activities:
 
 ``` swift
 let log = DLog(.oslog)
@@ -607,14 +610,13 @@ log.scope("Loading") {
 	}
 	log.info("finish")
 }
-
 ```
 
-Console.app:
+Console.app with activities:
 
 <img src="Images/dlog-oslog-console-activity.png" alt="DLog: Activities in Console.app"><br>
 
-The `interval` maps to to the system logger's signposts:
+DLog's intervals map to to the system logger signposts:
 
 ``` swift
 let log = DLog(.oslog)
@@ -628,14 +630,14 @@ for _ in 0..<10 {
 }
 ```
 
-Instruments.app:
+Instruments.app with signposts:
 
 <img src="Images/dlog-oslog-instruments-signpost.png" alt="DLog: Signposts in Instruments.app"><br>
 
 
 ### Net
 
-`Net` is a target output that sends log messages to `NetConsole` service that can be run from a command line on your machine. The service is provided as executable inside DLog package and to start it you should run `sh NetConsole.command` (or just click on NetConsole.command file) inside the package's folder and then the service starts listening for incoming messages:
+`Net` is a target output that sends log messages to `NetConsole` service that can be run from a command line on your machine. The service is provided as executable inside DLog package and to start it you should run `sh NetConsole.command` (or just click on `NetConsole.command` file) inside the package's folder and then the service starts listening for incoming messages:
 
 ```shell
 $ sh NetConsole.command # or 'xcrun --sdk macosx swift run'
@@ -685,19 +687,21 @@ And you can also use `.net` shortcut to create the output for the logger.
 let log = DLog(.net)
 ```
 
-To connect to a specific instance of the service in your network you should provide an unique name to both the service and the output ("DLog" is used by default). To run the NetConsole service with a specific name run next command:
+To connect to a specific instance of the service in your network you should provide an unique name to both `NetConsole` and `Net` output ("DLog" name is used by default).
 
-Terminal:
+To run the `NetConsole` with a specific name run next command:
+
 ``` shell
 sh NetConsole.command -n "MyLogger" # or 'xcrun --sdk macosx swift run NetConsole -n "MyLogger"'
 ```
 
-Swift:
+In swift code you should set the same name:
+
 ``` swift
 let log = DLog(.net("MyLogger"))
 ```
 
-For more params you can look at help:
+More params of `NetConsole` you can look at help:
 
 ``` shell
 sh NetConsole.command --help  # or 'xcrun --sdk macosx swift run NetConsole --help'
@@ -716,14 +720,14 @@ OPTIONS:
 
 ## Pipeline
 
-As described above `File`, `Net` and `Standard` outputs have `source` parameter in their initializers to set a source output that is very useful if we want to change default outputs:
+As described above `File`, `Net` and `Standard` outputs have `source` parameter in their initializers to set a source output that is very useful if we want to change an output by default:
 
 ``` swift
 let std = Standard(stream: .out, source: .textEmoji)
 let log = DLog(std)
 ```
 
-Actually any output has `source` property to set:
+Actually any output has `source` property:
 
 ``` swift
 let std = Standard()
@@ -734,18 +738,21 @@ let log = DLog(std)
 So that it's possible to make a linked list of outputs:
 
 ``` swift
+// Text
 let text: LogOutput = .textEmoji
 
+// Standard
 let std = Standard()
 std.source = text
 
+// File
 let file = File(path: "dlog.txt")
 file.source = std
 
 let log = DLog(file)
 ```
 
-Where `text` is a source for `std` and `std` is a source for `file`: text --> std --> file. And now each text message will be sent to both `std` and `file` outputs consecutive.
+Where `text` is a source for `std` and `std` is a source for `file`: text --> std --> file, and now each text message will be sent to both `std` and `file` outputs consecutive.
 
 Lets rewrite this shorter:
 
@@ -753,16 +760,9 @@ Lets rewrite this shorter:
 let log = DLog(.textEmoji => .stdout => .file("dlog.txt"))
 ```
 
-Where `=>` is pipeline operator which defines a combined output from two outputs where the first one is a source and second is a target.
+Where `=>` is pipeline operator which defines a combined output from two outputs where the first one is a source and second is a target. So from example above emoji text messages will be written twice: first to standard output and then to the file.
 
-You can combine any needed outputs together:
-``` swift
-// All log messages will be written as colored text (with escape codes) to the file
-
-let log = DLog(.textColored => .file(path))
-```
-
-Also this allows the creation of a chained output from multiple outputs one by one by:
+You can combine any needed outputs together and create a final chained output from multiple outputs and your messages will be forwarded to all of them one by one:
 
 ``` swift
 // All log messages will be written:
@@ -774,62 +774,82 @@ let log = DLog(.textPlain => .stdout => .textColored => .file(path))
 
 ## Filter
 
-`.filter` represents a pipe output that can filter log messages by next available fields: `time`, `category`, `type`, `fileName`, `funcName`, `line`, `text` and by a specific scope. You can inject it to your pipeline to log needed data only.
+`Filter` or `.filter` represents a pipe output that can filter log messages by next available fields: `time`, `category`, `type`, `fileName`, `funcName`, `line`, `text` and `scope`. You can inject it to your pipeline where you need to log specific data only.
 
 Examples:
 
-1) Log messages from 'NET' category only
+1) Log messages to stardard output with 'NET' category only
+
 ``` swift
 let log = DLog(.textPlain => .filter { $0.category == "NET" } => .stdout)
+let netLog = log["NET"]
 
 log.info("info")
-let netLog = categoryLog["NET"]
 netLog.info("info")
 ```
+
 Outputs:
-```
-23:37:32.582 [NET] [INFO] <Package.playground:11> info
 
 ```
+22:44:56.386 [00] [NET] [INFO] <DLog.playground:8> info
+```
+
 2) Log debug messages only
+
 ``` swift
 let log = DLog(.textPlain => .filter { $0.type == .debug } => .stdout)
 
 log.trace()
 log.info("info")
 log.debug("debug")
-```
-Outputs:
-```
-23:43:55.594 [DLOG] [DEBUG] <Package.playground:11> debug
+log.error("error")
 ```
 
-3) Log messages that contain "hello" only
+Outputs:
+
+```
+22:47:07.865 [00] [DLOG] [DEBUG] <DLog.playground:8> debug
+```
+
+3) Log messages that contain "hello" string only
+
 ``` swift
 let log = DLog(.textPlain => .filter { $0.text.contains("hello") } => .stdout)
 
-log.info("hello world")
 log.debug("debug")
+log.log("hello world")
 log.info("info")
 ```
+
 Outputs:
+
 ```
-23:49:01.047 [DLOG] [INFO] <Package.playground:9> hello world
+22:48:30.399 [00] [DLOG] [LOG] <DLog.playground:7> hello world
 ```
 
 3) Log messages that are related to a specific scope:
 
 ``` swift
-let log = DLog(.textPlain => .filter { ($0 as? LogScope)?.text == "Load" || $0.scope?.text == "Load" } => .stdout)
-
-log.info("info")
-log.scope("Load") {
-	log.debug("load")
-	log.error("load")
-	log.scope("Parse") {
-		log.debug("parse")
-		log.error("parse")
+let filter = Filter { item in
+	let name = "Load"
+	if let scope = item as? LogScope {
+		return scope.text == name
 	}
+	return item.scope?.text == name
+}
+
+let log = DLog(.textPlain => filter => .stdout)
+
+log.trace("trace")
+log.scope("Load") {
+	log.debug("debug")
+
+	log.scope("Parse") {
+		log.log("log")
+		log.info("info")
+	}
+
+	log.error("error")
 }
 log.fault("fault")
 ```
@@ -837,15 +857,15 @@ log.fault("fault")
 Outputs:
 
 ```
-17:22:57.418 [01] [DLOG] ┌ [Load]
-17:22:57.451 [01] [DLOG] |	[DEBUG] <DLog.playground:9> load
-17:22:57.451 [01] [DLOG] |	[ERROR] <DLog.playground:10> load
-17:22:57.520 [01] [DLOG] └ [Load] (0.102s)
+22:58:16.401 [01] [DLOG] ┌ [Load]
+22:58:16.402 [01] [DLOG] |	[DEBUG] <DLog.playground:16> debug
+22:58:16.413 [01] [DLOG] |	[ERROR] <DLog.playground:21> error
+22:58:16.414 [01] [DLOG] └ [Load] (0.012s)
 ```
 
 ## `.disabled`
 
-It is the shared disabled logger constant that prevents DLog from logging any messages. It's useful when you want to turn off logging for some build configuration, preference, condition etc.
+It is the shared disabled logger constant that logging any messages and it's very useful when you want to turn off the logger for some build configuration, preference, condition etc.
 
 ``` swift
 // Logging is enabled for `Debug` build configuration only
@@ -857,13 +877,43 @@ It is the shared disabled logger constant that prevents DLog from logging any me
 #endif
 ```
 
+When you disable the logger all your code continue running inside scopes and intervals except of log messages:
+
+```swift
+let log = DLog.disabled
+
+log.log("start")
+log.scope("scope") {
+	log.debug("debug")
+
+	print("scope code")
+}
+log.interval("signpost") {
+	log.info("info")
+
+	print("signpost code")
+}
+log.log("finish")
+```
+
+Outputs:
+
+```
+scope code
+signpost code
+```
+
 ## Installation
 
 ### XCode project
 
-Select `Xcode` > `File` > `Swift Packages` > `Add Package Dependency...` > Paste `https://github.com/ikhvorost/DLog.git` and then `import DLog` in source files.
+1. Select `Xcode > File > Swift Packages > Add Package Dependency...`
+2. Add package repository: `https://github.com/ikhvorost/DLog.git`
+3. Import the package in your source files: `import DLog`
 
 ### Swift Package
+
+Add `DLog` package dependency to your `Package.swift` file:
 
 ``` swift
 let package = Package(
@@ -881,10 +931,6 @@ let package = Package(
 	...
 )
 ```
-
-### Manual
-
-Just copy source files to your project.
 
 ## License
 

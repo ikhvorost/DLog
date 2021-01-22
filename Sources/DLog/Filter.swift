@@ -28,7 +28,7 @@ import Foundation
 public class Filter : LogOutput {
 	private let predicate: NSPredicate
 	
-	init(block: @escaping (LogItem) -> Bool) {
+	public init(block: @escaping (LogItem) -> Bool) {
 		predicate = NSPredicate { (obj, _) in
 			if let item = obj as? LogItem {
 				return block(item)
