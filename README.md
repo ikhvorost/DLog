@@ -483,35 +483,7 @@ Colored
 
 Colored text in Terminal:
 
-<span style="color:red; background-color:black">Hello<span>
-
-<style type="text/css">
-div.terminal {
-	margin-bottom: 16px;
-	padding: 16px;
-	background-color: #000000;
-}
-</style>
-<div class="terminal">
-<style type="text/css">
-   p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 14.0px Monaco; color: #13480c; background-color: #000000}
-   p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 14.0px Monaco; color: #4d4d4d; background-color: #000000}
-   p.p3 {margin: 0.0px 0.0px 0.0px 0.0px; font: 14.0px Monaco; color: #480e0a; background-color: #000000}
-   span.s1 {font-variant-ligatures: no-common-ligatures; color: #616161}
-   span.s2 {font-variant-ligatures: no-common-ligatures; color: #f2f2f2}
-   span.s3 {font-variant-ligatures: no-common-ligatures; color: #3f0cd4}
-   span.s4 {font-variant-ligatures: no-common-ligatures; color: #b2b2b2; background-color: #149902}
-   span.s5 {font-variant-ligatures: no-common-ligatures}
-   span.s6 {font-variant-ligatures: no-common-ligatures; color: #2fb41d}
-   span.s7 {font-variant-ligatures: no-common-ligatures; color: #000000; background-color: #b2b2b2}
-   span.s8 {font-variant-ligatures: no-common-ligatures; color: #c0c0c0}
-   span.s9 {font-variant-ligatures: no-common-ligatures; color: #b2b2b2; background-color: #850002}
-   span.s10 {font-variant-ligatures: no-common-ligatures; color: #b42419}
- </style>
-<p class="p1"><span class="s1">16:34:15.421</span><span class="s2"> </span><span class="s1">[00]</span><span class="s2"> </span><span class="s3">DLOG</span><span class="s2"><span class="Apple-converted-space"> </span></span><span class="s4"> INFO<span class="Apple-converted-space"> </span></span><span class="s2"> </span><span class="s5">&lt;DLog.playground:16&gt;</span><span class="s2"> </span><span class="s6">info</span></p>
-<p class="p2"><span class="s1">16:34:15.422</span><span class="s2"> </span><span class="s1">[00]</span><span class="s2"> </span><span class="s3">DLOG</span><span class="s2"><span class="Apple-converted-space"> </span></span><span class="s7"> LOG<span class="Apple-converted-space"> </span></span><span class="s2"> </span><span class="s5">&lt;DLog.playground:17&gt;</span><span class="s2"> </span><span class="s8">log</span></p>
-<p class="p3"><span class="s1">16:34:15.422</span><span class="s2"> </span><span class="s1">[00]</span><span class="s2"> </span><span class="s3">DLOG</span><span class="s2"><span class="Apple-converted-space"> </span></span><span class="s9"> FAULT<span class="Apple-converted-space"> </span></span><span class="s2"> </span><span class="s5">&lt;DLog.playground:18&gt;</span><span class="s2"> </span><span class="s10">fatal</span></p>
-</div>
+<img src="Images/dlog-text-colored.png" alt="DLog: Colored log in Terminal"><br>
 
 You can also use shortcuts `.textPlain`, `.textEmoji` and `.textColored` to create the output:
 
