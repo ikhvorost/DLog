@@ -232,13 +232,13 @@ final class DLogTests: XCTestCase {
 		var scope = log.scope("scope1") {
 			delay()
 		}
-		XCTAssert(0.25 <= scope.duration && scope.duration <= 0.26)
+		XCTAssert(0.25 <= scope.duration)
 		
 		scope = log.scope("scope2")
 		scope.enter()
 		delay()
 		scope.leave()
-		XCTAssert(0.25 <= scope.duration && scope.duration <= 0.26)
+		XCTAssert(0.25 <= scope.duration)
 	}
 
 	// MARK: - Interval
@@ -282,19 +282,19 @@ final class DLogTests: XCTestCase {
 			delay()
 		}
 		XCTAssert(interval.count == 1)
-		XCTAssert(0.25 <= interval.duration && interval.duration <= 0.26)
-		XCTAssert(0.25 <= interval.minDuration && interval.minDuration <= 0.26)
-		XCTAssert(0.25 <= interval.maxDuration && interval.maxDuration <= 0.26)
-		XCTAssert(0.25 <= interval.avgDuration && interval.avgDuration <= 0.26)
+		XCTAssert(0.25 <= interval.duration)
+		XCTAssert(0.25 <= interval.minDuration)
+		XCTAssert(0.25 <= interval.maxDuration)
+		XCTAssert(0.25 <= interval.avgDuration)
 		
 		interval.begin()
 		delay()
 		interval.end()
 		XCTAssert(interval.count == 2)
-		XCTAssert(0.5 <= interval.duration && interval.duration <= 0.51)
-		XCTAssert(0.25 <= interval.minDuration && interval.minDuration <= 0.26)
-		XCTAssert(0.25 <= interval.maxDuration && interval.maxDuration <= 0.26)
-		XCTAssert(0.25 <= interval.avgDuration && interval.avgDuration <= 0.26)
+		XCTAssert(0.5 <= interval.duration)
+		XCTAssert(0.25 <= interval.minDuration)
+		XCTAssert(0.25 <= interval.maxDuration)
+		XCTAssert(0.25 <= interval.avgDuration)
 	}
 	
 	func test_IntervalConcurent() {

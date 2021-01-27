@@ -3,6 +3,7 @@
 [![Language: Swift](https://img.shields.io/badge/language-swift-f48041.svg?style=flat)](https://developer.apple.com/swift)
 ![Platform: iOS 8+/macOS10.11](https://img.shields.io/badge/platform-iOS%20|%20macOS%20|%20tvOS%20|%20watchOS%20|%20Linux-blue.svg?style=flat)
 [![SPM compatible](https://img.shields.io/badge/SPM-compatible-4BC51D.svg?style=flat)](https://swift.org/package-manager/)
+![Swift](https://github.com/ikhvorost/DLog/workflows/Swift/badge.svg)
 
 <p align="center"><img src="Images/dlog.png" alt="Logger for Swift"></p>
 
@@ -616,7 +617,7 @@ Console.app with activities:
 
 <img src="Images/dlog-oslog-console-activity.png" alt="DLog: Activities in Console.app"><br>
 
-DLog's intervals map to to the system logger signposts:
+DLog's intervals map to the system logger signposts:
 
 ``` swift
 let log = DLog(.oslog)
@@ -827,7 +828,7 @@ Outputs:
 22:48:30.399 [00] [DLOG] [LOG] <DLog.playground:7> hello world
 ```
 
-3) Log messages that are related to a specific scope:
+3) Log messages which are related to a specific scope:
 
 ``` swift
 let filter = Filter { item in
