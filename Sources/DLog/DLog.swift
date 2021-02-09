@@ -25,106 +25,101 @@
 
 import Foundation
 
-func synchronized<T : AnyObject, U>(_ obj: T, closure: () -> U) -> U {
-	objc_sync_enter(obj)
-	defer {
-		objc_sync_exit(obj)
-	}
-	return closure()
-}
 
-@propertyWrapper
-class Atomic<T> {
-	private var value: T
-
-	init(wrappedValue value: T) {
-		self.value = value
-	}
-
-	var wrappedValue: T {
-		get {
-			synchronized(self) { value }
-		}
-		set {
-			synchronized(self) { value = newValue }
-		}
-	}
-}
-
+/// A `DLog` is the central class to emit log messages to specified outputs using one of the methods corresponding to
+/// a log level.
+///
+/// Create an instance and use it to log text messages about your app’s behaviour and to help you assess the state
+/// of your app later. You also can choose a target output and a log level to indicate the severity of that message.
+///
+///     let log = DLog()
+///     log.log("Hello DLog!")
+///
 public class DLog {
-	/// The shared disabled log.
-	///
-	/// Using this constant prevents logging.
-	public static let disabled = DLog(nil)
-	
-	// LogProtocol
-	public var category = "DLOG"
-	public var scope: LogScope? {
-		synchronized(self) {
-			scopes.last
-		}
-	}
 	
 	private let output: LogOutput?
-	
+
 	@Atomic private var categories = [String : LogCategory]()
 	@Atomic private var scopes = [LogScope]()
 	@Atomic private var intervals = [LogInterval]()
 	
+	/// The shared disabled log.
+	///
+	/// Using this constant prevents from logging messages.
+	///
+	/// 	let log = DLog.disabled
+	///
+	public static let disabled = DLog(nil)
+
+	/// Creates a logger object that assigns log messages to the specified category.
+	///
+	/// 	let log = DLog()
+	/// 	let netLog = log["NET"]
+	/// 	let netLog.log("Hello Net!")
+	///
 	public subscript(category: String) -> LogCategory {
-		if let log = categories[category] {
+		synchronized(self) {
+			if let log = categories[category] {
+				return log
+			}
+			let log = LogCategory(log: self, category: category)
+			categories[category] = log
 			return log
 		}
-		let log = LogCategory(log: self, category: category)
-		categories[category] = log
-		return log
 	}
-	
+
+	/// Creates a logger instance with an existing output object.
+	///
+	/// If an output is not provided DLog uses Standard output as a target.
+	///
+	/// - Parameters:
+	/// 	- output: a target output object
+	///
 	public init(_ output: LogOutput? = .stdout) {
 		self.output = output
 	}
-	
+
 	// Scope
-	
+
 	func enter(scope: LogScope) {
 		guard let out = output else { return }
-		
+
 		synchronized(self) {
 			if let current = self.scope {
 				scope.level = current.level + 1
 			}
 			scopes.append(scope)
-		
+
 			out.scopeEnter(scope: scope, scopes: scopes)
 		}
 	}
-	
+
 	func leave(scope: LogScope) {
 		guard let out = output else { return }
-		
+
 		synchronized(self) {
 			if scopes.contains(where: { $0.uid == scope.uid }) {
 				out.scopeLeave(scope: scope, scopes: scopes)
-			
+
 				scopes.removeAll { $0.uid == scope.uid }
 			}
 		}
 	}
-	
+
 	// Interval
-	
+
 	func begin(interval: LogInterval) {
 		guard let out = output else { return }
-	
+
 		out.intervalBegin(interval: interval)
 	}
-	
+
 	func end(interval: LogInterval) {
 		guard let out = output else { return }
-		
+
 		out.intervalEnd(interval: interval, scopes: scopes)
 	}
-	
+
 	private func interval(id: String, name: StaticString, category: String, scope: LogScope?, file: String, function: String, line: UInt, scopes: [LogScope]) -> LogInterval {
 		if let interval = intervals.first(where: { $0.id == id }) {
 			return interval
@@ -145,9 +140,17 @@ public class DLog {
 
 extension DLog : LogProtocol {
 	
-	public func log(_ text: String, type: LogType, category: String, scope: LogScope?, file: String, function: String, line: UInt) -> String? {
+	var category : String { "DLOG" }
+	
+	var scope: LogScope? {
+		synchronized(self) {
+			scopes.last
+		}
+	}
+
+	func log(_ text: String, type: LogType, category: String, scope: LogScope?, file: String, function: String, line: UInt) -> String? {
 		guard let out = output else { return nil }
-		
+
 		let fileName = NSString(string: file).lastPathComponent
 		let item = LogItem(
 			time: Date(),
@@ -160,8 +163,8 @@ extension DLog : LogProtocol {
 			text: text)
 		return out.log(item: item, scopes: scopes)
 	}
-	
-	public func scope(_ text: String, category: String, file: String, function: String, line: UInt, closure: ((LogScope) -> Void)?) -> LogScope {
+
+	func scope(_ text: String, category: String, file: String, function: String, line: UInt, closure: ((LogScope) -> Void)?) -> LogScope {
 		let fileName = NSString(string: file).lastPathComponent
 		let scope = LogScope(log: self,
 							 category: category,
@@ -169,34 +172,34 @@ extension DLog : LogProtocol {
 							 funcName: function,
 							 line: line,
 							 text: text)
-		
+
 		if let block = closure {
 			scope.enter()
-		
+
 			block(scope)
-		
+
 			scope.leave()
 		}
-		
+
 		return scope
 	}
-	
-	public func interval(_ name: StaticString, category: String, scope: LogScope?, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
+
+	func interval(_ name: StaticString, category: String, scope: LogScope?, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
 		let fileName = NSString(string: file).lastPathComponent
 		let id = "\(fileName):\(line)"
-		
+
 		let sp = interval(id: id, name: name, category: category, scope: scope, file: fileName, function: function, line: line, scopes: scopes)
-	
+
 		guard closure != nil else {
 			return sp
 		}
-	
+
 		sp.begin()
-		
+
 		closure?()
-		
+
 		sp.end()
-		
+
 		return sp
 	}
 }

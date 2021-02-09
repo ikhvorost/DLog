@@ -1,6 +1,7 @@
 import Foundation
 import XCTest
-/*@testable*/ import DLog
+//import DLog
+@testable import DLog
 
 // MARK: - Utils
 

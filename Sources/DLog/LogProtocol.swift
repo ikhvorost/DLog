@@ -25,7 +25,7 @@
 
 import Foundation
 
-public protocol LogProtocol {
+protocol LogProtocol {
 	var category: String { get }
 	var scope: LogScope? { get }
 	

@@ -107,15 +107,15 @@ public class LogScope : LogItem {
 
 extension LogScope : LogProtocol {
 	
-	public func log(_ text: String, type: LogType, category: String, scope: LogScope?, file: String, function: String, line: UInt) -> String?  {
+	func log(_ text: String, type: LogType, category: String, scope: LogScope?, file: String, function: String, line: UInt) -> String?  {
 		log.log(text, type: type, category: category, scope: self, file: file, function: function, line: line)
 	}
 	
-	public func scope(_ text: String, category: String, file: String, function: String, line: UInt, closure: ((LogScope) -> Void)?) -> LogScope {
+	func scope(_ text: String, category: String, file: String, function: String, line: UInt, closure: ((LogScope) -> Void)?) -> LogScope {
 		log.scope(text, category: category, file: file, function: function, line: line, closure: closure)
 	}
 	
-	public func interval(_ name: StaticString, category: String, scope: LogScope?, file: String, function: String, line: UInt, closure: (() -> Void)? = nil) -> LogInterval {
+	func interval(_ name: StaticString, category: String, scope: LogScope?, file: String, function: String, line: UInt, closure: (() -> Void)? = nil) -> LogInterval {
 		log.interval(name, category: category, scope: self, file: file, function: function, line: line, closure: closure)
 	}
 }
