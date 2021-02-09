@@ -26,14 +26,7 @@
 import Foundation
 
 
-/// A `DLog` is the central class to emit log messages to specified outputs using one of the methods corresponding to
-/// a log level.
-///
-/// Create an instance and use it to log text messages about your app’s behaviour and to help you assess the state
-/// of your app later. You also can choose a target output and a log level to indicate the severity of that message.
-///
-///     let log = DLog()
-///     log.log("Hello DLog!")
+/// The central class to emit log messages to specified outputs using one of the methods corresponding to a log level.
 ///
 public class DLog {
 	
@@ -51,7 +44,10 @@ public class DLog {
 	///
 	public static let disabled = DLog(nil)
 
-	/// Creates a logger object that assigns log messages to the specified category.
+	/// Creates a logger object that assigns log messages to a specified category.
+	///
+	/// You can define category name to differentiate unique areas and parts of your app and DLog uses this value
+	/// to categorize and filter related log messages.
 	///
 	/// 	let log = DLog()
 	/// 	let netLog = log["NET"]
@@ -68,12 +64,16 @@ public class DLog {
 		}
 	}
 
-	/// Creates a logger instance with an existing output object.
+	/// Creates a logger instance with a target output object.
 	///
-	/// If an output is not provided DLog uses Standard output as a target.
+	/// Create an instance and use it to log text messages about your app’s behaviour and to help you assess the state
+	/// of your app later. You also can choose a target output and a log level to indicate the severity of that message.
+	///
+	/// 	let log = DLog()
+	///     log.log("Hello DLog!")
 	///
 	/// - Parameters:
-	/// 	- output: a target output object
+	/// 	- output: A target output object. If it is omitted the logger uses `stdout` by default.
 	///
 	public init(_ output: LogOutput? = .stdout) {
 		self.output = output

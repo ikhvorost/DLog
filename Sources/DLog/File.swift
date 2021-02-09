@@ -26,11 +26,26 @@
 
 import Foundation
 
-
+/// Target output for a file.
+///
 public class File : LogOutput {
 	private let file: FileHandle?
 	private let queue = DispatchQueue(label: "File")
 	
+	/// Initializes and returns the target file output object associated with the specified file.
+	///
+	/// You can use the file output to write text messages to a file by a provided path.
+	///
+	///		let file = File(path: "/users/user/dlog.txt")
+	/// 	let log = DLog(file)
+	///		log.info("It's a file")
+	///
+	/// - Parameters:
+	/// 	- path: The path to the file to access.
+	/// 	- append: `true` if the file output object should append log messages to the end of an existing file or `false` if you want to clear one.
+	/// 	- source: A source output object for pipelines. If it is omitted, the file output takes `Text` plain output as a source output.
+	/// - SeeAlso: `Text`, `=>`
+	///
 	public init(path: String, append: Bool = false, source: LogOutput = .textPlain) {
 		let fileManager = FileManager.default
 		if append == false {

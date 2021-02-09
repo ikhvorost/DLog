@@ -5,7 +5,7 @@
 [![SPM compatible](https://img.shields.io/badge/SPM-compatible-4BC51D.svg?style=flat)](https://swift.org/package-manager/)
 ![CI](https://github.com/ikhvorost/DLog/workflows/CI/badge.svg)
 [![codecov](https://codecov.io/gh/ikhvorost/DLog/branch/master/graph/badge.svg?token=DJLKDA9W1Q)](https://codecov.io/gh/ikhvorost/DLog)
-[![swift-doc](https://img.shields.io/badge/swiftdoc-5%25-f39f37)](https://github.com/SwiftDocOrg/swift-doc)
+[![swift-doc](https://img.shields.io/badge/swiftdoc-8%25-f39f37)](https://github.com/SwiftDocOrg/swift-doc)
 
 <p align="center"><img src="Images/dlog.png" alt="Logger for Swift"></p>
 
@@ -532,8 +532,8 @@ Outputs:
 `File` is a target output that writes text messages to a file by a provided path:
 
 ``` swift
-let output = File(path: "/users/user/dlog.txt")
-let log = DLog(output)
+let file = File(path: "/users/user/dlog.txt")
+let log = DLog(file)
 
 log.info("It's a file")
 ```
@@ -541,7 +541,7 @@ log.info("It's a file")
 By default `File` output clears content of a opened file but if you want to append data to the existed file you should set `append` parameter to `true`:
 
 ``` swift
-let output = File(path: "/users/user/dlog.txt", append: true)
+let file = File(path: "/users/user/dlog.txt", append: true)
 ```
 
 You can also use `.file` shortcut to create the output:
@@ -553,8 +553,8 @@ let log = DLog(.file("dlog.txt"))
 `File` output uses `Text(style: .plain)` as a source by default but you can change it:
 
 ``` swift
-let output = File(path: "/users/user/dlog.txt", source: .textColored)
-let log = DLog(output)
+let file = File(path: "/users/user/dlog.txt", source: .textColored)
+let log = DLog(file)
 
 log.scope("File") {
 	log.info("It's a file")
