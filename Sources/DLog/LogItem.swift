@@ -43,7 +43,7 @@ public enum LogType : Int {
 }
 
 @objcMembers
-public class LogItem : NSObject {
+public class LogItem {
 	public var time: Date?
 	public let category: String
 	public let scope: LogScope?
@@ -65,8 +65,10 @@ public class LogItem : NSObject {
 	}
 }
 
-public class LogScope : LogItem {
-	let log: DLog
+public class LogScope : LogItem, LogProtocol {
+	// LogProtocol
+	public let logger: DLog
+	public var currentScope: LogScope? { self }
 	
 	internal(set) public var level: Int = 1
 	
@@ -76,13 +78,13 @@ public class LogScope : LogItem {
 	
 	private(set) public var duration: TimeInterval = 0
 	
-	init(log: DLog, category: String, fileName: String, funcName: String, line: UInt, text: String) {
-		self.log = log
+	init(logger: DLog, category: String, fileName: String, funcName: String, line: UInt, text: String) {
+		self.logger = logger
 		super.init(category: category, scope: nil, type: .scope, fileName: fileName, funcName: funcName, line: line, text: text)
 	}
 	
 	deinit {
-		log.leave(scope: self)
+		logger.leave(scope: self)
 	}
 	
 	public func enter() {
@@ -90,7 +92,7 @@ public class LogScope : LogItem {
 		entered.toggle()
 		
 		time = Date()
-		log.enter(scope: self)
+		logger.enter(scope: self)
 	}
 	
 	public func leave() {
@@ -101,27 +103,12 @@ public class LogScope : LogItem {
 			duration = -t.timeIntervalSinceNow
 		}
 		
-		log.leave(scope: self)
-	}
-}
-
-extension LogScope : LogProtocol {
-	
-	func log(_ text: String, type: LogType, category: String, scope: LogScope?, file: String, function: String, line: UInt) -> String?  {
-		log.log(text, type: type, category: category, scope: self, file: file, function: function, line: line)
-	}
-	
-	func scope(_ text: String, category: String, file: String, function: String, line: UInt, closure: ((LogScope) -> Void)?) -> LogScope {
-		log.scope(text, category: category, file: file, function: function, line: line, closure: closure)
-	}
-	
-	func interval(_ name: StaticString, category: String, scope: LogScope?, file: String, function: String, line: UInt, closure: (() -> Void)? = nil) -> LogInterval {
-		log.interval(name, category: category, scope: self, file: file, function: function, line: line, closure: closure)
+		logger.leave(scope: self)
 	}
 }
 
 public class LogInterval : LogItem {
-	let log: DLog
+	let logger: DLog
 	let name: StaticString
 	
 	@Atomic var begun = false
@@ -143,8 +130,8 @@ public class LogInterval : LogItem {
 		get { _signpostID as? OSSignpostID }
 	}
 	
-	init(log: DLog, category: String, scope: LogScope?, fileName: String, funcName: String, line: UInt, name: StaticString) {
-		self.log = log
+	init(logger: DLog, category: String, scope: LogScope?, fileName: String, funcName: String, line: UInt, name: StaticString) {
+		self.logger = logger
 		self.name = name
 		
 		super.init(category: category, scope: scope, type: .interval, fileName: fileName, funcName: funcName, line: line, text: "\(name)")
@@ -155,7 +142,7 @@ public class LogInterval : LogItem {
 		begun.toggle()
 	
 		time = Date()
-		log.begin(interval: self)
+		logger.begin(interval: self)
 	}
 	
 	public func end() {
@@ -173,9 +160,6 @@ public class LogInterval : LogItem {
 		}
 		avgDuration = duration / Double(count)
 		
-		log.end(interval: self)
+		logger.end(interval: self)
 	}
-	
-//	public func event() {
-//	}
 }

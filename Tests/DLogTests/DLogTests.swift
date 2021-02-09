@@ -1,7 +1,7 @@
 import Foundation
 import XCTest
-//import DLog
-@testable import DLog
+import DLog
+//@testable import DLog
 
 // MARK: - Utils
 
@@ -106,26 +106,26 @@ final class DLogTests: XCTestCase {
 	
 	// MARK: Tests -
 	
-	func testAll(_ log: LogProtocol, categoryTag: String = CategoryTag) {
+	func testAll(_ logger: LogProtocol, categoryTag: String = CategoryTag) {
 		let scope = #"(\|\t)?"#
 		
-		XCTAssert(log.log("log")?.match(#"\#(categoryTag) \#(scope)\#(LogTag) \#(Location) log"#) == true)
+		XCTAssert(logger.log("log")?.match(#"\#(categoryTag) \#(scope)\#(LogTag) \#(Location) log"#) == true)
 		
-		XCTAssert(log.trace()?.match(#"\#(categoryTag) \#(scope)\#(TraceTag) \#(Location) testAll"#) == true)
-		XCTAssert(log.debug("debug")?.match(#"\#(categoryTag) \#(scope)\#(DebugTag) \#(Location) debug"#) == true)
+		XCTAssert(logger.trace()?.match(#"\#(categoryTag) \#(scope)\#(TraceTag) \#(Location) testAll"#) == true)
+		XCTAssert(logger.debug("debug")?.match(#"\#(categoryTag) \#(scope)\#(DebugTag) \#(Location) debug"#) == true)
 		
-		XCTAssert(log.info("info")?.match(#"\#(categoryTag) \#(scope)\#(InfoTag) \#(Location) info"#) == true)
+		XCTAssert(logger.info("info")?.match(#"\#(categoryTag) \#(scope)\#(InfoTag) \#(Location) info"#) == true)
 		
-		XCTAssert(log.warning("warning")?.match(#"\#(categoryTag) \#(scope)\#(WarningTag) \#(Location) warning"#) == true)
-		XCTAssert(log.error("error")?.match(#"\#(categoryTag) \#(scope)\#(ErrorTag) \#(Location) error"#) == true)
+		XCTAssert(logger.warning("warning")?.match(#"\#(categoryTag) \#(scope)\#(WarningTag) \#(Location) warning"#) == true)
+		XCTAssert(logger.error("error")?.match(#"\#(categoryTag) \#(scope)\#(ErrorTag) \#(Location) error"#) == true)
 		
-		XCTAssertNil(log.assert(true, "assert"))
-		XCTAssert(log.assert(false)?.match(#"\#(categoryTag) \#(scope)\#(AssertTag) \#(Location)"#) == true)
-		XCTAssert(log.assert(false, "assert")?.match(#"\#(categoryTag) \#(scope)\#(AssertTag) \#(Location) assert"#) == true)
-		XCTAssert(log.fault("fault")?.match(#"\#(categoryTag) \#(scope)\#(FaultTag) \#(Location) fault"#) == true)
+		XCTAssertNil(logger.assert(true, "assert"))
+		XCTAssert(logger.assert(false)?.match(#"\#(categoryTag) \#(scope)\#(AssertTag) \#(Location)"#) == true)
+		XCTAssert(logger.assert(false, "assert")?.match(#"\#(categoryTag) \#(scope)\#(AssertTag) \#(Location) assert"#) == true)
+		XCTAssert(logger.fault("fault")?.match(#"\#(categoryTag) \#(scope)\#(FaultTag) \#(Location) fault"#) == true)
 		
-		XCTAssert(read_stdout { log.scope("scope") { delay() } }?.match(#"\#(categoryTag) \#(scope)└ \[scope\] \(0\.[0-9]{3}s\)"#) == true)
-		XCTAssert(read_stdout { log.interval("signpost") { delay() } }?.match(#"\#(categoryTag) \#(scope)\[INTERVAL\] \#(Location) \[signpost\] Count: 1, Total: 0\.[0-9]{3}s, Min: 0\.[0-9]{3}s, Max: 0\.[0-9]{3}s, Avg: 0\.[0-9]{3}s"#) == true)
+		XCTAssert(read_stdout { logger.scope("scope") { delay() } }?.match(#"\#(categoryTag) \#(scope)└ \[scope\] \(0\.[0-9]{3}s\)"#) == true)
+		XCTAssert(read_stdout { logger.interval("signpost") { delay() } }?.match(#"\#(categoryTag) \#(scope)\[INTERVAL\] \#(Location) \[signpost\] Count: 1, Total: 0\.[0-9]{3}s, Min: 0\.[0-9]{3}s, Max: 0\.[0-9]{3}s, Avg: 0\.[0-9]{3}s"#) == true)
 	}
 	
 	func test_Log() {

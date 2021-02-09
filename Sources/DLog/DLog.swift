@@ -58,7 +58,7 @@ public class DLog {
 			if let log = categories[category] {
 				return log
 			}
-			let log = LogCategory(log: self, category: category)
+			let log = LogCategory(logger: self, category: category)
 			categories[category] = log
 			return log
 		}
@@ -85,7 +85,7 @@ public class DLog {
 		guard let out = output else { return }
 
 		synchronized(self) {
-			if let current = self.scope {
+			if let current = self.currentScope {
 				scope.level = current.level + 1
 			}
 			scopes.append(scope)
@@ -125,7 +125,7 @@ public class DLog {
 			return interval
 		}
 		else {
-			let interval = LogInterval(log: self,
+			let interval = LogInterval(logger: self,
 									   category: category,
 									   scope: scope,
 									   fileName: file,
@@ -136,19 +136,8 @@ public class DLog {
 			return interval
 		}
 	}
-}
 
-extension DLog : LogProtocol {
-	
-	var category : String { "DLOG" }
-	
-	var scope: LogScope? {
-		synchronized(self) {
-			scopes.last
-		}
-	}
-
-	func log(_ text: String, type: LogType, category: String, scope: LogScope?, file: String, function: String, line: UInt) -> String? {
+	func log(text: String, type: LogType, category: String, scope: LogScope?, file: String, function: String, line: UInt) -> String? {
 		guard let out = output else { return nil }
 
 		let fileName = NSString(string: file).lastPathComponent
@@ -164,9 +153,9 @@ extension DLog : LogProtocol {
 		return out.log(item: item, scopes: scopes)
 	}
 
-	func scope(_ text: String, category: String, file: String, function: String, line: UInt, closure: ((LogScope) -> Void)?) -> LogScope {
+	func scope(text: String, category: String, file: String, function: String, line: UInt, closure: ((LogScope) -> Void)?) -> LogScope {
 		let fileName = NSString(string: file).lastPathComponent
-		let scope = LogScope(log: self,
+		let scope = LogScope(logger: self,
 							 category: category,
 							 fileName: fileName,
 							 funcName: function,
@@ -184,7 +173,7 @@ extension DLog : LogProtocol {
 		return scope
 	}
 
-	func interval(_ name: StaticString, category: String, scope: LogScope?, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
+	func interval(name: StaticString, category: String, scope: LogScope?, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
 		let fileName = NSString(string: file).lastPathComponent
 		let id = "\(fileName):\(line)"
 
@@ -201,5 +190,18 @@ extension DLog : LogProtocol {
 		sp.end()
 
 		return sp
+	}
+}
+
+extension DLog : LogProtocol {
+	
+	public var logger : DLog { self }
+	
+	public var category : String { "DLOG" }
+	
+	public var currentScope: LogScope? {
+		synchronized(self) {
+			scopes.last
+		}
 	}
 }

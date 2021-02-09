@@ -27,33 +27,16 @@
 import Foundation
 
 
-public class LogCategory {
-	let log: DLog
-	
+public class LogCategory: LogProtocol {
 	// LogProtocol
-	var category: String
+	public let logger: DLog
+	public let category: String
+	public var currentScope: LogScope? {
+		logger.currentScope
+	}
 	
-	init(log: DLog, category: String) {
-		self.log = log
+	init(logger: DLog, category: String) {
+		self.logger = logger
 		self.category = category
-	}
-}
-
-extension LogCategory: LogProtocol {
-	
-	var scope: LogScope? {
-		log.scope
-	}
-	
-	func log(_ text: String, type: LogType, category: String, scope: LogScope?, file: String, function: String, line: UInt) -> String?  {
-		log.log(text, type: type, category: category, scope: scope, file: file, function: function, line: line)
-	}
-	
-	func scope(_ text: String, category: String, file: String, function: String, line: UInt, closure: ((LogScope) -> Void)?) -> LogScope {
-		log.scope(text, category: category, file: file, function: function, line: line, closure: closure)
-	}
-	
-	func interval(_ name: StaticString, category: String, scope: LogScope?, file: String, function: String, line: UInt, closure: (() -> Void)? = nil) -> LogInterval {
-		log.interval(name, category: category, scope: scope, file: file, function: function, line: line, closure: closure)
 	}
 }
