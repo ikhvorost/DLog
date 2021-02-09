@@ -1,5 +1,5 @@
 //
-//  DLog
+//  DLog.swift
 //
 //  Created by Iurii Khvorost <iurii.khvorost@gmail.com> on 2020/06/03.
 //  Copyright © 2020 Iurii Khvorost. All rights reserved.

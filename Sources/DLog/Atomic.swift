@@ -1,5 +1,5 @@
 //
-//  Atomic
+//  Atomic.swift
 //
 //  Created by Iurii Khvorost <iurii.khvorost@gmail.com> on 2021/02/04.
 //  Copyright © 2021 Iurii Khvorost. All rights reserved.
