@@ -54,10 +54,11 @@ log.log("Hello DLog!")
 Outputs:
 
 ```
-13:12:41.437 [00] [DLOG] [LOG] <DLog.playground:7> Hello DLog!
+• 13:09:25.854 [00] [DLOG] [LOG] <DLog.playground:12> Hello DLog!
 ```
 
 Where:
+- `•` - start sign (useful for filtering)
 - `13:12:41.437` - timestamp (HH:mm:ss.SSS)
 - `[00]` - global scope nesting level (see Scope)
 - `[DLOG]` - category tag ('DLOG' by default)
@@ -214,23 +215,25 @@ Outputs:
 `scope` provides a mechanism for grouping and labeling work that's done in your program, so that can see all log messages related to the defined scope of your code in a tree view:
 
 ``` swift
-log.scope("Loading") {
+log.scope("Loading") { scope in
 	if let path = Bundle.main.path(forResource: "data", ofType: "json") {
-		log.info("File: \(path)")
+		scope.info("File: \(path)")
 		if let data = try? String(contentsOfFile: path) {
-			log.debug("Loaded \(data.count) bytes")
+			scope.debug("Loaded \(data.count) bytes")
 		}
 	}
 }
 ```
 
+> NOTE: To pin your messages to a needed scope you should use the provided parameter of the closure that is scope logger.
+
 Outputs:
 
 ```
-14:41:31.175 [01] [DLOG] ┌ [Loading]
-14:41:31.176 [01] [DLOG] |	[INFO] <DLog.playground:9> File: .../data.json
-14:41:31.178 [01] [DLOG] |	[DEBUG] <DLog.playground:11> Loaded 33 bytes
-14:41:31.178 [01] [DLOG] └ [Loading] (0.003s)
+• 12:36:43.656 [01] [DLOG] ┌ [Loading]
+• 12:36:43.657 [01] [DLOG] |	[INFO] <DLog.playground:8> File: .../data.json
+• 12:36:43.658 [01] [DLOG] |	[DEBUG] <DLog.playground:10> Loaded 121 bytes
+• 12:36:43.658 [01] [DLOG] └ [Loading] (0.028s)
 ```
 
 Where:
@@ -241,7 +244,7 @@ Where:
 You can get duration value of a finished scope programatically:
 
 ```
-var scope = log.scope("scope") {
+var scope = log.scope("scope") { _ in
 	...
 }
 
@@ -264,8 +267,8 @@ session.dataTask(with: URL(string: "https://apple.com")!) { data, response, erro
 		return
 	}
 
-	log.debug("\(http.url!.absoluteString) - HTTP \(http.statusCode)")
-	log.debug("Loaded: \(data.count) bytes")
+	scope.debug("\(http.url!.absoluteString) - HTTP \(http.statusCode)")
+	scope.debug("Loaded: \(data.count) bytes")
 }
 .resume()
 ```
@@ -273,25 +276,25 @@ session.dataTask(with: URL(string: "https://apple.com")!) { data, response, erro
 Outputs:
 
 ```
-14:45:42.446 [01] [DLOG] ┌ [Request]
-14:45:44.094 [01] [DLOG] |	[DEBUG] <DLog.playground:21> https://www.apple.com/ - HTTP 200
-14:45:44.095 [01] [DLOG] |	[DEBUG] <DLog.playground:22> Loaded: 69836 bytes
-14:45:44.095 [01] [DLOG] └ [Request] (1.649s)
+• 12:42:58.844 [01] [DLOG] ┌ [Request]
+• 12:43:00.262 [01] [DLOG] |	[DEBUG] <DLog.playground:19> https://www.apple.com/ - HTTP 200
+• 12:43:00.263 [01] [DLOG] |	[DEBUG] <DLog.playground:20> Loaded: 72705 bytes
+• 12:43:00.263 [01] [DLOG] └ [Request] (1.418s)
 ```
 
 Scopes can be nested one into one and that implements a global stack of scopes:
 
 ``` swift
-log.scope("Loading") {
+log.scope("Loading") { scope1 in
 	if let url = Bundle.main.url(forResource: "data", withExtension: "json") {
-		log.info("File: \(url)")
+		scope1.info("File: \(url)")
 
 		if let data = try? Data(contentsOf: url) {
-			log.debug("Loaded \(data.count) bytes")
+			scope1.debug("Loaded \(data.count) bytes")
 
-			log.scope("Parsing") {
+			log.scope("Parsing") { scope2 in
 				if let items = try? JSONDecoder().decode([Item].self, from: data) {
-					log.debug("Parsed \(items.count) items")
+					scope2.debug("Parsed \(items.count) items")
 				}
 			}
 		}
@@ -302,42 +305,16 @@ log.scope("Loading") {
 Outputs:
 
 ```
-15:11:11.502 [01] [DLOG] ┌ [Loading]
-15:11:11.503 [01] [DLOG] |	[INFO] <DLog.playground:13> File: .../data.json
-15:11:11.504 [01] [DLOG] |	[DEBUG] <DLog.playground:16> Loaded 121 bytes
-15:11:11.504 [02] [DLOG] |	┌ [Parsing]
-15:11:11.505 [02] [DLOG] |	|	[DEBUG] <DLog.playground:20> Parsed 3 items
-15:11:11.512 [02] [DLOG] |	└ [Parsing] (0.008s)
-15:11:11.530 [01] [DLOG] └ [Loading] (0.028s)
+• 12:46:44.729 [01] [DLOG] ┌ [Loading]
+• 12:46:44.730 [01] [DLOG] |	[INFO] <DLog.playground:13> File: .../data.json
+• 12:46:44.731 [01] [DLOG] |	[DEBUG] <DLog.playground:16> Loaded 121 bytes
+• 12:46:44.731 [02] [DLOG] |	┌ [Parsing]
+• 12:46:44.739 [02] [DLOG] |	|	[DEBUG] <DLog.playground:20> Parsed 3 items
+• 12:46:44.739 [02] [DLOG] |	└ [Parsing] (0.008s)
+• 12:46:44.756 [01] [DLOG] └ [Loading] (0.027s)
 ```
 
 As you can see from the sample above the scopes have different scope nesting levels "Loading" - [01] and "Parsing" - [02] and it's useful for filtering.
-
-For multithreading logging with scopes you should pin your internal logs to the current scope because each log function will be attached to the top scope from the global stack and you messages can be shown under other scopes otherwise. With this approach you can also pin your messages to any needed scope:
-
-```
-log.scope("Loading") { scope1 in
-	scope1.log("Pinned to Loading")
-
-	scope1.scope("Parsing: Pinned to Loading") { scope2 in
-		scope2.debug("Pinned to Parsing")
-
-		scope1.info("Pinned to Loading")
-	}
-}
-```
-
-Outputs:
-
-```
-16:01:17.690 [01] [DLOG] ┌ [Loading]
-16:01:17.691 [01] [DLOG] |	[LOG] <DLog.playground:7> Pinned to Loading
-16:01:17.692 [02] [DLOG] |	┌ [Parsing: Pinned to Loading]
-16:01:17.692 [02] [DLOG] |	|	[DEBUG] <DLog.playground:10> Pinned to Parsing
-16:01:17.692 [01] [DLOG] |	[INFO] <DLog.playground:12> Pinned to Loading
-16:01:17.692 [02] [DLOG] |	└ [Parsing: Pinned to Loading] (0.000s)
-16:01:17.717 [01] [DLOG] └ [Loading] (0.027s)
-```
 
 ## Interval
 

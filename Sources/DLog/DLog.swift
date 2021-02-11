@@ -32,7 +32,6 @@ public class DLog {
 	
 	private let output: LogOutput?
 
-	@Atomic private var categories = [String : LogCategory]()
 	@Atomic private var scopes = [LogScope]()
 	@Atomic private var intervals = [LogInterval]()
 	
@@ -54,14 +53,7 @@ public class DLog {
 	/// 	let netLog.log("Hello Net!")
 	///
 	public subscript(category: String) -> LogCategory {
-		synchronized(self) {
-			if let log = categories[category] {
-				return log
-			}
-			let log = LogCategory(logger: self, category: category)
-			categories[category] = log
-			return log
-		}
+		LogCategory(logger: self, category: category)
 	}
 
 	/// Creates a logger instance with a target output object.
@@ -85,9 +77,8 @@ public class DLog {
 		guard let out = output else { return }
 
 		synchronized(self) {
-			if let current = self.currentScope {
-				scope.level = current.level + 1
-			}
+			let level = scopes.last?.level ?? 0
+			scope.level = level + 1
 			scopes.append(scope)
 
 			out.scopeEnter(scope: scope, scopes: scopes)
@@ -199,9 +190,5 @@ extension DLog : LogProtocol {
 	
 	public var category : String { "DLOG" }
 	
-	public var currentScope: LogScope? {
-		synchronized(self) {
-			scopes.last
-		}
-	}
+	public var currentScope: LogScope?  { nil }
 }

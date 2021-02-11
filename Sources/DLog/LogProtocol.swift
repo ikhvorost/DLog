@@ -80,11 +80,6 @@ extension LogProtocol {
 	}
 	
 	@discardableResult
-	public func scope(_ text: String, file: String = #file, function: String = #function, line: UInt = #line, closure: @escaping (() -> Void)) -> LogScope {
-		logger.scope(text: text, category: category, file: file, function: function, line: line, closure: { _ in closure() })
-	}
-	
-	@discardableResult
 	public func interval(_ name: StaticString, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval {
 		logger.interval(name: name, category: category, scope: currentScope, file: file, function: function, line: line, closure: closure)
 	}

@@ -70,7 +70,7 @@ public class LogScope : LogItem, LogProtocol {
 	public let logger: DLog
 	public var currentScope: LogScope? { self }
 	
-	internal(set) public var level: Int = 1
+	internal(set) public var level: Int = 0
 	
 	let uid = UUID()
 	var os_state = os_activity_scope_state_s()
@@ -92,6 +92,7 @@ public class LogScope : LogItem, LogProtocol {
 		entered.toggle()
 		
 		time = Date()
+		duration = 0
 		logger.enter(scope: self)
 	}
 	

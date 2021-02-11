@@ -31,9 +31,7 @@ public class LogCategory: LogProtocol {
 	// LogProtocol
 	public let logger: DLog
 	public let category: String
-	public var currentScope: LogScope? {
-		logger.currentScope
-	}
+	public var currentScope: LogScope? { nil }
 	
 	init(logger: DLog, category: String) {
 		self.logger = logger

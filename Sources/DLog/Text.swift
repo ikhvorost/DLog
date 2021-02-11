@@ -124,6 +124,8 @@ public class Text : LogOutput {
 		//.scope :
 	]
 	
+	private let startSign = "•"
+	
 	public enum Style {
 		case plain
 		case emoji
@@ -160,8 +162,8 @@ public class Text : LogOutput {
 		let time = item.time != nil ? Self.dateFormatter.string(from: item.time!) : ""
 		
 		var padding = ""
-		if let maxlevel = item.scope?.level {
-			for level in 1...maxlevel {
+		if let scope = item.scope, scope.entered {
+			for level in 1...scope.level {
 				let scope = scopes.first(where: { $0.level == level })
 				padding += scope != nil ? "|\t" : "\t"
 			}
@@ -175,13 +177,13 @@ public class Text : LogOutput {
 				
 				let tagText = " \(item.type.title) ".color(tag.colors)
 				let location = "<\(item.fileName):\(item.line)>".color([.dim, tag.textColor])
-				return "\(time.color(.dim)) \(level.color(.dim)) \(item.category.color(.textBlue)) \(padding)\(tagText) \(location) \(item.text.color(tag.textColor))"
+				return "\(startSign.color(.dim)) \(time.color(.dim)) \(level.color(.dim)) \(item.category.color(.textBlue)) \(padding)\(tagText) \(location) \(item.text.color(tag.textColor))"
 				
 			case .plain:
-				return "\(time) \(level) [\(item.category)] \(padding)[\(item.type.title)] <\(item.fileName):\(item.line)> \(item.text)"
+				return "\(startSign) \(time) \(level) [\(item.category)] \(padding)[\(item.type.title)] <\(item.fileName):\(item.line)> \(item.text)"
 				
 			case .emoji:
-				return "\(time) \(level) [\(item.category)] \(padding)\(item.type.icon) [\(item.type.title)] <\(item.fileName):\(item.line)> \(item.text)"
+				return "\(startSign) \(time) \(level) [\(item.category)] \(padding)\(item.type.icon) [\(item.type.title)] <\(item.fileName):\(item.line)> \(item.text)"
 		}
 	}
 
@@ -211,10 +213,10 @@ public class Text : LogOutput {
 		
 		switch style {
 			case .emoji, .plain:
-				return "\(time) \(level) [\(scope.category)] \(padding) [\(scope.text)] \(ms ?? "")"
+				return "\(startSign) \(time) \(level) [\(scope.category)] \(padding) [\(scope.text)] \(ms ?? "")"
 				
 			case .colored:
-				return "\(time.color(.dim)) \(level.color(.dim)) \(scope.category.color(.textBlue)) \(padding) [\(scope.text.color(.textMagenta))] \(ms ?? "")"
+				return "\(startSign.color(.dim)) \(time.color(.dim)) \(level.color(.dim)) \(scope.category.color(.textBlue)) \(padding) [\(scope.text.color(.textMagenta))] \(ms ?? "")"
 		}
 	}
 	
