@@ -60,7 +60,7 @@ Outputs:
 Where:
 - `•` - start sign (useful for filtering)
 - `13:12:41.437` - timestamp (HH:mm:ss.SSS)
-- `[00]` - global scope nesting level (see Scope)
+- `[00]` - global scope level (see Scope)
 - `[DLOG]` - category tag ('DLOG' by default)
 - `[LOG]` - log type tag
 - `<Package.playground:7>` - location (file:line)
@@ -533,8 +533,8 @@ let log = DLog(.file("dlog.txt"))
 let file = File(path: "/users/user/dlog.txt", source: .textColored)
 let log = DLog(file)
 
-log.scope("File") {
-	log.info("It's a file")
+log.scope("File") { scope in
+	scope.info("It's a file")
 }
 ```
 File "dlog.txt":
@@ -583,12 +583,12 @@ DLog's scopes map to the system logger activities:
 ``` swift
 let log = DLog(.oslog)
 
-log.scope("Loading") {
-	log.info("start")
-	log.scope("Parsing") {
-		log.debug("Parsed 1000 items")
+log.scope("Loading") { scope1 in
+	scope1.info("start")
+	log.scope("Parsing") { scope2 in
+		scope2.debug("Parsed 1000 items")
 	}
-	log.info("finish")
+	scope1.info("finish")
 }
 ```
 
@@ -630,14 +630,14 @@ Then the output connects and sends your log messages to `NetConsole`:
 ``` swift
 let log = DLog(Net())
 
-log.scope("Main") {
-	log.trace("Start")
-	log.scope("Subtask") {
-		log.info("Validation")
-		log.error("Token is invalid")
-		log.debug("Retry")
+log.scope("Main") { scope1 in
+	scope1.trace("Start")
+	log.scope("Subtask") { scope2 in
+		scope2.info("Validation")
+		scope2.error("Token is invalid")
+		scope2.debug("Retry")
 	}
-	log.info("Close connection")
+	scope1.info("Close connection")
 }
 ```
 
@@ -821,15 +821,15 @@ let filter = Filter { item in
 let log = DLog(.textPlain => filter => .stdout)
 
 log.trace("trace")
-log.scope("Load") {
-	log.debug("debug")
+log.scope("Load") { scope1 in
+	scope1.debug("debug")
 
-	log.scope("Parse") {
-		log.log("log")
-		log.info("info")
+	log.scope("Parse") { scope2 in
+		scope2.log("log")
+		scope2.info("info")
 	}
 
-	log.error("error")
+	scope1.error("error")
 }
 log.fault("fault")
 ```
@@ -863,8 +863,8 @@ When you disable the logger all your code continue running inside scopes and int
 let log = DLog.disabled
 
 log.log("start")
-log.scope("scope") {
-	log.debug("debug")
+log.scope("scope") { scope in
+	scope.debug("debug")
 
 	print("scope code")
 }
