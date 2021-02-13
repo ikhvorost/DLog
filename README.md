@@ -99,7 +99,7 @@ Outputs:
 
 ### `trace`
 
-Log the current function name or a message (if it is provided) to help debug problems during the development:
+Log the current function name or a message (if it is provided) to help in debugging problems during the development:
 
 ``` swift
 func startup() {

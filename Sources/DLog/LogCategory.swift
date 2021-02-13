@@ -1,5 +1,5 @@
 //
-//  LogCategory
+//  LogCategory.swift
 //
 //  Created by Iurii Khvorost <iurii.khvorost@gmail.com> on 2020/10/14.
 //  Copyright © 2020 Iurii Khvorost. All rights reserved.
@@ -26,15 +26,20 @@
 
 import Foundation
 
-
+/// Creates a logger object that assigns log messages to a specified category.
+///
+/// You can define category name to differentiate unique areas and parts of your app and the logger can use this value
+/// to categorize and filter related log messages.
+///
+/// 	let log = DLog()
+/// 	let netLog = log["NET"]
+/// 	let netLog.log("Hello Net!")
+///
 public class LogCategory: LogProtocol {
-	// LogProtocol
-	public let logger: DLog
-	public let category: String
-	public var currentScope: LogScope? { nil }
+	/// LogProtocol parameters
+	public let params: LogParams
 	
 	init(logger: DLog, category: String) {
-		self.logger = logger
-		self.category = category
+		params = LogParams(logger: logger, category: category, scope: nil)
 	}
 }

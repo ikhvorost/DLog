@@ -28,7 +28,7 @@ import Foundation
 
 /// The central class to emit log messages to specified outputs using one of the methods corresponding to a log level.
 ///
-public class DLog {
+public class DLog: LogProtocol {
 	
 	private let output: LogOutput?
 
@@ -42,6 +42,9 @@ public class DLog {
 	/// 	let log = DLog.disabled
 	///
 	public static let disabled = DLog(nil)
+	
+	/// LogProtocol parameters
+	public lazy var params = LogParams(logger: self, category: "DLOG", scope: nil)
 
 	/// Creates a logger object that assigns log messages to a specified category.
 	///
@@ -144,14 +147,14 @@ public class DLog {
 		return out.log(item: item, scopes: scopes)
 	}
 
-	func scope(text: String, category: String, file: String, function: String, line: UInt, closure: ((LogScope) -> Void)?) -> LogScope {
+	func scope(name: String, category: String, file: String, function: String, line: UInt, closure: ((LogScope) -> Void)?) -> LogScope {
 		let fileName = NSString(string: file).lastPathComponent
 		let scope = LogScope(logger: self,
 							 category: category,
 							 fileName: fileName,
 							 funcName: function,
 							 line: line,
-							 text: text)
+							 name: name)
 
 		if let block = closure {
 			scope.enter()
@@ -182,13 +185,4 @@ public class DLog {
 
 		return sp
 	}
-}
-
-extension DLog : LogProtocol {
-	
-	public var logger : DLog { self }
-	
-	public var category : String { "DLOG" }
-	
-	public var currentScope: LogScope?  { nil }
 }

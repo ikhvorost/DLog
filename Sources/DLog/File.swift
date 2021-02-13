@@ -43,8 +43,7 @@ public class File : LogOutput {
 	/// - Parameters:
 	/// 	- path: The path to the file to access.
 	/// 	- append: `true` if the file output object should append log messages to the end of an existing file or `false` if you want to clear one.
-	/// 	- source: A source output object for pipelines. If it is omitted, the file output takes `Text` plain output as a source output.
-	/// - SeeAlso: `Text`, `=>`
+	/// 	- source: A source output object, if it is omitted, the file output takes `Text` plain output as a source output.
 	///
 	public init(path: String, append: Bool = false, source: LogOutput = .textPlain) {
 		let fileManager = FileManager.default

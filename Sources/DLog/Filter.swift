@@ -1,5 +1,5 @@
 //
-//  Filter
+//  Filter.swift
 //
 //  Created by Iurii Khvorost <iurii.khvorost@gmail.com> on 2020/08/30.
 //  Copyright © 2020 Iurii Khvorost. All rights reserved.
@@ -25,9 +25,21 @@
 
 import Foundation
 
+/// Middleware output for filtering
+///
 public class Filter : LogOutput {
 	private let predicate: NSPredicate
 	
+	/// Initializes a filter output that evaluates using a specified block object.
+	///
+	/// Represents a pipe middleware output that can filter log messages by available fields of an evaluated object.
+	///
+	///		// Logs debug messages only
+	///		let log = DLog(.textPlain => .filter { $0.type == .debug } => .stdout)
+	///
+	/// - Parameters:
+	/// 	- block: The block is applied to the object to be evaluated.
+	///
 	public init(block: @escaping (LogItem) -> Bool) {
 		predicate = NSPredicate { (obj, _) in
 			if let item = obj as? LogItem {

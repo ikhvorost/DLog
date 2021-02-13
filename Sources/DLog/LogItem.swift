@@ -1,5 +1,5 @@
 //
-//  LogItem
+//  LogItem.swift
 //
 //  Created by Iurii Khvorost <iurii.khvorost@gmail.com> on 2020/10/14.
 //  Copyright © 2020 Iurii Khvorost. All rights reserved.
@@ -26,23 +26,55 @@
 import Foundation
 import os.log
 
-@objc
+
+/// Logging levels.
 public enum LogType : Int {
-	// Levels
+	/// The default log level.
+	///
+	/// Use this level to capture non critical information.
 	case log
+	
+	/// The informational log level.
+	///
+	/// Use this level to capture information messages and helpful data.
 	case info
+	
+	/// The trace log level.
+	///
+	/// Use this level to capture the current function name to help in debugging problems during the development.
 	case trace
+	
+	/// The debug log level.
+	///
+	/// Use this level to capture information that may be useful during development or while troubleshooting a specific problem.
 	case debug
+	
+	/// The warning log level.
+	///
+	/// Use this level to capture information about things that might result in an error.
 	case warning
+	
+	/// The error log level.
+	///
+	/// Use this log level to report errors.
 	case error
+	
+	/// The assert log level.
+	///
+	/// Use this log level for sanity checks.
 	case assert
+	
+	/// The fault log level.
+	///
+	/// Use this level only to capture system-level or multi-process information when reporting system errors.
 	case fault
 	
+	/// The interval log level.
 	case interval
+	/// The scope log level.
 	case scope
 }
 
-@objcMembers
 public class LogItem {
 	public var time: Date?
 	public let category: String
@@ -66,9 +98,10 @@ public class LogItem {
 }
 
 public class LogScope : LogItem, LogProtocol {
-	// LogProtocol
-	public let logger: DLog
-	public var currentScope: LogScope? { self }
+	let logger: DLog
+	
+	/// LogProtocol parameters
+	public lazy var params = LogParams(logger: logger, category: category, scope: self)
 	
 	internal(set) public var level: Int = 0
 	
@@ -78,9 +111,9 @@ public class LogScope : LogItem, LogProtocol {
 	
 	private(set) public var duration: TimeInterval = 0
 	
-	init(logger: DLog, category: String, fileName: String, funcName: String, line: UInt, text: String) {
+	init(logger: DLog, category: String, fileName: String, funcName: String, line: UInt, name: String) {
 		self.logger = logger
-		super.init(category: category, scope: nil, type: .scope, fileName: fileName, funcName: funcName, line: line, text: text)
+		super.init(category: category, scope: nil, type: .scope, fileName: fileName, funcName: funcName, line: line, text: name)
 	}
 	
 	deinit {
