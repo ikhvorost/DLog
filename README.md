@@ -99,7 +99,7 @@ Outputs:
 
 ### `trace`
 
-Log the current function name or a message (if it is provided) to help in debugging problems during the development:
+Log the current function name and a message (if it is provided) to help in debugging problems during the development:
 
 ``` swift
 func startup() {
@@ -113,7 +113,7 @@ startup()
 Outputs:
 
 ```
-13:38:31.903 [00] [DLOG] [TRACE] <DLog.playground:8> Start
+13:38:31.903 [00] [DLOG] [TRACE] <DLog.playground:8> startup() Start
 13:38:31.905 [00] [DLOG] [TRACE] <DLog.playground:9> startup()
 ```
 

@@ -1,5 +1,5 @@
 //
-//  LogProtocol
+//  LogProtocol.swift
 //
 //  Created by Iurii Khvorost <iurii.khvorost@gmail.com> on 2020/10/14.
 //  Copyright © 2020 Iurii Khvorost. All rights reserved.
@@ -25,62 +25,114 @@
 
 import Foundation
 
+/// LogProtocol parameters
+///
+public struct LogParams {
+	let logger: DLog
+	let category: String
+	let scope: LogScope?
+}
+
+/// Base logger protocol
+///
 public protocol LogProtocol {
-	var logger: DLog { get }
-	var category: String { get }
-	var currentScope: LogScope? { get }
+	/// LogProtocol parameters
+	var params: LogParams { get }
 }
 
 extension LogProtocol {
 	
+	/// Logs a message that is essential to troubleshoot problems later.
+	///
+	/// This method logs the message using the default log level.
+	///
+	///		let log = DLog()
+	///		log.log("message")
+	///
+	/// - Parameters:
+	/// 	- text: The message to be logged that can be used with any string interpolation literal.
+	/// 	- file: The file this log message originates from (defaults to `#file`).
+	/// 	- function: The function this log message originates from (defaults to `#function`).
+	/// 	- line: The line this log message originates (defaults to `#line`).
+	///
+	/// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
+	///
 	@discardableResult
 	public func log(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		logger.log(text: text, type: .log, category: category, scope: currentScope, file: file, function: function, line: line)
+		params.logger.log(text: text, type: .log, category: params.category, scope: params.scope, file: file, function: function, line: line)
 	}
 	
+	/// Logs trace information to help debug problems during the development of your code.
+	///
+	/// Use it during development to record information that might aid you in debugging problems later.
 	@discardableResult
 	public func trace(_ text: String? = nil, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		logger.log(text: text ?? function, type: .trace, category: category, scope: currentScope, file: file, function: function, line: line)
+		let msg = "\(function) \(text ?? "")"
+		return params.logger.log(text: msg, type: .trace, category: params.category, scope: params.scope, file: file, function: function, line: line)
 	}
 	
+	/// Logs a message to help debug problems during the development of your code.
+	///
+	/// Use this method during development to record information that might aid you in debugging problems later.
 	@discardableResult
 	public func debug(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		logger.log(text: text, type: .debug, category: category, scope: currentScope, file: file, function: function, line: line)
+		params.logger.log(text: text, type: .debug, category: params.category, scope: params.scope, file: file, function: function, line: line)
 	}
 	
+	/// Logs a message that is helpful, but not essential, to diagnose issues with your code.
+	///
+	/// Use this method to capture information messages and helpful data.
 	@discardableResult
 	public func info(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		logger.log(text: text, type: .info, category: category, scope: currentScope, file: file, function: function, line: line)
+		params.logger.log(text: text, type: .info, category: params.category, scope: params.scope, file: file, function: function, line: line)
 	}
 	
+	/// Logs a warning that occurred during the execution of your code.
+	///
+	/// Use this method to capture information about things that might result in an error.
 	@discardableResult
 	public func warning(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		logger.log(text: text, type: .warning, category: category, scope: currentScope, file: file, function: function, line: line)
+		params.logger.log(text: text, type: .warning, category: params.category, scope: params.scope, file: file, function: function, line: line)
 	}
-		
+	
+	/// Logs an error that occurred during the execution of your code.
+	///
+	/// Use this method to report errors.
 	@discardableResult
 	public func error(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		logger.log(text: text, type: .error, category: category, scope: currentScope, file: file, function: function, line: line)
+		params.logger.log(text: text, type: .error, category: params.category, scope: params.scope, file: file, function: function, line: line)
 	}
 	
+	/// Logs a traditional C-style assert notice with an optional message.
+	///
+	/// Use this function for internal sanity checks.
 	@discardableResult
-	public func assert(_ value: Bool, _ text: String = "", file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		guard !value else { return nil }
-		return logger.log(text: text, type: .assert, category: category, scope: currentScope, file: file, function: function, line: line)
+	public func assert(_ condition: Bool, _ text: String = "", file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+		guard !condition else { return nil }
+		return params.logger.log(text: text, type: .assert, category: params.category, scope: params.scope, file: file, function: function, line: line)
 	}
 	
+	/// Logs a bug or fault that occurred during the execution of your code.
+	///
+	/// Use this method to capture critical errors that occurred during the execution of your code.
 	@discardableResult
 	public func fault(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		logger.log(text: text, type: .fault, category: category, scope: currentScope, file: file, function: function, line: line)
+		params.logger.log(text: text, type: .fault, category: params.category, scope: params.scope, file: file, function: function, line: line)
 	}
 	
+	/// Creates a scope object that assigns log messages to the specified scope's name.
+	///
+	/// Scope provides a mechanism for grouping and labeling log messages that's done in your program.
 	@discardableResult
-	public func scope(_ text: String, file: String = #file, function: String = #function, line: UInt = #line, closure: ((LogScope) -> Void)? = nil) -> LogScope {
-		logger.scope(text: text, category: category, file: file, function: function, line: line, closure: closure)
+	public func scope(_ name: String, file: String = #file, function: String = #function, line: UInt = #line, closure: ((LogScope) -> Void)? = nil) -> LogScope {
+		params.logger.scope(name: name, category: params.category, file: file, function: function, line: line, closure: closure)
 	}
 	
+	/// Creates an interval object that .
+	///
+	/// Logs a point of interest in your code as a time interval for debugging performances.
 	@discardableResult
 	public func interval(_ name: StaticString, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval {
-		logger.interval(name: name, category: category, scope: currentScope, file: file, function: function, line: line, closure: closure)
+		params.logger.interval(name: name, category: params.category, scope: params.scope, file: file, function: function, line: line, closure: closure)
 	}
 }
