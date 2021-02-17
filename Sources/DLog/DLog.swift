@@ -114,33 +114,35 @@ public class DLog: LogProtocol {
 		out.intervalEnd(interval: interval, scopes: scopes)
 	}
 
-	private func interval(id: String, name: StaticString, category: String, scope: LogScope?, file: String, function: String, line: UInt, scopes: [LogScope]) -> LogInterval {
-		if let interval = intervals.first(where: { $0.id == id }) {
-			return interval
-		}
-		else {
-			let interval = LogInterval(logger: self,
-									   category: category,
-									   scope: scope,
-									   fileName: file,
-									   funcName: function,
-									   line: line,
-									   name: name)
-			intervals.append(interval)
-			return interval
+	private func interval(id: Int, name: StaticString, category: String, scope: LogScope?, file: String, function: String, line: UInt, scopes: [LogScope]) -> LogInterval {
+		synchronized(self) {
+			if let interval = intervals.first(where: { $0.id == id }) {
+				return interval
+			}
+			else {
+				let interval = LogInterval(id: id,
+									  logger: self,
+									  category: category,
+									  scope: scope,
+									  file: file,
+									  funcName: function,
+									  line: line,
+									  name: name)
+				intervals.append(interval)
+				return interval
+			}
 		}
 	}
 
 	func log(text: String, type: LogType, category: String, scope: LogScope?, file: String, function: String, line: UInt) -> String? {
 		guard let out = output else { return nil }
 
-		let fileName = NSString(string: file).lastPathComponent
 		let item = LogItem(
 			time: Date(),
 			category: category,
 			scope: scope,
 			type: type,
-			fileName: fileName,
+			file: file,
 			funcName: function,
 			line: line,
 			text: text)
@@ -148,19 +150,16 @@ public class DLog: LogProtocol {
 	}
 
 	func scope(name: String, category: String, file: String, function: String, line: UInt, closure: ((LogScope) -> Void)?) -> LogScope {
-		let fileName = NSString(string: file).lastPathComponent
 		let scope = LogScope(logger: self,
 							 category: category,
-							 fileName: fileName,
+							 file: file,
 							 funcName: function,
 							 line: line,
 							 name: name)
 
 		if let block = closure {
 			scope.enter()
-
 			block(scope)
-
 			scope.leave()
 		}
 
@@ -168,21 +167,15 @@ public class DLog: LogProtocol {
 	}
 
 	func interval(name: StaticString, category: String, scope: LogScope?, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
-		let fileName = NSString(string: file).lastPathComponent
-		let id = "\(fileName):\(line)"
+		let id = "\(file):\(line)".hash
+		let intr = interval(id: id, name: name, category: category, scope: scope, file: file, function: function, line: line, scopes: scopes)
 
-		let sp = interval(id: id, name: name, category: category, scope: scope, file: fileName, function: function, line: line, scopes: scopes)
-
-		guard closure != nil else {
-			return sp
+		if let block = closure {
+			intr.begin()
+			block()
+			intr.end()
 		}
 
-		sp.begin()
-
-		closure?()
-
-		sp.end()
-
-		return sp
+		return intr
 	}
 }

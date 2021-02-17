@@ -5,7 +5,7 @@
 [![SPM compatible](https://img.shields.io/badge/SPM-compatible-4BC51D.svg?style=flat)](https://swift.org/package-manager/)
 ![CI](https://github.com/ikhvorost/DLog/workflows/CI/badge.svg)
 [![codecov](https://codecov.io/gh/ikhvorost/DLog/branch/master/graph/badge.svg?token=DJLKDA9W1Q)](https://codecov.io/gh/ikhvorost/DLog)
-[![swift-doc](https://img.shields.io/badge/swiftdoc-8%25-f39f37)](https://github.com/SwiftDocOrg/swift-doc)
+[![swift doc coverage](https://img.shields.io/badge/swift%20doc-8%25-f39f37)](https://github.com/SwiftDocOrg/swift-doc)
 
 <p align="center"><img src="Images/dlog.png" alt="Logger for Swift"></p>
 
@@ -54,7 +54,7 @@ log.log("Hello DLog!")
 Outputs:
 
 ```
-• 13:09:25.854 [00] [DLOG] [LOG] <DLog.playground:12> Hello DLog!
+• 13:09:25.854 [00] [DLOG] [LOG] <DLog:12> Hello DLog!
 ```
 
 Where:
@@ -63,7 +63,7 @@ Where:
 - `[00]` - global scope level (see Scope)
 - `[DLOG]` - category tag ('DLOG' by default)
 - `[LOG]` - log type tag
-- `<Package.playground:7>` - location (file:line)
+- `<DLog:7>` - location (file:line)
 - `Hello DLog!` - message
 
 ## Log levels
@@ -79,7 +79,7 @@ log.log("App start")
 Outputs:
 
 ```
-13:36:59.086 [00] [DLOG] [LOG] <DLog.playground:7> App start
+13:36:59.086 [00] [DLOG] [LOG] <DLog:7> App start
 ```
 
 ### `info`
@@ -94,7 +94,7 @@ log.info("uuid: \(uuid)")
 Outputs:
 
 ```
-13:37:54.934 [00] [DLOG] [INFO] <DLog.playground:8> uuid: 104B6491-B2A8-4043-A5C6-93CEB60864FA
+13:37:54.934 [00] [DLOG] [INFO] <DLog:8> uuid: 104B6491-B2A8-4043-A5C6-93CEB60864FA
 ```
 
 ### `trace`
@@ -113,8 +113,8 @@ startup()
 Outputs:
 
 ```
-13:38:31.903 [00] [DLOG] [TRACE] <DLog.playground:8> startup() Start
-13:38:31.905 [00] [DLOG] [TRACE] <DLog.playground:9> startup()
+13:38:31.903 [00] [DLOG] [TRACE] <DLog:8> startup() Start
+13:38:31.905 [00] [DLOG] [TRACE] <DLog:9> startup()
 ```
 
 ### `debug`
@@ -135,7 +135,7 @@ session.dataTask(with: URL(string: "https://apple.com")!) { data, response, erro
 Outputs:
 
 ```
-13:39:41.662 [00] [DLOG] [DEBUG] <DLog.playground:12> https://www.apple.com/: 200 - no error
+13:39:41.662 [00] [DLOG] [DEBUG] <DLog:12> https://www.apple.com/: 200 - no error
 ```
 
 ### `warning`
@@ -149,7 +149,7 @@ log.warning("No Internet connection.")
 Outputs:
 
 ```
-13:44:49.992 [00] [DLOG] [WARNING] <DLog.playground:7> No Internet connection.
+13:44:49.992 [00] [DLOG] [WARNING] <DLog:7> No Internet connection.
 ```
 
 ### `error`
@@ -170,7 +170,7 @@ catch {
 Outputs:
 
 ```
-13:53:20.398 [00] [DLOG] [ERROR] <DLog.playground:13> “source.txt” couldn’t be moved to “com.apple.dt.playground.stub.iOS_Simulator.DLog-AA29FA84-10A1-45D7-BAEC-FC5402BAFB0C” because either the former doesn’t exist, or the folder containing the latter doesn’t exist.
+13:53:20.398 [00] [DLOG] [ERROR] <DLog:13> “source.txt” couldn’t be moved to “com.apple.dt.playground.stub.iOS_Simulator.DLog-AA29FA84-10A1-45D7-BAEC-FC5402BAFB0C” because either the former doesn’t exist, or the folder containing the latter doesn’t exist.
 ```
 
 ### `assert`
@@ -189,8 +189,8 @@ log.assert(password.isEmpty == false, "Password is empty")
 Outputs:
 
 ```
-13:55:15.108 [00] [DLOG] [ASSERT] <DLog.playground:11>
-13:55:15.110 [00] [DLOG] [ASSERT] <DLog.playground:12> Password is empty
+13:55:15.108 [00] [DLOG] [ASSERT] <DLog:11>
+13:55:15.110 [00] [DLOG] [ASSERT] <DLog:12> Password is empty
 ```
 
 ### `fault`
@@ -207,7 +207,7 @@ guard let modelURL = Bundle.main.url(forResource: "DataModel", withExtension:"mo
 Outputs:
 
 ```
-13:56:46.895 [00] [DLOG] [FAULT] <DLog.playground:8> Error loading model from bundle
+13:56:46.895 [00] [DLOG] [FAULT] <DLog:8> Error loading model from bundle
 ```
 
 ## Scope
@@ -231,8 +231,8 @@ Outputs:
 
 ```
 • 12:36:43.656 [01] [DLOG] ┌ [Loading]
-• 12:36:43.657 [01] [DLOG] |	[INFO] <DLog.playground:8> File: .../data.json
-• 12:36:43.658 [01] [DLOG] |	[DEBUG] <DLog.playground:10> Loaded 121 bytes
+• 12:36:43.657 [01] [DLOG] |	[INFO] <DLog:8> File: .../data.json
+• 12:36:43.658 [01] [DLOG] |	[DEBUG] <DLog:10> Loaded 121 bytes
 • 12:36:43.658 [01] [DLOG] └ [Loading] (0.028s)
 ```
 
@@ -277,8 +277,8 @@ Outputs:
 
 ```
 • 12:42:58.844 [01] [DLOG] ┌ [Request]
-• 12:43:00.262 [01] [DLOG] |	[DEBUG] <DLog.playground:19> https://www.apple.com/ - HTTP 200
-• 12:43:00.263 [01] [DLOG] |	[DEBUG] <DLog.playground:20> Loaded: 72705 bytes
+• 12:43:00.262 [01] [DLOG] |	[DEBUG] <DLog:19> https://www.apple.com/ - HTTP 200
+• 12:43:00.263 [01] [DLOG] |	[DEBUG] <DLog:20> Loaded: 72705 bytes
 • 12:43:00.263 [01] [DLOG] └ [Request] (1.418s)
 ```
 
@@ -306,10 +306,10 @@ Outputs:
 
 ```
 • 12:46:44.729 [01] [DLOG] ┌ [Loading]
-• 12:46:44.730 [01] [DLOG] |	[INFO] <DLog.playground:13> File: .../data.json
-• 12:46:44.731 [01] [DLOG] |	[DEBUG] <DLog.playground:16> Loaded 121 bytes
+• 12:46:44.730 [01] [DLOG] |	[INFO] <DLog:13> File: .../data.json
+• 12:46:44.731 [01] [DLOG] |	[DEBUG] <DLog:16> Loaded 121 bytes
 • 12:46:44.731 [02] [DLOG] |	┌ [Parsing]
-• 12:46:44.739 [02] [DLOG] |	|	[DEBUG] <DLog.playground:20> Parsed 3 items
+• 12:46:44.739 [02] [DLOG] |	|	[DEBUG] <DLog:20> Parsed 3 items
 • 12:46:44.739 [02] [DLOG] |	└ [Parsing] (0.008s)
 • 12:46:44.756 [01] [DLOG] └ [Loading] (0.027s)
 ```
@@ -332,17 +332,17 @@ for _ in 0...10 {
 Outputs:
 
 ```
-16:08:28.484 [00] [DLOG] [INTERVAL] <DLog.playground:7> [Sort] Count: 1, Total: 0.306s, Min: 0.306s, Max: 0.306s, Avg: 0.306s
-16:08:28.785 [00] [DLOG] [INTERVAL] <DLog.playground:7> [Sort] Count: 2, Total: 0.598s, Min: 0.292s, Max: 0.306s, Avg: 0.299s
-16:08:29.131 [00] [DLOG] [INTERVAL] <DLog.playground:7> [Sort] Count: 3, Total: 0.943s, Min: 0.292s, Max: 0.345s, Avg: 0.314s
-16:08:29.432 [00] [DLOG] [INTERVAL] <DLog.playground:7> [Sort] Count: 4, Total: 1.242s, Min: 0.292s, Max: 0.345s, Avg: 0.310s
-16:08:29.698 [00] [DLOG] [INTERVAL] <DLog.playground:7> [Sort] Count: 5, Total: 1.506s, Min: 0.265s, Max: 0.345s, Avg: 0.301s
-16:08:29.974 [00] [DLOG] [INTERVAL] <DLog.playground:7> [Sort] Count: 6, Total: 1.781s, Min: 0.265s, Max: 0.345s, Avg: 0.297s
-16:08:30.244 [00] [DLOG] [INTERVAL] <DLog.playground:7> [Sort] Count: 7, Total: 2.049s, Min: 0.265s, Max: 0.345s, Avg: 0.293s
-16:08:30.505 [00] [DLOG] [INTERVAL] <DLog.playground:7> [Sort] Count: 8, Total: 2.309s, Min: 0.260s, Max: 0.345s, Avg: 0.289s
-16:08:30.778 [00] [DLOG] [INTERVAL] <DLog.playground:7> [Sort] Count: 9, Total: 2.581s, Min: 0.260s, Max: 0.345s, Avg: 0.287s
-16:08:31.040 [00] [DLOG] [INTERVAL] <DLog.playground:7> [Sort] Count: 10, Total: 2.841s, Min: 0.260s, Max: 0.345s, Avg: 0.284s
-16:08:31.328 [00] [DLOG] [INTERVAL] <DLog.playground:7> [Sort] Count: 11, Total: 3.128s, Min: 0.260s, Max: 0.345s, Avg: 0.284s
+16:08:28.484 [00] [DLOG] [INTERVAL] <DLog:7> Sort - Count: 1, Total: 0.306s, Min: 0.306s, Max: 0.306s, Avg: 0.306s
+16:08:28.785 [00] [DLOG] [INTERVAL] <DLog:7> Sort - Count: 2, Total: 0.598s, Min: 0.292s, Max: 0.306s, Avg: 0.299s
+16:08:29.131 [00] [DLOG] [INTERVAL] <DLog:7> Sort - Count: 3, Total: 0.943s, Min: 0.292s, Max: 0.345s, Avg: 0.314s
+16:08:29.432 [00] [DLOG] [INTERVAL] <DLog:7> Sort - Count: 4, Total: 1.242s, Min: 0.292s, Max: 0.345s, Avg: 0.310s
+16:08:29.698 [00] [DLOG] [INTERVAL] <DLog:7> Sort - Count: 5, Total: 1.506s, Min: 0.265s, Max: 0.345s, Avg: 0.301s
+16:08:29.974 [00] [DLOG] [INTERVAL] <DLog:7> Sort - Count: 6, Total: 1.781s, Min: 0.265s, Max: 0.345s, Avg: 0.297s
+16:08:30.244 [00] [DLOG] [INTERVAL] <DLog:7> Sort - Count: 7, Total: 2.049s, Min: 0.265s, Max: 0.345s, Avg: 0.293s
+16:08:30.505 [00] [DLOG] [INTERVAL] <DLog:7> Sort - Count: 8, Total: 2.309s, Min: 0.260s, Max: 0.345s, Avg: 0.289s
+16:08:30.778 [00] [DLOG] [INTERVAL] <DLog:7> Sort - Count: 9, Total: 2.581s, Min: 0.260s, Max: 0.345s, Avg: 0.287s
+16:08:31.040 [00] [DLOG] [INTERVAL] <DLog:7> Sort - Count: 10, Total: 2.841s, Min: 0.260s, Max: 0.345s, Avg: 0.284s
+16:08:31.328 [00] [DLOG] [INTERVAL] <DLog:7> Sort - Count: 11, Total: 3.128s, Min: 0.260s, Max: 0.345s, Avg: 0.284s
 ```
 
 Where:
@@ -388,7 +388,7 @@ Outputs:
 
 ```
 00:42:25.885 [00] [DLOG] [INFO] <Package.playground:16> Duration: 155000
-00:42:25.888 [00] [DLOG] [INTERVAL] <Package.playground:9> [Video] Count: 1, Total: 0.390s, Min: 0.390s, Max: 0.390s, Avg: 0.390s
+00:42:25.888 [00] [DLOG] [INTERVAL] <Package.playground:9> Video - Count: 1, Total: 0.390s, Min: 0.390s, Max: 0.390s, Avg: 0.390s
 ```
 
 ## Category
@@ -408,9 +408,9 @@ tableLog.debug("Updating with network response.")
 Outputs:
 
 ```
-16:21:10.777 [00] [DLOG] [DEBUG] <DLog.playground:9> Refresh
-16:21:10.779 [00] [NET] [DEBUG] <DLog.playground:10> Successfully fetched recordings.
-16:21:10.779 [00] [TABLE] [DEBUG] <DLog.playground:11> Updating with network response.
+16:21:10.777 [00] [DLOG] [DEBUG] <DLog:9> Refresh
+16:21:10.779 [00] [NET] [DEBUG] <DLog:10> Successfully fetched recordings.
+16:21:10.779 [00] [TABLE] [DEBUG] <DLog:11> Updating with network response.
 ```
 
 ## Outputs
@@ -446,19 +446,19 @@ Outputs:
 
 ```
 Plain
-16:25:38.303 [00] [DLOG] [INFO] <DLog.playground:16> info
-16:25:38.305 [00] [DLOG] [LOG] <DLog.playground:17> log
-16:25:38.311 [00] [DLOG] [FAULT] <DLog.playground:18> fatal
+16:25:38.303 [00] [DLOG] [INFO] <DLog:16> info
+16:25:38.305 [00] [DLOG] [LOG] <DLog:17> log
+16:25:38.311 [00] [DLOG] [FAULT] <DLog:18> fatal
 
 Emoji
-16:25:38.312 [00] [DLOG] ✅ [INFO] <DLog.playground:16> info
-16:25:38.312 [00] [DLOG] 💬 [LOG] <DLog.playground:17> log
-16:25:38.312 [00] [DLOG] 🆘 [FAULT] <DLog.playground:18> fatal
+16:25:38.312 [00] [DLOG] ✅ [INFO] <DLog:16> info
+16:25:38.312 [00] [DLOG] 💬 [LOG] <DLog:17> log
+16:25:38.312 [00] [DLOG] 🆘 [FAULT] <DLog:18> fatal
 
 Colored
-[2m16:25:38.312[0m [2m[00][0m [34mDLOG[0m [42m[37m INFO [0m [2m[32m<DLog.playground:16>[0m [32minfo[0m
-[2m16:25:38.318[0m [2m[00][0m [34mDLOG[0m [47m[30m LOG [0m [2m[37m<DLog.playground:17>[0m [37mlog[0m
-[2m16:25:38.318[0m [2m[00][0m [34mDLOG[0m [41m[37m[5m FAULT [0m [2m[31m<DLog.playground:18>[0m [31mfatal[0m
+[2m16:25:38.312[0m [2m[00][0m [34mDLOG[0m [42m[37m INFO [0m [2m[32m<DLog:16>[0m [32minfo[0m
+[2m16:25:38.318[0m [2m[00][0m [34mDLOG[0m [47m[30m LOG [0m [2m[37m<DLog:17>[0m [37mlog[0m
+[2m16:25:38.318[0m [2m[00][0m [34mDLOG[0m [41m[37m[5m FAULT [0m [2m[31m<DLog:18>[0m [31mfatal[0m
 ```
 
 Colored text in Terminal:
@@ -501,7 +501,7 @@ log.info("Emoji")
 Outputs:
 
 ```
-17:59:55.516 [00] [DLOG] ✅ [INFO] <DLog.playground:7> Emoji
+17:59:55.516 [00] [DLOG] ✅ [INFO] <DLog:7> Emoji
 ```
 
 ### File
@@ -771,7 +771,7 @@ netLog.info("info")
 Outputs:
 
 ```
-22:44:56.386 [00] [NET] [INFO] <DLog.playground:8> info
+22:44:56.386 [00] [NET] [INFO] <DLog:8> info
 ```
 
 2) Log debug messages only
@@ -788,7 +788,7 @@ log.error("error")
 Outputs:
 
 ```
-22:47:07.865 [00] [DLOG] [DEBUG] <DLog.playground:8> debug
+22:47:07.865 [00] [DLOG] [DEBUG] <DLog:8> debug
 ```
 
 3) Log messages that contain "hello" string only
@@ -804,7 +804,7 @@ log.info("info")
 Outputs:
 
 ```
-22:48:30.399 [00] [DLOG] [LOG] <DLog.playground:7> hello world
+22:48:30.399 [00] [DLOG] [LOG] <DLog:7> hello world
 ```
 
 3) Log messages which are related to a specific scope:
@@ -838,8 +838,8 @@ Outputs:
 
 ```
 22:58:16.401 [01] [DLOG] ┌ [Load]
-22:58:16.402 [01] [DLOG] |	[DEBUG] <DLog.playground:16> debug
-22:58:16.413 [01] [DLOG] |	[ERROR] <DLog.playground:21> error
+22:58:16.402 [01] [DLOG] |	[DEBUG] <DLog:16> debug
+22:58:16.413 [01] [DLOG] |	[ERROR] <DLog:21> error
 22:58:16.414 [01] [DLOG] └ [Load] (0.012s)
 ```
 

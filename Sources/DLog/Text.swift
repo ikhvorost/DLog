@@ -165,7 +165,7 @@ public class Text : LogOutput {
 		if let scope = item.scope, scope.entered {
 			for level in 1...scope.level {
 				let scope = scopes.first(where: { $0.level == level })
-				padding += scope != nil ? "|\t" : "\t"
+				padding += scope != nil ? "|\t" : " \t"
 			}
 		}
 		
@@ -205,7 +205,7 @@ public class Text : LogOutput {
 		var padding = ""
 		for level in 1..<scope.level {
 			let scope = scopes.first(where: { $0.level == level })
-			padding += scope != nil ? "|\t" : "\t"
+			padding += scope != nil ? "|\t" : " \t"
 		}
 		padding += start ? "┌" : "└"
 		
@@ -246,22 +246,14 @@ public class Text : LogOutput {
 	override func intervalEnd(interval: LogInterval, scopes: [LogScope]) -> String? {
 		super.intervalEnd(interval: interval, scopes: scopes)
 		
+		interval.time = Date()
+		
 		let duration = stringFromTime(interval: interval.duration)
 		let minDuration = stringFromTime(interval: interval.minDuration)
 		let maxDuration = stringFromTime(interval: interval.maxDuration)
 		let avgDuration = stringFromTime(interval: interval.avgDuration)
-		let text = "[\(interval.name)] Count: \(interval.count), Total: \(duration)s, Min: \(minDuration)s, Max: \(maxDuration)s, Avg: \(avgDuration)s"
+		interval.text = "\(interval.name) - Count: \(interval.count), Total: \(duration)s, Min: \(minDuration)s, Max: \(maxDuration)s, Avg: \(avgDuration)s"
 		
-		let item = LogItem(
-			time: Date(),
-			category: interval.category,
-			scope: interval.scope,
-			type: .interval,
-			fileName: interval.fileName,
-			funcName: interval.funcName,
-			line: interval.line,
-			text: text)
-		
-		return textMessage(item: item, scopes: scopes)
+		return textMessage(item: interval, scopes: scopes)
 	}
 }

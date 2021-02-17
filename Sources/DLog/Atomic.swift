@@ -25,6 +25,7 @@
 
 import Foundation
 
+@discardableResult
 func synchronized<T : AnyObject, U>(_ obj: T, closure: () -> U) -> U {
 	objc_sync_enter(obj)
 	defer {

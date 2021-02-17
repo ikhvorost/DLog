@@ -86,7 +86,7 @@ let ErrorTag = #"\[ERROR\]"#
 let AssertTag = #"\[ASSERT\]"#
 let FaultTag = #"\[FAULT\]"#
 
-let Location = "<DLogTests.swift:[0-9]+>"
+let Location = "<DLogTests:[0-9]+>"
 
 final class DLogTests: XCTestCase {
 	
@@ -127,7 +127,7 @@ final class DLogTests: XCTestCase {
 		XCTAssert(logger.fault("fault")?.match(#"\#(categoryTag) \#(scope)\#(FaultTag) \#(Location) fault"#) == true)
 		
 		XCTAssert(read_stdout { logger.scope("scope") { _ in delay() } }?.match(#"\#(categoryTag) \#(scope)└ \[scope\] \(0\.[0-9]{3}s\)"#) == true)
-		XCTAssert(read_stdout { logger.interval("signpost") { delay() } }?.match(#"\#(categoryTag) \#(scope)\[INTERVAL\] \#(Location) \[signpost\] Count: 1, Total: 0\.[0-9]{3}s, Min: 0\.[0-9]{3}s, Max: 0\.[0-9]{3}s, Avg: 0\.[0-9]{3}s"#) == true)
+		XCTAssert(read_stdout { logger.interval("signpost") { delay() } }?.match(#"\#(categoryTag) \#(scope)\[INTERVAL\] \#(Location) signpost - Count: 1, Total: 0\.[0-9]{3}s, Min: 0\.[0-9]{3}s, Max: 0\.[0-9]{3}s, Avg: 0\.[0-9]{3}s"#) == true)
 	}
 	
 	func test_Log() {
@@ -194,10 +194,10 @@ final class DLogTests: XCTestCase {
 		XCTAssert(scope3.info("3")?.match(#"\#(CategoryTag) \|\t\|\t\|\t\#(InfoTag) \#(Location) 3"#) == true)
 		
 		scope1.leave()
-		XCTAssert(scope3.debug("3")?.match(#"\#(CategoryTag) \t\|\t\|\t\#(DebugTag) \#(Location) 3"#) == true)
+		XCTAssert(scope3.debug("3")?.match(#"\#(CategoryTag)  \t\|\t\|\t\#(DebugTag) \#(Location) 3"#) == true)
 		
 		scope2.leave()
-		XCTAssert(scope3.error("3")?.match(#"\#(CategoryTag) \t\t\|\t\#(ErrorTag) \#(Location) 3"#) == true)
+		XCTAssert(scope3.error("3")?.match(#"\#(CategoryTag)  \t \t\|\t\#(ErrorTag) \#(Location) 3"#) == true)
 		
 		scope3.leave()
 		XCTAssert(log.fault("no scope")?.match(#"\#(CategoryTag) \#(FaultTag) \#(Location) no scope"#) == true)
@@ -223,12 +223,12 @@ final class DLogTests: XCTestCase {
 		XCTAssert(log.trace()?.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) \#(#function)"#) == true)
 	}
 	
-	func test_ScopeConcurent() {
+	func test_ScopeConcurrent() {
 		let log = DLog()
 		
 		for i in 1...10 {
 			DispatchQueue.global().async {
-				log.scope("Scope \(i)") { delay(); $0.debug("scope \(i)") }
+				log.scope("Scope \(i)") { $0.debug("scope \(i)") }
 			}
 		}
 		
@@ -259,7 +259,7 @@ final class DLogTests: XCTestCase {
 			log.interval("signpost") {
 				delay()
 			}
-		}?.match(#"\[signpost\] Count: 1, Total: 0\.[0-9]{3}s, Min: 0\.[0-9]{3}s, Max: 0\.[0-9]{3}s, Avg: 0\.[0-9]{3}s"#) == true)
+		}?.match(#"signpost - Count: 1, Total: 0\.[0-9]{3}s, Min: 0\.[0-9]{3}s, Max: 0\.[0-9]{3}s, Avg: 0\.[0-9]{3}s"#) == true)
 	}
 	
 	func test_IntervalBeginEnd() {
@@ -270,7 +270,7 @@ final class DLogTests: XCTestCase {
 			interval.begin()
 			delay()
 			interval.end()
-		}?.match(#"\[signpost\] Count: 1, Total: 0\.[0-9]{3}s, Min: 0\.[0-9]{3}s, Max: 0\.[0-9]{3}s, Avg: 0\.[0-9]{3}s"#) == true)
+		}?.match(#"signpost - Count: 1, Total: 0\.[0-9]{3}s, Min: 0\.[0-9]{3}s, Max: 0\.[0-9]{3}s, Avg: 0\.[0-9]{3}s"#) == true)
 		
 		// Double begin/end
 		XCTAssert(read_stdout {
@@ -280,14 +280,14 @@ final class DLogTests: XCTestCase {
 			delay()
 			interval.end()
 			interval.end()
-		}?.match(#"\[signpost\] Count: 1, Total: 0\.[0-9]{3}s, Min: 0\.[0-9]{3}s, Max: 0\.[0-9]{3}s, Avg: 0\.[0-9]{3}s"#) == true)
+		}?.match(#"signpost - Count: 1, Total: 0\.[0-9]{3}s, Min: 0\.[0-9]{3}s, Max: 0\.[0-9]{3}s, Avg: 0\.[0-9]{3}s"#) == true)
 		
 	}
 	
 	func test_IntervalStatistics() {
 		let log = DLog()
 
-		let interval = log.interval("signpost") {
+		let interval = log.interval("Signpost") {
 			delay()
 		}
 		XCTAssert(interval.count == 1)
@@ -306,7 +306,7 @@ final class DLogTests: XCTestCase {
 		XCTAssert(0.25 <= interval.avgDuration)
 	}
 	
-	func test_IntervalConcurent() {
+	func test_IntervalConcurrent() {
 		let log = DLog()
 		
 		for i in 0..<10 {
@@ -422,7 +422,7 @@ final class DLogTests: XCTestCase {
 		XCTAssertNil(read_stdout { typeLog.scope("scope") { _ in } })
 		
 		// File name
-		let fileLog = DLog(.textPlain => .filter { $0.fileName == "DLogTests.swift" } => .stdout)
+		let fileLog = DLog(.textPlain => .filter { $0.fileName == "DLogTests" } => .stdout)
 		XCTAssertNotNil(fileLog.info("info"))
 		
 		// Func name
@@ -509,7 +509,7 @@ final class DLogTests: XCTestCase {
 		let log = DLog(.textPlain
 						=> .stdout
 						=> .file("dlog.txt")
-						//=> .oslog
+						=> .oslog
 						=> .filter { $0.type == .debug }
 						=> .net)
 		
@@ -538,6 +538,6 @@ final class DLogTests: XCTestCase {
 			scope.interval("signpost") {  }
 		}
 		
-		XCTAssert(scope.duration < 0.1)
+		XCTAssert(scope.duration < 0.2)
 	}
 }

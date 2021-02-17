@@ -27,70 +27,77 @@ import Foundation
 import os.log
 
 
-/// Logging levels.
+/// Logging levels supported by the logger.
+///
+/// A log type controls the conditions under which a message should be logged.
+///
 public enum LogType : Int {
-	/// The default log level.
-	///
-	/// Use this level to capture non critical information.
+	/// The default log level to capture non critical information.
 	case log
 	
-	/// The informational log level.
-	///
-	/// Use this level to capture information messages and helpful data.
+	/// The informational log level to capture information messages and helpful data.
 	case info
 	
-	/// The trace log level.
-	///
-	/// Use this level to capture the current function name to help in debugging problems during the development.
+	/// The trace log level to capture the current function name to help in debugging problems during the development.
 	case trace
 	
-	/// The debug log level.
-	///
-	/// Use this level to capture information that may be useful during development or while troubleshooting a specific problem.
+	/// The debug log level to capture information that may be useful during development or while troubleshooting a specific problem.
 	case debug
 	
-	/// The warning log level.
-	///
-	/// Use this level to capture information about things that might result in an error.
+	/// The warning log level to capture information about things that might result in an error.
 	case warning
 	
-	/// The error log level.
-	///
-	/// Use this log level to report errors.
+	/// The error log level to report errors.
 	case error
 	
-	/// The assert log level.
-	///
-	/// Use this log level for sanity checks.
+	/// The assert log level for sanity checks.
 	case assert
 	
-	/// The fault log level.
-	///
-	/// Use this level only to capture system-level or multi-process information when reporting system errors.
+	/// The fault log level to capture system-level or multi-process information when reporting system errors.
 	case fault
 	
 	/// The interval log level.
 	case interval
+	
 	/// The scope log level.
 	case scope
 }
 
+/// A base log message class that the logger adds to the logs.
+///
+/// An LogItem class contains all available properties of the log message.
+///
 public class LogItem {
-	public var time: Date?
+	/// The timestamp of this log message.
+	internal(set) public var time: Date?
+	
+	/// The category of this log message.
 	public let category: String
+	
+	/// The scope of this log message.
 	public let scope: LogScope?
+	
+	/// The log level of this log message.
 	public let type: LogType
+	
+	/// The file name this log message originates from.
 	public let fileName: String
+	
+	/// The function name this log message originates from.
 	public let funcName: String
+	
+	/// The line number of code this log message originates from.
 	public let line: UInt
-	public let text: String
+	
+	/// The text of this log message.
+	internal(set) public var text: String
 
-	public init(time: Date? = nil, category: String, scope: LogScope?, type: LogType, fileName: String, funcName: String, line: UInt, text: String) {
+	init(time: Date? = nil, category: String, scope: LogScope?, type: LogType, file: String, funcName: String, line: UInt, text: String) {
 		self.time = time
 		self.category = category
 		self.scope = scope
 		self.type = type
-		self.fileName = fileName
+		self.fileName = ((file as NSString).lastPathComponent as NSString).deletingPathExtension
 		self.funcName = funcName
 		self.line = line
 		self.text = text
@@ -111,9 +118,9 @@ public class LogScope : LogItem, LogProtocol {
 	
 	private(set) public var duration: TimeInterval = 0
 	
-	init(logger: DLog, category: String, fileName: String, funcName: String, line: UInt, name: String) {
+	init(logger: DLog, category: String, file: String, funcName: String, line: UInt, name: String) {
 		self.logger = logger
-		super.init(category: category, scope: nil, type: .scope, fileName: fileName, funcName: funcName, line: line, text: name)
+		super.init(category: category, scope: nil, type: .scope, file: file, funcName: funcName, line: line, text: name)
 	}
 	
 	deinit {
@@ -142,6 +149,7 @@ public class LogScope : LogItem, LogProtocol {
 }
 
 public class LogInterval : LogItem {
+	let id : Int
 	let logger: DLog
 	let name: StaticString
 	
@@ -153,10 +161,6 @@ public class LogInterval : LogItem {
 	private(set) public var maxDuration: TimeInterval = 0
 	private(set) public var avgDuration: TimeInterval = 0
 	
-	var id : String {
-		"\(fileName):\(line)"
-	}
-	
 	// SignpostID
 	private var _signpostID: Any? = nil
 	var signpostID: OSSignpostID? {
@@ -164,11 +168,12 @@ public class LogInterval : LogItem {
 		get { _signpostID as? OSSignpostID }
 	}
 	
-	init(logger: DLog, category: String, scope: LogScope?, fileName: String, funcName: String, line: UInt, name: StaticString) {
+	init(id: Int, logger: DLog, category: String, scope: LogScope?, file: String, funcName: String, line: UInt, name: StaticString) {
+		self.id = id
 		self.logger = logger
 		self.name = name
 		
-		super.init(category: category, scope: scope, type: .interval, fileName: fileName, funcName: funcName, line: line, text: "\(name)")
+		super.init(category: category, scope: scope, type: .interval, file: file, funcName: funcName, line: line, text: "\(name)")
 	}
 	
 	public func begin() {
