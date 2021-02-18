@@ -104,18 +104,23 @@ public class LogItem {
 	}
 }
 
+/// An object that represents a scope triggered by the user.
+///
+/// Scope provides a mechanism for grouping log messages.
+///
 public class LogScope : LogItem, LogProtocol {
 	let logger: DLog
-	
-	/// LogProtocol parameters
-	public lazy var params = LogParams(logger: logger, category: category, scope: self)
-	
-	internal(set) public var level: Int = 0
-	
 	let uid = UUID()
 	var os_state = os_activity_scope_state_s()
 	@Atomic var entered = false
 	
+	/// LogProtocol parameters
+	public lazy var params = LogParams(logger: logger, category: category, scope: self)
+	
+	/// A global level of a scope
+	internal(set) public var level: Int = 0
+	
+	/// A time duration of a scope
 	private(set) public var duration: TimeInterval = 0
 	
 	init(logger: DLog, category: String, file: String, funcName: String, line: UInt, name: String) {
@@ -123,10 +128,19 @@ public class LogScope : LogItem, LogProtocol {
 		super.init(category: category, scope: nil, type: .scope, file: file, funcName: funcName, line: line, text: name)
 	}
 	
-	deinit {
-		logger.leave(scope: self)
-	}
-	
+	/// Start a scope.
+	///
+	/// A scope can be created and then used for logging grouped log messages.
+	///
+	/// 	let log = DLog()
+	/// 	let scope = log.scope("Auth")
+	/// 	scope.enter()
+	///
+	/// 	scope.log("message")
+	/// 	...
+	///
+	/// 	scope.leave()
+	///
 	public func enter() {
 		guard !entered else { return }
 		entered.toggle()
@@ -136,6 +150,19 @@ public class LogScope : LogItem, LogProtocol {
 		logger.enter(scope: self)
 	}
 	
+	/// Finish a scope.
+	///
+	/// A scope can be created and then used for logging grouped log messages.
+	///
+	/// 	let log = DLog()
+	/// 	let scope = log.scope("Auth")
+	/// 	scope.enter()
+	///
+	/// 	scope.log("message")
+	/// 	...
+	///
+	/// 	scope.leave()
+	///
 	public func leave() {
 		guard entered else { return }
 		entered.toggle()
@@ -148,26 +175,39 @@ public class LogScope : LogItem, LogProtocol {
 	}
 }
 
+/// An object that represents a time interval triggered by the user.
+///
+/// Interval logs a point of interest in your code as running time statistics for debugging performance.
+///
 public class LogInterval : LogItem {
 	let id : Int
 	let logger: DLog
 	let name: StaticString
-	
 	@Atomic var begun = false
-	
-	internal(set) public var count = 0
-	private(set) public var duration: TimeInterval = 0
-	internal(set) public var total: TimeInterval = 0
-	internal(set) public var min: TimeInterval = 0
-	internal(set) public var max: TimeInterval = 0
-	internal(set) public var avg: TimeInterval = 0
-	
 	// SignpostID
 	private var _signpostID: Any? = nil
 	var signpostID: OSSignpostID? {
 		set { _signpostID = newValue }
 		get { _signpostID as? OSSignpostID }
 	}
+	
+	/// A number of total calls of a interval
+	internal(set) public var count = 0
+	
+	/// A time duration of a interval
+	private(set) public var duration: TimeInterval = 0
+	
+	/// A total time duration of all calls of a interval
+	internal(set) public var total: TimeInterval = 0
+	
+	/// A minimum time duration of a interval
+	internal(set) public var min: TimeInterval = 0
+	
+	/// A maximum time duration of a interval
+	internal(set) public var max: TimeInterval = 0
+	
+	/// A average time duration of a interval
+	internal(set) public var avg: TimeInterval = 0
 	
 	init(id: Int, logger: DLog, category: String, scope: LogScope?, file: String, funcName: String, line: UInt, name: StaticString) {
 		self.id = id
@@ -177,6 +217,16 @@ public class LogInterval : LogItem {
 		super.init(category: category, scope: scope, type: .interval, file: file, funcName: funcName, line: line, text: "\(name)")
 	}
 	
+	/// Start a time interval.
+	///
+	/// A time interval can be created and then used for logging running time statistics.
+	///
+	/// 	let log = DLog()
+	/// 	let interval = log.interval("Sort")
+	/// 	interval.begin()
+	/// 	...
+	/// 	interval.end()
+	///
 	public func begin() {
 		guard !begun else { return }
 		begun.toggle()
@@ -186,6 +236,16 @@ public class LogInterval : LogItem {
 		logger.begin(interval: self)
 	}
 	
+	/// Finish a time interval.
+	///
+	/// A time interval can be created and then used for logging running time statistics.
+	///
+	/// 	let log = DLog()
+	/// 	let interval = log.interval("Sort")
+	/// 	interval.begin()
+	/// 	...
+	/// 	interval.end()
+	///
 	public func end() {
 		guard begun, let time = time else { return }
 		begun.toggle()

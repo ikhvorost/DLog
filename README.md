@@ -212,7 +212,7 @@ Outputs:
 
 ## Scope
 
-`scope` provides a mechanism for grouping and labeling work that's done in your program, so that can see all log messages related to the defined scope of your code in a tree view:
+`scope` provides a mechanism for grouping work that's done in your program, so that can see all log messages related to a defined scope of your code in a tree view:
 
 ``` swift
 log.scope("Loading") { scope in
@@ -237,7 +237,7 @@ Outputs:
 ```
 
 Where:
- - `[01]` - global scope level
+ - `[01]` - a global level of the scope
  - `[Loading]` - a name of the scope
  - `(0.028s)` - a time duration of the scope
 
@@ -318,7 +318,7 @@ As you can see from the sample above the scopes have different scope nesting lev
 
 ## Interval
 
-`interval` measures performance of your code by time durations and logs a detailed message with accumulated statistics:
+`interval` measures performance of your code by a running time and logs a detailed message with accumulated statistics:
 
 ``` swift
 for _ in 0..<10 {
