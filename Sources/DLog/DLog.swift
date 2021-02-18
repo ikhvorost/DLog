@@ -25,6 +25,13 @@
 
 import Foundation
 
+class IntervalData {
+	var count = 0
+	var total: TimeInterval = 0
+	var min: TimeInterval = 0
+	var max: TimeInterval = 0
+	var avg: TimeInterval = 0
+}
 
 /// The central class to emit log messages to specified outputs using one of the methods corresponding to a log level.
 ///
@@ -33,7 +40,7 @@ public class DLog: LogProtocol {
 	private let output: LogOutput?
 
 	@Atomic private var scopes = [LogScope]()
-	@Atomic private var intervals = [LogInterval]()
+	@Atomic private var intervals = [Int : IntervalData]()
 	
 	/// The shared disabled log.
 	///
@@ -101,6 +108,16 @@ public class DLog: LogProtocol {
 	}
 
 	// Interval
+	
+	private func intervalData(id: Int) -> IntervalData {
+		if let data = intervals[id] {
+			return data
+		}
+		
+		let data = IntervalData()
+		intervals[id] = data
+		return data
+	}
 
 	func begin(interval: LogInterval) {
 		guard let out = output else { return }
@@ -110,28 +127,29 @@ public class DLog: LogProtocol {
 
 	func end(interval: LogInterval) {
 		guard let out = output else { return }
+		
+		synchronized(self) {
+			let data = intervalData(id: interval.id)
+			
+			data.count += 1
+			data.total += interval.duration
+			if data.min == 0 || data.min > interval.duration {
+				data.min = interval.duration
+			}
+			if data.max == 0 || data.max < interval.duration {
+				data.max = interval.duration
+			}
+			data.avg = data.total / Double(data.count)
+			
+			interval.time = Date()
+			interval.count = data.count
+			interval.total = data.total
+			interval.min = data.min
+			interval.max = data.max
+			interval.avg = data.avg
+		}
 
 		out.intervalEnd(interval: interval, scopes: scopes)
-	}
-
-	private func interval(id: Int, name: StaticString, category: String, scope: LogScope?, file: String, function: String, line: UInt, scopes: [LogScope]) -> LogInterval {
-		synchronized(self) {
-			if let interval = intervals.first(where: { $0.id == id }) {
-				return interval
-			}
-			else {
-				let interval = LogInterval(id: id,
-									  logger: self,
-									  category: category,
-									  scope: scope,
-									  file: file,
-									  funcName: function,
-									  line: line,
-									  name: name)
-				intervals.append(interval)
-				return interval
-			}
-		}
 	}
 
 	func log(text: String, type: LogType, category: String, scope: LogScope?, file: String, function: String, line: UInt) -> String? {
@@ -168,14 +186,21 @@ public class DLog: LogProtocol {
 
 	func interval(name: StaticString, category: String, scope: LogScope?, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
 		let id = "\(file):\(line)".hash
-		let intr = interval(id: id, name: name, category: category, scope: scope, file: file, function: function, line: line, scopes: scopes)
-
+		let interval = LogInterval(id: id,
+							  logger: self,
+							  category: category,
+							  scope: scope,
+							  file: file,
+							  funcName: function,
+							  line: line,
+							  name: name)
+		
 		if let block = closure {
-			intr.begin()
+			interval.begin()
 			block()
-			intr.end()
+			interval.end()
 		}
 
-		return intr
+		return interval
 	}
 }

@@ -87,6 +87,8 @@ let AssertTag = #"\[ASSERT\]"#
 let FaultTag = #"\[FAULT\]"#
 
 let Location = "<DLogTests:[0-9]+>"
+let SECS = #"[0-9]+\.[0-9]{3}s"#
+let Interval = #"- Count: [0-9]+, Duration: \#(SECS), Total: \#(SECS), Min: \#(SECS), Max: \#(SECS), Avg: \#(SECS)"#
 
 final class DLogTests: XCTestCase {
 	
@@ -127,7 +129,7 @@ final class DLogTests: XCTestCase {
 		XCTAssert(logger.fault("fault")?.match(#"\#(categoryTag) \#(scope)\#(FaultTag) \#(Location) fault"#) == true)
 		
 		XCTAssert(read_stdout { logger.scope("scope") { _ in delay() } }?.match(#"\#(categoryTag) \#(scope)└ \[scope\] \(0\.[0-9]{3}s\)"#) == true)
-		XCTAssert(read_stdout { logger.interval("signpost") { delay() } }?.match(#"\#(categoryTag) \#(scope)\[INTERVAL\] \#(Location) signpost - Count: 1, Total: 0\.[0-9]{3}s, Min: 0\.[0-9]{3}s, Max: 0\.[0-9]{3}s, Avg: 0\.[0-9]{3}s"#) == true)
+		XCTAssert(read_stdout { logger.interval("signpost") { delay() } }?.match(#"\#(categoryTag) \#(scope)\[INTERVAL\] \#(Location) signpost \#(Interval)"#) == true)
 	}
 	
 	func test_Log() {
@@ -259,7 +261,7 @@ final class DLogTests: XCTestCase {
 			log.interval("signpost") {
 				delay()
 			}
-		}?.match(#"signpost - Count: 1, Total: 0\.[0-9]{3}s, Min: 0\.[0-9]{3}s, Max: 0\.[0-9]{3}s, Avg: 0\.[0-9]{3}s"#) == true)
+		}?.match(#"signpost \#(Interval)"#) == true)
 	}
 	
 	func test_IntervalBeginEnd() {
@@ -270,7 +272,7 @@ final class DLogTests: XCTestCase {
 			interval.begin()
 			delay()
 			interval.end()
-		}?.match(#"signpost - Count: 1, Total: 0\.[0-9]{3}s, Min: 0\.[0-9]{3}s, Max: 0\.[0-9]{3}s, Avg: 0\.[0-9]{3}s"#) == true)
+		}?.match(#"signpost \#(Interval)"#) == true)
 		
 		// Double begin/end
 		XCTAssert(read_stdout {
@@ -280,8 +282,7 @@ final class DLogTests: XCTestCase {
 			delay()
 			interval.end()
 			interval.end()
-		}?.match(#"signpost - Count: 1, Total: 0\.[0-9]{3}s, Min: 0\.[0-9]{3}s, Max: 0\.[0-9]{3}s, Avg: 0\.[0-9]{3}s"#) == true)
-		
+		}?.match(#"signpost \#(Interval)"#) == true)
 	}
 	
 	func test_IntervalStatistics() {
@@ -292,18 +293,20 @@ final class DLogTests: XCTestCase {
 		}
 		XCTAssert(interval.count == 1)
 		XCTAssert(0.25 <= interval.duration)
-		XCTAssert(0.25 <= interval.minDuration)
-		XCTAssert(0.25 <= interval.maxDuration)
-		XCTAssert(0.25 <= interval.avgDuration)
+		XCTAssert(0.25 <= interval.total)
+		XCTAssert(0.25 <= interval.min)
+		XCTAssert(0.25 <= interval.max)
+		XCTAssert(0.25 <= interval.avg)
 		
 		interval.begin()
 		delay()
 		interval.end()
 		XCTAssert(interval.count == 2)
-		XCTAssert(0.5 <= interval.duration)
-		XCTAssert(0.25 <= interval.minDuration)
-		XCTAssert(0.25 <= interval.maxDuration)
-		XCTAssert(0.25 <= interval.avgDuration)
+		XCTAssert(0.25 <= interval.duration)
+		XCTAssert(0.5 <= interval.total)
+		XCTAssert(0.25 <= interval.min)
+		XCTAssert(0.25 <= interval.max)
+		XCTAssert(0.25 <= interval.avg)
 	}
 	
 	func test_IntervalConcurrent() {

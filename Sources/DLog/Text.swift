@@ -246,13 +246,12 @@ public class Text : LogOutput {
 	override func intervalEnd(interval: LogInterval, scopes: [LogScope]) -> String? {
 		super.intervalEnd(interval: interval, scopes: scopes)
 		
-		interval.time = Date()
-		
 		let duration = stringFromTime(interval: interval.duration)
-		let minDuration = stringFromTime(interval: interval.minDuration)
-		let maxDuration = stringFromTime(interval: interval.maxDuration)
-		let avgDuration = stringFromTime(interval: interval.avgDuration)
-		interval.text = "\(interval.name) - Count: \(interval.count), Total: \(duration)s, Min: \(minDuration)s, Max: \(maxDuration)s, Avg: \(avgDuration)s"
+		let total = stringFromTime(interval: interval.total)
+		let min = stringFromTime(interval: interval.min)
+		let max = stringFromTime(interval: interval.max)
+		let avg = stringFromTime(interval: interval.avg)
+		interval.text = "\(interval.name) - count: \(interval.count), duration: \(duration)s, total: \(total)s, min: \(min)s, max: \(max)s, avg: \(avg)s"
 		
 		return textMessage(item: interval, scopes: scopes)
 	}

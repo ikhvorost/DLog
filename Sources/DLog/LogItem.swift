@@ -155,11 +155,12 @@ public class LogInterval : LogItem {
 	
 	@Atomic var begun = false
 	
-	private(set) public var count = 0
+	internal(set) public var count = 0
 	private(set) public var duration: TimeInterval = 0
-	private(set) public var minDuration: TimeInterval = 0
-	private(set) public var maxDuration: TimeInterval = 0
-	private(set) public var avgDuration: TimeInterval = 0
+	internal(set) public var total: TimeInterval = 0
+	internal(set) public var min: TimeInterval = 0
+	internal(set) public var max: TimeInterval = 0
+	internal(set) public var avg: TimeInterval = 0
 	
 	// SignpostID
 	private var _signpostID: Any? = nil
@@ -181,6 +182,7 @@ public class LogInterval : LogItem {
 		begun.toggle()
 	
 		time = Date()
+		
 		logger.begin(interval: self)
 	}
 	
@@ -188,16 +190,7 @@ public class LogInterval : LogItem {
 		guard begun, let time = time else { return }
 		begun.toggle()
 		
-		let interval = -time.timeIntervalSinceNow
-		count += 1
-		duration += interval
-		if minDuration == 0 || minDuration > interval {
-			minDuration = interval
-		}
-		if maxDuration == 0 || maxDuration < interval {
-			maxDuration = interval
-		}
-		avgDuration = duration / Double(count)
+		duration = -time.timeIntervalSinceNow
 		
 		logger.end(interval: self)
 	}

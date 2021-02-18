@@ -321,7 +321,7 @@ As you can see from the sample above the scopes have different scope nesting lev
 `interval` measures performance of your code by time durations and logs a detailed message with accumulated statistics:
 
 ``` swift
-for _ in 0...10 {
+for _ in 0..<10 {
 	log.interval("Sort") {
 		var arr = (1...10000).map {_ in arc4random()}
 		arr.sort()
@@ -332,29 +332,29 @@ for _ in 0...10 {
 Outputs:
 
 ```
-16:08:28.484 [00] [DLOG] [INTERVAL] <DLog:7> Sort - Count: 1, Total: 0.306s, Min: 0.306s, Max: 0.306s, Avg: 0.306s
-16:08:28.785 [00] [DLOG] [INTERVAL] <DLog:7> Sort - Count: 2, Total: 0.598s, Min: 0.292s, Max: 0.306s, Avg: 0.299s
-16:08:29.131 [00] [DLOG] [INTERVAL] <DLog:7> Sort - Count: 3, Total: 0.943s, Min: 0.292s, Max: 0.345s, Avg: 0.314s
-16:08:29.432 [00] [DLOG] [INTERVAL] <DLog:7> Sort - Count: 4, Total: 1.242s, Min: 0.292s, Max: 0.345s, Avg: 0.310s
-16:08:29.698 [00] [DLOG] [INTERVAL] <DLog:7> Sort - Count: 5, Total: 1.506s, Min: 0.265s, Max: 0.345s, Avg: 0.301s
-16:08:29.974 [00] [DLOG] [INTERVAL] <DLog:7> Sort - Count: 6, Total: 1.781s, Min: 0.265s, Max: 0.345s, Avg: 0.297s
-16:08:30.244 [00] [DLOG] [INTERVAL] <DLog:7> Sort - Count: 7, Total: 2.049s, Min: 0.265s, Max: 0.345s, Avg: 0.293s
-16:08:30.505 [00] [DLOG] [INTERVAL] <DLog:7> Sort - Count: 8, Total: 2.309s, Min: 0.260s, Max: 0.345s, Avg: 0.289s
-16:08:30.778 [00] [DLOG] [INTERVAL] <DLog:7> Sort - Count: 9, Total: 2.581s, Min: 0.260s, Max: 0.345s, Avg: 0.287s
-16:08:31.040 [00] [DLOG] [INTERVAL] <DLog:7> Sort - Count: 10, Total: 2.841s, Min: 0.260s, Max: 0.345s, Avg: 0.284s
-16:08:31.328 [00] [DLOG] [INTERVAL] <DLog:7> Sort - Count: 11, Total: 3.128s, Min: 0.260s, Max: 0.345s, Avg: 0.284s
+• 12:14:09.740 [00] [DLOG] [INTERVAL] <DLog:7> Sort - count: 1, duration: 0.342s, total: 0.342s, min: 0.342s, max: 0.342s, avg: 0.342s
+• 12:14:10.039 [00] [DLOG] [INTERVAL] <DLog:7> Sort - count: 2, duration: 0.290s, total: 0.632s, min: 0.290s, max: 0.342s, avg: 0.316s
+• 12:14:10.302 [00] [DLOG] [INTERVAL] <DLog:7> Sort - count: 3, duration: 0.261s, total: 0.893s, min: 0.261s, max: 0.342s, avg: 0.298s
+• 12:14:10.554 [00] [DLOG] [INTERVAL] <DLog:7> Sort - count: 4, duration: 0.250s, total: 1.144s, min: 0.250s, max: 0.342s, avg: 0.286s
+• 12:14:10.805 [00] [DLOG] [INTERVAL] <DLog:7> Sort - count: 5, duration: 0.250s, total: 1.393s, min: 0.250s, max: 0.342s, avg: 0.279s
+• 12:14:11.061 [00] [DLOG] [INTERVAL] <DLog:7> Sort - count: 6, duration: 0.255s, total: 1.648s, min: 0.250s, max: 0.342s, avg: 0.275s
+• 12:14:11.315 [00] [DLOG] [INTERVAL] <DLog:7> Sort - count: 7, duration: 0.252s, total: 1.900s, min: 0.250s, max: 0.342s, avg: 0.271s
+• 12:14:11.566 [00] [DLOG] [INTERVAL] <DLog:7> Sort - count: 8, duration: 0.249s, total: 2.149s, min: 0.249s, max: 0.342s, avg: 0.269s
+• 12:14:11.816 [00] [DLOG] [INTERVAL] <DLog:7> Sort - count: 9, duration: 0.249s, total: 2.398s, min: 0.249s, max: 0.342s, avg: 0.266s
+• 12:14:12.075 [00] [DLOG] [INTERVAL] <DLog:7> Sort - count: 10, duration: 0.257s, total: 2.655s, min: 0.249s, max: 0.342s, avg: 0.265s
 ```
 
 Where:
- - `[Sort]` - a name of the interval
- - `Count` - a number of calls
- - `Total` - total time duration
- - `Min` - the shortest time duration
- - `Max` - the longest time duration
- - `Avg` - average time duration
+ - `Sort` - a name of the interval
+ - `count` - a number of calls
+ - `duration` - the current time duration
+ - `total` - a total time duration
+ - `min` - the shortest time duration
+ - `max` - the longest time duration
+ - `avg` - an average time duration
 
 
-You can get all metrics values of an interval programatically:
+You can get all metrics values of the interval programatically:
 
 ```
 let interval = log.interval("signpost") {
@@ -363,9 +363,10 @@ let interval = log.interval("signpost") {
 
 print(interval.count)
 print(interval.duration)
-print(interval.minDuration)
-print(interval.maxDuration)
-print(interval.avgDuration)
+print(interval.total)
+print(interval.min)
+print(interval.max)
+print(interval.avg)
 ```
 
 To measure asynchronous tasks you can use `begin` and `end` methods:
@@ -388,7 +389,7 @@ Outputs:
 
 ```
 00:42:25.885 [00] [DLOG] [INFO] <Package.playground:16> Duration: 155000
-00:42:25.888 [00] [DLOG] [INTERVAL] <Package.playground:9> Video - Count: 1, Total: 0.390s, Min: 0.390s, Max: 0.390s, Avg: 0.390s
+00:42:25.888 [00] [DLOG] [INTERVAL] <Package.playground:9> Video - count: 1, duration: 0.390s, total: 0.390s, min: 0.390s, max: 0.390s, avg: 0.390s
 ```
 
 ## Category
