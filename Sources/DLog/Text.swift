@@ -1,5 +1,5 @@
 //
-//  Text
+//  Text.swift
 //
 //  Created by Iurii Khvorost <iurii.khvorost@gmail.com> on 2020/08/03.
 //  Copyright © 2020 Iurii Khvorost. All rights reserved.

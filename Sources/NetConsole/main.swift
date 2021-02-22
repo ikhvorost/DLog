@@ -1,5 +1,7 @@
 //
-//  NetConsole for DLog
+//	main.swift
+//
+//	NetConsole for DLog
 //
 //  Created by Iurii Khvorost <iurii.khvorost@gmail.com> on 2020/09/01.
 //  Copyright © 2020 Iurii Khvorost. All rights reserved.

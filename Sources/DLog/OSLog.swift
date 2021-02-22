@@ -1,5 +1,5 @@
 //
-//  OSLog
+//  OSLog.swift
 //
 //  Created by Iurii Khvorost <iurii.khvorost@gmail.com> on 2020/08/03.
 //  Copyright © 2020 Iurii Khvorost. All rights reserved.
@@ -29,7 +29,11 @@ import os
 import os.log
 import os.activity
 
-
+/// A target output that sends log messages to the Unified Logging System.
+///
+/// It captures telemetry from your app for debugging and performance analysis and then you can use various tools to
+/// retrieve log information such as: `Console` and `Instruments` apps, command line tool `"log"` etc.
+///
 public class OSLog : LogOutput {
 	
 	// Handle to dynamic shared object
@@ -40,7 +44,7 @@ public class OSLog : LogOutput {
 	private static let OS_ACTIVITY_NONE = unsafeBitCast(dlsym(RTLD_DEFAULT, "_os_activity_none"), to: os_activity_t.self)
 	private static let OS_ACTIVITY_CURRENT = unsafeBitCast(dlsym(RTLD_DEFAULT, "_os_activity_current"), to: os_activity_t.self)
 	
-	static let types: [LogType : OSLogType] = [
+	private static let types: [LogType : OSLogType] = [
 		.log : .default,
 		// Debug
 		.trace : .debug,
@@ -58,6 +62,18 @@ public class OSLog : LogOutput {
 	private var subsystem: String
 	@Atomic private var logs = [String : os.OSLog]()
 	
+	/// Creates a `OSlog` output object.
+	///
+	/// To create OSLog you can use subsystem strings that identify major functional areas of your app, and you specify
+	/// them in reverse DNS notation—for example, com.your_company.your_subsystem_name.
+	///
+	/// 	let log = DLog(OSLog(subsystem: "com.myapp.logger"))
+	///
+	/// - Parameters:
+	///		- subsystem: An identifier string, in reverse DNS notation, that represents the subsystem that’s performing
+	///		logging (defaults to `"com.dlog.logger"`).
+	///		- source: A source output (defaults to `.textPlain`)
+	///
 	public init(subsystem: String = "com.dlog.logger", source: LogOutput = .textPlain) {
 		self.subsystem = subsystem
 		
@@ -65,12 +81,14 @@ public class OSLog : LogOutput {
 	}
 	
 	private func oslog(category: String) -> os.OSLog {
-		if let log = logs[category] {
+		synchronized(self) {
+			if let log = logs[category] {
+				return log
+			}
+			let log = os.OSLog(subsystem: subsystem, category: category)
+			logs[category] = log
 			return log
 		}
-		let log = os.OSLog(subsystem: subsystem, category: category)
-		logs[category] = log
-		return log
 	}
 	
 	// MARK: - LogOutput
