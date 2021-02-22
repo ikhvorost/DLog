@@ -1,5 +1,5 @@
 //
-//  LogOutput
+//  LogOutput.swift
 //
 //  Created by Iurii Khvorost <iurii.khvorost@gmail.com> on 2020/10/14.
 //  Copyright © 2020 Iurii Khvorost. All rights reserved.

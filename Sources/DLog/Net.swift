@@ -1,5 +1,5 @@
 //
-//  Net
+//  Net.swift
 //
 //  Created by Iurii Khvorost <iurii.khvorost@gmail.com> on 2020/08/13.
 //  Copyright © 2020 Iurii Khvorost. All rights reserved.
@@ -51,21 +51,34 @@ private class LogBuffer {
 	}
 }
 
+/// A target output that sends log messages to `NetConsole` service.
+///
+/// `NetConsole` service can be run from a command line on your machine and then the output connects and sends your log messages to it.
+///
 public class Net : LogOutput {
 	private static let type = "_dlog._tcp"
 	private static let domain = "local."
 	
 	private let name: String
-	private let debug: Bool
 	private let browser = NetServiceBrowser()
 	private var service: NetService?
 	private let queue = DispatchQueue(label: "NetOutput")
 	private var outputStream : OutputStream?
 	private let buffer = LogBuffer()
 	
-	public init(name: String = "DLog", debug: Bool = false, source: LogOutput = .textColored) {
+	var debug = false
+	
+	/// Creates `Net` output object.
+	///
+	/// To connect to a specific instance of the service in your network you should provide an unique name to both `NetConsole` and `Net` output.
+	///
+	///		let log = DLog(Net(name: "MyNetConsole"))
+	///
+	/// - Parameters:
+	/// 	- name: A name of `NetConsole` service (defaults to `"DLog"`)
+	/// 	- source: A source output (defaults to `.textColored`)
+	public init(name: String = "DLog", source: LogOutput = .textColored) {
 		self.name = name
-		self.debug = debug
 		
 		super.init(source: source)
 		
@@ -95,6 +108,7 @@ public class Net : LogOutput {
 		return text
 	}
 	
+	// Log debug messages
 	private func log(_ text: String) {
 		guard debug else { return }
 		print("[NetOutput] \(text)")
@@ -121,18 +135,22 @@ public class Net : LogOutput {
 
 extension Net : NetServiceBrowserDelegate {
 	
+	/// Tells the delegate that a search is commencing.
 	public func netServiceBrowserWillSearch(_ browser: NetServiceBrowser) {
 		log("Begin search name:'\(name)', type:'\(Self.type)', domain:'\(Self.domain)'")
 	}
 	
+	/// Tells the delegate that a search was stopped.
 	public func netServiceBrowserDidStopSearch(_ browser: NetServiceBrowser) {
 		log("Stop search")
 	}
 	
+	/// Tells the delegate that a search was not successful.
 	public func netServiceBrowser(_ browser: NetServiceBrowser, didNotSearch errorDict: [String : NSNumber]) {
 		log("Error: \(errorDict)")
 	}
 	
+	/// Tells the delegate the sender found a service.
 	public func netServiceBrowser(_ browser: NetServiceBrowser, didFind service: NetService, moreComing: Bool) {
 		guard service.name == self.name,
 			  self.service == nil,
@@ -142,14 +160,13 @@ extension Net : NetServiceBrowserDelegate {
 		log("Connected")
 		
 		self.service = service
-		//self.service?.delegate = self
-		//self.service?.resolve(withTimeout: 10)
 		
 		CFWriteStreamSetDispatchQueue(outputStream, queue)
 		outputStream?.delegate = self
 		outputStream?.open()
 	}
 	
+	/// Tells the delegate a service has disappeared or has become unavailable.
 	public func netServiceBrowser(_ browser: NetServiceBrowser, didRemove service: NetService, moreComing: Bool) {
 		guard self.service == service else { return }
 		
@@ -161,18 +178,11 @@ extension Net : NetServiceBrowserDelegate {
 	}
 }
 
-//extension NetOutput : NetServiceDelegate {
-//
-//	public func netServiceDidResolveAddress(_ sender: NetService) {
-//		print(sender.addresses?.first)
-//	}
-//
-//}
-
 extension Net : StreamDelegate {
 	
+	/// The delegate receives this message when a given event has occurred on a given stream.
 	public func stream(_ aStream: Stream, handle eventCode: Stream.Event) {
-		switch eventCode{
+		switch eventCode {
 			case .openCompleted:
 				log("Output stream is opened")
 			
