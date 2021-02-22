@@ -65,7 +65,7 @@ public enum LogType : Int {
 
 /// A base log message class that the logger adds to the logs.
 ///
-/// An LogItem class contains all available properties of the log message.
+/// It contains all available properties of the log message.
 ///
 public class LogItem {
 	/// The timestamp of this log message.
