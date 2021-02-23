@@ -27,7 +27,7 @@
 import Foundation
 
 
-enum ANSIEscapeCode: String {
+private enum ANSIEscapeCode: String {
 	case reset = "\u{001b}[0m"
 	case clear = "\u{001b}c"
 	
@@ -105,7 +105,12 @@ private extension LogType {
 	}
 }
 
+/// A source output that generates text representation of log messages.
+///
+/// It doesn’t deliver text to any target outputs (stdout, file etc.) and usually other outputs use it.
+///
 public class Text : LogOutput {
+	
 	private struct Tag {
 		let textColor: ANSIEscapeCode
 		let colors: [ANSIEscapeCode]
@@ -121,32 +126,45 @@ public class Text : LogOutput {
 		.fault : Tag(textColor: .textRed, colors: [.backgrounRed, .textWhite, .blink]),
 		.assert : Tag(textColor: .textRed, colors: [.backgrounRed, .textWhite]),
 		.interval : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textBlack]),
-		//.scope :
 	]
 	
-	private let startSign = "•"
+	private static let startSign = "•"
 	
+	/// Style of text to output.
 	public enum Style {
+		/// Universal plain text.
 		case plain
+		
+		/// Text with type icons for info, debug etc. (useful for XCode console).
 		case emoji
+		
+		/// Colored text with ANSI escape codes (useful for Terminal and files).
 		case colored
 	}
 	
-	let style: Style
+	private let style: Style
 	
+	/// Creates `Text` source output object.
+	///
+	/// 	let log = DLog(Text(style: .emoji))
+	/// 	log.info("It's emoji text")
+	///
+	/// - Parameters:
+	///		- style: Style of text to output (defaults to `.plain`).
+	///
 	public init(style: Style = .plain) {
 		self.style = style
 		
 		super.init(source: nil)
 	}
 	
-	static let dateFormatter: DateFormatter = {
+	private static let dateFormatter: DateFormatter = {
 		let dateFormatter = DateFormatter()
 		dateFormatter.dateFormat = "HH:mm:ss.SSS"
 		return dateFormatter
 	}()
 	
-	static let dateComponentsFormatter: DateComponentsFormatter = {
+	private static let dateComponentsFormatter: DateComponentsFormatter = {
 		let formatter = DateComponentsFormatter()
 		formatter.allowedUnits = [.minute, .second]
 		return formatter
@@ -177,13 +195,13 @@ public class Text : LogOutput {
 				
 				let tagText = " \(item.type.title) ".color(tag.colors)
 				let location = "<\(item.fileName):\(item.line)>".color([.dim, tag.textColor])
-				return "\(startSign.color(.dim)) \(time.color(.dim)) \(level.color(.dim)) \(item.category.color(.textBlue)) \(padding)\(tagText) \(location) \(item.text.color(tag.textColor))"
+				return "\(Self.startSign.color(.dim)) \(time.color(.dim)) \(level.color(.dim)) \(item.category.color(.textBlue)) \(padding)\(tagText) \(location) \(item.text.color(tag.textColor))"
 				
 			case .plain:
-				return "\(startSign) \(time) \(level) [\(item.category)] \(padding)[\(item.type.title)] <\(item.fileName):\(item.line)> \(item.text)"
+				return "\(Self.startSign) \(time) \(level) [\(item.category)] \(padding)[\(item.type.title)] <\(item.fileName):\(item.line)> \(item.text)"
 				
 			case .emoji:
-				return "\(startSign) \(time) \(level) [\(item.category)] \(padding)\(item.type.icon) [\(item.type.title)] <\(item.fileName):\(item.line)> \(item.text)"
+				return "\(Self.startSign) \(time) \(level) [\(item.category)] \(padding)\(item.type.icon) [\(item.type.title)] <\(item.fileName):\(item.line)> \(item.text)"
 		}
 	}
 
@@ -213,10 +231,10 @@ public class Text : LogOutput {
 		
 		switch style {
 			case .emoji, .plain:
-				return "\(startSign) \(time) \(level) [\(scope.category)] \(padding) [\(scope.text)] \(ms ?? "")"
+				return "\(Self.startSign) \(time) \(level) [\(scope.category)] \(padding) [\(scope.text)] \(ms ?? "")"
 				
 			case .colored:
-				return "\(startSign.color(.dim)) \(time.color(.dim)) \(level.color(.dim)) \(scope.category.color(.textBlue)) \(padding) [\(scope.text.color(.textMagenta))] \(ms ?? "")"
+				return "\(Self.startSign.color(.dim)) \(time.color(.dim)) \(level.color(.dim)) \(scope.category.color(.textBlue)) \(padding) [\(scope.text.color(.textMagenta))] \(ms ?? "")"
 		}
 	}
 	

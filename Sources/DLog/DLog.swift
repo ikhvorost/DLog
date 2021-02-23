@@ -66,7 +66,7 @@ public class DLog: LogProtocol {
 		LogCategory(logger: self, category: category)
 	}
 
-	/// Creates a logger instance with a target output object.
+	/// Creates the logger instance with a target output object.
 	///
 	/// Create an instance and use it to log text messages about your app’s behaviour and to help you assess the state
 	/// of your app later. You also can choose a target output and a log level to indicate the severity of that message.

@@ -32,7 +32,7 @@ public class Standard : LogOutput {
 	
 	let stream: UnsafeMutablePointer<FILE>
 	
-	/// Creates a `Standard` output object.
+	/// Creates `Standard` output object.
 	///
 	/// 	let log = DLog(Standard())
 	/// 	log.info("It's standard output")
