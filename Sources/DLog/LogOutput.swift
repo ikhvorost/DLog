@@ -36,9 +36,9 @@ public class LogOutput : NSObject {
 	public static var textColored: Text { Text(style: .colored) }
 	
 	/// Creates `Standard` output for `stdout` stream.
-	public static var stdout: Standard { Standard(stream: .out) }
+	public static var stdout: Standard { Standard() }
 	/// Creates `Standard` output for `stderr` stream.
-	public static var stderr: Standard { Standard(stream: .err) }
+	public static var stderr: Standard { Standard(stream: Darwin.stderr) }
 	
 	/// Creates `OSLog` output with default subsystem name: `com.dlog.logger`.
 	public static var oslog: OSLog { OSLog() }

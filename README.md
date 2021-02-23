@@ -475,15 +475,18 @@ let logEmoji = DLog(.textEmoji)
 ### Standard
 
 `Standard` is a target output that can output text messages to POSIX streams:
-- `.out` - Standard Output (stdout)
-- `.err` - Standard Error (stderr)
+- `stdout` - Standard Output
+- `stderr` - Standard Error
 
 ``` swift
-let logOut = DLog(Standard(stream: .out)) // Or Standard()
-let logErr = DLog(Standard(stream: .err))
+// Prints to stdout
+let logOut = DLog(Standard())
+
+// Prints to stderr
+let logErr = DLog(Standard(stream: Darwin.stderr))
 ```
 
-You can also use shortcuts `.stdout` and `.stderr` to create the output to the logger:
+You can also use shortcuts `.stdout` and `.stderr` to create the output for the logger:
 
 ``` swift
 let log = DLog(.stderr)

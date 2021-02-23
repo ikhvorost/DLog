@@ -26,17 +26,22 @@
 
 import Foundation
 
-
+/// A target output that can output text messages to POSIX streams.
+///
 public class Standard : LogOutput {
 	
-	public enum Stream {
-		case out
-		case err
-	}
+	let stream: UnsafeMutablePointer<FILE>
 	
-	let stream: Stream
-	
-	public init(stream: Stream = .out, source: LogOutput = .textPlain) {
+	/// Creates a `Standard` output object.
+	///
+	/// 	let log = DLog(Standard())
+	/// 	log.info("It's standard output")
+	///
+	/// - Parameters:
+	///		- stream: POSIX stream: `Darwin.stdout`, `Darwin.stderr`.
+	///		- source: A source output (defaults to `.textPlain`).
+	///
+	public init(stream: UnsafeMutablePointer<FILE> = Darwin.stdout, source: LogOutput = .textPlain) {
 		self.stream = stream
 		
 		super.init(source: source)
@@ -44,13 +49,7 @@ public class Standard : LogOutput {
 	
 	private func echo(_ text: String?) -> String? {
 		if let str = text, !str.isEmpty {
-			switch stream {
-				case .out:
-					fputs(str + "\n", Darwin.stdout)
-					
-				case .err:
-					fputs(str + "\n", Darwin.stderr)
-			}
+			fputs(str + "\n", stream)
 		}
 		return text
 	}
