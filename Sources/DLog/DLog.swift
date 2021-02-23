@@ -156,7 +156,6 @@ public class DLog: LogProtocol {
 		guard let out = output else { return nil }
 
 		let item = LogItem(
-			time: Date(),
 			category: category,
 			scope: scope,
 			type: type,

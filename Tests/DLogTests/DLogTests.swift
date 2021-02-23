@@ -408,7 +408,7 @@ final class DLogTests: XCTestCase {
 	
 	func test_Filter() {
 		// Time
-		let timeLog = DLog(.textPlain => .filter { $0.time != nil } => .stdout)
+		let timeLog = DLog(.textPlain => .filter { $0.time < Date() } => .stdout)
 		XCTAssertNotNil(timeLog.info("info"))
 		
 		// Category

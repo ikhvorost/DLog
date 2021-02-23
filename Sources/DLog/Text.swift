@@ -176,8 +176,7 @@ public class Text : LogOutput {
 	}
 	
 	private func textMessage(item: LogItem, scopes: [LogScope]) -> String {
-		assert(item.time != nil)
-		let time = item.time != nil ? Self.dateFormatter.string(from: item.time!) : ""
+		let time = Self.dateFormatter.string(from: item.time)
 		
 		var padding = ""
 		if let scope = item.scope, scope.entered {
@@ -191,7 +190,9 @@ public class Text : LogOutput {
 		
 		switch style {
 			case .colored:
-				guard let tag = Self.tags[item.type] else { fallthrough }
+				guard let tag = Self.tags[item.type] else {
+					fallthrough
+				}
 				
 				let tagText = " \(item.type.title) ".color(tag.colors)
 				let location = "<\(item.fileName):\(item.line)>".color([.dim, tag.textColor])
@@ -206,17 +207,13 @@ public class Text : LogOutput {
 	}
 
 	private func textScope(scope: LogScope, scopes: [LogScope]) -> String {
-		guard let scopeTime = scope.time else {
-			return ""
-		}
-		
 		var start = true
-		var time = Self.dateFormatter.string(from: scopeTime)
+		var time = Self.dateFormatter.string(from: scope.time)
 		var ms: String?
 		
 		if scope.duration > 0 {
 			start = false
-			time = Self.dateFormatter.string(from: scopeTime.addingTimeInterval(scope.duration))
+			time = Self.dateFormatter.string(from: scope.time.addingTimeInterval(scope.duration))
 			ms = "(\(stringFromTime(interval: scope.duration))s)"
 		}
 		

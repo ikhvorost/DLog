@@ -69,7 +69,7 @@ public enum LogType : Int {
 ///
 public class LogItem {
 	/// The timestamp of this log message.
-	internal(set) public var time: Date?
+	internal(set) public var time = Date()
 	
 	/// The category of this log message.
 	public let category: String
@@ -92,8 +92,7 @@ public class LogItem {
 	/// The text of this log message.
 	internal(set) public var text: String
 
-	init(time: Date? = nil, category: String, scope: LogScope?, type: LogType, file: String, funcName: String, line: UInt, text: String) {
-		self.time = time
+	init(category: String, scope: LogScope?, type: LogType, file: String, funcName: String, line: UInt, text: String) {
 		self.category = category
 		self.scope = scope
 		self.type = type
@@ -167,9 +166,7 @@ public class LogScope : LogItem, LogProtocol {
 		guard entered else { return }
 		entered.toggle()
 		
-		if let t = time {
-			duration = -t.timeIntervalSinceNow
-		}
+		duration = -time.timeIntervalSinceNow
 		
 		logger.leave(scope: self)
 	}
@@ -247,7 +244,7 @@ public class LogInterval : LogItem {
 	/// 	interval.end()
 	///
 	public func end() {
-		guard begun, let time = time else { return }
+		guard begun else { return }
 		begun.toggle()
 		
 		duration = -time.timeIntervalSinceNow

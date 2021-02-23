@@ -5,7 +5,7 @@
 [![SPM compatible](https://img.shields.io/badge/SPM-compatible-4BC51D.svg?style=flat)](https://swift.org/package-manager/)
 ![CI](https://github.com/ikhvorost/DLog/workflows/CI/badge.svg)
 [![codecov](https://codecov.io/gh/ikhvorost/DLog/branch/master/graph/badge.svg?token=DJLKDA9W1Q)](https://codecov.io/gh/ikhvorost/DLog)
-[![swift doc coverage](https://img.shields.io/badge/swift%20doc-8%25-f39f37)](https://github.com/SwiftDocOrg/swift-doc)
+[![swift doc coverage](https://img.shields.io/badge/swift%20doc-100%25-f39f37)](https://github.com/SwiftDocOrg/swift-doc)
 
 <p align="center"><img src="Images/dlog.png" alt="Logger for Swift"></p>
 
