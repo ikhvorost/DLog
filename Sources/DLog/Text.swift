@@ -48,7 +48,7 @@ private enum ANSIEscapeCode: String {
 	case textWhite = "\u{001B}[37m"
 	
 	case backgroundBlack = "\u{001b}[40m"
-	case backgrounRed = "\u{001b}[41m"
+	case backgroundRed = "\u{001b}[41m"
 	case backgroundGreen = "\u{001b}[42m"
 	case backgroundYellow = "\u{001b}[43m"
 	case backgroundBlue = "\u{001b}[44m"
@@ -123,8 +123,8 @@ public class Text : LogOutput {
 		.debug : Tag(textColor: .textCyan, colors: [.backgroundCyan, .textBlack]),
 		.warning : Tag(textColor: .textYellow, colors: [.backgroundYellow, .textBlack]),
 		.error : Tag(textColor: .textYellow, colors: [.backgroundYellow, .textBlack]),
-		.fault : Tag(textColor: .textRed, colors: [.backgrounRed, .textWhite, .blink]),
-		.assert : Tag(textColor: .textRed, colors: [.backgrounRed, .textWhite]),
+		.fault : Tag(textColor: .textRed, colors: [.backgroundRed, .textWhite, .blink]),
+		.assert : Tag(textColor: .textRed, colors: [.backgroundRed, .textWhite]),
 		.interval : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textBlack]),
 	]
 	
@@ -176,6 +176,8 @@ public class Text : LogOutput {
 	}
 	
 	private func textMessage(item: LogItem, scopes: [LogScope]) -> String {
+		assert(item.type != .scope)
+		
 		let time = Self.dateFormatter.string(from: item.time)
 		
 		var padding = ""
@@ -190,9 +192,8 @@ public class Text : LogOutput {
 		
 		switch style {
 			case .colored:
-				guard let tag = Self.tags[item.type] else {
-					fallthrough
-				}
+				assert(Self.tags[item.type] != nil)
+				let tag = Self.tags[item.type]!
 				
 				let tagText = " \(item.type.title) ".color(tag.colors)
 				let location = "<\(item.fileName):\(item.line)>".color([.dim, tag.textColor])
