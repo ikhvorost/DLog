@@ -28,7 +28,7 @@ import Foundation
 /// Middleware output for filtering
 ///
 public class Filter : LogOutput {
-	private let predicate: NSPredicate
+	private let predicate: (LogItem) -> Bool
 	
 	/// Initializes a filter output that evaluates using a specified block object.
 	///
@@ -41,12 +41,7 @@ public class Filter : LogOutput {
 	/// 	- block: The block is applied to the object to be evaluated.
 	///
 	public init(block: @escaping (LogItem) -> Bool) {
-		predicate = NSPredicate { (obj, _) in
-			if let item = obj as? LogItem {
-				return block(item)
-			}
-			return true
-		}
+		predicate = block
 		super.init(source: nil)
 	}
 	
@@ -54,21 +49,21 @@ public class Filter : LogOutput {
 	
 	override func log(item: LogItem, scopes: [LogScope]) -> String? {
 		let text = super.log(item: item, scopes: scopes)
-		return predicate.evaluate(with: item) ? text : nil
+		return predicate(item) ? text : nil
 	}
 	
 	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
 		let text = super.scopeEnter(scope: scope, scopes: scopes)
-		return predicate.evaluate(with: scope) ? text : nil
+		return predicate(scope) ? text : nil
 	}
 	
 	override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
 		let text = super.scopeLeave(scope: scope, scopes: scopes)
-		return predicate.evaluate(with: scope) ? text : nil
+		return predicate(scope) ? text : nil
 	}
 	
 	override func intervalEnd(interval: LogInterval, scopes: [LogScope]) -> String? {
 		let text = super.intervalEnd(interval: interval, scopes: scopes)
-		return predicate.evaluate(with: interval) ? text : nil
+		return predicate(interval) ? text : nil
 	}
 }

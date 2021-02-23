@@ -402,7 +402,25 @@ final class DLogTests: XCTestCase {
 		}
 	}
 	
-	// MARK: - OSLog, NetConsole
+	// MARK: - OSLog
+	
+	func test_oslog() {
+		let log = DLog(.oslog)
+		XCTAssertNotNil(log.debug("oslog"))
+		
+		let log2 = DLog(.oslog("com.dlog.test"))
+		XCTAssertNotNil(log2.debug("oslog"))
+	}
+	
+	// MARK: - Net
+	
+	func test_net() {
+		let log = DLog(.net)
+		XCTAssertNotNil(log.debug("oslog"))
+		
+		let log2 = DLog(.net("MyName"))
+		XCTAssertNotNil(log2.debug("oslog"))
+	}
 	
 	// MARK: - Filter
 	
@@ -516,19 +534,19 @@ final class DLogTests: XCTestCase {
 						=> .filter { $0.type == .debug }
 						=> .net)
 		
+		let netLog = log["NET"]
+		netLog.log("log")
+		netLog.trace()
+		netLog.debug("debug")
+		netLog.info("info")
+		netLog.warning("warning")
+		netLog.error("error")
+		netLog.assert(false)
+		netLog.fault("fault")
+		netLog.scope("scope") { _ in }
+		netLog.interval("signpost") {  }
+		
 		let scope = log.scope("test") { scope in
-			let netLog = log["NET"]
-			netLog.log("log")
-			netLog.trace()
-			netLog.debug("debug")
-			netLog.info("info")
-			netLog.warning("warning")
-			netLog.error("error")
-			netLog.assert(false)
-			netLog.fault("fault")
-			netLog.scope("scope") { _ in }
-			netLog.interval("signpost") {  }
-			
 			scope.log("log")
 			scope.trace()
 			scope.debug("debug")
