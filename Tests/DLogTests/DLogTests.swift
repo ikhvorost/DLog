@@ -387,7 +387,7 @@ final class DLogTests: XCTestCase {
 	
 	func test_File() {
 		let filePath = "dlog.txt"
-		let log = DLog(.textPlain => .file(filePath))
+		let log = DLog(.textPlain => .file(filePath, append: true))
 		log.trace()
 		
 		delay(0.1)

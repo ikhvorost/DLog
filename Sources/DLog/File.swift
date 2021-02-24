@@ -67,10 +67,6 @@ public class File : LogOutput {
 		super.init(source: source)
 	}
 	
-	deinit {
-		file?.closeFile()
-	}
-	
 	private func write(_ text: String?) -> String? {
 		if let str = text, !str.isEmpty {
 			queue.async {
