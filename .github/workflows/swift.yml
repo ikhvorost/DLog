@@ -16,7 +16,7 @@ jobs:
     - name: Run tests
       run: |
         swift test --enable-code-coverage -v
-        xcrun llvm-cov export 
+        > xcrun llvm-cov export
             -format="lcov"
             .build/debug/DLogPackageTests.xctest/contents/macos/DLogPackageTests
             -instr-profile .build/debug/codecov/default.profdata
