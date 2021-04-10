@@ -25,10 +25,7 @@
 //  THE SOFTWARE.
 //
 
-
 import Foundation
-import ArgumentParser
-
 
 class Service : NSObject {
 	
@@ -144,33 +141,38 @@ extension Service : StreamDelegate {
 	}
 }
 
-let info = "NetConsole for DLog v.1.0"
+// Arguments
 
-struct NetConsole: ParsableCommand {
-	
-	static let configuration = CommandConfiguration(abstract: info)
-	
-	@Option(
-		name: [.long, .short],
-		help: "The name by which the service is identified to the network. The name must be unique and by default it equals \"DLog\". If you pass the empty string (\"\"), the system automatically advertises your service using the computer name as the service name.")
-	var name: String?
-	
-	@Flag(
-		name: [.long, .short],
-		help: "Clear a terminal on new connection.")
-	var autoClear = false
-	
-	@Flag(
-		name: [.long, .short],
-		help: "Enable debug messages.")
-	var debug = false
-	
-	func run() throws {
-		print(info)
-		
-		let _ = Service(name: name ?? "DLog", debug: debug, autoClear: autoClear)
-		RunLoop.current.run()
-	}
+let arguments = Arguments()
+
+let overview = "NetConsole v.1.1"
+
+var help = arguments.boolValue(forKeys: ["--help", "-h"])
+guard !help else {
+	print(
+"""
+OVERVIEW: \(overview)
+
+USAGE: netconsole [--name <name>] [--auto-clear] [--debug]
+
+OPTIONS:
+  -n, --name <name>		The name by which the service is identified to the network. The name must be unique and by default it equals
+				"DLog". If you pass the empty string (""), the system automatically advertises your service using the computer
+				name as the service name.
+  -a, --auto-clear		Clear a terminal on new connection.
+  -d, --debug			Enable debug messages.
+  -h, --help			Show help information.
+"""
+	)
+	exit(EXIT_SUCCESS)
 }
 
-NetConsole.main()
+var name = arguments.stringValue(forKeys: ["--name", "-n"], defaultValue: "DLog")
+var autoClear = arguments.boolValue(forKeys: ["--auto-clear", "-a"])
+var debug = arguments.boolValue(forKeys: ["--debug", "-d"])
+
+let _ = Service(name: name, debug: debug, autoClear: autoClear)
+
+print(overview)
+
+RunLoop.main.run()

@@ -15,12 +15,9 @@ let package = Package(
 		.library(name: "DLog", targets: ["DLog"]),
 		.executable(name: "NetConsole", targets: ["NetConsole"])
 	],
-	dependencies: [
-		.package(url: "https://github.com/apple/swift-argument-parser", from: "0.3.1"),
-	],
 	targets: [
 		.target(name: "DLog"),
-		.target(name: "NetConsole", dependencies: [ .product(name: "ArgumentParser", package: "swift-argument-parser")]),
+		.target(name: "NetConsole"),
 		.testTarget(name: "DLogTests", dependencies: ["DLog"]),
 	],
 	swiftLanguageVersions: [.v5]
