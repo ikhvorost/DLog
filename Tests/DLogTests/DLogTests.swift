@@ -486,39 +486,44 @@ final class DLogTests: XCTestCase {
 	// MARK: - Disabled
 	
 	func test_Disabled() {
-		let test: (LogProtocol) -> Void = { log in
-			log.log("log")
-			log.trace()
-			log.debug("debug")
-			log.info("info")
-			log.warning("warning")
-			log.error("error")
-			log.fault("fatal")
-			log.assert(false, "assert")
-			log.scope("scope") { _ in }
-			log.interval("interval") { }
+		
+		let failBool: () -> Bool = {
+			XCTFail()
+			return false
+		}
+		
+		let failString: () -> String = {
+			XCTFail()
+			return ""
+		}
+		
+		let test: (LogProtocol, XCTestExpectation) -> Void = { log, expectation in
+			log.log(failString())
+			log.trace(failString())
+			log.debug(failString())
+			log.info(failString())
+			log.warning(failString())
+			log.error(failString())
+			log.fault(failString())
+			log.assert(failBool(), failString())
+			log.scope("scope") { _ in expectation.fulfill() }
+			log.interval("interval") { expectation.fulfill() }
 		}
 		
 		let log = DLog.disabled
 		let scope = log.scope("scope")
 		let netLog = log["NET"]
 		
-		XCTAssertNil(
-			read_stdout {
-				test(log)
-				test(netLog)
-				test(scope)
-			}
-		)
-		
-		wait(count: 5) { exps in
-			log.scope("scope") { _ in exps[0].fulfill() }
-			log.interval("interval") { exps[1].fulfill() }
+		wait { expectation in
+			expectation.expectedFulfillmentCount = 6
 			
-			scope.scope("child") { _ in exps[2].fulfill() }
-			
-			netLog.scope("scope") { _ in exps[3].fulfill() }
-			netLog.interval("interval") { exps[4].fulfill() }
+			XCTAssertNil(
+				read_stdout {
+					test(log, expectation)
+					test(netLog, expectation)
+					test(scope, expectation)
+				}
+			)
 		}
 	}
 	

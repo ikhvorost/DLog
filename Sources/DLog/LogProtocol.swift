@@ -58,7 +58,7 @@ extension LogProtocol {
 	/// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
 	///
 	@discardableResult
-	public func log(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+	public func log(_ text: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
 		params.logger.log(text: text, type: .log, category: params.category, scope: params.scope, file: file, function: function, line: line)
 	}
 	
@@ -78,9 +78,8 @@ extension LogProtocol {
 	/// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
 	///
 	@discardableResult
-	public func trace(_ text: String? = nil, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		let msg = "\(function) \(text ?? "")"
-		return params.logger.log(text: msg, type: .trace, category: params.category, scope: params.scope, file: file, function: function, line: line)
+	public func trace(_ text:  @autoclosure () -> String? = nil, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+		return params.logger.log(text: { "\(function) \(text() ?? "")" }, type: .trace, category: params.category, scope: params.scope, file: file, function: function, line: line)
 	}
 	
 	/// Logs a message to help debug problems during the development of your code.
@@ -99,8 +98,8 @@ extension LogProtocol {
 	/// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
 	///
 	@discardableResult
-	public func debug(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		params.logger.log(text: text, type: .debug, category: params.category, scope: params.scope, file: file, function: function, line: line)
+	public func debug(_ text: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+		return params.logger.log(text: text, type: .debug, category: params.category, scope: params.scope, file: file, function: function, line: line)
 	}
 	
 	/// Logs a message that is helpful, but not essential, to diagnose issues with your code.
@@ -119,7 +118,7 @@ extension LogProtocol {
 	/// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
 	///
 	@discardableResult
-	public func info(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+	public func info(_ text: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
 		params.logger.log(text: text, type: .info, category: params.category, scope: params.scope, file: file, function: function, line: line)
 	}
 	
@@ -139,7 +138,7 @@ extension LogProtocol {
 	/// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
 	///
 	@discardableResult
-	public func warning(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+	public func warning(_ text: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
 		params.logger.log(text: text, type: .warning, category: params.category, scope: params.scope, file: file, function: function, line: line)
 	}
 	
@@ -159,7 +158,7 @@ extension LogProtocol {
 	/// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
 	///
 	@discardableResult
-	public func error(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+	public func error(_ text: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
 		params.logger.log(text: text, type: .error, category: params.category, scope: params.scope, file: file, function: function, line: line)
 	}
 	
@@ -180,9 +179,10 @@ extension LogProtocol {
 	/// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
 	///
 	@discardableResult
-	public func assert(_ condition: Bool, _ text: String = "", file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		guard !condition else { return nil }
-		return params.logger.log(text: text, type: .assert, category: params.category, scope: params.scope, file: file, function: function, line: line)
+	public func assert(_ condition: @autoclosure () -> Bool, _ text: @autoclosure () -> String = "", file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+		return !params.logger.disabled && !condition()
+			? params.logger.log(text: text, type: .assert, category: params.category, scope: params.scope, file: file, function: function, line: line)
+			: nil
 	}
 	
 	/// Logs a bug or fault that occurred during the execution of your code.
@@ -201,7 +201,7 @@ extension LogProtocol {
 	/// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
 	///
 	@discardableResult
-	public func fault(_ text: String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+	public func fault(_ text: @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
 		params.logger.log(text: text, type: .fault, category: params.category, scope: params.scope, file: file, function: function, line: line)
 	}
 	

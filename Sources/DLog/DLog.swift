@@ -50,6 +50,8 @@ public class DLog: LogProtocol {
 	///
 	public static let disabled = DLog(nil)
 	
+	var disabled : Bool { output == nil }
+	
 	/// LogProtocol parameters
 	public lazy var params = LogParams(logger: self, category: "DLOG", scope: nil)
 
@@ -152,7 +154,7 @@ public class DLog: LogProtocol {
 		out.intervalEnd(interval: interval, scopes: scopes)
 	}
 
-	func log(text: String, type: LogType, category: String, scope: LogScope?, file: String, function: String, line: UInt) -> String? {
+	func log(text: () -> String, type: LogType, category: String, scope: LogScope?, file: String, function: String, line: UInt) -> String? {
 		guard let out = output else { return nil }
 
 		let item = LogItem(
@@ -162,7 +164,7 @@ public class DLog: LogProtocol {
 			file: file,
 			funcName: function,
 			line: line,
-			text: text)
+			text: text())
 		return out.log(item: item, scopes: scopes)
 	}
 
