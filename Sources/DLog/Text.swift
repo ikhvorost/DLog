@@ -171,7 +171,7 @@ public class Text : LogOutput {
 	}()
 	
 	private func stringFromTime(interval: TimeInterval) -> String {
-		let ms = String(format:"%.03f", interval).suffix(3)
+		let ms = Int(interval.truncatingRemainder(dividingBy: 1) * 1000)
 		return Self.dateComponentsFormatter.string(from: interval)! + ".\(ms)"
 	}
 	

@@ -78,8 +78,20 @@ extension LogProtocol {
 	/// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
 	///
 	@discardableResult
-	public func trace(_ text:  @autoclosure () -> String? = nil, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		return params.logger.log(text: { "\(function) \(text() ?? "")" }, type: .trace, category: params.category, scope: params.scope, file: file, function: function, line: line)
+	public func trace(_ text: @autoclosure () -> String? = nil,
+					  config: TraceConfig? = nil,
+					  callStackSymbols: [String] = Thread.callStackSymbols,
+					  file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+		let message: () -> String = {
+			let info = traceInfo(function,
+								 callStackSymbols: callStackSymbols.dropFirst(),
+								 config: config ?? params.logger.config.traceConfig)
+			if let text = text() {
+				return "\(text) - \(info)"
+			}
+			return info
+		}
+		return params.logger.log(text: message, type: .trace, category: params.category, scope: params.scope, file: file, function: function, line: line)
 	}
 	
 	/// Logs a message to help debug problems during the development of your code.

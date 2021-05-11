@@ -33,11 +33,17 @@ class IntervalData {
 	var avg: TimeInterval = 0
 }
 
+public struct LogConfig {
+	public var traceConfig = TraceConfig()
+	public init() {}
+}
+
 /// The central class to emit log messages to specified outputs using one of the methods corresponding to a log level.
 ///
 public class DLog: LogProtocol {
 	
 	private let output: LogOutput?
+	let config: LogConfig
 
 	@Atomic private var scopes = [LogScope]()
 	@Atomic private var intervals = [Int : IntervalData]()
@@ -79,8 +85,9 @@ public class DLog: LogProtocol {
 	/// - Parameters:
 	/// 	- output: A target output object. If it is omitted the logger uses `stdout` by default.
 	///
-	public init(_ output: LogOutput? = .stdout) {
+	public init(_ output: LogOutput? = .stdout, config: LogConfig = LogConfig()) {
 		self.output = output
+		self.config = config
 	}
 
 	// Scope

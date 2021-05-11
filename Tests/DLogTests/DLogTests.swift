@@ -137,6 +137,47 @@ final class DLogTests: XCTestCase {
 		testAll(log)
 	}
 	
+	// MARK: - Trace
+	
+	func test_trace() {
+		var config = LogConfig()
+		//config.traceConfig.options = .compact
+		let log = DLog(config: config)
+		
+		// Thread
+		XCTAssert(log.trace(config: TraceConfig(options: .thread))?.match("Thread 1 \\(main\\)") == true)
+		Thread.detachNewThread {
+			XCTAssert(log.trace(config: TraceConfig(options: .thread))?.match("Thread \\d+") == true)
+		}
+		
+		// Queue
+		XCTAssert(log.trace(config: TraceConfig(options: .queue))?.match(#"com.apple.main-thread"#) == true)
+		
+		let queues = [
+			#"com.apple.root.background-qos"# : DispatchQueue.global(qos: .background),
+			#"com.apple.root.utility-qos"# : DispatchQueue.global(qos: .utility),
+			#"com.apple.root.default-qos"# : DispatchQueue.global(qos: .default),
+			#"com.apple.root.user-initiated-qos"# : DispatchQueue.global(qos: .userInitiated),
+			#"com.apple.root.user-interactive-qos"# : DispatchQueue.global(qos: .userInteractive),
+			#"serial"# : DispatchQueue(label: "serial"),
+			#"concurrent"# : DispatchQueue(label: "concurrent", attributes: .concurrent)
+		]
+		for (label, queue) in queues {
+			queue.async {
+				XCTAssert(log.trace(config: TraceConfig(options: .queue))?.match(label) == true)
+			}
+		}
+		
+		// Function
+		XCTAssert(log.trace(config: TraceConfig(options: .function))?.match(#"test_trace"#) == true)
+		
+		// Stack
+		//XCTAssert(log.trace(options: .stack)?.match(#"test_trace"#) == true)
+		log.trace(config: TraceConfig(options: [.thread, .queue, .stack]))
+		
+		delay()
+	}
+	
 	// MARK: - Scope
 	
 	func test_Scope() {
