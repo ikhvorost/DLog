@@ -25,7 +25,7 @@
 
 import Foundation
 
-class IntervalData {
+fileprivate class IntervalData {
 	var count = 0
 	var total: TimeInterval = 0
 	var min: TimeInterval = 0
@@ -34,7 +34,9 @@ class IntervalData {
 }
 
 public struct LogConfig {
-	public var traceConfig = TraceConfig()
+	public var trace = TraceConfig()
+	public var interval = IntervalConfig()
+	
 	public init() {}
 }
 
@@ -156,6 +158,7 @@ public class DLog: LogProtocol {
 			interval.min = data.min
 			interval.max = data.max
 			interval.avg = data.avg
+			interval.text = interval.text()
 		}
 
 		out.intervalEnd(interval: interval, scopes: scopes)
@@ -192,12 +195,13 @@ public class DLog: LogProtocol {
 		return scope
 	}
 
-	func interval(name: StaticString, category: String, scope: LogScope?, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
+	func interval(name: StaticString, category: String, scope: LogScope?, config: IntervalConfig?, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
 		let id = "\(file):\(line)".hash
 		let interval = LogInterval(id: id,
 							  logger: self,
 							  category: category,
 							  scope: scope,
+							  config: config ?? self.config.interval,
 							  file: file,
 							  funcName: function,
 							  line: line,

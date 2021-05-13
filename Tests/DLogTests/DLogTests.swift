@@ -88,7 +88,7 @@ let FaultTag = #"\[FAULT\]"#
 
 let Location = "<DLogTests:[0-9]+>"
 let SECS = #"[0-9]+\.[0-9]{3}s"#
-let Interval = #"- Count: [0-9]+, Duration: \#(SECS), Total: \#(SECS), Min: \#(SECS), Max: \#(SECS), Avg: \#(SECS)"#
+let Interval = #"\{ duration: \#(SECS), average: \#(SECS) \}"#
 
 final class DLogTests: XCTestCase {
 	
@@ -140,9 +140,7 @@ final class DLogTests: XCTestCase {
 	// MARK: - Trace
 	
 	func test_trace() {
-		var config = LogConfig()
-		//config.traceConfig.options = .compact
-		let log = DLog(config: config)
+		let log = DLog()
 		
 		// Thread
 		XCTAssert(log.trace(config: TraceConfig(options: .thread))?.match("Thread 1 \\(main\\)") == true)
@@ -293,75 +291,6 @@ final class DLogTests: XCTestCase {
 		XCTAssert(0.25 <= scope.duration)
 	}
 
-	// MARK: - Interval
-	
-	func test_Interval() {
-		let log = DLog()
-		
-		XCTAssert(read_stdout {
-			log.interval("signpost") {
-				delay()
-			}
-		}?.match(#"signpost \#(Interval)"#) == true)
-	}
-	
-	func test_IntervalBeginEnd() {
-		let log = DLog()
-		
-		XCTAssert(read_stdout {
-			let interval = log.interval("signpost")
-			interval.begin()
-			delay()
-			interval.end()
-		}?.match(#"signpost \#(Interval)"#) == true)
-		
-		// Double begin/end
-		XCTAssert(read_stdout {
-			let interval = log.interval("signpost")
-			interval.begin()
-			interval.begin()
-			delay()
-			interval.end()
-			interval.end()
-		}?.match(#"signpost \#(Interval)"#) == true)
-	}
-	
-	func test_IntervalStatistics() {
-		let log = DLog()
-
-		let interval = log.interval("Signpost") {
-			delay()
-		}
-		XCTAssert(interval.count == 1)
-		XCTAssert(0.25 <= interval.duration)
-		XCTAssert(0.25 <= interval.total)
-		XCTAssert(0.25 <= interval.min)
-		XCTAssert(0.25 <= interval.max)
-		XCTAssert(0.25 <= interval.avg)
-		
-		interval.begin()
-		delay()
-		interval.end()
-		XCTAssert(interval.count == 2)
-		XCTAssert(0.25 <= interval.duration)
-		XCTAssert(0.5 <= interval.total)
-		XCTAssert(0.25 <= interval.min)
-		XCTAssert(0.25 <= interval.max)
-		XCTAssert(0.25 <= interval.avg)
-	}
-	
-	func test_IntervalConcurrent() {
-		let log = DLog()
-		
-		for i in 0..<10 {
-			DispatchQueue.global().async {
-				log.interval("Signpost") { delay(); log.debug("\(i)") }
-			}
-		}
-		
-		delay(1)
-	}
-	
 	// MARK: - Category
 	
 	func test_Category() {
@@ -606,5 +535,113 @@ final class DLogTests: XCTestCase {
 		}
 		
 		XCTAssert(scope.duration < 0.2)
+	}
+}
+
+final class IntervalTests: XCTestCase {
+	func test_Interval() {
+		let log = DLog()
+		
+		XCTAssert(read_stdout {
+			log.interval("signpost") {
+				delay()
+			}
+		}?.match(#"signpost: \#(Interval)"#) == true)
+	}
+	
+	func test_IntervalBeginEnd() {
+		let log = DLog()
+		
+		XCTAssert(read_stdout {
+			let interval = log.interval("signpost")
+			interval.begin()
+			delay()
+			interval.end()
+		}?.match(#"signpost: \#(Interval)"#) == true)
+		
+		// Double begin/end
+		XCTAssert(read_stdout {
+			let interval = log.interval("signpost")
+			interval.begin()
+			interval.begin()
+			delay()
+			interval.end()
+			interval.end()
+		}?.match(#"signpost: \#(Interval)"#) == true)
+	}
+	
+	func test_IntervalStatistics() {
+		let log = DLog()
+
+		let interval = log.interval("Signpost") {
+			delay()
+		}
+		XCTAssert(interval.count == 1)
+		XCTAssert(0.25 <= interval.duration)
+		XCTAssert(0.25 <= interval.total)
+		XCTAssert(0.25 <= interval.min)
+		XCTAssert(0.25 <= interval.max)
+		XCTAssert(0.25 <= interval.avg)
+		
+		interval.begin()
+		delay()
+		interval.end()
+		XCTAssert(interval.count == 2)
+		XCTAssert(0.25 <= interval.duration)
+		XCTAssert(0.5 <= interval.total)
+		XCTAssert(0.25 <= interval.min)
+		XCTAssert(0.25 <= interval.max)
+		XCTAssert(0.25 <= interval.avg)
+	}
+	
+	func test_IntervalConcurrent() {
+		let log = DLog()
+		
+		for i in 0..<10 {
+			DispatchQueue.global().async {
+				log.interval("Signpost") { delay(); log.debug("\(i)") }
+			}
+		}
+		
+		delay(1)
+	}
+	
+	func test_IntervalConfigEmpty() {
+		var config = LogConfig()
+		config.interval.options = []
+		
+		let log = DLog(config: config)
+		
+		XCTAssert(read_stdout {
+			log.interval("signpost") {
+				delay()
+			}
+		}?.match(#"signpost$"#) == true)
+	}
+	
+	func test_IntervalConfigAll() {
+		var config = LogConfig()
+		config.interval.options = .all
+		
+		let log = DLog(config: config)
+		
+		XCTAssert(read_stdout {
+			log.interval("signpost") {
+				delay()
+			}
+		}?.match(#"signpost: \{ duration: \#(SECS), count: [0-9]+, total: \#(SECS), min: \#(SECS), max: \#(SECS), average: \#(SECS) \}"#) == true)
+	}
+	
+	func test_IntervalConfigOverride() {
+		var config = LogConfig()
+		config.interval.options = .all
+		
+		let log = DLog(config: config)
+			
+		XCTAssert(read_stdout {
+			log.interval("signpost", config: IntervalConfig(options: .duration)) {
+				delay()
+			}
+		}?.match(#"signpost: \{ duration: \#(SECS) \}"#) == true)
 	}
 }

@@ -170,9 +170,9 @@ public class Text : LogOutput {
 		return formatter
 	}()
 	
-	private func stringFromTime(interval: TimeInterval) -> String {
+	static func stringFromTime(interval: TimeInterval) -> String {
 		let ms = Int(interval.truncatingRemainder(dividingBy: 1) * 1000)
-		return Self.dateComponentsFormatter.string(from: interval)! + ".\(ms)"
+		return dateComponentsFormatter.string(from: interval)! + ".\(ms)"
 	}
 	
 	private func textMessage(item: LogItem, scopes: [LogScope]) -> String {
@@ -215,7 +215,7 @@ public class Text : LogOutput {
 		if scope.duration > 0 {
 			start = false
 			time = Self.dateFormatter.string(from: scope.time.addingTimeInterval(scope.duration))
-			ms = "(\(stringFromTime(interval: scope.duration))s)"
+			ms = "(\(Self.stringFromTime(interval: scope.duration))s)"
 		}
 		
 		var padding = ""
@@ -261,13 +261,6 @@ public class Text : LogOutput {
 	
 	override func intervalEnd(interval: LogInterval, scopes: [LogScope]) -> String? {
 		super.intervalEnd(interval: interval, scopes: scopes)
-		
-		let duration = stringFromTime(interval: interval.duration)
-		let total = stringFromTime(interval: interval.total)
-		let min = stringFromTime(interval: interval.min)
-		let max = stringFromTime(interval: interval.max)
-		let avg = stringFromTime(interval: interval.avg)
-		interval.text = "\(interval.name) - count: \(interval.count), duration: \(duration)s, total: \(total)s, min: \(min)s, max: \(max)s, avg: \(avg)s"
 		
 		return textMessage(item: interval, scopes: scopes)
 	}

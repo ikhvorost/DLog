@@ -85,7 +85,7 @@ extension LogProtocol {
 		let message: () -> String = {
 			let info = traceInfo(function,
 								 callStackSymbols: callStackSymbols.dropFirst(),
-								 config: config ?? params.logger.config.traceConfig)
+								 config: config ?? params.logger.config.trace)
 			if let text = text() {
 				return "\(text) - \(info)"
 			}
@@ -259,7 +259,7 @@ extension LogProtocol {
 	/// - Returns: An `LogInterval` object for the new interval.
 	///
 	@discardableResult
-	public func interval(_ name: StaticString, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval {
-		params.logger.interval(name: name, category: params.category, scope: params.scope, file: file, function: function, line: line, closure: closure)
+	public func interval(_ name: StaticString, config: IntervalConfig? = nil, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval {
+		params.logger.interval(name: name, category: params.category, scope: params.scope, config: config, file: file, function: function, line: line, closure: closure)
 	}
 }

@@ -56,7 +56,7 @@ public struct StackOptions: OptionSet {
 }
 
 public struct StackConfig {
-	let stackOptions: StackOptions = []
+	let options: StackOptions = []
 	let depth = 0
 	// style
 }
@@ -64,7 +64,7 @@ public struct StackConfig {
 public struct TraceConfig {
 	public var options: TraceOptions
 	public var threadOptions: ThreadOptions = []
-	public var stackConfig = StackConfig()
+	public var stack = StackConfig()
 	
 	public init(options: TraceOptions = .compact) {
 		self.options = options
