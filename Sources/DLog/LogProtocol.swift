@@ -83,13 +83,10 @@ extension LogProtocol {
 					  callStackSymbols: [String] = Thread.callStackSymbols,
 					  file: String = #file, function: String = #function, line: UInt = #line) -> String? {
 		let message: () -> String = {
-			let info = traceInfo(function,
-								 callStackSymbols: callStackSymbols.dropFirst(),
-								 config: config ?? params.logger.config.trace)
-			if let text = text() {
-				return "\(text) - \(info)"
-			}
-			return info
+			traceInfo(title: text(),
+					  function: function,
+					  callStackSymbols: callStackSymbols.dropFirst(),
+					  config: config ?? params.logger.config.trace)
 		}
 		return params.logger.log(text: message, type: .trace, category: params.category, scope: params.scope, file: file, function: function, line: line)
 	}

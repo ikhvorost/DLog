@@ -101,31 +101,16 @@ public class LogInterval : LogItem {
 	
 	func description() -> String {
 		
-		let props: [(IntervalOptions, String, () -> String)] = [
-			(.duration, "duration", { "\(Text.stringFromTime(interval: self.duration))s" }),
+		let items: [(IntervalOptions, String, () -> String)] = [
+			(.duration, "duration", { "\(Text.stringFromTime(interval: self.duration))" }),
 			(.count, "count", { "\(self.count)" }),
-			(.total, "total", { "\(Text.stringFromTime(interval: self.total))s" }),
-			(.min, "min", { "\(Text.stringFromTime(interval: self.min))s" }),
-			(.max, "max", { "\(Text.stringFromTime(interval: self.max))s" }),
-			(.average, "average", { "\(Text.stringFromTime(interval: self.avg))s" }),
+			(.total, "total", { "\(Text.stringFromTime(interval: self.total))" }),
+			(.min, "min", { "\(Text.stringFromTime(interval: self.min))" }),
+			(.max, "max", { "\(Text.stringFromTime(interval: self.max))" }),
+			(.average, "average", { "\(Text.stringFromTime(interval: self.avg))" }),
 		]
 		
-		let propsText = props
-			.compactMap { config.options.contains($0.0) ? "\($0.1): \($0.2())" : nil }
-			.joined(separator: ", ")
-		
-		var result = [String]()
-		
-		let title = "\(name)"
-		if !title.isEmpty {
-			result.append(title)
-		}
-		
-		if !propsText.isEmpty {
-			result.append("{ \(propsText) }")
-		}
-		
-		return result.joined(separator: ": ")
+		return jsonDescription(title: "\(name)", items: items, options: config.options)
 	}
 	
 	/// Start a time interval.

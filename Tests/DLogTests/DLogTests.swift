@@ -87,7 +87,7 @@ let AssertTag = #"\[ASSERT\]"#
 let FaultTag = #"\[FAULT\]"#
 
 let Location = "<DLogTests:[0-9]+>"
-let SECS = #"[0-9]+\.[0-9]{3}s"#
+let SECS = #"[0-9]+\.[0-9]{3}"#
 let Interval = #"\{ duration: \#(SECS), average: \#(SECS) \}"#
 
 final class DLogTests: XCTestCase {
@@ -129,51 +129,12 @@ final class DLogTests: XCTestCase {
 		XCTAssert(logger.fault("fault")?.match(#"\#(categoryTag) \#(scope)\#(FaultTag) \#(Location) fault"#) == true)
 		
 		XCTAssert(read_stdout { logger.scope("scope") { _ in delay() } }?.match(#"\#(categoryTag) \#(scope)└ \[scope\] \(0\.[0-9]{3}s\)"#) == true)
-		XCTAssert(read_stdout { logger.interval("signpost") { delay() } }?.match(#"\#(categoryTag) \#(scope)\[INTERVAL\] \#(Location) signpost \#(Interval)"#) == true)
+		XCTAssert(read_stdout { logger.interval("signpost") { delay() } }?.match(#"\#(categoryTag) \#(scope)\[INTERVAL\] \#(Location) signpost: \#(Interval)"#) == true)
 	}
 	
 	func test_Log() {
 		let log = DLog()
 		testAll(log)
-	}
-	
-	// MARK: - Trace
-	
-	func test_trace() {
-		let log = DLog()
-		
-		// Thread
-		XCTAssert(log.trace(config: TraceConfig(options: .thread))?.match("Thread 1 \\(main\\)") == true)
-		Thread.detachNewThread {
-			XCTAssert(log.trace(config: TraceConfig(options: .thread))?.match("Thread \\d+") == true)
-		}
-		
-		// Queue
-		XCTAssert(log.trace(config: TraceConfig(options: .queue))?.match(#"com.apple.main-thread"#) == true)
-		
-		let queues = [
-			#"com.apple.root.background-qos"# : DispatchQueue.global(qos: .background),
-			#"com.apple.root.utility-qos"# : DispatchQueue.global(qos: .utility),
-			#"com.apple.root.default-qos"# : DispatchQueue.global(qos: .default),
-			#"com.apple.root.user-initiated-qos"# : DispatchQueue.global(qos: .userInitiated),
-			#"com.apple.root.user-interactive-qos"# : DispatchQueue.global(qos: .userInteractive),
-			#"serial"# : DispatchQueue(label: "serial"),
-			#"concurrent"# : DispatchQueue(label: "concurrent", attributes: .concurrent)
-		]
-		for (label, queue) in queues {
-			queue.async {
-				XCTAssert(log.trace(config: TraceConfig(options: .queue))?.match(label) == true)
-			}
-		}
-		
-		// Function
-		XCTAssert(log.trace(config: TraceConfig(options: .function))?.match(#"test_trace"#) == true)
-		
-		// Stack
-		//XCTAssert(log.trace(options: .stack)?.match(#"test_trace"#) == true)
-		log.trace(config: TraceConfig(options: [.thread, .queue, .stack]))
-		
-		delay()
 	}
 	
 	// MARK: - Scope
@@ -539,6 +500,7 @@ final class DLogTests: XCTestCase {
 }
 
 final class IntervalTests: XCTestCase {
+	
 	func test_Interval() {
 		let log = DLog()
 		
@@ -606,6 +568,16 @@ final class IntervalTests: XCTestCase {
 		delay(1)
 	}
 	
+	func test_IntervalNameEmpty() {
+		let log = DLog()
+		
+		XCTAssert(read_stdout {
+			log.interval("") {
+				delay()
+			}
+		}?.match(#"> duration: \#(SECS), average: \#(SECS)$"#) == true)
+	}
+	
 	func test_IntervalConfigEmpty() {
 		var config = LogConfig()
 		config.interval.options = []
@@ -643,5 +615,123 @@ final class IntervalTests: XCTestCase {
 				delay()
 			}
 		}?.match(#"signpost: \{ duration: \#(SECS) \}"#) == true)
+	}
+}
+
+final class TraceTests: XCTestCase {
+	
+	func test_TraceFunction() {
+		var config = LogConfig()
+		config.trace.options = .function
+		
+		let log = DLog(config: config)
+		
+		XCTAssert(log.trace()?.match(#"func: test_TraceFunction"#) == true)
+	}
+	
+	func test_TraceQueue() {
+		var config = LogConfig()
+		config.trace.options = .queue
+		
+		let log = DLog(config: config)
+		
+		XCTAssert(log.trace()?.match(#"com.apple.main-thread"#) == true)
+		
+		let queues = [
+			#"com.apple.root.background-qos"# : DispatchQueue.global(qos: .background),
+			#"com.apple.root.utility-qos"# : DispatchQueue.global(qos: .utility),
+			#"com.apple.root.default-qos"# : DispatchQueue.global(qos: .default),
+			#"com.apple.root.user-initiated-qos"# : DispatchQueue.global(qos: .userInitiated),
+			#"com.apple.root.user-interactive-qos"# : DispatchQueue.global(qos: .userInteractive),
+			#"serial"# : DispatchQueue(label: "serial"),
+			#"concurrent"# : DispatchQueue(label: "concurrent", attributes: .concurrent)
+		]
+		for (label, queue) in queues {
+			queue.async {
+				XCTAssert(log.trace()?.match(label) == true)
+			}
+		}
+	}
+	
+	func test_TraceThreadMain() {
+		var config = LogConfig()
+		config.trace.options = .thread
+		
+		let log = DLog(config: config)
+		
+		XCTAssert(log.trace()?.match(#"thread: \{ number: 1, name: main \}$"#) == true)
+	}
+	
+	func test_TraceThreadDetach() {
+		var config = LogConfig()
+		config.trace.options = .thread
+		
+		let log = DLog(config: config)
+		
+		Thread.detachNewThread {
+			XCTAssert(log.trace()?.match(#"thread: \{ number: \d+ \}$"#) == true)
+		}
+		
+		delay()
+	}
+	
+	func test_TraceThreadAll() {
+		var config = LogConfig()
+		config.trace.options = .thread
+		config.trace.thread.options = .all
+		
+		let log = DLog(config: config)
+		
+		XCTAssert(log.trace()?.match(#"thread: \{ number: \d+, name: \S+, priority: \S+, qos: [^,]+, stackSize: \d+ KB \}$"#) == true)
+	}
+	
+	func test_TraceThreadEmpty() {
+		var config = LogConfig()
+		config.trace.options = .thread
+		config.trace.thread.options = []
+		
+		let log = DLog(config: config)
+		
+		XCTAssert(log.trace()?.match(#"> $"#) == true)
+	}
+	
+	func test_TraceThreadOverride() {
+		let log = DLog()
+		
+		let config = TraceConfig(options: .thread, thread: ThreadConfig(options: .number))
+		XCTAssert(log.trace(config: config)?.match(#"thread: \{ number: 1 \}$"#) == true)
+	}
+	
+//	func test_TraceStack() {
+//		var config = LogConfig()
+//		config.trace.options = .stack
+//
+//		let log = DLog(config: config)
+//
+//		//XCTAssert(log.trace()?.match(#"test_TraceStack"#) == true)
+//	}
+	
+	func test_TraceConfigEmpty() {
+		var config = LogConfig()
+		config.trace.options = []
+		
+		let log = DLog(config: config)
+		
+		XCTAssert(log.trace()?.match(#"\#(Location) $"#) == true)
+	}
+	
+//	func test_TraceConfigAll() {
+//		var config = LogConfig()
+//		config.trace.options = .all
+//
+//		let log = DLog(config: config)
+//
+//		XCTAssert(log.trace()?.match(#"\#(Location) $"#) == true)
+//	}
+	
+	func test_TraceText() {
+		let log = DLog()
+		
+		XCTAssert(log.trace("trace")?.match(#"trace: \{ func: test_TraceText\(\), thread: \{ number: 1, name: main \} \}$"#) == true)
 	}
 }
