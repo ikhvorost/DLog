@@ -99,41 +99,33 @@ public class LogInterval : LogItem {
 		super.init(category: category, scope: scope, type: .interval, file: file, funcName: funcName, line: line, text: "\(name)")
 	}
 	
-	func text() -> String {
-		var items = [String]()
+	func description() -> String {
 		
-		if config.options.contains(.duration) {
-			let duration = Text.stringFromTime(interval: self.duration)
-			items.append("duration: \(duration)s")
+		let props: [(IntervalOptions, String, () -> String)] = [
+			(.duration, "duration", { "\(Text.stringFromTime(interval: self.duration))s" }),
+			(.count, "count", { "\(self.count)" }),
+			(.total, "total", { "\(Text.stringFromTime(interval: self.total))s" }),
+			(.min, "min", { "\(Text.stringFromTime(interval: self.min))s" }),
+			(.max, "max", { "\(Text.stringFromTime(interval: self.max))s" }),
+			(.average, "average", { "\(Text.stringFromTime(interval: self.avg))s" }),
+		]
+		
+		let propsText = props
+			.compactMap { config.options.contains($0.0) ? "\($0.1): \($0.2())" : nil }
+			.joined(separator: ", ")
+		
+		var result = [String]()
+		
+		let title = "\(name)"
+		if !title.isEmpty {
+			result.append(title)
 		}
 		
-		if config.options.contains(.count) {
-			items.append("count: \(count)")
+		if !propsText.isEmpty {
+			result.append("{ \(propsText) }")
 		}
 		
-		if config.options.contains(.total) {
-			let total = Text.stringFromTime(interval: self.total)
-			items.append("total: \(total)s")
-		}
-		
-		if config.options.contains(.min) {
-			let min = Text.stringFromTime(interval: self.min)
-			items.append("min: \(min)s")
-		}
-		
-		if config.options.contains(.max) {
-			let max = Text.stringFromTime(interval: self.max)
-			items.append("max: \(max)s")
-		}
-		
-		if config.options.contains(.average) {
-			let avg = Text.stringFromTime(interval: self.avg)
-			items.append("average: \(avg)s")
-		}
-		
-		return items.isEmpty
-			? "\(name)"
-			: "\(name): { \(items.joined(separator: ", ")) }"
+		return result.joined(separator: ": ")
 	}
 	
 	/// Start a time interval.
