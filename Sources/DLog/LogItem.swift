@@ -90,9 +90,9 @@ public class LogItem {
 	public let line: UInt
 	
 	/// The text of this log message.
-	internal(set) public var text: String
+	internal(set) public var text: () -> String
 
-	init(category: String, scope: LogScope?, type: LogType, file: String, funcName: String, line: UInt, text: String) {
+	init(category: String, scope: LogScope?, type: LogType, file: String, funcName: String, line: UInt, text: @escaping () -> String) {
 		self.category = category
 		self.scope = scope
 		self.type = type
@@ -122,7 +122,7 @@ public class LogScope : LogItem, LogProtocol {
 	/// A time duration of a scope
 	private(set) public var duration: TimeInterval = 0
 	
-	init(logger: DLog, category: String, file: String, funcName: String, line: UInt, name: String) {
+	init(logger: DLog, category: String, file: String, funcName: String, line: UInt, name:  @autoclosure @escaping () -> String) {
 		self.logger = logger
 		super.init(category: category, scope: nil, type: .scope, file: file, funcName: funcName, line: line, text: name)
 	}

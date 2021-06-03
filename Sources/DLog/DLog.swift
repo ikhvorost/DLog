@@ -158,13 +158,13 @@ public class DLog: LogProtocol {
 			interval.min = data.min
 			interval.max = data.max
 			interval.avg = data.avg
-			interval.text = interval.description()
+			interval.text = { interval.description() }
 		}
 
 		out.intervalEnd(interval: interval, scopes: scopes)
 	}
 
-	func log(text: () -> String, type: LogType, category: String, scope: LogScope?, file: String, function: String, line: UInt) -> String? {
+	func log(text: @escaping () -> String, type: LogType, category: String, scope: LogScope?, file: String, function: String, line: UInt) -> String? {
 		guard let out = output else { return nil }
 
 		let item = LogItem(
@@ -174,7 +174,7 @@ public class DLog: LogProtocol {
 			file: file,
 			funcName: function,
 			line: line,
-			text: text())
+			text: text)
 		return out.log(item: item, scopes: scopes)
 	}
 

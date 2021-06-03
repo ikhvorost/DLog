@@ -197,13 +197,13 @@ public class Text : LogOutput {
 				
 				let tagText = " \(item.type.title) ".color(tag.colors)
 				let location = "<\(item.fileName):\(item.line)>".color([.dim, tag.textColor])
-				return "\(Self.startSign.color(.dim)) \(time.color(.dim)) \(level.color(.dim)) \(item.category.color(.textBlue)) \(padding)\(tagText) \(location) \(item.text.color(tag.textColor))"
+				return "\(Self.startSign.color(.dim)) \(time.color(.dim)) \(level.color(.dim)) \(item.category.color(.textBlue)) \(padding)\(tagText) \(location) \(item.text().color(tag.textColor))"
 				
 			case .plain:
-				return "\(Self.startSign) \(time) \(level) [\(item.category)] \(padding)[\(item.type.title)] <\(item.fileName):\(item.line)> \(item.text)"
+				return "\(Self.startSign) \(time) \(level) [\(item.category)] \(padding)[\(item.type.title)] <\(item.fileName):\(item.line)> \(item.text())"
 				
 			case .emoji:
-				return "\(Self.startSign) \(time) \(level) [\(item.category)] \(padding)\(item.type.icon) [\(item.type.title)] <\(item.fileName):\(item.line)> \(item.text)"
+				return "\(Self.startSign) \(time) \(level) [\(item.category)] \(padding)\(item.type.icon) [\(item.type.title)] <\(item.fileName):\(item.line)> \(item.text())"
 		}
 	}
 
@@ -229,10 +229,10 @@ public class Text : LogOutput {
 		
 		switch style {
 			case .emoji, .plain:
-				return "\(Self.startSign) \(time) \(level) [\(scope.category)] \(padding) [\(scope.text)] \(ms ?? "")"
+				return "\(Self.startSign) \(time) \(level) [\(scope.category)] \(padding) [\(scope.text())] \(ms ?? "")"
 				
 			case .colored:
-				return "\(Self.startSign.color(.dim)) \(time.color(.dim)) \(level.color(.dim)) \(scope.category.color(.textBlue)) \(padding) [\(scope.text.color(.textMagenta))] \(ms ?? "")"
+				return "\(Self.startSign.color(.dim)) \(time.color(.dim)) \(level.color(.dim)) \(scope.category.color(.textBlue)) \(padding) [\(scope.text().color(.textMagenta))] \(ms ?? "")"
 		}
 	}
 	

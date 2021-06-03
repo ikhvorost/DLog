@@ -113,8 +113,8 @@ final class DLogTests: XCTestCase {
 		
 		XCTAssert(logger.log("log")?.match(#"\#(categoryTag) \#(scope)\#(LogTag) \#(Location) log"#) == true)
 		
-		XCTAssert(logger.trace()?.match(#"\#(categoryTag) \#(scope)\#(TraceTag) \#(Location) testAll"#) == true)
-		XCTAssert(logger.trace("start")?.match(#"\#(categoryTag) \#(scope)\#(TraceTag) \#(Location) testAll\(_:categoryTag:\) start"#) == true)
+		XCTAssert(logger.trace()?.match(#"\#(categoryTag) \#(scope)\#(TraceTag) \#(Location) func: testAll\(_:categoryTag:\), thread: \{ number: 1, name: main \}"#) == true)
+		XCTAssert(logger.trace("start")?.match(#"\#(categoryTag) \#(scope)\#(TraceTag) \#(Location) start: \{ func: testAll\(_:categoryTag:\), thread: \{ number: 1, name: main \} \}"#) == true)
 		
 		XCTAssert(logger.debug("debug")?.match(#"\#(categoryTag) \#(scope)\#(DebugTag) \#(Location) debug"#) == true)
 		
@@ -165,16 +165,16 @@ final class DLogTests: XCTestCase {
 				XCTAssert(scope2.fault("scope2")?.match(#"\[02\] \#(CategoryTag) \|\t\|\t\#(FaultTag) \#(Location) scope2"#) == true)
 			}
 			
-			XCTAssert(scope1.trace("scope1 end")?.match(#"\[01\] \#(CategoryTag) \|\t\#(TraceTag) \#(Location) test_ScopeStack\(\) scope1 end"#) == true)
+			XCTAssert(scope1.trace("scope1 end")?.match(#"\[01\] \#(CategoryTag) \|\t\#(TraceTag) \#(Location) scope1 end"#) == true)
 		}
 		
-		XCTAssert(log.trace("no scope")?.match(#"\[00\] \#(CategoryTag) \#(TraceTag) \#(Location) test_ScopeStack\(\) no scope"#) == true)
+		XCTAssert(log.trace("no scope")?.match(#"\[00\] \#(CategoryTag) \#(TraceTag) \#(Location) no scope"#) == true)
 	}
 	
 	func test_ScopeNotEntered() {
 		let log = DLog()
 		let scope1 = log.scope("scope 1")
-		XCTAssert(scope1.trace()?.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) \#(#function)"#) == true)
+		XCTAssert(scope1.trace()?.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) func: \#(#function)"#) == true)
 	}
 	
 	func test_ScopeEnterLeave() {
@@ -213,16 +213,16 @@ final class DLogTests: XCTestCase {
 		scope1.enter()
 		scope1.enter()
 		
-		XCTAssert(scope1.trace()?.match(#"\#(CategoryTag) \|\t\#(TraceTag) \#(Location) \#(#function)"#) == true)
+		XCTAssert(scope1.trace()?.match(#"\#(CategoryTag) \|\t\#(TraceTag) \#(Location) func: \#(#function)"#) == true)
 		
 		scope1.leave()
 		scope1.leave()
 		
 		scope1.enter()
-		XCTAssert(scope1.trace()?.match(#"\#(CategoryTag) \|\t\#(TraceTag) \#(Location) \#(#function)"#) == true)
+		XCTAssert(scope1.trace()?.match(#"\#(CategoryTag) \|\t\#(TraceTag) \#(Location) func: \#(#function)"#) == true)
 		scope1.leave()
 
-		XCTAssert(log.trace()?.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) \#(#function)"#) == true)
+		XCTAssert(log.trace()?.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) func: \#(#function)"#) == true)
 	}
 	
 	func test_ScopeConcurrent() {
@@ -274,7 +274,7 @@ final class DLogTests: XCTestCase {
 		
 		XCTAssert(log.log("log")?.match(#"\#(CategoryTag) 💬 \#(LogTag) \#(Location) log"#) == true)
 		
-		XCTAssert(log.trace()?.match(#"\#(CategoryTag) #️⃣ \#(TraceTag) \#(Location) \#(#function)"#) == true)
+		XCTAssert(log.trace()?.match(#"\#(CategoryTag) #️⃣ \#(TraceTag) \#(Location) func: \#(#function)"#) == true)
 		XCTAssert(log.debug("debug")?.match(#"\#(CategoryTag) ▶️ \#(DebugTag) \#(Location) debug"#) == true)
 		
 		XCTAssert(log.info("info")?.match(#"\#(CategoryTag) ✅ \#(InfoTag) \#(Location) info"#) == true)
@@ -308,10 +308,10 @@ final class DLogTests: XCTestCase {
 	
 	func test_stdOutErr() {
 		let logOut = DLog(.stdout)
-		XCTAssert(read_stdout { logOut.trace() }?.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) \#(#function)"#) == true)
+		XCTAssert(read_stdout { logOut.trace() }?.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) func: \#(#function)"#) == true)
 		
 		let logErr = DLog(.stderr)
-		XCTAssert(read_stderr { logErr.trace() }?.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) \#(#function)"#) == true)
+		XCTAssert(read_stderr { logErr.trace() }?.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) func: \#(#function)"#) == true)
 	}
 	
 	// MARK: - File
@@ -326,7 +326,7 @@ final class DLogTests: XCTestCase {
 		do {
 			let text = try String(contentsOfFile: filePath)
 			print(text)
-			XCTAssert(text.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) \#(#function)"#))
+			XCTAssert(text.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) func: \#(#function)"#))
 		}
 		catch {
 			XCTFail(error.localizedDescription)
@@ -386,7 +386,7 @@ final class DLogTests: XCTestCase {
 		XCTAssertNotNil(lineLog.info("info"))
 		
 		// Text
-		let textLog = DLog(.textPlain => .filter { $0.text.contains("hello") } => .stdout)
+		let textLog = DLog(.textPlain => .filter { $0.text().contains("hello") } => .stdout)
 		XCTAssertNotNil(textLog.info("hello world"))
 		XCTAssertNotNil(textLog.debug("hello"))
 		XCTAssertNil(textLog.info("info"))
@@ -396,7 +396,7 @@ final class DLogTests: XCTestCase {
 		XCTAssertNotNil(read_stdout { textLog.scope("scope hello") { _ in } })
 		
 		// Scope
-		let scopeLog = DLog(.textPlain => .filter { ($0 as? LogScope)?.text == "Load" || $0.scope?.text == "Load" } => .stdout)
+		let scopeLog = DLog(.textPlain => .filter { ($0 as? LogScope)?.text() == "Load" || $0.scope?.text() == "Load" } => .stdout)
 		//let scopeLog = DLog(.textPlain => .filter { $0.scope?.level == 1 } => .stdout)
 		XCTAssertNil(scopeLog.info("info"))
 		XCTAssertNotNil(read_stdout {

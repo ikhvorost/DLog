@@ -96,7 +96,7 @@ public class LogInterval : LogItem {
 		self.name = name
 		self.config = config
 		
-		super.init(category: category, scope: scope, type: .interval, file: file, funcName: funcName, line: line, text: "\(name)")
+		super.init(category: category, scope: scope, type: .interval, file: file, funcName: funcName, line: line, text: { "\(name)" })
 	}
 	
 	func description() -> String {
