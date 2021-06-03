@@ -77,21 +77,26 @@ public struct StackOptions: OptionSet {
 		self.rawValue = rawValue
 	}
 	
-	public static let depth = StackOptions(rawValue: 1 << 0)
 	public static let module = StackOptions(rawValue: 1 << 1)
 	public static let symbols = StackOptions(rawValue: 1 << 2)
 	
-	public static let compact: StackOptions = [.symbols]
-	//public static let all: StackOptions = [.depth, .module .symbols]
+	public static let all: StackOptions = [.module, .symbols]
+}
+
+public enum StackStyle {
+	case flat
+	case column
 }
 
 public struct StackConfig {
-	public let options: StackOptions
-	let depth = 0
-	// style
+	public var options: StackOptions
+	public var depth: Int
+	public var style: StackStyle
 	
-	public init(options: StackOptions = .compact) {
+	public init(options: StackOptions = .symbols, depth: Int = 0, style: StackStyle = .flat) {
 		self.options = options
+		self.depth = depth
+		self.style = style
 	}
 }
 
@@ -161,15 +166,13 @@ fileprivate extension Thread {
 
 // MARK: - Stack
 
-// https://github.com/apple/swift/tree/main/include/swift/Demangling
-// https://github.com/apple/swift/blob/main/stdlib/public/runtime/Demangle.cpp
 fileprivate typealias Swift_Demangle = @convention(c) (_ mangledName: UnsafePointer<UInt8>?,
-										   _ mangledNameLength: Int,
-										   _ outputBuffer: UnsafeMutablePointer<UInt8>?,
-										   _ outputBufferSize: UnsafeMutablePointer<Int>?,
-										   _ flags: UInt32) -> UnsafeMutablePointer<Int8>?
+													   _ mangledNameLength: Int,
+													   _ outputBuffer: UnsafeMutablePointer<UInt8>?,
+													   _ outputBufferSize: UnsafeMutablePointer<Int>?,
+													   _ flags: UInt32) -> UnsafeMutablePointer<Int8>?
 
-fileprivate let _swift_demangle: Swift_Demangle? = {
+fileprivate let swift_demangle: Swift_Demangle? = {
 	let RTLD_DEFAULT = dlopen(nil, RTLD_NOW)
 	if let sym = dlsym(RTLD_DEFAULT, "swift_demangle") {
 		return unsafeBitCast(sym, to: Swift_Demangle.self)
@@ -177,41 +180,28 @@ fileprivate let _swift_demangle: Swift_Demangle? = {
 	return nil
 }()
 
-fileprivate func swift_demangle(_ mangled: String) -> String? {
+fileprivate func demangle(_ mangled: String) -> String? {
 	guard mangled.hasPrefix("$s") else { return nil }
 	
-	if let cString = _swift_demangle?(mangled, mangled.count, nil, nil, 0) {
+	if let cString = swift_demangle?(mangled, mangled.count, nil, nil, 0) {
 		defer { cString.deallocate() }
 		return String(cString: cString)
 	}
 	return nil
 }
 
+/*
 struct StackItem {
-	
-	enum ItemType {
-		case unknown
-		case function
-		case closure
-		case thunk
-		case getter
-	}
-	
-	let depth: Int
 	let module: String
-	let type: ItemType
 	let name: String
-	//let params: String = ""
 	
 	static let regexClosure = try! NSRegularExpression(pattern: "^closure #\\d+")
 	static let regexExtension = try! NSRegularExpression(pattern: "(static )?\\(extension in \\S+\\):([^\\(]+)")
 	static let regexFunction = try! NSRegularExpression(pattern: "^[^\\(]+")
 	
-	init(depth: Int, module: String, from text: String) {
-		self.depth = depth
+	init(module: String, from text: String) {
 		self.module = module
 		
-		var type: ItemType = .unknown
 		var name = text
 		
 		let range = NSMakeRange(0, text.count)
@@ -219,77 +209,93 @@ struct StackItem {
 		//*
 		// reabstraction thunk helper from @escaping @callee_guaranteed () -> () to @escaping @callee_unowned @convention(block) () -> ()
 		if text.hasPrefix("reabstraction") {
-			type = .thunk
 			name = "thunk"
 		}
 		// closure #1 () -> Swift.String in (extension in DLog):DLog.LogProtocol.trace(_: @autoclosure () -> Swift.Optional<Swift.String>, options: DLog.TraceOptions, file: Swift.String, function: Swift.String, line: Swift.UInt) -> Swift.Optional<Swift.String>
 		// closure #2 () -> () in DLogTests.DLogTests.test_trace() -> ()
 		else if let match = Self.regexClosure.matches(in: text, range: range).first {
-			type = .closure
 			name = (text as NSString).substring(with: match.range)
 		}
 		// static (extension in DLog):__C.NSThread.(callStack in _2FF057552DC5FD3D49D622420632695F).getter : Swift.String
 		// (extension in DLog):DLog.LogProtocol.trace(_: @autoclosure () -> Swift.Optional<Swift.String>, options: DLog.TraceOptions, file: Swift.String, function: Swift.String, line: Swift.UInt) -> Swift.Optional<Swift.String>
 		else if let match = Self.regexExtension.matches(in: text, range: range).first, match.numberOfRanges == 3 {
-			type = .function
 			name = (text as NSString).substring(with: match.range(at: 2))
 		}
 		// DLog.DLog.log(text: () -> Swift.String, type: DLog.LogType, category: Swift.String, scope: Swift.Optional<DLog.LogScope>, file: Swift.String, function: Swift.String, line: Swift.UInt) -> Swift.Optional<Swift.String>
 		else if let match = Self.regexFunction.matches(in: text, range: range).first {
-			type = .function
 			name = (text as NSString).substring(with: match.range)
 		}
 		else {
-			type = .unknown
 			name = text
 		}
 		// */
-		
-		self.type = type
+
 		self.name = name
 	}
 }
+*/
 
-// 1 DLogTests 0x00000001034d42ac $s4DLog9traceInfoyS2SF + 812
-let regex = try! NSRegularExpression(pattern: "(\\d+)\\s+(\\S+)\\s+0x[0-9a-f]+\\s+([^+]+)")
-
-func callStack(_ callStackSymbols: ArraySlice<String>) -> String {
-	var items = [StackItem]()
+fileprivate func stack(_ addresses: ArraySlice<NSNumber>, config: StackConfig) -> String {
+	var info = dl_info()
 	
-	for line in callStackSymbols {
-		if let match = regex.matches(in: line, range: NSMakeRange(0, line.count)).first, match.numberOfRanges == 4 {
-			let ns_line = line as NSString
-			let depth = Int(ns_line.substring(with: match.range(at: 1))) ?? 0
+	var separator = "\n"
+	if case .flat = config.style {
+		separator = ", "
+	}
+	
+	let text = addresses
+		.dropLast(config.depth > 0 ? addresses.count - config.depth : 0)
+		.compactMap { addr -> (String, String)? in
+			guard dladdr(UnsafeRawPointer(bitPattern: addr.uintValue), &info) > 0 else {
+				return nil
+			}
 			
-			let module = ns_line.substring(with: match.range(at: 2))
+			var module: String?
+			if let dli_fname = info.dli_fname, let fname = String(validatingUTF8: dli_fname) {
+				module = (fname as NSString).lastPathComponent
+			}
 			
-			var name = ns_line.substring(with: match.range(at: 3)).trimmingCharacters(in: .whitespaces)
-			if let demangled = swift_demangle(name) {
-				name = demangled
+			var name: String?
+			if let dli_sname = info.dli_sname, let sname = String(validatingUTF8: dli_sname) {
+				name = sname
 				
-				// Double module name
-				if let range = name.range(of: "\(module).\(module)") {
-					name.replaceSubrange(range, with: module)
+				// Swift
+				if let demangled = demangle(sname) {
+					name = demangled
 				}
 			}
 			
-			let item = StackItem(depth: depth, module: module, from: name)
-			items.append(item)
+			if module != nil && name != nil {
+				return (module!, name!)
+			}
+			
+			return nil
 		}
+		.enumerated()
+		.map { item in
+			let items: [(StackOptions, String, () -> String)] = [
+				(.module, "module", { "\(item.element.0)" }),
+				(.symbols, "symbols", { "\(item.element.1)" }),
+			]
+			
+			return jsonDescription(title: "\(item.offset)", items: items, options: config.options)
+		}
+		.joined(separator: separator)
+	
+	if case .flat = config.style {
+		return "[ \(text) ]"
 	}
 	
-	return items.reduce("") { result, item in
-		result + "\(item.depth)\t" + item.module + "\t" + item.name + "\n"
-	}
+	return "[\n\(text) ]"
 }
 
-func traceInfo(title: String?, function: String, callStackSymbols: ArraySlice<String>, config: TraceConfig) -> String {
+func traceInfo(title: String?, function: String, addresses: ArraySlice<NSNumber>, config: TraceConfig) -> String {
 	
 	let items: [(TraceOptions, String, () -> String)] = [
 		(.function, "func", { function }),
 		(.queue, "queue", { "\(String(cString: __dispatch_queue_get_label(nil)))" }),
 		(.thread, "thread", { "\(Thread.current.description(config: config.thread))" }),
-		(.stack, "stack", { "\(callStack(callStackSymbols))" }),
+		(.stack, "stack", { "\(stack(addresses, config: config.stack))" }),
 	]
 	
 	return jsonDescription(title: title ?? "", items: items, options: config.options)
@@ -299,9 +305,10 @@ func jsonDescription<Option: OptionSet>(title: String, items: [(Option, String, 
 	let text = items
 		.compactMap {
 			if options.contains($0.0 as! Option.Element) {
+				let name = $0.1
 				let text = $0.2()
 				if !text.isEmpty {
-					return "\($0.1): \($0.2())"
+					return "\(name): \(text)"
 				}
 			}
 			return nil

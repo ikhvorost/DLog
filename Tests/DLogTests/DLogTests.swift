@@ -620,6 +620,18 @@ final class IntervalTests: XCTestCase {
 
 final class TraceTests: XCTestCase {
 	
+	func test_Trace() {
+		let log = DLog()
+		
+		XCTAssert(log.trace()?.match(#"func: test_Trace\(\), thread: \{ number: 1, name: main \}$"#) == true)
+	}
+		
+	func test_TraceText() {
+		let log = DLog()
+		
+		XCTAssert(log.trace("trace")?.match(#"trace: \{ func: test_TraceText\(\), thread: \{ number: 1, name: main \} \}$"#) == true)
+	}
+	
 	func test_TraceFunction() {
 		var config = LogConfig()
 		config.trace.options = .function
@@ -685,7 +697,7 @@ final class TraceTests: XCTestCase {
 		XCTAssert(log.trace()?.match(#"thread: \{ number: \d+, name: \S+, priority: \S+, qos: [^,]+, stackSize: \d+ KB \}$"#) == true)
 	}
 	
-	func test_TraceThreadEmpty() {
+	func test_TraceThreadOptionsEmpty() {
 		var config = LogConfig()
 		config.trace.options = .thread
 		config.trace.thread.options = []
@@ -695,21 +707,21 @@ final class TraceTests: XCTestCase {
 		XCTAssert(log.trace()?.match(#"> $"#) == true)
 	}
 	
-	func test_TraceThreadOverride() {
+	func test_TraceThreadConfigOverride() {
 		let log = DLog()
 		
 		let config = TraceConfig(options: .thread, thread: ThreadConfig(options: .number))
 		XCTAssert(log.trace(config: config)?.match(#"thread: \{ number: 1 \}$"#) == true)
 	}
 	
-//	func test_TraceStack() {
-//		var config = LogConfig()
-//		config.trace.options = .stack
-//
-//		let log = DLog(config: config)
-//
-//		//XCTAssert(log.trace()?.match(#"test_TraceStack"#) == true)
-//	}
+	func test_TraceStack() {
+		var config = LogConfig()
+		config.trace.options = .stack
+
+		let log = DLog(config: config)
+
+		XCTAssert(log.trace()?.match(#"DLogTests.TraceTests.test_TraceStack"#) == true)
+	}
 	
 	func test_TraceConfigEmpty() {
 		var config = LogConfig()
@@ -728,10 +740,4 @@ final class TraceTests: XCTestCase {
 //
 //		XCTAssert(log.trace()?.match(#"\#(Location) $"#) == true)
 //	}
-	
-	func test_TraceText() {
-		let log = DLog()
-		
-		XCTAssert(log.trace("trace")?.match(#"trace: \{ func: test_TraceText\(\), thread: \{ number: 1, name: main \} \}$"#) == true)
-	}
 }

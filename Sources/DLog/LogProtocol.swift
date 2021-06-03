@@ -80,12 +80,12 @@ extension LogProtocol {
 	@discardableResult
 	public func trace(_ text: @autoclosure () -> String? = nil,
 					  config: TraceConfig? = nil,
-					  callStackSymbols: [String] = Thread.callStackSymbols,
+					  addresses: [NSNumber] = Thread.callStackReturnAddresses,
 					  file: String = #file, function: String = #function, line: UInt = #line) -> String? {
 		let message: () -> String = {
 			traceInfo(title: text(),
 					  function: function,
-					  callStackSymbols: callStackSymbols.dropFirst(),
+					  addresses: addresses.dropFirst(),
 					  config: config ?? params.logger.config.trace)
 		}
 		return params.logger.log(text: message, type: .trace, category: params.category, scope: params.scope, file: file, function: function, line: line)
