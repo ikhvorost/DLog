@@ -33,7 +33,30 @@ fileprivate class IntervalData {
 	var avg: TimeInterval = 0
 }
 
+public struct LogOptions: OptionSet {
+	public let rawValue: Int
+	
+	public init(rawValue: Int) {
+		self.rawValue = rawValue
+	}
+	
+	public static let sign = Self(rawValue: 1 << 0)
+	public static let time = Self(rawValue: 1 << 1)
+	public static let level = Self(rawValue: 1 << 2)
+	public static let category = Self(rawValue: 1 << 3)
+	public static let padding = Self(rawValue: 1 << 4)
+	public static let type = Self(rawValue: 1 << 5)
+	public static let location = Self(rawValue: 1 << 6)
+	
+	public static let compact: Self = [.sign, .time]
+	public static let regular: Self = [.sign, .time, .category, .padding, .type, .location]
+	public static let all: Self = [.sign, .time, .level, .category, .padding, .type, .location]
+}
+
 public struct LogConfig {
+	public var sign: Character = "•"
+	public var options: LogOptions = .all
+	
 	public var trace = TraceConfig()
 	public var interval = IntervalConfig()
 	
@@ -174,7 +197,8 @@ public class DLog: LogProtocol {
 			file: file,
 			funcName: function,
 			line: line,
-			text: text)
+			text: text,
+			config: config)
 		return out.log(item: item, scopes: scopes)
 	}
 
@@ -184,7 +208,8 @@ public class DLog: LogProtocol {
 							 file: file,
 							 funcName: function,
 							 line: line,
-							 name: name)
+							 name: name,
+							 config: config)
 
 		if let block = closure {
 			scope.enter()
@@ -195,17 +220,17 @@ public class DLog: LogProtocol {
 		return scope
 	}
 
-	func interval(name: StaticString, category: String, scope: LogScope?, config: IntervalConfig?, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
+	func interval(name: StaticString, category: String, scope: LogScope?, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
 		let id = "\(file):\(line)".hash
 		let interval = LogInterval(id: id,
 							  logger: self,
 							  category: category,
 							  scope: scope,
-							  config: config ?? self.config.interval,
 							  file: file,
 							  funcName: function,
 							  line: line,
-							  name: name)
+							  name: name,
+							  config: config)
 		
 		if let block = closure {
 			interval.begin()

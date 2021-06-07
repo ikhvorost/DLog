@@ -34,14 +34,14 @@ public struct TraceOptions: OptionSet {
 		self.rawValue = rawValue
 	}
 	
-	public static let thread = TraceOptions(rawValue: 1 << 0)
-	public static let queue = TraceOptions(rawValue: 1 << 1)
-	public static let function = TraceOptions(rawValue: 1 << 2)
-	public static let stack = TraceOptions(rawValue: 1 << 3)
+	public static let thread = Self(rawValue: 1 << 0)
+	public static let queue = Self(rawValue: 1 << 1)
+	public static let function = Self(rawValue: 1 << 2)
+	public static let stack = Self(rawValue: 1 << 3)
 	
-	public static let compact: TraceOptions = [.thread, .function]
-	public static let regular: TraceOptions = [.thread, .queue, .function]
-	public static let all: TraceOptions = [.thread, .queue, .function, .stack]
+	public static let compact: Self = [.thread, .function]
+	public static let regular: Self = [.thread, .queue, .function]
+	public static let all: Self = [.thread, .queue, .function, .stack]
 }
 
 public struct ThreadOptions: OptionSet {
@@ -51,14 +51,14 @@ public struct ThreadOptions: OptionSet {
 		self.rawValue = rawValue
 	}
 	
-	public static let number = ThreadOptions(rawValue: 1 << 0)
-	public static let name = ThreadOptions(rawValue: 1 << 1)
-	public static let priority = ThreadOptions(rawValue: 1 << 2)
-	public static let qos = ThreadOptions(rawValue: 1 << 3)
-	public static let stackSize = ThreadOptions(rawValue: 1 << 4)
+	public static let number = Self(rawValue: 1 << 0)
+	public static let name = Self(rawValue: 1 << 1)
+	public static let priority = Self(rawValue: 1 << 2)
+	public static let qos = Self(rawValue: 1 << 3)
+	public static let stackSize = Self(rawValue: 1 << 4)
 	
-	public static let compact: ThreadOptions = [.number, .name]
-	public static let regular: ThreadOptions = [.number, .name, .qos]
+	public static let compact: Self = [.number, .name]
+	public static let regular: Self = [.number, .name, .qos]
 	public static let all: ThreadOptions = [.number, .name, .qos, .priority, .stackSize]
 }
 
@@ -77,10 +77,10 @@ public struct StackOptions: OptionSet {
 		self.rawValue = rawValue
 	}
 	
-	public static let module = StackOptions(rawValue: 1 << 1)
-	public static let symbols = StackOptions(rawValue: 1 << 2)
+	public static let module = Self(rawValue: 1 << 1)
+	public static let symbols = Self(rawValue: 1 << 2)
 	
-	public static let all: StackOptions = [.module, .symbols]
+	public static let all: Self = [.module, .symbols]
 }
 
 public enum StackStyle {
@@ -102,6 +102,7 @@ public struct StackConfig {
 
 public struct TraceConfig {
 	public var options: TraceOptions
+	
 	public var thread: ThreadConfig
 	public var stack: StackConfig
 	
@@ -137,13 +138,13 @@ fileprivate extension QualityOfService {
 fileprivate extension Thread {
 	
 	// <NSThread: 0x100d04870>{number = 1, name = main}
-	static let regexThread = try? NSRegularExpression(pattern: "number = ([0-9]+), name = ([^}]+)")
+	static let regexThread = try! NSRegularExpression(pattern: "number = ([0-9]+), name = ([^}]+)")
 	
 	func description(config: ThreadConfig) -> String {
 		var number = ""
 		var name = ""
 		let nsString = description as NSString
-		if let match = Self.regexThread?.matches(in: description, options: [], range: NSMakeRange(0, nsString.length)).first,
+		if let match = Self.regexThread.matches(in: description, options: [], range: NSMakeRange(0, nsString.length)).first,
 		   match.numberOfRanges == 3 {
 			number = nsString.substring(with: match.range(at: 1))
 			name = nsString.substring(with: match.range(at: 2))

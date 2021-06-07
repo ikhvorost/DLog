@@ -34,16 +34,16 @@ public struct IntervalOptions: OptionSet {
 		self.rawValue = rawValue
 	}
 	
-	public static let duration = IntervalOptions(rawValue: 1 << 0)
-	public static let count = IntervalOptions(rawValue: 1 << 1)
-	public static let total = IntervalOptions(rawValue: 1 << 2)
-	public static let min = IntervalOptions(rawValue: 1 << 3)
-	public static let max = IntervalOptions(rawValue: 1 << 4)
-	public static let average = IntervalOptions(rawValue: 1 << 5)
+	public static let duration = Self(rawValue: 1 << 0)
+	public static let count = Self(rawValue: 1 << 1)
+	public static let total = Self(rawValue: 1 << 2)
+	public static let min = Self(rawValue: 1 << 3)
+	public static let max = Self(rawValue: 1 << 4)
+	public static let average = Self(rawValue: 1 << 5)
 	
-	public static let compact: IntervalOptions = [.duration, .average]
-	public static let regular: IntervalOptions = [.duration, .average, .count, .total]
-	public static let all: IntervalOptions = [.duration, .count, .total, .min, .max, .average]
+	public static let compact: Self = [.duration, .average]
+	public static let regular: Self = [.duration, .average, .count, .total]
+	public static let all: Self = [.duration, .count, .total, .min, .max, .average]
 }
 
 public struct IntervalConfig {
@@ -63,7 +63,6 @@ public class LogInterval : LogItem {
 	let logger: DLog
 	let name: StaticString
 	@Atomic var begun = false
-	let config: IntervalConfig
 	
 	// SignpostID
 	private var _signpostID: Any? = nil
@@ -90,13 +89,12 @@ public class LogInterval : LogItem {
 	/// A average time duration of a interval
 	internal(set) public var avg: TimeInterval = 0
 	
-	init(id: Int, logger: DLog, category: String, scope: LogScope?, config: IntervalConfig, file: String, funcName: String, line: UInt, name: StaticString) {
+	init(id: Int, logger: DLog, category: String, scope: LogScope?, file: String, funcName: String, line: UInt, name: StaticString, config: LogConfig) {
 		self.id = id
 		self.logger = logger
 		self.name = name
-		self.config = config
 		
-		super.init(category: category, scope: scope, type: .interval, file: file, funcName: funcName, line: line, text: { "\(name)" })
+		super.init(category: category, scope: scope, type: .interval, file: file, funcName: funcName, line: line, text: { "\(name)" }, config: config)
 	}
 	
 	func description() -> String {
@@ -110,7 +108,7 @@ public class LogInterval : LogItem {
 			(.average, "average", { "\(Text.stringFromTime(interval: self.avg))" }),
 		]
 		
-		return jsonDescription(title: "\(name)", items: items, options: config.options)
+		return jsonDescription(title: "\(name)", items: items, options: config.interval.options)
 	}
 	
 	/// Start a time interval.

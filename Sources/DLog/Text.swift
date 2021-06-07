@@ -57,13 +57,17 @@ private enum ANSIEscapeCode: String {
 	case backgroundWhite = "\u{001b}[47m"
 }
 
-private extension String {
+fileprivate extension String {
 	func color(_ codes: [ANSIEscapeCode]) -> String {
 		return codes.map { $0.rawValue }.joined() + self + ANSIEscapeCode.reset.rawValue
 	}
 	
 	func color(_ code: ANSIEscapeCode) -> String {
 		return color([code])
+	}
+	
+	func trimTrailingWhitespace() -> String {
+		replacingOccurrences(of: "\\s+$", with: "", options: .regularExpression)
 	}
 }
 
@@ -128,8 +132,6 @@ public class Text : LogOutput {
 		.interval : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textBlack]),
 	]
 	
-	private static let startSign = "•"
-	
 	/// Style of text to output.
 	public enum Style {
 		/// Universal plain text.
@@ -175,65 +177,110 @@ public class Text : LogOutput {
 		return dateComponentsFormatter.string(from: interval)! + ".\(ms)"
 	}
 	
+	private func logPrefix(items: [(LogOptions, () -> String)], options: LogOptions) -> String {
+		items
+			.compactMap {
+				guard options.contains($0.0) else { return nil }
+				let text = $0.1()
+				return !text.isEmpty ? text.trimTrailingWhitespace() : nil
+			}
+			.joined(separator: " ")
+	}
+	
 	private func textMessage(item: LogItem, scopes: [LogScope]) -> String {
 		assert(item.type != .scope)
 		
-		let time = Self.dateFormatter.string(from: item.time)
-		
-		var padding = ""
-		if let scope = item.scope, scope.entered {
-			for level in 1...scope.level {
-				let scope = scopes.first(where: { $0.level == level })
-				padding += scope != nil ? "|\t" : " \t"
+		var sign = { "\(item.config.sign)" }
+		var time = { Self.dateFormatter.string(from: item.time) }
+		var level = { String(format: "[%02d]", item.scope?.level ?? 0) }
+		var category = { "[\(item.category)]" }
+		let padding: () -> String = {
+			var text = ""
+			if let scope = item.scope, scope.entered {
+				for level in 1...scope.level {
+					let scope = scopes.first(where: { $0.level == level })
+					text += scope != nil ? "| " : "  "
+				}
 			}
+			return text
 		}
-		
-		let level = String(format: "[%02d]", item.scope?.level ?? 0)
+		var type = { "[\(item.type.title)]" }
+		var location = { "<\(item.fileName):\(item.line)>" }
+		var text = item.text()
 		
 		switch style {
+			case .plain:
+				break
+				
 			case .colored:
 				assert(Self.tags[item.type] != nil)
 				let tag = Self.tags[item.type]!
 				
-				let tagText = " \(item.type.title) ".color(tag.colors)
-				let location = "<\(item.fileName):\(item.line)>".color([.dim, tag.textColor])
-				return "\(Self.startSign.color(.dim)) \(time.color(.dim)) \(level.color(.dim)) \(item.category.color(.textBlue)) \(padding)\(tagText) \(location) \(item.text().color(tag.textColor))"
-				
-			case .plain:
-				return "\(Self.startSign) \(time) \(level) [\(item.category)] \(padding)[\(item.type.title)] <\(item.fileName):\(item.line)> \(item.text())"
+				sign = { "\(item.config.sign)".color(.dim) }
+				time = { Self.dateFormatter.string(from: item.time).color(.dim) }
+				level = { String(format: "[%02d]", item.scope?.level ?? 0).color(.dim) }
+				category = { "[\(item.category)]" }
+				type = { "[\(item.type.title)]" }
+				location = { "<\(item.fileName):\(item.line)>".color([.dim, tag.textColor]) }
+				text = text.color(tag.textColor)
 				
 			case .emoji:
-				return "\(Self.startSign) \(time) \(level) [\(item.category)] \(padding)\(item.type.icon) [\(item.type.title)] <\(item.fileName):\(item.line)> \(item.text())"
+				type = { "\(item.type.icon) [\(item.type.title)]" }
 		}
+		
+		let items: [(LogOptions, () -> String)] = [
+			(.sign, sign),
+			(.time, time),
+			(.level, level),
+			(.category, category),
+			(.padding, padding),
+			(.type, type),
+			(.location, location)
+		]
+		let prefix = logPrefix(items: items, options: item.config.options)
+		return "\(prefix) \(text)"
 	}
 
 	private func textScope(scope: LogScope, scopes: [LogScope]) -> String {
-		var start = true
-		var time = Self.dateFormatter.string(from: scope.time)
-		var ms: String?
+		let start = scope.duration == 0
 		
-		if scope.duration > 0 {
-			start = false
-			time = Self.dateFormatter.string(from: scope.time.addingTimeInterval(scope.duration))
-			ms = "(\(Self.stringFromTime(interval: scope.duration))s)"
+		var sign = { "\(scope.config.sign)" }
+		var time = start ? Self.dateFormatter.string(from: scope.time) : Self.dateFormatter.string(from: scope.time.addingTimeInterval(scope.duration))
+		let ms = !start ? "(\(Self.stringFromTime(interval: scope.duration)))" : nil
+		var category = { "[\(scope.category)]" }
+		var level = { String(format: "[%02d]", scope.level) }
+		let padding: () -> String = {
+			var text = ""
+			for level in 1..<scope.level {
+				let scope = scopes.first(where: { $0.level == level })
+				text += scope != nil ? "| " : "  "
+			}
+			text += start ? "┌" : "└"
+			return text
 		}
-		
-		var padding = ""
-		for level in 1..<scope.level {
-			let scope = scopes.first(where: { $0.level == level })
-			padding += scope != nil ? "|\t" : " \t"
-		}
-		padding += start ? "┌" : "└"
-		
-		let level = String(format: "[%02d]", scope.level)
+		var text = "[\(scope.text())]"
 		
 		switch style {
 			case .emoji, .plain:
-				return "\(Self.startSign) \(time) \(level) [\(scope.category)] \(padding) [\(scope.text())] \(ms ?? "")"
-				
+				break
+
 			case .colored:
-				return "\(Self.startSign.color(.dim)) \(time.color(.dim)) \(level.color(.dim)) \(scope.category.color(.textBlue)) \(padding) [\(scope.text().color(.textMagenta))] \(ms ?? "")"
+				sign = { "\(scope.config.sign)".color(.dim) }
+				time = time.color(.dim)
+				level = { String(format: "[%02d]", scope.level).color(.dim) }
+				category = { scope.category.color(.textBlue) }
+				text = "[\(scope.text().color(.textMagenta))]"
 		}
+	
+		let items: [(LogOptions, () -> String)] = [
+			(.sign, sign),
+			(.time, { time }),
+			(.level, level),
+			(.category, category),
+			(.padding, padding),
+		]
+		let prefix = logPrefix(items: items, options: scope.config.options)
+		return "\(prefix) \(text) \(ms ?? "")"
 	}
 	
 	// MARK: - LogOutput

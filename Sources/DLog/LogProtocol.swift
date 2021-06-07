@@ -79,14 +79,13 @@ extension LogProtocol {
 	///
 	@discardableResult
 	public func trace(_ text: @escaping @autoclosure () -> String? = nil,
-					  config: TraceConfig? = nil,
 					  addresses: [NSNumber] = Thread.callStackReturnAddresses,
 					  file: String = #file, function: String = #function, line: UInt = #line) -> String? {
 		let message: () -> String = {
 			traceInfo(title: text(),
 					  function: function,
 					  addresses: addresses.dropFirst(),
-					  config: config ?? params.logger.config.trace)
+					  config: params.logger.config.trace)
 		}
 		return params.logger.log(text: message, type: .trace, category: params.category, scope: params.scope, file: file, function: function, line: line)
 	}
@@ -189,9 +188,8 @@ extension LogProtocol {
 	///
 	@discardableResult
 	public func assert(_ condition: @autoclosure () -> Bool, _ text: @escaping @autoclosure () -> String = "", file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		return !params.logger.disabled && !condition()
-			? params.logger.log(text: text, type: .assert, category: params.category, scope: params.scope, file: file, function: function, line: line)
-			: nil
+		guard !(params.logger.disabled || condition()) else { return nil }
+		return params.logger.log(text: text, type: .assert, category: params.category, scope: params.scope, file: file, function: function, line: line)
 	}
 	
 	/// Logs a bug or fault that occurred during the execution of your code.
@@ -256,7 +254,7 @@ extension LogProtocol {
 	/// - Returns: An `LogInterval` object for the new interval.
 	///
 	@discardableResult
-	public func interval(_ name: StaticString, config: IntervalConfig? = nil, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval {
-		params.logger.interval(name: name, category: params.category, scope: params.scope, config: config, file: file, function: function, line: line, closure: closure)
+	public func interval(_ name: StaticString, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval {
+		params.logger.interval(name: name, category: params.category, scope: params.scope, file: file, function: function, line: line, closure: closure)
 	}
 }

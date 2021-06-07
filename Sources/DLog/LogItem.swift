@@ -91,8 +91,10 @@ public class LogItem {
 	
 	/// The text of this log message.
 	internal(set) public var text: () -> String
+	
+	let config: LogConfig
 
-	init(category: String, scope: LogScope?, type: LogType, file: String, funcName: String, line: UInt, text: @escaping () -> String) {
+	init(category: String, scope: LogScope?, type: LogType, file: String, funcName: String, line: UInt, text: @escaping () -> String, config: LogConfig) {
 		self.category = category
 		self.scope = scope
 		self.type = type
@@ -100,6 +102,7 @@ public class LogItem {
 		self.funcName = funcName
 		self.line = line
 		self.text = text
+		self.config = config
 	}
 }
 
@@ -122,9 +125,9 @@ public class LogScope : LogItem, LogProtocol {
 	/// A time duration of a scope
 	private(set) public var duration: TimeInterval = 0
 	
-	init(logger: DLog, category: String, file: String, funcName: String, line: UInt, name:  @autoclosure @escaping () -> String) {
+	init(logger: DLog, category: String, file: String, funcName: String, line: UInt, name:  @autoclosure @escaping () -> String, config: LogConfig) {
 		self.logger = logger
-		super.init(category: category, scope: nil, type: .scope, file: file, funcName: funcName, line: line, text: name)
+		super.init(category: category, scope: nil, type: .scope, file: file, funcName: funcName, line: line, text: name, config: config)
 	}
 	
 	/// Start a scope.
