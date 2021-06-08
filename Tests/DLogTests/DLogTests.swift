@@ -75,6 +75,11 @@ func read_stderr(_ block: () -> Void) -> String? {
 
 
 // Patterns
+
+let Sign = #"•"#
+let Time = #"\d{2}:\d{2}:\d{2}\.\d{3}"#
+let Level = #"\[\d{2}\]"#
+
 let CategoryTag = #"\[DLOG\]"#
 
 let LogTag = #"\[LOG\]"#
@@ -385,11 +390,22 @@ final class DLogTests: XCTestCase {
 	
 	// MARK: - Config
 	
-	func test_Config() {
-		let config = LogConfig()
+	func test_ConfigEmpty() {
+		var config = LogConfig()
+		config.options = []
+		
 		let log = DLog(config: config)
 		
-		log.trace()
+		XCTAssert(log.trace()?.match(#"^func: test_ConfigEmpty\(\), thread: \{ number: 1, name: main \}$"#) == true)
+	}
+	
+	func test_ConfigAll() {
+		var config = LogConfig()
+		config.options = .all
+		
+		let log = DLog(config: config)
+		
+		XCTAssert(log.trace()?.match(#"\#(Sign) \#(Time) \#(Level) \#(CategoryTag) \#(TraceTag) \#(Location) func: test_ConfigAll\(\), thread: \{ number: 1, name: main \}"#) == true)
 	}
 }
 
@@ -510,7 +526,10 @@ final class ScopeTests: XCTestCase {
 	}
 	
 	func test_ScopeStack() {
-		let log = DLog()
+		var config = LogConfig()
+		config.options = .all
+		
+		let log = DLog(config: config)
 		
 		XCTAssert(log.debug("no scope")?.match(#"\[00\] \#(CategoryTag) \#(DebugTag) \#(Location) no scope"#) == true)
 		
@@ -724,12 +743,12 @@ final class TraceTests: XCTestCase {
 		XCTAssert(log.trace()?.match(#"\#(Location) $"#) == true)
 	}
 	
-//	func test_TraceConfigAll() {
-//		var config = LogConfig()
-//		config.trace.options = .all
-//
-//		let log = DLog(config: config)
-//
-//		XCTAssert(log.trace()?.match(#"\#(Location) $"#) == true)
-//	}
+	func test_TraceConfigAll() {
+		var config = LogConfig()
+		config.trace.options = .all
+
+		let log = DLog(config: config)
+
+		XCTAssert(log.trace()?.match(#"\#(Location) func: test_TraceConfigAll\(\), queue: com.apple.main-thread, thread: \{ number: 1, name: main \}, stack: \[ 0: \{ symbols:"#) == true)
+	}
 }

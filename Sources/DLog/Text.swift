@@ -238,7 +238,7 @@ public class Text : LogOutput {
 			(.location, location)
 		]
 		let prefix = logPrefix(items: items, options: item.config.options)
-		return "\(prefix) \(text)"
+		return prefix.isEmpty ? text : "\(prefix) \(text)"
 	}
 
 	private func textScope(scope: LogScope, scopes: [LogScope]) -> String {
@@ -258,7 +258,7 @@ public class Text : LogOutput {
 			text += start ? "┌" : "└"
 			return text
 		}
-		var text = "[\(scope.text())]"
+		var text = "[\(scope.text())] \(ms ?? "")"
 		
 		switch style {
 			case .emoji, .plain:
@@ -280,7 +280,7 @@ public class Text : LogOutput {
 			(.padding, padding),
 		]
 		let prefix = logPrefix(items: items, options: scope.config.options)
-		return "\(prefix) \(text) \(ms ?? "")"
+		return prefix.isEmpty ? text : "\(prefix) \(text)"
 	}
 	
 	// MARK: - LogOutput

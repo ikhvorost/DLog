@@ -55,7 +55,7 @@ public struct LogOptions: OptionSet {
 
 public struct LogConfig {
 	public var sign: Character = "•"
-	public var options: LogOptions = .all
+	public var options: LogOptions = .regular
 	
 	public var trace = TraceConfig()
 	public var interval = IntervalConfig()
