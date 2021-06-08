@@ -239,6 +239,22 @@ final class DLogTests: XCTestCase {
 		let log = DLog(.net)
 		XCTAssertNotNil(log.debug("oslog"))
 		
+		log.scope("hello") { scope in
+			scope.log("log")
+			scope.debug("debug")
+			scope.trace()
+			scope.warning("warning")
+			scope.error("error")
+			scope.assert(false, "assert")
+			scope.fault("fatal")
+			scope.interval("interval") {
+				delay()
+			}
+		}
+		
+//		wait { exp in
+//		}
+		
 		let log2 = DLog(.net("MyName"))
 		XCTAssertNotNil(log2.debug("oslog"))
 	}
@@ -729,8 +745,6 @@ final class TraceTests: XCTestCase {
 
 		let log = DLog(config: config)
 		
-		debugPrint()
-
 		XCTAssert(log.trace()?.match(#"DLogTests.TraceTests.test_TraceStack"#) == true)
 	}
 	

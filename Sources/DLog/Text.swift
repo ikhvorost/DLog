@@ -219,8 +219,8 @@ public class Text : LogOutput {
 				sign = { "\(item.config.sign)".color(.dim) }
 				time = { Self.dateFormatter.string(from: item.time).color(.dim) }
 				level = { String(format: "[%02d]", item.scope?.level ?? 0).color(.dim) }
-				category = { "[\(item.category)]" }
-				type = { "[\(item.type.title)]" }
+				category = { "\(item.category.color(.textBlue))" }
+				type = { " \(item.type.title) ".color(tag.colors) }
 				location = { "<\(item.fileName):\(item.line)>".color([.dim, tag.textColor]) }
 				text = text.color(tag.textColor)
 				
@@ -269,7 +269,7 @@ public class Text : LogOutput {
 				time = time.color(.dim)
 				level = { String(format: "[%02d]", scope.level).color(.dim) }
 				category = { scope.category.color(.textBlue) }
-				text = "[\(scope.text().color(.textMagenta))]"
+				text = "[\(scope.text().color(.textMagenta))] \((ms ?? "").color(.dim))"
 		}
 	
 		let items: [(LogOptions, () -> String)] = [
