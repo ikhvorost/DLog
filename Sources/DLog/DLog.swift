@@ -181,7 +181,6 @@ public class DLog: LogProtocol {
 			interval.min = data.min
 			interval.max = data.max
 			interval.avg = data.avg
-			interval.text = { interval.description() }
 		}
 
 		out.intervalEnd(interval: interval, scopes: scopes)

@@ -94,20 +94,18 @@ public class LogInterval : LogItem {
 		self.logger = logger
 		self.name = name
 		
-		super.init(category: category, scope: scope, type: .interval, file: file, funcName: funcName, line: line, text: { "\(name)" }, config: config)
+		super.init(category: category, scope: scope, type: .interval, file: file, funcName: funcName, line: line, text: nil, config: config)
 	}
 	
-	func description() -> String {
-		
+	public override func text() -> String {
 		let items: [(IntervalOptions, String, () -> String)] = [
 			(.duration, "duration", { "\(Text.stringFromTime(interval: self.duration))" }),
 			(.count, "count", { "\(self.count)" }),
 			(.total, "total", { "\(Text.stringFromTime(interval: self.total))" }),
 			(.min, "min", { "\(Text.stringFromTime(interval: self.min))" }),
 			(.max, "max", { "\(Text.stringFromTime(interval: self.max))" }),
-			(.average, "average", { "\(Text.stringFromTime(interval: self.avg))" }),
+			(.average, "average", { "\(Text.stringFromTime(interval: self.avg))" })
 		]
-		
 		return jsonDescription(title: "\(name)", items: items, options: config.interval.options)
 	}
 	

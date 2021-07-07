@@ -90,18 +90,23 @@ public class LogItem {
 	public let line: UInt
 	
 	/// The text of this log message.
-	internal(set) public var text: () -> String
+	private let _text: (() -> String)!
+	
+	public func text() -> String {
+		precondition(_text != nil, "Text is empty.")
+		return _text()
+	}
 	
 	let config: LogConfig
 
-	init(category: String, scope: LogScope?, type: LogType, file: String, funcName: String, line: UInt, text: @escaping () -> String, config: LogConfig) {
+	init(category: String, scope: LogScope?, type: LogType, file: String, funcName: String, line: UInt, text: (() -> String)!, config: LogConfig) {
 		self.category = category
 		self.scope = scope
 		self.type = type
 		self.fileName = ((file as NSString).lastPathComponent as NSString).deletingPathExtension
 		self.funcName = funcName
 		self.line = line
-		self.text = text
+		self._text = text
 		self.config = config
 	}
 }
