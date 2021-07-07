@@ -180,7 +180,9 @@ final class DLogTests: XCTestCase {
 	}
 	
 	func test_textColored() {
-		let log = DLog(.textColored => .stdout)
+		var config = LogConfig()
+		config.options = .all
+		let log = DLog(.textColored => .stdout, config: config)
 		
 		let reset = "\u{001b}[0m"
 		XCTAssert(log.trace()?.contains(reset) == true)
@@ -538,6 +540,16 @@ final class ScopeTests: XCTestCase {
 		
 		log.scope("scope") {
 			testAll($0)
+		}
+	}
+	
+	func test_ScopeConfigEmpty() {
+		var config = LogConfig()
+		config.options = []
+		let log = DLog(config: config)
+		
+		log.scope("scope") {
+			XCTAssert($0.trace()?.match(#"^func: test_ScopeConfigEmpty\(\), thread: \{ number: 1, name: main \}"#) == true)
 		}
 	}
 	
