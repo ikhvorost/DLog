@@ -25,14 +25,6 @@
 
 import Foundation
 
-fileprivate class IntervalData {
-	var count = 0
-	var total: TimeInterval = 0
-	var min: TimeInterval = 0
-	var max: TimeInterval = 0
-	var avg: TimeInterval = 0
-}
-
 public struct LogOptions: OptionSet {
 	public let rawValue: Int
 	
@@ -71,7 +63,6 @@ public class DLog: LogProtocol {
 	let config: LogConfig
 
 	@Atomic private var scopes = [LogScope]()
-	@Atomic private var intervals = [Int : IntervalData]()
 	
 	/// The shared disabled log.
 	///
@@ -143,16 +134,6 @@ public class DLog: LogProtocol {
 
 	// Interval
 	
-	private func intervalData(id: Int) -> IntervalData {
-		if let data = intervals[id] {
-			return data
-		}
-		
-		let data = IntervalData()
-		intervals[id] = data
-		return data
-	}
-
 	func begin(interval: LogInterval) {
 		guard let out = output else { return }
 
@@ -161,27 +142,6 @@ public class DLog: LogProtocol {
 
 	func end(interval: LogInterval) {
 		guard let out = output else { return }
-		
-		synchronized(self) {
-			let data = intervalData(id: interval.id)
-			
-			data.count += 1
-			data.total += interval.duration
-			if data.min == 0 || data.min > interval.duration {
-				data.min = interval.duration
-			}
-			if data.max == 0 || data.max < interval.duration {
-				data.max = interval.duration
-			}
-			data.avg = data.total / Double(data.count)
-			
-			interval.time = Date()
-			interval.count = data.count
-			interval.total = data.total
-			interval.min = data.min
-			interval.max = data.max
-			interval.avg = data.avg
-		}
 
 		out.intervalEnd(interval: interval, scopes: scopes)
 	}
@@ -220,9 +180,7 @@ public class DLog: LogProtocol {
 	}
 
 	func interval(name: StaticString, category: String, scope: LogScope?, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
-		let id = "\(file):\(line)".hash
-		let interval = LogInterval(id: id,
-							  logger: self,
+		let interval = LogInterval(logger: self,
 							  category: category,
 							  scope: scope,
 							  file: file,

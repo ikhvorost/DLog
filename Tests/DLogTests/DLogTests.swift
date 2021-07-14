@@ -485,7 +485,9 @@ final class IntervalTests: XCTestCase {
 	}
 	
 	func test_IntervalConcurrent() {
-		let log = DLog()
+		var config = LogConfig()
+		config.interval.options = .all
+		let log = DLog(config: config)
 		
 		for i in 0..<10 {
 			DispatchQueue.global().async {

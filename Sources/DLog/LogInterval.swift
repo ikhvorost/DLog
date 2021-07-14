@@ -27,6 +27,15 @@ import Foundation
 import os.log
 
 
+fileprivate class IntervalData {
+	var count = 0
+	var total: TimeInterval = 0
+	var min: TimeInterval = 0
+	var max: TimeInterval = 0
+	var avg: TimeInterval = 0
+}
+
+
 public struct IntervalOptions: OptionSet {
 	public let rawValue: Int
 	
@@ -59,10 +68,23 @@ public struct IntervalConfig {
 /// Interval logs a point of interest in your code as running time statistics for debugging performance.
 ///
 public class LogInterval : LogItem {
-	let id : Int
-	let logger: DLog
+	@Atomic static private var intervals = [Int : IntervalData]()
+	
+	private static func intervalData(id: Int) -> IntervalData {
+		if let data = Self.intervals[id] {
+			return data
+		}
+		
+		let data = IntervalData()
+		Self.intervals[id] = data
+		return data
+	}
+	
+	private let id : Int
+	private let logger: DLog
+	@Atomic private var begun = false
+	
 	let name: StaticString
-	@Atomic var begun = false
 	
 	// SignpostID
 	private var _signpostID: Any? = nil
@@ -89,24 +111,24 @@ public class LogInterval : LogItem {
 	/// A average time duration of a interval
 	internal(set) public var avg: TimeInterval = 0
 	
-	init(id: Int, logger: DLog, category: String, scope: LogScope?, file: String, funcName: String, line: UInt, name: StaticString, config: LogConfig) {
-		self.id = id
+	init(logger: DLog, category: String, scope: LogScope?, file: String, funcName: String, line: UInt, name: StaticString, config: LogConfig) {
+		self.id = "\(file):\(line)".hash
 		self.logger = logger
 		self.name = name
 		
 		super.init(category: category, scope: scope, type: .interval, file: file, funcName: funcName, line: line, text: nil, config: config)
-	}
-	
-	public override func text() -> String {
-		let items: [(IntervalOptions, String, () -> String)] = [
-			(.duration, "duration", { "\(Text.stringFromTime(interval: self.duration))" }),
-			(.count, "count", { "\(self.count)" }),
-			(.total, "total", { "\(Text.stringFromTime(interval: self.total))" }),
-			(.min, "min", { "\(Text.stringFromTime(interval: self.min))" }),
-			(.max, "max", { "\(Text.stringFromTime(interval: self.max))" }),
-			(.average, "average", { "\(Text.stringFromTime(interval: self.avg))" })
-		]
-		return jsonDescription(title: "\(name)", items: items, options: config.interval.options)
+		
+		text = {
+			let items: [(IntervalOptions, String, () -> String)] = [
+				(.duration, "duration", { "\(Text.stringFromTime(interval: self.duration))" }),
+				(.count, "count", { "\(self.count)" }),
+				(.total, "total", { "\(Text.stringFromTime(interval: self.total))" }),
+				(.min, "min", { "\(Text.stringFromTime(interval: self.min))" }),
+				(.max, "max", { "\(Text.stringFromTime(interval: self.max))" }),
+				(.average, "average", { "\(Text.stringFromTime(interval: self.avg))" })
+			]
+			return jsonDescription(title: "\(name)", items: items, options: config.interval.options)
+		}
 	}
 	
 	/// Start a time interval.
@@ -143,6 +165,27 @@ public class LogInterval : LogItem {
 		begun.toggle()
 		
 		duration = -time.timeIntervalSinceNow
+		time = Date()
+		
+		synchronized(Self.self as AnyObject) {
+			let data = Self.intervalData(id: id)
+			
+			data.count += 1
+			data.total += duration
+			if data.min == 0 || data.min > duration {
+				data.min = duration
+			}
+			if data.max == 0 || data.max < duration {
+				data.max = duration
+			}
+			data.avg = data.total / Double(data.count)
+			
+			count = data.count
+			total = data.total
+			min = data.min
+			max = data.max
+			avg = data.avg
+		}
 		
 		logger.end(interval: self)
 	}
