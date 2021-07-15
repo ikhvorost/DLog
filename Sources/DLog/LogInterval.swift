@@ -112,7 +112,7 @@ public class LogInterval : LogItem {
 	internal(set) public var avg: TimeInterval = 0
 	
 	init(logger: DLog, category: String, scope: LogScope?, file: String, funcName: String, line: UInt, name: StaticString, config: LogConfig) {
-		self.id = "\(file):\(line)".hash
+		self.id = "\(file):\(funcName):\(line)".hash
 		self.logger = logger
 		self.name = name
 		

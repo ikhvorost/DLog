@@ -687,9 +687,10 @@ final class TraceTests: XCTestCase {
 		XCTAssert(log.trace()?.match(#"func: test_TraceFunction"#) == true)
 	}
 	
-	func test_TraceQueue() {
+	func test_TraceQoS() {
 		var config = LogConfig()
-		config.trace.options = .queue
+		config.trace.options = [.thread, .queue]
+		config.trace.thread.options = .all
 		
 		let log = DLog(config: config)
 		
@@ -759,8 +760,30 @@ final class TraceTests: XCTestCase {
 
 		let log = DLog(config: config)
 		
-		XCTAssert(log.trace()?.match(#"DLogTests.TraceTests.test_TraceStack"#) == true)
+		XCTAssert(log.trace()?.match(#"stack: \[ 0: \{ symbols:"#) == true)
 	}
+	
+	func test_TraceStackAll() {
+		var config = LogConfig()
+		config.trace.options = .stack
+		config.trace.stack.options = .all
+		config.trace.stack.depth = 1
+
+		let log = DLog(config: config)
+		
+		XCTAssert(log.trace()?.match(#"stack: \[ 0: \{ module: DLogTests, symbols: implicit closure #1 \(\) throws -> Swift.Bool in DLogTests.TraceTests.test_TraceStackAll\(\) -> \(\) \} \]$"#) == true)
+	}
+	
+	func test_TraceStackStyleColumn() {
+		var config = LogConfig()
+		config.trace.options = .stack
+		config.trace.stack.style = .column
+
+		let log = DLog(config: config)
+		
+		XCTAssert(log.trace()?.match(#"stack: \[\n0: \{ symbols: implicit closure #1 \(\) throws -> Swift.Bool in DLogTests.TraceTests.test_TraceStackStyleColumn\(\) -> \(\) \}"#) == true)
+	}
+	
 	
 	func test_TraceConfigEmpty() {
 		var config = LogConfig()

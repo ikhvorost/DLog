@@ -117,21 +117,16 @@ public struct TraceConfig {
 
 fileprivate extension QualityOfService {
 	
+	static let names: [QualityOfService : String] = [
+		.userInteractive : "userInteractive",
+		.userInitiated: "userInitiated",
+		.utility: "utility",
+		.background: "background",
+		.default :  "default",
+	]
+	
 	var description : String {
-		switch self {
-			case .userInteractive:
-				return "user interactive"
-			case .userInitiated:
-				return "user initiated"
-			case .utility:
-				return "utility"
-			case .background:
-				return "background"
-			case .default:
-				return "background"
-			default:
-				return "unknown"
-		}
+		return Self.names[self] ?? "unknown"
 	}
 }
 
@@ -191,51 +186,6 @@ fileprivate func demangle(_ mangled: String) -> String? {
 	return nil
 }
 
-/*
-struct StackItem {
-	let module: String
-	let name: String
-	
-	static let regexClosure = try! NSRegularExpression(pattern: "^closure #\\d+")
-	static let regexExtension = try! NSRegularExpression(pattern: "(static )?\\(extension in \\S+\\):([^\\(]+)")
-	static let regexFunction = try! NSRegularExpression(pattern: "^[^\\(]+")
-	
-	init(module: String, from text: String) {
-		self.module = module
-		
-		var name = text
-		
-		let range = NSMakeRange(0, text.count)
-		
-		//*
-		// reabstraction thunk helper from @escaping @callee_guaranteed () -> () to @escaping @callee_unowned @convention(block) () -> ()
-		if text.hasPrefix("reabstraction") {
-			name = "thunk"
-		}
-		// closure #1 () -> Swift.String in (extension in DLog):DLog.LogProtocol.trace(_: @autoclosure () -> Swift.Optional<Swift.String>, options: DLog.TraceOptions, file: Swift.String, function: Swift.String, line: Swift.UInt) -> Swift.Optional<Swift.String>
-		// closure #2 () -> () in DLogTests.DLogTests.test_trace() -> ()
-		else if let match = Self.regexClosure.matches(in: text, range: range).first {
-			name = (text as NSString).substring(with: match.range)
-		}
-		// static (extension in DLog):__C.NSThread.(callStack in _2FF057552DC5FD3D49D622420632695F).getter : Swift.String
-		// (extension in DLog):DLog.LogProtocol.trace(_: @autoclosure () -> Swift.Optional<Swift.String>, options: DLog.TraceOptions, file: Swift.String, function: Swift.String, line: Swift.UInt) -> Swift.Optional<Swift.String>
-		else if let match = Self.regexExtension.matches(in: text, range: range).first, match.numberOfRanges == 3 {
-			name = (text as NSString).substring(with: match.range(at: 2))
-		}
-		// DLog.DLog.log(text: () -> Swift.String, type: DLog.LogType, category: Swift.String, scope: Swift.Optional<DLog.LogScope>, file: Swift.String, function: Swift.String, line: Swift.UInt) -> Swift.Optional<Swift.String>
-		else if let match = Self.regexFunction.matches(in: text, range: range).first {
-			name = (text as NSString).substring(with: match.range)
-		}
-		else {
-			name = text
-		}
-		// */
-
-		self.name = name
-	}
-}
-*/
-
 fileprivate func stack(_ addresses: ArraySlice<NSNumber>, config: StackConfig) -> String {
 	var info = dl_info()
 	
@@ -251,26 +201,13 @@ fileprivate func stack(_ addresses: ArraySlice<NSNumber>, config: StackConfig) -
 				return nil
 			}
 			
-			var module: String?
-			if let dli_fname = info.dli_fname, let fname = String(validatingUTF8: dli_fname) {
-				module = (fname as NSString).lastPathComponent
-			}
+			let fname = String(validatingUTF8: info.dli_fname)!
+			let module = (fname as NSString).lastPathComponent
 			
-			var name: String?
-			if let dli_sname = info.dli_sname, let sname = String(validatingUTF8: dli_sname) {
-				name = sname
-				
-				// Swift
-				if let demangled = demangle(sname) {
-					name = demangled
-				}
-			}
+			let sname = String(validatingUTF8: info.dli_sname)!
+			let name = demangle(sname) ?? sname
 			
-			if module != nil && name != nil {
-				return (module!, name!)
-			}
-			
-			return nil
+			return (module, name)
 		}
 		.enumerated()
 		.map { item in
@@ -278,7 +215,6 @@ fileprivate func stack(_ addresses: ArraySlice<NSNumber>, config: StackConfig) -
 				(.module, "module", { "\(item.element.0)" }),
 				(.symbols, "symbols", { "\(item.element.1)" }),
 			]
-			
 			return jsonDescription(title: "\(item.offset)", items: items, options: config.options)
 		}
 		.joined(separator: separator)
