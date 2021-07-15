@@ -771,7 +771,7 @@ final class TraceTests: XCTestCase {
 
 		let log = DLog(config: config)
 		
-		XCTAssert(log.trace()?.match(#"stack: \[ 0: \{ module: DLogTests, symbols: implicit closure #1 \(\) throws -> Swift.Bool in DLogTests.TraceTests.test_TraceStackAll\(\) -> \(\) \} \]$"#) == true)
+		XCTAssert(log.trace()?.match(#"stack: \[ 0: \{ module: \S+, symbols: implicit closure #1 \(\) throws -> Swift.Bool in DLogTests.TraceTests.test_TraceStackAll\(\) -> \(\) \} \]$"#) == true)
 	}
 	
 	func test_TraceStackStyleColumn() {
