@@ -35,32 +35,53 @@ fileprivate class IntervalData {
 	var avg: TimeInterval = 0
 }
 
-
+/// Indicates which info from `LogInterval` should be used.
 public struct IntervalOptions: OptionSet {
-	public let rawValue: Int
+	/// The corresponding value of the raw type.
+	public let rawValue: UInt8
 	
-	public init(rawValue: Int) {
+	/// Creates a new option set from the given raw value.
+	public init(rawValue: UInt8) {
 		self.rawValue = rawValue
 	}
 	
-	public static let duration = Self(rawValue: 1 << 0)
-	public static let count = Self(rawValue: 1 << 1)
-	public static let total = Self(rawValue: 1 << 2)
-	public static let min = Self(rawValue: 1 << 3)
-	public static let max = Self(rawValue: 1 << 4)
-	public static let average = Self(rawValue: 1 << 5)
+	private init(_ shift: UInt8) {
+		self.rawValue = 1 << shift
+	}
 	
+	/// A time duration should be used
+	public static let duration = Self(0)
+	
+	/// A number of total calls should be used
+	public static let count = Self(1)
+	
+	/// A total time duration of all calls should be used
+	public static let total = Self(2)
+	
+	/// A minimum time duration should be used
+	public static let min = Self(3)
+	
+	/// A maximum time duration should be used
+	public static let max = Self(4)
+	
+	/// An average time duration should be used
+	public static let average = Self(5)
+	
+	/// `duration` and `average` should be used
 	public static let compact: Self = [.duration, .average]
+	
+	/// `duration`, `average`, `count` and `total` should be used
 	public static let regular: Self = [.duration, .average, .count, .total]
-	public static let all: Self = [.duration, .count, .total, .min, .max, .average]
+	
+	/// All properties should be used
+	public static let all = Self(rawValue: 255)
 }
 
-public struct IntervalConfig {
-	public var options: IntervalOptions
+/// Contains configuration values regarding to `LogInterval`.
+public struct IntervalConfiguration {
 	
-	public init(options: IntervalOptions = .compact) {
-		self.options = options
-	}
+	/// Set which info from `LogInteral` should be used. Default value is `IntervalOptions.compact`.
+	public var options: IntervalOptions = .compact
 }
 
 /// An object that represents a time interval triggered by the user.
@@ -93,22 +114,22 @@ public class LogInterval : LogItem {
 		get { _signpostID as? OSSignpostID }
 	}
 	
-	/// A number of total calls of a interval
-	internal(set) public var count = 0
-	
-	/// A time duration of a interval
+	/// A time duration
 	private(set) public var duration: TimeInterval = 0
 	
-	/// A total time duration of all calls of a interval
+	/// A number of total calls
+	internal(set) public var count = 0
+	
+	/// A total time duration of all calls
 	internal(set) public var total: TimeInterval = 0
 	
-	/// A minimum time duration of a interval
+	/// A minimum time duration
 	internal(set) public var min: TimeInterval = 0
 	
-	/// A maximum time duration of a interval
+	/// A maximum time duration
 	internal(set) public var max: TimeInterval = 0
 	
-	/// A average time duration of a interval
+	/// An average time duration
 	internal(set) public var avg: TimeInterval = 0
 	
 	init(logger: DLog, category: String, scope: LogScope?, file: String, funcName: String, line: UInt, name: StaticString, config: LogConfig) {
@@ -127,7 +148,7 @@ public class LogInterval : LogItem {
 				(.max, "max", { "\(Text.stringFromTime(interval: self.max))" }),
 				(.average, "average", { "\(Text.stringFromTime(interval: self.avg))" })
 			]
-			return jsonDescription(title: "\(name)", items: items, options: config.interval.options)
+			return jsonDescription(title: "\(name)", items: items, options: config.intervalConfiguration.options)
 		}
 	}
 	

@@ -50,7 +50,7 @@ public struct LogConfig {
 	public var options: LogOptions = .regular
 	
 	public var trace = TraceConfig()
-	public var interval = IntervalConfig()
+	public var intervalConfiguration = IntervalConfiguration()
 	
 	public init() {}
 }

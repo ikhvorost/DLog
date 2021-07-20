@@ -486,7 +486,7 @@ final class IntervalTests: XCTestCase {
 	
 	func test_IntervalConcurrent() {
 		var config = LogConfig()
-		config.interval.options = .all
+		config.intervalConfiguration.options = .all
 		let log = DLog(config: config)
 		
 		for i in 0..<10 {
@@ -510,7 +510,7 @@ final class IntervalTests: XCTestCase {
 	
 	func test_IntervalConfigEmpty() {
 		var config = LogConfig()
-		config.interval.options = []
+		config.intervalConfiguration.options = []
 		
 		let log = DLog(config: config)
 		
@@ -523,7 +523,7 @@ final class IntervalTests: XCTestCase {
 	
 	func test_IntervalConfigAll() {
 		var config = LogConfig()
-		config.interval.options = .all
+		config.intervalConfiguration.options = .all
 		
 		let log = DLog(config: config)
 		
