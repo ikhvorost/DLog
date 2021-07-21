@@ -35,18 +35,24 @@ fileprivate class IntervalData {
 	var avg: TimeInterval = 0
 }
 
+extension OptionSet where RawValue == Int {
+	public static var all: Self {
+		Self.init(rawValue: Int.max)
+	}
+	
+	init(_ shift: Int) {
+		self.init(rawValue: 1 << shift)
+	}
+}
+
 /// Indicates which info from `LogInterval` should be used.
 public struct IntervalOptions: OptionSet {
 	/// The corresponding value of the raw type.
-	public let rawValue: UInt8
+	public let rawValue: Int
 	
 	/// Creates a new option set from the given raw value.
-	public init(rawValue: UInt8) {
+	public init(rawValue: Int) {
 		self.rawValue = rawValue
-	}
-	
-	private init(_ shift: UInt8) {
-		self.rawValue = 1 << shift
 	}
 	
 	/// A time duration should be used
@@ -72,9 +78,6 @@ public struct IntervalOptions: OptionSet {
 	
 	/// `duration`, `average`, `count` and `total` should be used
 	public static let regular: Self = [.duration, .average, .count, .total]
-	
-	/// All properties should be used
-	public static let all = Self(rawValue: 255)
 }
 
 /// Contains configuration values regarding to `LogInterval`.

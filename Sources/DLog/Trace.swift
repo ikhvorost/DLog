@@ -34,14 +34,13 @@ public struct TraceOptions: OptionSet {
 		self.rawValue = rawValue
 	}
 	
-	public static let thread = Self(rawValue: 1 << 0)
-	public static let queue = Self(rawValue: 1 << 1)
-	public static let function = Self(rawValue: 1 << 2)
-	public static let stack = Self(rawValue: 1 << 3)
+	public static let thread = Self(0)
+	public static let queue = Self(1)
+	public static let function = Self(2)
+	public static let stack = Self(3)
 	
 	public static let compact: Self = [.thread, .function]
 	public static let regular: Self = [.thread, .queue, .function]
-	public static let all: Self = [.thread, .queue, .function, .stack]
 }
 
 public struct ThreadOptions: OptionSet {
@@ -51,15 +50,14 @@ public struct ThreadOptions: OptionSet {
 		self.rawValue = rawValue
 	}
 	
-	public static let number = Self(rawValue: 1 << 0)
-	public static let name = Self(rawValue: 1 << 1)
-	public static let priority = Self(rawValue: 1 << 2)
-	public static let qos = Self(rawValue: 1 << 3)
-	public static let stackSize = Self(rawValue: 1 << 4)
+	public static let number = Self(0)
+	public static let name = Self(1)
+	public static let priority = Self(2)
+	public static let qos = Self(3)
+	public static let stackSize = Self(4)
 	
 	public static let compact: Self = [.number, .name]
 	public static let regular: Self = [.number, .name, .qos]
-	public static let all: ThreadOptions = [.number, .name, .qos, .priority, .stackSize]
 }
 
 public struct ThreadConfig {
@@ -77,10 +75,8 @@ public struct StackOptions: OptionSet {
 		self.rawValue = rawValue
 	}
 	
-	public static let module = Self(rawValue: 1 << 1)
-	public static let symbols = Self(rawValue: 1 << 2)
-	
-	public static let all: Self = [.module, .symbols]
+	public static let module = Self(0)
+	public static let symbols = Self(1)
 }
 
 public enum StackStyle {

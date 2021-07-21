@@ -32,17 +32,16 @@ public struct LogOptions: OptionSet {
 		self.rawValue = rawValue
 	}
 	
-	public static let sign = Self(rawValue: 1 << 0)
-	public static let time = Self(rawValue: 1 << 1)
-	public static let level = Self(rawValue: 1 << 2)
-	public static let category = Self(rawValue: 1 << 3)
-	public static let padding = Self(rawValue: 1 << 4)
-	public static let type = Self(rawValue: 1 << 5)
-	public static let location = Self(rawValue: 1 << 6)
+	public static let sign = Self(0)
+	public static let time = Self(1)
+	public static let level = Self(2)
+	public static let category = Self(3)
+	public static let padding = Self(4)
+	public static let type = Self(5)
+	public static let location = Self(6)
 	
 	public static let compact: Self = [.sign, .time]
 	public static let regular: Self = [.sign, .time, .category, .padding, .type, .location]
-	public static let all: Self = [.sign, .time, .level, .category, .padding, .type, .location]
 }
 
 public struct LogConfig {
