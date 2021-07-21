@@ -180,9 +180,9 @@ final class DLogTests: XCTestCase {
 	}
 	
 	func test_textColored() {
-		var config = LogConfig()
+		var config = LogConfiguration()
 		config.options = .all
-		let log = DLog(.textColored => .stdout, config: config)
+		let log = DLog(.textColored => .stdout, configuration: config)
 		
 		let reset = "\u{001b}[0m"
 		XCTAssert(log.trace()?.contains(reset) == true)
@@ -409,19 +409,19 @@ final class DLogTests: XCTestCase {
 	// MARK: - Config
 	
 	func test_ConfigEmpty() {
-		var config = LogConfig()
+		var config = LogConfiguration()
 		config.options = []
 		
-		let log = DLog(config: config)
+		let log = DLog(configuration: config)
 		
 		XCTAssert(log.trace()?.match(#"^func: test_ConfigEmpty\(\), thread: \{ number: 1, name: main \}$"#) == true)
 	}
 	
 	func test_ConfigAll() {
-		var config = LogConfig()
+		var config = LogConfiguration()
 		config.options = .all
 		
-		let log = DLog(config: config)
+		let log = DLog(configuration: config)
 		
 		XCTAssert(log.trace()?.match(#"\#(Sign) \#(Time) \#(Level) \#(CategoryTag) \#(TraceTag) \#(Location) func: test_ConfigAll\(\), thread: \{ number: 1, name: main \}"#) == true)
 	}
@@ -485,9 +485,9 @@ final class IntervalTests: XCTestCase {
 	}
 	
 	func test_IntervalConcurrent() {
-		var config = LogConfig()
+		var config = LogConfiguration()
 		config.intervalConfiguration.options = .all
-		let log = DLog(config: config)
+		let log = DLog(configuration: config)
 		
 		for i in 0..<10 {
 			DispatchQueue.global().async {
@@ -509,10 +509,10 @@ final class IntervalTests: XCTestCase {
 	}
 	
 	func test_IntervalConfigEmpty() {
-		var config = LogConfig()
+		var config = LogConfiguration()
 		config.intervalConfiguration.options = []
 		
-		let log = DLog(config: config)
+		let log = DLog(configuration: config)
 		
 		XCTAssert(read_stdout {
 			log.interval("signpost") {
@@ -522,10 +522,10 @@ final class IntervalTests: XCTestCase {
 	}
 	
 	func test_IntervalConfigAll() {
-		var config = LogConfig()
+		var config = LogConfiguration()
 		config.intervalConfiguration.options = .all
 		
-		let log = DLog(config: config)
+		let log = DLog(configuration: config)
 		
 		XCTAssert(read_stdout {
 			log.interval("signpost") {
@@ -546,9 +546,9 @@ final class ScopeTests: XCTestCase {
 	}
 	
 	func test_ScopeConfigEmpty() {
-		var config = LogConfig()
+		var config = LogConfiguration()
 		config.options = []
-		let log = DLog(config: config)
+		let log = DLog(configuration: config)
 		
 		log.scope("scope") {
 			XCTAssert($0.trace()?.match(#"^func: test_ScopeConfigEmpty\(\), thread: \{ number: 1, name: main \}"#) == true)
@@ -556,10 +556,10 @@ final class ScopeTests: XCTestCase {
 	}
 	
 	func test_ScopeStack() {
-		var config = LogConfig()
+		var config = LogConfiguration()
 		config.options = .all
 		
-		let log = DLog(config: config)
+		let log = DLog(configuration: config)
 		
 		XCTAssert(log.debug("no scope")?.match(#"\[00\] \#(CategoryTag) \#(DebugTag) \#(Location) no scope"#) == true)
 		
@@ -679,20 +679,20 @@ final class TraceTests: XCTestCase {
 	}
 	
 	func test_TraceFunction() {
-		var config = LogConfig()
+		var config = LogConfiguration()
 		config.trace.options = .function
 		
-		let log = DLog(config: config)
+		let log = DLog(configuration: config)
 		
 		XCTAssert(log.trace()?.match(#"func: test_TraceFunction"#) == true)
 	}
 	
 	func test_TraceQoS() {
-		var config = LogConfig()
+		var config = LogConfiguration()
 		config.trace.options = [.thread, .queue]
 		config.trace.thread.options = .all
 		
-		let log = DLog(config: config)
+		let log = DLog(configuration: config)
 		
 		XCTAssert(log.trace()?.match(#"com.apple.main-thread"#) == true)
 		
@@ -713,19 +713,19 @@ final class TraceTests: XCTestCase {
 	}
 	
 	func test_TraceThreadMain() {
-		var config = LogConfig()
+		var config = LogConfiguration()
 		config.trace.options = .thread
 		
-		let log = DLog(config: config)
+		let log = DLog(configuration: config)
 		
 		XCTAssert(log.trace()?.match(#"thread: \{ number: 1, name: main \}$"#) == true)
 	}
 	
 	func test_TraceThreadDetach() {
-		var config = LogConfig()
+		var config = LogConfiguration()
 		config.trace.options = .thread
 		
-		let log = DLog(config: config)
+		let log = DLog(configuration: config)
 		
 		Thread.detachNewThread {
 			XCTAssert(log.trace()?.match(#"thread: \{ number: \d+ \}$"#) == true)
@@ -735,70 +735,70 @@ final class TraceTests: XCTestCase {
 	}
 	
 	func test_TraceThreadAll() {
-		var config = LogConfig()
+		var config = LogConfiguration()
 		config.trace.options = .thread
 		config.trace.thread.options = .all
 		
-		let log = DLog(config: config)
+		let log = DLog(configuration: config)
 		
 		XCTAssert(log.trace()?.match(#"thread: \{ number: \d+, name: \S+, priority: \S+, qos: [^,]+, stackSize: \d+ KB \}$"#) == true)
 	}
 	
 	func test_TraceThreadOptionsEmpty() {
-		var config = LogConfig()
+		var config = LogConfiguration()
 		config.trace.options = .thread
 		config.trace.thread.options = []
 		
-		let log = DLog(config: config)
+		let log = DLog(configuration: config)
 		
 		XCTAssert(log.trace()?.match(#"> $"#) == true)
 	}
 	
 	func test_TraceStack() {
-		var config = LogConfig()
+		var config = LogConfiguration()
 		config.trace.options = .stack
 
-		let log = DLog(config: config)
+		let log = DLog(configuration: config)
 		
 		XCTAssert(log.trace()?.match(#"stack: \[ 0: \{ symbols:"#) == true)
 	}
 	
 	func test_TraceStackAll() {
-		var config = LogConfig()
+		var config = LogConfiguration()
 		config.trace.options = .stack
 		config.trace.stack.options = .all
 		config.trace.stack.depth = 1
 
-		let log = DLog(config: config)
+		let log = DLog(configuration: config)
 		
 		XCTAssert(log.trace()?.match(#"stack: \[ 0: \{ module: \S+, symbols: implicit closure #1 \(\) throws -> Swift.Bool in DLogTests.TraceTests.test_TraceStackAll\(\) -> \(\) \} \]$"#) == true)
 	}
 	
 	func test_TraceStackStyleColumn() {
-		var config = LogConfig()
+		var config = LogConfiguration()
 		config.trace.options = .stack
 		config.trace.stack.style = .column
 
-		let log = DLog(config: config)
+		let log = DLog(configuration: config)
 		
 		XCTAssert(log.trace()?.match(#"stack: \[\n0: \{ symbols: implicit closure #1 \(\) throws -> Swift.Bool in DLogTests.TraceTests.test_TraceStackStyleColumn\(\) -> \(\) \}"#) == true)
 	}
 	
 	
 	func test_TraceConfigEmpty() {
-		var config = LogConfig()
+		var config = LogConfiguration()
 		config.trace.options = []
 		
-		let log = DLog(config: config)
+		let log = DLog(configuration: config)
 		
 		XCTAssert(log.trace()?.match(#"\#(Location) $"#) == true)
 	}
 	
 	func test_TraceConfigAll() {
-		var config = LogConfig()
+		var config = LogConfiguration()
 		config.trace.options = .all
 
-		let log = DLog(config: config)
+		let log = DLog(configuration: config)
 
 		XCTAssert(log.trace()?.match(#"\#(Location) func: test_TraceConfigAll\(\), queue: com.apple.main-thread, thread: \{ number: 1, name: main \}, stack: \[ 0: \{ symbols:"#) == true)
 	}

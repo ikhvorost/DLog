@@ -89,11 +89,12 @@ public class LogItem {
 	/// The line number of code this log message originates from.
 	public let line: UInt
 		
+	/// The text of this log message.
 	internal(set) public var text: (() -> String)!
 	
-	let config: LogConfig
+	let config: LogConfiguration
 
-	init(category: String, scope: LogScope?, type: LogType, file: String, funcName: String, line: UInt, text: (() -> String)!, config: LogConfig) {
+	init(category: String, scope: LogScope?, type: LogType, file: String, funcName: String, line: UInt, text: (() -> String)!, config: LogConfiguration) {
 		self.category = category
 		self.scope = scope
 		self.type = type
@@ -124,7 +125,7 @@ public class LogScope : LogItem, LogProtocol {
 	/// A time duration of a scope
 	private(set) public var duration: TimeInterval = 0
 	
-	init(logger: DLog, category: String, file: String, funcName: String, line: UInt, name: @autoclosure @escaping () -> String, config: LogConfig) {
+	init(logger: DLog, category: String, file: String, funcName: String, line: UInt, name: @autoclosure @escaping () -> String, config: LogConfiguration) {
 		self.logger = logger
 		super.init(category: category, scope: nil, type: .scope, file: file, funcName: funcName, line: line, text: name, config: config)
 	}

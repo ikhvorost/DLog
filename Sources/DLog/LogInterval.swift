@@ -35,16 +35,6 @@ fileprivate class IntervalData {
 	var avg: TimeInterval = 0
 }
 
-extension OptionSet where RawValue == Int {
-	public static var all: Self {
-		Self.init(rawValue: Int.max)
-	}
-	
-	init(_ shift: Int) {
-		self.init(rawValue: 1 << shift)
-	}
-}
-
 /// Indicates which info from `LogInterval` should be used.
 public struct IntervalOptions: OptionSet {
 	/// The corresponding value of the raw type.
@@ -80,7 +70,7 @@ public struct IntervalOptions: OptionSet {
 	public static let regular: Self = [.duration, .average, .count, .total]
 }
 
-/// Contains configuration values regarding to `LogInterval`.
+/// Contains configuration values regarding to intervals.
 public struct IntervalConfiguration {
 	
 	/// Set which info from `LogInteral` should be used. Default value is `IntervalOptions.compact`.
@@ -135,7 +125,7 @@ public class LogInterval : LogItem {
 	/// An average time duration
 	internal(set) public var avg: TimeInterval = 0
 	
-	init(logger: DLog, category: String, scope: LogScope?, file: String, funcName: String, line: UInt, name: StaticString, config: LogConfig) {
+	init(logger: DLog, category: String, scope: LogScope?, file: String, funcName: String, line: UInt, name: StaticString, config: LogConfiguration) {
 		self.id = "\(file):\(funcName):\(line)".hash
 		self.logger = logger
 		self.name = name
