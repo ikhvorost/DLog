@@ -27,86 +27,122 @@ import Foundation
 
 // MARK: - Configuration
 
-public struct TraceOptions: OptionSet {
-	public let rawValue: Int
-	
-	public init(rawValue: Int) {
-		self.rawValue = rawValue
-	}
-	
-	public static let thread = Self(0)
-	public static let queue = Self(1)
-	public static let function = Self(2)
-	public static let stack = Self(3)
-	
-	public static let compact: Self = [.thread, .function]
-	public static let regular: Self = [.thread, .queue, .function]
-}
-
+/// Indicates which info from threads should be used.
 public struct ThreadOptions: OptionSet {
+	/// The corresponding value of the raw type.
 	public let rawValue: Int
 	
+	/// Creates a new option set from the given raw value.
 	public init(rawValue: Int) {
 		self.rawValue = rawValue
 	}
 	
+	/// Number
 	public static let number = Self(0)
+	
+	/// Name (if it exists)
 	public static let name = Self(1)
+	
+	/// Priority
 	public static let priority = Self(2)
+	
+	/// QoS
 	public static let qos = Self(3)
+	
+	/// Stack size
 	public static let stackSize = Self(4)
 	
+	/// Compact: `.number` and `.name`
 	public static let compact: Self = [.number, .name]
+	
+	/// Regular: `.number`, `.name` and `.qos`
 	public static let regular: Self = [.number, .name, .qos]
 }
 
-public struct ThreadConfig {
-	public var options: ThreadOptions
+/// Contains configuration values regarding to thread info.
+public struct ThreadConfiguration {
 	
-	public init(options: ThreadOptions = .compact) {
-		self.options = options
-	}
+	/// Set which info from threads should be used. Default value is `ThreadOptions.compact`.
+	public var options: ThreadOptions = .compact
 }
 
+/// Indicates which info from stacks should be used.
 public struct StackOptions: OptionSet {
+	/// The corresponding value of the raw type.
 	public let rawValue: Int
 	
+	/// Creates a new option set from the given raw value.
 	public init(rawValue: Int) {
 		self.rawValue = rawValue
 	}
 	
+	/// Module name
 	public static let module = Self(0)
+	
+	/// Stack symbols
 	public static let symbols = Self(1)
 }
 
-public enum StackStyle {
+/// View style of stack info
+public enum StackViewStyle {
+	/// Flat view
 	case flat
+	
+	/// Column view
 	case column
 }
 
-public struct StackConfig {
-	public var options: StackOptions
-	public var depth: Int
-	public var style: StackStyle
+/// Contains configuration values regarding to stack info
+public struct StackConfiguration {
+	/// Set which info from stacks should be used. Default value is `StackOptions.symbols`.
+	public var options: StackOptions = .symbols
 	
-	public init(options: StackOptions = .symbols, depth: Int = 0, style: StackStyle = .flat) {
-		self.options = options
-		self.depth = depth
-		self.style = style
-	}
+	/// Depth of stack
+	public var depth = 0
+	
+	/// View style of stack
+	public var style: StackViewStyle = .flat
 }
 
-public struct TraceConfig {
-	public var options: TraceOptions
+/// Indicates which info from the `trace` method should be used.
+public struct TraceOptions: OptionSet {
+	/// The corresponding value of the raw type.
+	public let rawValue: Int
 	
-	public var thread: ThreadConfig
-	public var stack: StackConfig
-	
-	public init(options: TraceOptions = .compact, thread: ThreadConfig = ThreadConfig(), stack: StackConfig = StackConfig()) {
-		self.options = options
-		self.thread = thread
-		self.stack = stack
+	/// Creates a new option set from the given raw value.
+	public init(rawValue: Int) {
+		self.rawValue = rawValue
 	}
+	
+	/// Thread
+	public static let thread = Self(0)
+	
+	/// Queue
+	public static let queue = Self(1)
+	
+	/// Function
+	public static let function = Self(2)
+	
+	/// Stack
+	public static let stack = Self(3)
+	
+	/// Compact: `.thread` and `.function`
+	public static let compact: Self = [.thread, .function]
+	
+	/// Regular: `.thread`, `.queue` and `.function`
+	public static let regular: Self = [.thread, .queue, .function]
+}
+
+/// Contains configuration values regarding to the `trace` method.
+public struct TraceConfiguration {
+	/// Set which info from the `trace` method should be used. Default value is `TraceOptions.compact`.
+	public var options: TraceOptions = .compact
+	
+	/// Configuration of thread info
+	public var thread = ThreadConfiguration()
+	
+	/// Configuration of stack info
+	public var stack = StackConfiguration()
 }
 
 // MARK: - Thread
@@ -131,7 +167,7 @@ fileprivate extension Thread {
 	// <NSThread: 0x100d04870>{number = 1, name = main}
 	static let regexThread = try! NSRegularExpression(pattern: "number = ([0-9]+), name = ([^}]+)")
 	
-	func description(config: ThreadConfig) -> String {
+	func description(config: ThreadConfiguration) -> String {
 		var number = ""
 		var name = ""
 		let nsString = description as NSString
@@ -182,7 +218,7 @@ fileprivate func demangle(_ mangled: String) -> String? {
 	return nil
 }
 
-fileprivate func stack(_ addresses: ArraySlice<NSNumber>, config: StackConfig) -> String {
+fileprivate func stack(_ addresses: ArraySlice<NSNumber>, config: StackConfiguration) -> String {
 	var info = dl_info()
 	
 	var separator = "\n"
@@ -222,7 +258,7 @@ fileprivate func stack(_ addresses: ArraySlice<NSNumber>, config: StackConfig) -
 	return "[\n\(text) ]"
 }
 
-func traceInfo(title: String?, function: String, addresses: ArraySlice<NSNumber>, config: TraceConfig) -> String {
+func traceInfo(title: String?, function: String, addresses: ArraySlice<NSNumber>, config: TraceConfiguration) -> String {
 	
 	let items: [(TraceOptions, String, () -> String)] = [
 		(.function, "func", { function }),

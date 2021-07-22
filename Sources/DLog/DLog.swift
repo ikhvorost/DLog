@@ -36,7 +36,7 @@ extension OptionSet where RawValue == Int {
 	}
 }
 
-/// Indicates which fields should be used.
+/// Indicates which info from the logger should be used.
 public struct LogOptions: OptionSet {
 	/// The corresponding value of the raw type.
 	public let rawValue: Int
@@ -46,31 +46,31 @@ public struct LogOptions: OptionSet {
 		self.rawValue = rawValue
 	}
 	
-	/// A start sign should be used
+	/// Start sign
 	public static let sign = Self(0)
 	
-	/// A timespamp should be used
+	/// Timestamp
 	public static let time = Self(1)
 	
-	/// A level of the current scope should be used
+	/// Level of the current scope
 	public static let level = Self(2)
 	
-	/// A category should be used
+	/// Category
 	public static let category = Self(3)
 	
-	/// The current scope padding should be used
+	/// The current scope padding
 	public static let padding = Self(4)
 	
-	/// A log type should be used
+	/// Log type
 	public static let type = Self(5)
 	
-	/// A location should be used
+	/// Location
 	public static let location = Self(6)
 	
-	/// `sign` and `time` should be used
+	/// Compact: `.sign` and `.time`
 	public static let compact: Self = [.sign, .time]
 	
-	/// `sign`, `time`, `catefory`, `padding`, `type` and `location` should be used
+	/// Regular: `.sign`, `.time`, `.category`, `.padding`, `.type` and `.location`
 	public static let regular: Self = [.sign, .time, .category, .padding, .type, .location]
 }
 
@@ -79,11 +79,11 @@ public struct LogConfiguration {
 	/// Start sign of the logger
 	public var sign: Character = "•"
 	
-	/// Set which options of the logger should be used. Default value is `LogOptions.regular`.
+	/// Set which info from the logger should be used. Default value is `LogOptions.regular`.
 	public var options: LogOptions = .regular
 	
-	/// Configuration of `trace` method
-	public var trace = TraceConfig()
+	/// Configuration of the `trace` method
+	public var traceConfiguration = TraceConfiguration()
 	
 	/// Configuration of intervals
 	public var intervalConfiguration = IntervalConfiguration()

@@ -680,7 +680,7 @@ final class TraceTests: XCTestCase {
 	
 	func test_TraceFunction() {
 		var config = LogConfiguration()
-		config.trace.options = .function
+		config.traceConfiguration.options = .function
 		
 		let log = DLog(configuration: config)
 		
@@ -689,8 +689,8 @@ final class TraceTests: XCTestCase {
 	
 	func test_TraceQoS() {
 		var config = LogConfiguration()
-		config.trace.options = [.thread, .queue]
-		config.trace.thread.options = .all
+		config.traceConfiguration.options = [.thread, .queue]
+		config.traceConfiguration.thread.options = .all
 		
 		let log = DLog(configuration: config)
 		
@@ -714,7 +714,7 @@ final class TraceTests: XCTestCase {
 	
 	func test_TraceThreadMain() {
 		var config = LogConfiguration()
-		config.trace.options = .thread
+		config.traceConfiguration.options = .thread
 		
 		let log = DLog(configuration: config)
 		
@@ -723,7 +723,7 @@ final class TraceTests: XCTestCase {
 	
 	func test_TraceThreadDetach() {
 		var config = LogConfiguration()
-		config.trace.options = .thread
+		config.traceConfiguration.options = .thread
 		
 		let log = DLog(configuration: config)
 		
@@ -736,8 +736,8 @@ final class TraceTests: XCTestCase {
 	
 	func test_TraceThreadAll() {
 		var config = LogConfiguration()
-		config.trace.options = .thread
-		config.trace.thread.options = .all
+		config.traceConfiguration.options = .thread
+		config.traceConfiguration.thread.options = .all
 		
 		let log = DLog(configuration: config)
 		
@@ -746,8 +746,8 @@ final class TraceTests: XCTestCase {
 	
 	func test_TraceThreadOptionsEmpty() {
 		var config = LogConfiguration()
-		config.trace.options = .thread
-		config.trace.thread.options = []
+		config.traceConfiguration.options = .thread
+		config.traceConfiguration.thread.options = []
 		
 		let log = DLog(configuration: config)
 		
@@ -756,7 +756,7 @@ final class TraceTests: XCTestCase {
 	
 	func test_TraceStack() {
 		var config = LogConfiguration()
-		config.trace.options = .stack
+		config.traceConfiguration.options = .stack
 
 		let log = DLog(configuration: config)
 		
@@ -765,9 +765,9 @@ final class TraceTests: XCTestCase {
 	
 	func test_TraceStackAll() {
 		var config = LogConfiguration()
-		config.trace.options = .stack
-		config.trace.stack.options = .all
-		config.trace.stack.depth = 1
+		config.traceConfiguration.options = .stack
+		config.traceConfiguration.stack.options = .all
+		config.traceConfiguration.stack.depth = 1
 
 		let log = DLog(configuration: config)
 		
@@ -776,8 +776,8 @@ final class TraceTests: XCTestCase {
 	
 	func test_TraceStackStyleColumn() {
 		var config = LogConfiguration()
-		config.trace.options = .stack
-		config.trace.stack.style = .column
+		config.traceConfiguration.options = .stack
+		config.traceConfiguration.stack.style = .column
 
 		let log = DLog(configuration: config)
 		
@@ -787,7 +787,7 @@ final class TraceTests: XCTestCase {
 	
 	func test_TraceConfigEmpty() {
 		var config = LogConfiguration()
-		config.trace.options = []
+		config.traceConfiguration.options = []
 		
 		let log = DLog(configuration: config)
 		
@@ -796,7 +796,7 @@ final class TraceTests: XCTestCase {
 	
 	func test_TraceConfigAll() {
 		var config = LogConfiguration()
-		config.trace.options = .all
+		config.traceConfiguration.options = .all
 
 		let log = DLog(configuration: config)
 

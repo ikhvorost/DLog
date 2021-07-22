@@ -35,7 +35,7 @@ fileprivate class IntervalData {
 	var avg: TimeInterval = 0
 }
 
-/// Indicates which info from `LogInterval` should be used.
+/// Indicates which info from intervals should be used.
 public struct IntervalOptions: OptionSet {
 	/// The corresponding value of the raw type.
 	public let rawValue: Int
@@ -45,35 +45,35 @@ public struct IntervalOptions: OptionSet {
 		self.rawValue = rawValue
 	}
 	
-	/// A time duration should be used
+	/// Time duration
 	public static let duration = Self(0)
 	
-	/// A number of total calls should be used
+	/// Number of total calls
 	public static let count = Self(1)
 	
-	/// A total time duration of all calls should be used
+	/// Total time duration of all calls
 	public static let total = Self(2)
 	
-	/// A minimum time duration should be used
+	/// Minimum time duration
 	public static let min = Self(3)
 	
-	/// A maximum time duration should be used
+	/// Maximum time duration
 	public static let max = Self(4)
 	
-	/// An average time duration should be used
+	/// Average time duration∂ß
 	public static let average = Self(5)
 	
-	/// `duration` and `average` should be used
+	/// Compact: `.duration` and `.average`
 	public static let compact: Self = [.duration, .average]
 	
-	/// `duration`, `average`, `count` and `total` should be used
+	/// Regular: `.duration`, `.average`, `.count` and `.total`
 	public static let regular: Self = [.duration, .average, .count, .total]
 }
 
 /// Contains configuration values regarding to intervals.
 public struct IntervalConfiguration {
 	
-	/// Set which info from `LogInteral` should be used. Default value is `IntervalOptions.compact`.
+	/// Set which info from the intervals should be used. Default value is `IntervalOptions.compact`.
 	public var options: IntervalOptions = .compact
 }
 

@@ -85,7 +85,7 @@ extension LogProtocol {
 			traceInfo(title: text(),
 					  function: function,
 					  addresses: addresses.dropFirst(),
-					  config: params.logger.config.trace)
+					  config: params.logger.config.traceConfiguration)
 		}
 		return params.logger.log(text: message, type: .trace, category: params.category, scope: params.scope, file: file, function: function, line: line)
 	}
