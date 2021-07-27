@@ -885,7 +885,7 @@ Outputs:
 
 ## `.disabled`
 
-It is the shared disabled logger constant that logging any messages and it's very useful when you want to turn off the logger for some build configuration, preference, condition etc.
+It is the shared disabled logger constant that doesn't emit any log message and it's very useful when you want to turn off the logger for some build configuration, preference, condition etc.
 
 ``` swift
 // Logging is enabled for `Debug` build configuration only
@@ -897,7 +897,14 @@ It is the shared disabled logger constant that logging any messages and it's ver
 #endif
 ```
 
-When you disable the logger all your code continue running inside scopes and intervals except of log messages:
+The same can be done for disabling unnecessary log categories without commenting or deleting the logger's functions:
+
+```swift
+//let netLog = log["NET"]
+let netLog = DLog.disabled // Disable "NET" category
+```
+
+The disabled logger continue running your code inside scopes and intervals:
 
 ```swift
 let log = DLog.disabled
