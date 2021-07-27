@@ -66,6 +66,42 @@ Where:
 - `<DLog:7>` - location (file:line)
 - `Hello DLog!` - message
 
+`DLog` outputs text logs to `stdout` by default but you can use the other such as: `stderr`, filter, file, OSLog, Net outputs. For instance:
+
+``` swift
+let log = DLog(.file("path/dlog.txt"))
+log.debug("It's a file log!")
+```
+
+`Dlog` supports plain (by default), emoji and colored styles for text messages and you can set a needed one:
+
+```swift
+let log = DLog(.textEmoji => .stdout)
+
+log.info("Info message")
+log.log("Log message")
+log.assert(false, "Assert message")
+```
+
+Outputs:
+
+```bash
+• 00:03:07.179 [DLOG] ✅ [INFO] <DLog:6> Info message
+• 00:03:07.181 [DLOG] 💬 [LOG] <DLog:7> Log message
+• 00:03:07.181 [DLOG] 🅰️ [ASSERT] <DLog:8> Assert message
+```
+
+`=>` is pipeline operator and it can be used for creating a list of outputs:
+
+```swift
+let log = DLog(.textEmoji
+    => .stdout
+    => .filter { $0.type == .error }
+    => .file("path/error.log"))
+```
+
+All log messages will be written to `stdout` first and the the error messages only to the file.
+
 ## Log levels
 
 ### `log`
