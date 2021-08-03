@@ -109,6 +109,9 @@ public class DLog: LogProtocol {
 	///
 	public static let disabled = DLog(nil)
 	
+	/// The default configuration.
+	public static let defaultConfiguration = LogConfiguration()
+	
 	var disabled : Bool { output == nil }
 	
 	/// LogProtocol parameters
@@ -138,7 +141,7 @@ public class DLog: LogProtocol {
 	/// - Parameters:
 	/// 	- output: A target output object. If it is omitted the logger uses `stdout` by default.
 	///
-	public init(_ output: LogOutput? = .stdout, configuration: LogConfiguration = LogConfiguration()) {
+	public init(_ output: LogOutput? = .stdout, configuration: LogConfiguration = DLog.defaultConfiguration) {
 		self.output = output
 		self.config = configuration
 	}

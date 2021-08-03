@@ -180,7 +180,7 @@ final class DLogTests: XCTestCase {
 	}
 	
 	func test_textColored() {
-		var config = LogConfiguration()
+		var config = DLog.defaultConfiguration
 		config.options = .all
 		let log = DLog(.textColored => .stdout, configuration: config)
 		
@@ -409,7 +409,7 @@ final class DLogTests: XCTestCase {
 	// MARK: - Config
 	
 	func test_ConfigEmpty() {
-		var config = LogConfiguration()
+		var config = DLog.defaultConfiguration
 		config.options = []
 		
 		let log = DLog(configuration: config)
@@ -418,7 +418,7 @@ final class DLogTests: XCTestCase {
 	}
 	
 	func test_ConfigAll() {
-		var config = LogConfiguration()
+		var config = DLog.defaultConfiguration
 		config.options = .all
 		
 		let log = DLog(configuration: config)
@@ -485,7 +485,7 @@ final class IntervalTests: XCTestCase {
 	}
 	
 	func test_IntervalConcurrent() {
-		var config = LogConfiguration()
+		var config = DLog.defaultConfiguration
 		config.intervalConfiguration.options = .all
 		let log = DLog(configuration: config)
 		
@@ -509,7 +509,7 @@ final class IntervalTests: XCTestCase {
 	}
 	
 	func test_IntervalConfigEmpty() {
-		var config = LogConfiguration()
+		var config = DLog.defaultConfiguration
 		config.intervalConfiguration.options = []
 		
 		let log = DLog(configuration: config)
@@ -522,7 +522,7 @@ final class IntervalTests: XCTestCase {
 	}
 	
 	func test_IntervalConfigAll() {
-		var config = LogConfiguration()
+		var config = DLog.defaultConfiguration
 		config.intervalConfiguration.options = .all
 		
 		let log = DLog(configuration: config)
@@ -546,7 +546,7 @@ final class ScopeTests: XCTestCase {
 	}
 	
 	func test_ScopeConfigEmpty() {
-		var config = LogConfiguration()
+		var config = DLog.defaultConfiguration
 		config.options = []
 		let log = DLog(configuration: config)
 		
@@ -556,7 +556,7 @@ final class ScopeTests: XCTestCase {
 	}
 	
 	func test_ScopeStack() {
-		var config = LogConfiguration()
+		var config = DLog.defaultConfiguration
 		config.options = .all
 		
 		let log = DLog(configuration: config)
@@ -679,7 +679,7 @@ final class TraceTests: XCTestCase {
 	}
 	
 	func test_TraceFunction() {
-		var config = LogConfiguration()
+		var config = DLog.defaultConfiguration
 		config.traceConfiguration.options = .function
 		
 		let log = DLog(configuration: config)
@@ -688,9 +688,9 @@ final class TraceTests: XCTestCase {
 	}
 	
 	func test_TraceQoS() {
-		var config = LogConfiguration()
+		var config = DLog.defaultConfiguration
 		config.traceConfiguration.options = [.thread, .queue]
-		config.traceConfiguration.thread.options = .all
+		config.traceConfiguration.threadConfiguration.options = .all
 		
 		let log = DLog(configuration: config)
 		
@@ -713,7 +713,7 @@ final class TraceTests: XCTestCase {
 	}
 	
 	func test_TraceThreadMain() {
-		var config = LogConfiguration()
+		var config = DLog.defaultConfiguration
 		config.traceConfiguration.options = .thread
 		
 		let log = DLog(configuration: config)
@@ -722,7 +722,7 @@ final class TraceTests: XCTestCase {
 	}
 	
 	func test_TraceThreadDetach() {
-		var config = LogConfiguration()
+		var config = DLog.defaultConfiguration
 		config.traceConfiguration.options = .thread
 		
 		let log = DLog(configuration: config)
@@ -735,9 +735,9 @@ final class TraceTests: XCTestCase {
 	}
 	
 	func test_TraceThreadAll() {
-		var config = LogConfiguration()
+		var config = DLog.defaultConfiguration
 		config.traceConfiguration.options = .thread
-		config.traceConfiguration.thread.options = .all
+		config.traceConfiguration.threadConfiguration.options = .all
 		
 		let log = DLog(configuration: config)
 		
@@ -745,9 +745,9 @@ final class TraceTests: XCTestCase {
 	}
 	
 	func test_TraceThreadOptionsEmpty() {
-		var config = LogConfiguration()
+		var config = DLog.defaultConfiguration
 		config.traceConfiguration.options = .thread
-		config.traceConfiguration.thread.options = []
+		config.traceConfiguration.threadConfiguration.options = []
 		
 		let log = DLog(configuration: config)
 		
@@ -755,7 +755,7 @@ final class TraceTests: XCTestCase {
 	}
 	
 	func test_TraceStack() {
-		var config = LogConfiguration()
+		var config = DLog.defaultConfiguration
 		config.traceConfiguration.options = .stack
 
 		let log = DLog(configuration: config)
@@ -764,21 +764,23 @@ final class TraceTests: XCTestCase {
 	}
 	
 	func test_TraceStackAll() {
-		var config = LogConfiguration()
+		var config = DLog.defaultConfiguration
 		config.traceConfiguration.options = .stack
-		config.traceConfiguration.stack.options = .all
-		config.traceConfiguration.stack.depth = 1
+		config.traceConfiguration.stackConfiguration.options = .all
+		config.traceConfiguration.stackConfiguration.depth = 1
 
 		let log = DLog(configuration: config)
 		
-		XCTAssert(log.trace()?.match(#"stack: \[ 0: \{ module: \S+, symbols: implicit closure #1 \(\) throws -> Swift.Bool in DLogTests.TraceTests.test_TraceStackAll\(\) -> \(\) \} \]$"#) == true)
+		XCTAssert(log.trace()?.match(#"stack: \[ 0: \{ module: \S+, address: 0x[0-9a-f]{16}, symbols: implicit closure #1 \(\) throws -> Swift.Bool in DLogTests.TraceTests.test_TraceStackAll\(\) -> \(\), offset: \d+ \} \]$"#) == true)
+		
+		return
 	}
 	
 	func test_TraceStackStyleColumn() {
-		var config = LogConfiguration()
+		var config = DLog.defaultConfiguration
 		config.traceConfiguration.options = .stack
-		config.traceConfiguration.stack.style = .column
-
+		config.traceConfiguration.stackConfiguration.style = .column
+		
 		let log = DLog(configuration: config)
 		
 		XCTAssert(log.trace()?.match(#"stack: \[\n0: \{ symbols: implicit closure #1 \(\) throws -> Swift.Bool in DLogTests.TraceTests.test_TraceStackStyleColumn\(\) -> \(\) \}"#) == true)
@@ -786,7 +788,7 @@ final class TraceTests: XCTestCase {
 	
 	
 	func test_TraceConfigEmpty() {
-		var config = LogConfiguration()
+		var config = DLog.defaultConfiguration
 		config.traceConfiguration.options = []
 		
 		let log = DLog(configuration: config)
@@ -795,7 +797,7 @@ final class TraceTests: XCTestCase {
 	}
 	
 	func test_TraceConfigAll() {
-		var config = LogConfiguration()
+		var config = DLog.defaultConfiguration
 		config.traceConfiguration.options = .all
 
 		let log = DLog(configuration: config)

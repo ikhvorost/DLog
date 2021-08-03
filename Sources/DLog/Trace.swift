@@ -79,8 +79,14 @@ public struct StackOptions: OptionSet {
 	/// Module name
 	public static let module = Self(0)
 	
+	/// Address
+	public static let address = Self(1)
+	
 	/// Stack symbols
-	public static let symbols = Self(1)
+	public static let symbols = Self(2)
+	
+	/// Offset
+	public static let offset = Self(3)
 }
 
 /// View style of stack info
@@ -139,10 +145,10 @@ public struct TraceConfiguration {
 	public var options: TraceOptions = .compact
 	
 	/// Configuration of thread info
-	public var thread = ThreadConfiguration()
+	public var threadConfiguration = ThreadConfiguration()
 	
 	/// Configuration of stack info
-	public var stack = StackConfiguration()
+	public var stackConfiguration = StackConfiguration()
 }
 
 // MARK: - Thread
@@ -227,9 +233,9 @@ fileprivate func stack(_ addresses: ArraySlice<NSNumber>, config: StackConfigura
 	}
 	
 	let text = addresses
-		.dropLast(config.depth > 0 ? addresses.count - config.depth : 0)
-		.compactMap { addr -> (String, String)? in
-			guard dladdr(UnsafeRawPointer(bitPattern: addr.uintValue), &info) > 0 else {
+		.compactMap { address -> (String, UInt, String, UInt)? in
+			let pointer = UnsafeRawPointer(bitPattern: address.uintValue)
+			guard dladdr(pointer, &info) != 0 else {
 				return nil
 			}
 			
@@ -239,13 +245,18 @@ fileprivate func stack(_ addresses: ArraySlice<NSNumber>, config: StackConfigura
 			let sname = String(validatingUTF8: info.dli_sname)!
 			let name = demangle(sname) ?? sname
 			
-			return (module, name)
+			let offset = address.uintValue - UInt(bitPattern: info.dli_saddr)
+			
+			return (module, address.uintValue, name, offset)
 		}
+		.prefix(config.depth > 0 ? config.depth : addresses.count)
 		.enumerated()
 		.map { item in
 			let items: [(StackOptions, String, () -> String)] = [
 				(.module, "module", { "\(item.element.0)" }),
-				(.symbols, "symbols", { "\(item.element.1)" }),
+				(.address, "address", { String(format:"0x%016llx", item.element.1) }),
+				(.symbols, "symbols", { "\(item.element.2)" }),
+				(.offset, "offset", { "\(item.element.3)" }),
 			]
 			return jsonDescription(title: "\(item.offset)", items: items, options: config.options)
 		}
@@ -263,8 +274,8 @@ func traceInfo(title: String?, function: String, addresses: ArraySlice<NSNumber>
 	let items: [(TraceOptions, String, () -> String)] = [
 		(.function, "func", { function }),
 		(.queue, "queue", { "\(String(cString: __dispatch_queue_get_label(nil)))" }),
-		(.thread, "thread", { "\(Thread.current.description(config: config.thread))" }),
-		(.stack, "stack", { "\(stack(addresses, config: config.stack))" }),
+		(.thread, "thread", { "\(Thread.current.description(config: config.threadConfiguration))" }),
+		(.stack, "stack", { "\(stack(addresses, config: config.stackConfiguration))" }),
 	]
 	
 	return jsonDescription(title: title ?? "", items: items, options: config.options)
