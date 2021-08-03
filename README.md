@@ -9,7 +9,7 @@
 
 <p align="center"><img src="Images/dlog.png" alt="DLog: Modern logger with pipelines for Swift"></p>
 
-DLog supports emoji and colored text output, oslog, pipelines, filtering, scopes, intervals and more.
+The development logger supports emoji and colored text output, oslog, pipelines, filtering, scopes, intervals, stack backtrace and more.
 
 - [Getting started](#getting-started)
 - [Log levels](#log-levels)
@@ -33,6 +33,11 @@ DLog supports emoji and colored text output, oslog, pipelines, filtering, scopes
 - [Pipeline](#pipeline)
 - [Filter](#filter)
 - [`.disabled`](#disabled)
+- [`LogConfiguration`](#logconfiguration)
+	- [`TraceConfiguration`](#traceconfiguration)
+		- [`ThreadConfiguration`](#threadconfiguration)
+		- [`StackConfiguration`](#stackconfiguration)
+	- [`IntervalConfiguration`](#intervalconfiguration)
 - [Installation](#installation)
 - [License](#license)
 
@@ -63,10 +68,10 @@ Where:
 - `[00]` - global scope level (see Scope)
 - `[DLOG]` - category tag ('DLOG' by default)
 - `[LOG]` - log type tag
-- `<DLog:7>` - location (file:line)
+- `<DLog:7>` - location (file_name:line)
 - `Hello DLog!` - message
 
-`DLog` outputs text logs to `stdout` by default but you can use the other such as: `stderr`, filter, file, OSLog, Net outputs. For instance:
+`DLog` outputs text logs to `stdout` by default but you can use the other outputs such as: `stderr`, filter, file, OSLog, Net. For instance:
 
 ``` swift
 let log = DLog(.file("path/dlog.txt"))
@@ -354,7 +359,7 @@ As you can see from the sample above the scopes have different scope nesting lev
 
 ## Interval
 
-`interval` measures performance of your code by a running time and logs a detailed message with accumulated statistics:
+`interval` measures performance of your code by a running time and logs a detailed message with accumulated statistics in seconds:
 
 ``` swift
 for _ in 0..<10 {
@@ -925,9 +930,180 @@ log.log("finish")
 
 Outputs:
 
-```
+```bash
 scope code
 signpost code
+```
+
+## `LogConfiguration`
+
+You can customize the logger's output by setting which info from the logger should be used. `LogConfiguration` is a root struct to configure the logger which contains common settings for log messages.
+
+For instance you can change the default view of log messages which includes a start sign, category, log type and location:
+
+```swift
+let log = DLog()
+log.info("Info message")
+```
+
+Outputs:
+
+```bash
+• 23:53:16.116 [DLOG] [INFO] <DLog:12> Info message
+```
+
+To new appearance that includes your start sign and timestamp only:
+
+```swift
+var config = DLog.defaultConfiguration // Or: var config = LogConfiguration()
+config.sign = ">"
+config.options = [.sign, .time]
+
+let log = DLog(configuration: config)
+
+log.info("Info message")
+```
+
+Outputs:
+
+```bash
+> 00:01:24.380 Info message
+```
+
+### `TraceConfiguration`
+
+It contains configuration values regarding to the `trace` method which includes trace view options, thread and stack configurations.
+
+By default `trace` method uses `.compact` view option to produce information about the current function name and thread info:
+
+```swift
+let log = DLog()
+
+func doTest() {
+	log.trace()
+}
+
+doTest()
+```
+
+Outputs:
+
+```bash
+• 12:20:47.137 [DLOG] [TRACE] <DLog:13> func: doTest(), thread: { number: 1, name: main }
+```
+
+But you can change it to show a function and queue names:
+
+```swift
+var config = DLog.defaultConfiguration
+config.traceConfiguration.options = [.function, .queue]
+
+let log = DLog(configuration: config)
+
+func doTest() {
+	log.trace()
+}
+
+doTest()
+```
+
+Outputs:
+
+```bash
+• 12:37:24.101 [DLOG] [TRACE] <DLog:11> func: doTest(), queue: com.apple.main-thread
+```
+
+#### `ThreadConfiguration`
+
+The trace configuration has `threadConfiguration` property to change view options of thread info. For instance the logger can print the current QoS of threads.
+
+```swift
+var config = DLog.defaultConfiguration
+config.traceConfiguration.threadConfiguration.options = [.number, .qos]
+
+let log = DLog(configuration: config)
+
+func doTest() {
+	log.trace()
+}
+
+doTest()
+
+DispatchQueue.global().async {
+	doTest()
+}
+```
+
+Outputs:
+
+```bash
+• 13:01:32.859 [DLOG] [TRACE] <DLog:9> func: doTest(), thread: { number: 1, qos: userInteractive }
+• 13:01:32.910 [DLOG] [TRACE] <DLog:9> func: doTest(), thread: { number: 3, qos: userInitiated }
+```
+
+#### `StackConfiguration`
+
+The `trace` method can output the call stack backtrace of the current thread at the moment this method was called. To enable this feature you should configure stack view options, style and depth with `stackConfiguration` property:
+
+```swift
+var configuration: LogConfiguration = {
+	var config = DLog.defaultConfiguration
+	config.traceConfiguration.options = [.stack]
+	config.traceConfiguration.stackConfiguration.options = [.symbols]
+	config.traceConfiguration.stackConfiguration.style = .column
+	config.traceConfiguration.stackConfiguration.depth = 3
+	return config
+}()
+
+let log = DLog(configuration: configuration)
+
+func third() {
+	log.trace()
+}
+
+func second() {
+	third()
+}
+
+func first() {
+	second()
+}
+
+...
+
+first()
+```
+
+Outputs:
+
+```bash
+• 23:06:24.092 [DLOG] [TRACE] <AppDelegate:45> stack: [
+0: { symbols: Test.third() -> () }
+1: { symbols: Test.second() -> () }
+2: { symbols: Test.first() -> () } ]
+```
+
+> NOTE: A full call stack backtrace is available in Debug mode only.
+
+### `IntervalConfiguration`
+
+You can change the view options of interval statistics with `intervalConfiguration` property of `LogConfiguration` to show needed information or use `.all`.
+
+```swift
+var config = LogConfiguration()
+config.intervalConfiguration.options = [.all]
+
+let log = DLog(configuration: config)
+
+log.interval("signpost") {
+	Thread.sleep(forTimeInterval: 3)
+}
+```
+
+Outputs:
+
+```bash
+• 23:26:40.978 [DLOG] [INTERVAL] <DLog:13> signpost: { duration: 3.2, count: 1, total: 3.2, min: 3.2, max: 3.2, average: 3.2 }
 ```
 
 ## Installation
