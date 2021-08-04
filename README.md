@@ -9,7 +9,7 @@
 
 <p align="center"><img src="Images/dlog.png" alt="DLog: Modern logger with pipelines for Swift"></p>
 
-The development logger supports emoji and colored text output, oslog, pipelines, filtering, scopes, intervals, stack backtrace and more.
+DLog is the development logger that supports emoji and colored text output, oslog, pipelines, filtering, scopes, intervals, stack backtrace and more.
 
 - [Getting started](#getting-started)
 - [Log levels](#log-levels)
@@ -33,7 +33,7 @@ The development logger supports emoji and colored text output, oslog, pipelines,
 - [Pipeline](#pipeline)
 - [Filter](#filter)
 - [`.disabled`](#disabled)
-- [`LogConfiguration`](#logconfiguration)
+- [Configuration](#configuration)
 	- [`TraceConfiguration`](#traceconfiguration)
 		- [`ThreadConfiguration`](#threadconfiguration)
 		- [`StackConfiguration`](#stackconfiguration)
@@ -45,7 +45,7 @@ The development logger supports emoji and colored text output, oslog, pipelines,
 
 By default `DLog` provides basic text console output:
 
-``` swift
+```swift
 // Import DLog package
 import DLog
 
@@ -58,22 +58,21 @@ log.log("Hello DLog!")
 
 Outputs:
 
-```
-• 13:09:25.854 [00] [DLOG] [LOG] <DLog:12> Hello DLog!
+```sh
+• 23:59:11.710 [DLOG] [LOG] <DLog:12> Hello DLog!
 ```
 
 Where:
 - `•` - start sign (useful for filtering)
-- `13:12:41.437` - timestamp (HH:mm:ss.SSS)
-- `[00]` - global scope level (see Scope)
+- `23:59:11.710` - timestamp (HH:mm:ss.SSS)
 - `[DLOG]` - category tag ('DLOG' by default)
 - `[LOG]` - log type tag
-- `<DLog:7>` - location (file_name:line)
+- `<DLog:12>` - location (fileName:line), without file extension
 - `Hello DLog!` - message
 
 `DLog` outputs text logs to `stdout` by default but you can use the other outputs such as: `stderr`, filter, file, OSLog, Net. For instance:
 
-``` swift
+```swift
 let log = DLog(.file("path/dlog.txt"))
 log.debug("It's a file log!")
 ```
@@ -90,7 +89,7 @@ log.assert(false, "Assert message")
 
 Outputs:
 
-```bash
+```sh
 • 00:03:07.179 [DLOG] ✅ [INFO] <DLog:6> Info message
 • 00:03:07.181 [DLOG] 💬 [LOG] <DLog:7> Log message
 • 00:03:07.181 [DLOG] 🅰️ [ASSERT] <DLog:8> Assert message
@@ -113,36 +112,36 @@ All log messages will be written to `stdout` first and the the error messages on
 
 Log a message:
 
-``` swift
+```swift
 log.log("App start")
 ```
 
 Outputs:
 
-```
-13:36:59.086 [00] [DLOG] [LOG] <DLog:7> App start
+```sh
+• 23:40:23.545 [DLOG] [LOG] <DLog:12> App start
 ```
 
 ### `info`
 
 Log an information message and helpful data:
 
-``` swift
+```swift
 let uuid = UUID().uuidString
 log.info("uuid: \(uuid)")
 ```
 
 Outputs:
 
-```
-13:37:54.934 [00] [DLOG] [INFO] <DLog:8> uuid: 104B6491-B2A8-4043-A5C6-93CEB60864FA
+```sh
+• 23:44:30.702 [DLOG] [INFO] <DLog:13> uuid: 8A71D2B9-29F1-4330-A4C2-69988E3FE172
 ```
 
 ### `trace`
 
 Log the current function name and a message (if it is provided) to help in debugging problems during the development:
 
-``` swift
+```swift
 func startup() {
 	log.trace("Start")
 	log.trace()
@@ -153,16 +152,16 @@ startup()
 
 Outputs:
 
-```
-13:38:31.903 [00] [DLOG] [TRACE] <DLog:8> startup() Start
-13:38:31.905 [00] [DLOG] [TRACE] <DLog:9> startup()
+```sh
+• 23:45:31.198 [DLOG] [TRACE] <DLog:13> Start: { func: startup(), thread: { number: 1, name: main } }
+• 23:45:31.216 [DLOG] [TRACE] <DLog:14> func: startup(), thread: { number: 1, name: main }
 ```
 
 ### `debug`
 
 Log a debug message to help debug problems during the development:
 
-``` swift
+```swift
 let session = URLSession(configuration: .default)
 session.dataTask(with: URL(string: "https://apple.com")!) { data, response, error in
 	guard let http = response as? HTTPURLResponse else { return }
@@ -175,29 +174,29 @@ session.dataTask(with: URL(string: "https://apple.com")!) { data, response, erro
 
 Outputs:
 
-```
-13:39:41.662 [00] [DLOG] [DEBUG] <DLog:12> https://www.apple.com/: 200 - no error
+```sh
+• 23:49:16.562 [DLOG] [DEBUG] <DLog:17> https://www.apple.com/: 200 - no error
 ```
 
 ### `warning`
 
 Log a warning message that occurred during the execution of your code.
 
-``` swift
+```swift
 log.warning("No Internet connection.")
 ```
 
 Outputs:
 
-```
-13:44:49.992 [00] [DLOG] [WARNING] <DLog:7> No Internet connection.
+```sh
+• 23:49:55.757 [DLOG] [WARNING] <DLog:12> No Internet connection.
 ```
 
 ### `error`
 
 Log an error that occurred during the execution of your code.
 
-``` swift
+```swift
 let fromURL = URL(fileURLWithPath: "source.txt")
 let toURL = URL(fileURLWithPath: "destination.txt")
 do {
@@ -210,15 +209,15 @@ catch {
 
 Outputs:
 
-```
-13:53:20.398 [00] [DLOG] [ERROR] <DLog:13> “source.txt” couldn’t be moved to “com.apple.dt.playground.stub.iOS_Simulator.DLog-AA29FA84-10A1-45D7-BAEC-FC5402BAFB0C” because either the former doesn’t exist, or the folder containing the latter doesn’t exist.
+```sh
+• 23:50:39.560 [DLOG] [ERROR] <DLog:18> “source.txt” couldn’t be moved to “Macintosh HD” because either the former doesn’t exist, or the folder containing the latter doesn’t exist.
 ```
 
 ### `assert`
 
 Sanity check and log a message (if it is provided) when a condition is false.
 
-``` swift
+```swift
 let user = "John"
 let password = ""
 
@@ -229,16 +228,17 @@ log.assert(password.isEmpty == false, "Password is empty")
 
 Outputs:
 
-```
-13:55:15.108 [00] [DLOG] [ASSERT] <DLog:11>
-13:55:15.110 [00] [DLOG] [ASSERT] <DLog:12> Password is empty
+```sh
+• 23:54:19.420 [DLOG] [ASSERT] <DLog:16>
+• 23:54:19.422 [DLOG] [ASSERT] <DLog:17> Password is empty
+
 ```
 
 ### `fault`
 
 Log a critical bug that occurred during the execution in your code.
 
-``` swift
+```swift
 guard let modelURL = Bundle.main.url(forResource: "DataModel", withExtension:"momd") else {
 	log.fault("Error loading model from bundle")
 	abort()
@@ -247,15 +247,15 @@ guard let modelURL = Bundle.main.url(forResource: "DataModel", withExtension:"mo
 
 Outputs:
 
-```
-13:56:46.895 [00] [DLOG] [FAULT] <DLog:8> Error loading model from bundle
+```sh
+• 23:55:07.445 [DLOG] [FAULT] <DLog:13> Error loading model from bundle
 ```
 
 ## Scope
 
 `scope` provides a mechanism for grouping work that's done in your program, so that can see all log messages related to a defined scope of your code in a tree view:
 
-``` swift
+```swift
 log.scope("Loading") { scope in
 	if let path = Bundle.main.path(forResource: "data", ofType: "json") {
 		scope.info("File: \(path)")
@@ -270,21 +270,21 @@ log.scope("Loading") { scope in
 
 Outputs:
 
-```
-• 12:36:43.656 [01] [DLOG] ┌ [Loading]
-• 12:36:43.657 [01] [DLOG] |	[INFO] <DLog:8> File: .../data.json
-• 12:36:43.658 [01] [DLOG] |	[DEBUG] <DLog:10> Loaded 121 bytes
-• 12:36:43.658 [01] [DLOG] └ [Loading] (0.028s)
+```sh
+• 23:57:13.410 [DLOG] ┌ [Loading]
+• 23:57:13.427 [DLOG] | [INFO] <DLog:14> File: path/data.json
+• 23:57:13.443 [DLOG] | [DEBUG] <DLog:16> Loaded 121 bytes
+• 23:57:13.443 [DLOG] └ [Loading] (0.33)
+
 ```
 
 Where:
- - `[01]` - a global level of the scope
  - `[Loading]` - a name of the scope
- - `(0.028s)` - a time duration of the scope
+ - `(0.33)` - a time duration of the scope in secs
 
 You can get duration value of a finished scope programatically:
 
-```
+```swift
 var scope = log.scope("scope") { _ in
 	...
 }
@@ -294,7 +294,7 @@ print(scope.duration)
 
 It's possible to `enter` and `leave` a scope asynchronously:
 
-``` swift
+```swift
 let scope = log.scope("Request")
 scope.enter()
 
@@ -316,16 +316,16 @@ session.dataTask(with: URL(string: "https://apple.com")!) { data, response, erro
 
 Outputs:
 
-```
-• 12:42:58.844 [01] [DLOG] ┌ [Request]
-• 12:43:00.262 [01] [DLOG] |	[DEBUG] <DLog:19> https://www.apple.com/ - HTTP 200
-• 12:43:00.263 [01] [DLOG] |	[DEBUG] <DLog:20> Loaded: 72705 bytes
-• 12:43:00.263 [01] [DLOG] └ [Request] (1.418s)
+```sh
+• 00:01:24.158 [DLOG] ┌ [Request]
+• 00:01:24.829 [DLOG] | [DEBUG] <DLog:25> https://www.apple.com/ - HTTP 200
+• 00:01:24.830 [DLOG] | [DEBUG] <DLog:26> Loaded: 74454 bytes
+• 00:01:24.830 [DLOG] └ [Request] (0.671)
 ```
 
 Scopes can be nested one into one and that implements a global stack of scopes:
 
-``` swift
+```swift
 log.scope("Loading") { scope1 in
 	if let url = Bundle.main.url(forResource: "data", withExtension: "json") {
 		scope1.info("File: \(url)")
@@ -345,23 +345,21 @@ log.scope("Loading") { scope1 in
 
 Outputs:
 
+```sh
+• 00:03:13.552 [DLOG] ┌ [Loading]
+• 00:03:13.554 [DLOG] | [INFO] <DLog:20> File: file:///path/data.json
+• 00:03:13.555 [DLOG] | [DEBUG] <DLog:23> Loaded 121 bytes
+• 00:03:13.555 [DLOG] | ┌ [Parsing]
+• 00:03:13.557 [DLOG] | | [DEBUG] <DLog:27> Parsed 3 items
+• 00:03:13.557 [DLOG] | └ [Parsing] (0.2)
+• 00:03:13.609 [DLOG] └ [Loading] (0.56)
 ```
-• 12:46:44.729 [01] [DLOG] ┌ [Loading]
-• 12:46:44.730 [01] [DLOG] |	[INFO] <DLog:13> File: .../data.json
-• 12:46:44.731 [01] [DLOG] |	[DEBUG] <DLog:16> Loaded 121 bytes
-• 12:46:44.731 [02] [DLOG] |	┌ [Parsing]
-• 12:46:44.739 [02] [DLOG] |	|	[DEBUG] <DLog:20> Parsed 3 items
-• 12:46:44.739 [02] [DLOG] |	└ [Parsing] (0.008s)
-• 12:46:44.756 [01] [DLOG] └ [Loading] (0.027s)
-```
-
-As you can see from the sample above the scopes have different scope nesting levels "Loading" - [01] and "Parsing" - [02] and it's useful for filtering.
 
 ## Interval
 
 `interval` measures performance of your code by a running time and logs a detailed message with accumulated statistics in seconds:
 
-``` swift
+```swift
 for _ in 0..<10 {
 	log.interval("Sort") {
 		var arr = (1...10000).map {_ in arc4random()}
@@ -372,32 +370,27 @@ for _ in 0..<10 {
 
 Outputs:
 
-```
-• 12:14:09.740 [00] [DLOG] [INTERVAL] <DLog:7> Sort - count: 1, duration: 0.342s, total: 0.342s, min: 0.342s, max: 0.342s, avg: 0.342s
-• 12:14:10.039 [00] [DLOG] [INTERVAL] <DLog:7> Sort - count: 2, duration: 0.290s, total: 0.632s, min: 0.290s, max: 0.342s, avg: 0.316s
-• 12:14:10.302 [00] [DLOG] [INTERVAL] <DLog:7> Sort - count: 3, duration: 0.261s, total: 0.893s, min: 0.261s, max: 0.342s, avg: 0.298s
-• 12:14:10.554 [00] [DLOG] [INTERVAL] <DLog:7> Sort - count: 4, duration: 0.250s, total: 1.144s, min: 0.250s, max: 0.342s, avg: 0.286s
-• 12:14:10.805 [00] [DLOG] [INTERVAL] <DLog:7> Sort - count: 5, duration: 0.250s, total: 1.393s, min: 0.250s, max: 0.342s, avg: 0.279s
-• 12:14:11.061 [00] [DLOG] [INTERVAL] <DLog:7> Sort - count: 6, duration: 0.255s, total: 1.648s, min: 0.250s, max: 0.342s, avg: 0.275s
-• 12:14:11.315 [00] [DLOG] [INTERVAL] <DLog:7> Sort - count: 7, duration: 0.252s, total: 1.900s, min: 0.250s, max: 0.342s, avg: 0.271s
-• 12:14:11.566 [00] [DLOG] [INTERVAL] <DLog:7> Sort - count: 8, duration: 0.249s, total: 2.149s, min: 0.249s, max: 0.342s, avg: 0.269s
-• 12:14:11.816 [00] [DLOG] [INTERVAL] <DLog:7> Sort - count: 9, duration: 0.249s, total: 2.398s, min: 0.249s, max: 0.342s, avg: 0.266s
-• 12:14:12.075 [00] [DLOG] [INTERVAL] <DLog:7> Sort - count: 10, duration: 0.257s, total: 2.655s, min: 0.249s, max: 0.342s, avg: 0.265s
+```sh
+• 00:05:09.932 [DLOG] [INTERVAL] <DLog:19> Sort: { duration: 0.270, average: 0.270 }
+• 00:05:10.162 [DLOG] [INTERVAL] <DLog:19> Sort: { duration: 0.216, average: 0.243 }
+• 00:05:10.380 [DLOG] [INTERVAL] <DLog:19> Sort: { duration: 0.215, average: 0.234 }
+• 00:05:10.608 [DLOG] [INTERVAL] <DLog:19> Sort: { duration: 0.225, average: 0.231 }
+• 00:05:10.829 [DLOG] [INTERVAL] <DLog:19> Sort: { duration: 0.217, average: 0.229 }
+• 00:05:11.057 [DLOG] [INTERVAL] <DLog:19> Sort: { duration: 0.225, average: 0.228 }
+• 00:05:11.275 [DLOG] [INTERVAL] <DLog:19> Sort: { duration: 0.214, average: 0.226 }
+• 00:05:11.497 [DLOG] [INTERVAL] <DLog:19> Sort: { duration: 0.219, average: 0.225 }
+• 00:05:11.712 [DLOG] [INTERVAL] <DLog:19> Sort: { duration: 0.212, average: 0.224 }
+• 00:05:11.925 [DLOG] [INTERVAL] <DLog:19> Sort: { duration: 0.209, average: 0.222 }
 ```
 
 Where:
  - `Sort` - a name of the interval
- - `count` - a number of calls
  - `duration` - the current time duration
- - `total` - a total time duration
- - `min` - the shortest time duration
- - `max` - the longest time duration
- - `avg` - an average time duration
-
+ - `average` - an average time duration
 
 You can get all metrics values of the interval programatically:
 
-```
+```swift
 let interval = log.interval("signpost") {
 	...
 }
@@ -412,7 +405,7 @@ print(interval.avg)
 
 To measure asynchronous tasks you can use `begin` and `end` methods:
 
-``` swift
+```swift
 let interval = log.interval("Video")
 interval.begin()
 
@@ -428,16 +421,16 @@ asset.loadValuesAsynchronously(forKeys: ["duration"]) {
 
 Outputs:
 
-```
-00:42:25.885 [00] [DLOG] [INFO] <Package.playground:16> Duration: 155000
-00:42:25.888 [00] [DLOG] [INTERVAL] <Package.playground:9> Video - count: 1, duration: 0.390s, total: 0.390s, min: 0.390s, max: 0.390s, avg: 0.390s
+```sh
+• 00:10:17.982 [DLOG] [INFO] <DLog:27> Duration: 5532776
+• 00:10:17.983 [DLOG] [INTERVAL] <DLog:20> Video: { duration: 2.376, average: 2.376 }
 ```
 
 ## Category
 
 You can define category name to differentiate unique areas and parts of your app and DLog uses this value to categorize and filter related log messages. For example, you might define separate strings for your app’s user interface, data model, and networking code.
 
-``` swift
+```swift
 let log = DLog()
 let tableLog = log["TABLE"]
 let netLog = log["NET"]
@@ -449,10 +442,10 @@ tableLog.debug("Updating with network response.")
 
 Outputs:
 
-```
-16:21:10.777 [00] [DLOG] [DEBUG] <DLog:9> Refresh
-16:21:10.779 [00] [NET] [DEBUG] <DLog:10> Successfully fetched recordings.
-16:21:10.779 [00] [TABLE] [DEBUG] <DLog:11> Updating with network response.
+```sh
+• 00:11:30.660 [DLOG] [DEBUG] <DLog:22> Refresh
+• 00:11:30.661 [NET] [DEBUG] <DLog:23> Successfully fetched recordings.
+• 00:11:30.661 [TABLE] [DEBUG] <DLog:24> Updating with network response.
 ```
 
 ## Outputs
@@ -466,7 +459,7 @@ It supports thee styles:
 - `.emoji` - text with type icons for info, debug etc. (useful for XCode console)
 - `.colored` - colored text with ANSI escape codes (useful for Terminal and files)
 
-``` swift
+```swift
 let outputs = [
 	"Plain" : Text(style: .plain),
 	"Emoji" : Text(style: .emoji),
@@ -486,21 +479,21 @@ for (name, output) in outputs {
 
 Outputs:
 
-```
+```sh
 Plain
-16:25:38.303 [00] [DLOG] [INFO] <DLog:16> info
-16:25:38.305 [00] [DLOG] [LOG] <DLog:17> log
-16:25:38.311 [00] [DLOG] [FAULT] <DLog:18> fatal
+• 00:12:31.718 [DLOG] [INFO] <DLog:25> info
+• 00:12:31.719 [DLOG] [ERROR] <DLog:26> error
+• 00:12:31.720 [DLOG] [FAULT] <DLog:27> fatal
 
 Emoji
-16:25:38.312 [00] [DLOG] ✅ [INFO] <DLog:16> info
-16:25:38.312 [00] [DLOG] 💬 [LOG] <DLog:17> log
-16:25:38.312 [00] [DLOG] 🆘 [FAULT] <DLog:18> fatal
+• 00:12:31.720 [DLOG] ✅ [INFO] <DLog:25> info
+• 00:12:31.721 [DLOG] ⚠️ [ERROR] <DLog:26> error
+• 00:12:31.734 [DLOG] 🆘 [FAULT] <DLog:27> fatal
 
 Colored
-[2m16:25:38.312[0m [2m[00][0m [34mDLOG[0m [42m[37m INFO [0m [2m[32m<DLog:16>[0m [32minfo[0m
-[2m16:25:38.318[0m [2m[00][0m [34mDLOG[0m [47m[30m LOG [0m [2m[37m<DLog:17>[0m [37mlog[0m
-[2m16:25:38.318[0m [2m[00][0m [34mDLOG[0m [41m[37m[5m FAULT [0m [2m[31m<DLog:18>[0m [31mfatal[0m
+[2m•[0m [2m00:12:31.735[0m [34mDLOG[0m [42m[37m INFO [0m [2m[32m<DLog:25>[0m [32minfo[0m
+[2m•[0m [2m00:12:31.735[0m [34mDLOG[0m [43m[30m ERROR [0m [2m[33m<DLog:26>[0m [33merror[0m
+[2m•[0m [2m00:12:31.735[0m [34mDLOG[0m [41m[37m[5m FAULT [0m [2m[31m<DLog:27>[0m [31mfatal[0m
 ```
 
 Colored text in Terminal:
@@ -509,8 +502,8 @@ Colored text in Terminal:
 
 You can also use shortcuts `.textPlain`, `.textEmoji` and `.textColored` to create the output:
 
-``` swift
-let logEmoji = DLog(.textEmoji)
+```swift
+let log = DLog(.textEmoji)
 ```
 
 ### Standard
@@ -519,7 +512,7 @@ let logEmoji = DLog(.textEmoji)
 - `stdout` - Standard Output
 - `stderr` - Standard Error
 
-``` swift
+```swift
 // Prints to stdout
 let logOut = DLog(Standard())
 
@@ -529,14 +522,14 @@ let logErr = DLog(Standard(stream: Darwin.stderr))
 
 You can also use shortcuts `.stdout` and `.stderr` to create the output for the logger:
 
-``` swift
+```swift
 let log = DLog(.stderr)
 log.info("It's error stream")
 ```
 
 By default `Standard` uses `Text(style: .plain)` output as a source to write text to the streams but you can set other:
 
-``` swift
+```swift
 let output = Standard(source: .textEmoji)
 let log = DLog(output)
 
@@ -545,15 +538,15 @@ log.info("Emoji")
 
 Outputs:
 
-```
-17:59:55.516 [00] [DLOG] ✅ [INFO] <DLog:7> Emoji
+```sh
+• 00:15:25.602 [DLOG] ✅ [INFO] <DLog:18> Emoji
 ```
 
 ### File
 
 `File` is a target output that writes text messages to a file by a provided path:
 
-``` swift
+```swift
 let file = File(path: "/users/user/dlog.txt")
 let log = DLog(file)
 
@@ -562,19 +555,19 @@ log.info("It's a file")
 
 By default `File` output clears content of a opened file but if you want to append data to the existed file you should set `append` parameter to `true`:
 
-``` swift
+```swift
 let file = File(path: "/users/user/dlog.txt", append: true)
 ```
 
 You can also use `.file` shortcut to create the output:
 
-``` swift
+```swift
 let log = DLog(.file("dlog.txt"))
 ```
 
 `File` output uses `Text(style: .plain)` as a source by default but you can change it:
 
-``` swift
+```swift
 let file = File(path: "/users/user/dlog.txt", source: .textColored)
 let log = DLog(file)
 
@@ -592,21 +585,21 @@ File "dlog.txt":
 
 To create `OSLog` you can use subsystem strings that identify major functional areas of your app, and you specify them in reverse DNS notation—for example, `com.your_company.your_subsystem_name`. `OSLog` uses `com.dlog.logger` subsystem by default:
 
-``` swift
+```swift
 let output1 = OSLog() // subsystem = "com.dlog.logger"
 let output2 = OSLog(subsystem: "com.company.app") // subsystem = "com.company.app"
 ```
 
 You can also use `.oslog` shortcut to create the output:
 
-``` swift
+```swift
 let log1 = DLog(.oslog)
 let log2 = DLog(.oslog("com.company.app"))
 ```
 
 All DLog's methods map to the system logger ones with appropriate log levels e.g.:
 
-``` swift
+```swift
 let log = DLog(.oslog)
 
 log.log("log")
@@ -625,7 +618,7 @@ Console.app with log levels:
 
 DLog's scopes map to the system logger activities:
 
-``` swift
+```swift
 let log = DLog(.oslog)
 
 log.scope("Loading") { scope1 in
@@ -643,7 +636,7 @@ Console.app with activities:
 
 DLog's intervals map to the system logger signposts:
 
-``` swift
+```swift
 let log = DLog(.oslog)
 
 for _ in 0..<10 {
@@ -664,7 +657,7 @@ Instruments.app with signposts:
 
 `Net` is a target output that sends log messages to `NetConsole` service that can be run from a command line on your machine. The service is provided as executable inside DLog package and to start it you should run `sh NetConsole.command` (or just click on `NetConsole.command` file) inside the package's folder and then the service starts listening for incoming messages:
 
-```shell
+```sh
 $ sh NetConsole.command # or 'xcrun --sdk macosx swift run'
 > [39/39] Linking NetConsole
 > NetConsole for DLog v.1.0
@@ -672,7 +665,7 @@ $ sh NetConsole.command # or 'xcrun --sdk macosx swift run'
 
 Then the output connects and sends your log messages to `NetConsole`:
 
-``` swift
+```swift
 let log = DLog(Net())
 
 log.scope("Main") { scope1 in
@@ -702,13 +695,13 @@ Terminal:
 
 By default `Net` uses `Text(style: .colored)` output as a source but you can set other:
 
-``` swift
+```swift
 let log = DLog(Net(source: .textEmoji))
 ```
 
 And you can also use `.net` shortcut to create the output for the logger.
 
-``` swift
+```swift
 let log = DLog(.net)
 ```
 
@@ -716,19 +709,19 @@ To connect to a specific instance of the service in your network you should prov
 
 To run the `NetConsole` with a specific name run next command:
 
-``` shell
+```sh
 sh NetConsole.command -n "MyLogger" # or 'xcrun --sdk macosx swift run NetConsole -n "MyLogger"'
 ```
 
 In swift code you should set the same name:
 
-``` swift
+```swift
 let log = DLog(.net("MyLogger"))
 ```
 
 More params of `NetConsole` you can look at help:
 
-``` shell
+```sh
 sh NetConsole.command --help  # or 'xcrun --sdk macosx swift run NetConsole --help'
 OVERVIEW: NetConsole for DLog v.1.0
 
@@ -747,14 +740,14 @@ OPTIONS:
 
 As described above `File`, `Net` and `Standard` outputs have `source` parameter in their initializers to set a source output that is very useful if we want to change an output by default:
 
-``` swift
+```swift
 let std = Standard(stream: .out, source: .textEmoji)
 let log = DLog(std)
 ```
 
 Actually any output has `source` property:
 
-``` swift
+```swift
 let std = Standard()
 std.source = .textEmoji
 let log = DLog(std)
@@ -762,7 +755,7 @@ let log = DLog(std)
 
 So that it's possible to make a linked list of outputs:
 
-``` swift
+```swift
 // Text
 let text: LogOutput = .textEmoji
 
@@ -781,7 +774,7 @@ Where `text` is a source for `std` and `std` is a source for `file`: text --> st
 
 Lets rewrite this shorter:
 
-``` swift
+```swift
 let log = DLog(.textEmoji => .stdout => .file("dlog.txt"))
 ```
 
@@ -789,7 +782,7 @@ Where `=>` is pipeline operator which defines a combined output from two outputs
 
 You can combine any needed outputs together and create a final chained output from multiple outputs and your messages will be forwarded to all of them one by one:
 
-``` swift
+```swift
 // All log messages will be written:
 // 1) as plain text to stdout
 // 2) as colored text (with escape codes) to the file
@@ -805,7 +798,7 @@ Examples:
 
 1) Log messages to stardard output with 'NET' category only
 
-``` swift
+```swift
 let log = DLog(.textPlain => .filter { $0.category == "NET" } => .stdout)
 let netLog = log["NET"]
 
@@ -815,13 +808,13 @@ netLog.info("info")
 
 Outputs:
 
-```
-22:44:56.386 [00] [NET] [INFO] <DLog:8> info
+```sh
+• 00:17:58.076 [NET] [INFO] <DLog:19> info
 ```
 
 2) Log debug messages only
 
-``` swift
+```swift
 let log = DLog(.textPlain => .filter { $0.type == .debug } => .stdout)
 
 log.trace()
@@ -832,14 +825,14 @@ log.error("error")
 
 Outputs:
 
-```
-22:47:07.865 [00] [DLOG] [DEBUG] <DLog:8> debug
+```sh
+• 00:18:23.638 [DLOG] [DEBUG] <DLog:19> debug
 ```
 
 3) Log messages that contain "hello" string only
 
-``` swift
-let log = DLog(.textPlain => .filter { $0.text.contains("hello") } => .stdout)
+```swift
+let log = DLog(.textPlain => .filter { $0.text().contains("hello") } => .stdout)
 
 log.debug("debug")
 log.log("hello world")
@@ -848,19 +841,19 @@ log.info("info")
 
 Outputs:
 
-```
-22:48:30.399 [00] [DLOG] [LOG] <DLog:7> hello world
+```sh
+• 00:19:17.821 [DLOG] [LOG] <DLog:18> hello world
 ```
 
 3) Log messages which are related to a specific scope:
 
-``` swift
+```swift
 let filter = Filter { item in
 	let name = "Load"
 	if let scope = item as? LogScope {
-		return scope.text == name
+		return scope.text() == name
 	}
-	return item.scope?.text == name
+	return item.scope?.text() == name
 }
 
 let log = DLog(.textPlain => filter => .stdout)
@@ -881,18 +874,18 @@ log.fault("fault")
 
 Outputs:
 
-```
-22:58:16.401 [01] [DLOG] ┌ [Load]
-22:58:16.402 [01] [DLOG] |	[DEBUG] <DLog:16> debug
-22:58:16.413 [01] [DLOG] |	[ERROR] <DLog:21> error
-22:58:16.414 [01] [DLOG] └ [Load] (0.012s)
+```sh
+• 00:19:59.573 [DLOG] ┌ [Load]
+• 00:19:59.573 [DLOG] | [DEBUG] <DLog:27> debug
+• 00:19:59.586 [DLOG] | [ERROR] <DLog:34> error
+• 00:19:59.586 [DLOG] └ [Load] (0.13)
 ```
 
 ## `.disabled`
 
 It is the shared disabled logger constant that doesn't emit any log message and it's very useful when you want to turn off the logger for some build configuration, preference, condition etc.
 
-``` swift
+```swift
 // Logging is enabled for `Debug` build configuration only
 
 #if DEBUG
@@ -930,12 +923,12 @@ log.log("finish")
 
 Outputs:
 
-```bash
+```sh
 scope code
 signpost code
 ```
 
-## `LogConfiguration`
+## Configuration
 
 You can customize the logger's output by setting which info from the logger should be used. `LogConfiguration` is a root struct to configure the logger which contains common settings for log messages.
 
@@ -948,7 +941,7 @@ log.info("Info message")
 
 Outputs:
 
-```bash
+```sh
 • 23:53:16.116 [DLOG] [INFO] <DLog:12> Info message
 ```
 
@@ -966,7 +959,7 @@ log.info("Info message")
 
 Outputs:
 
-```bash
+```sh
 > 00:01:24.380 Info message
 ```
 
@@ -988,7 +981,7 @@ doTest()
 
 Outputs:
 
-```bash
+```sh
 • 12:20:47.137 [DLOG] [TRACE] <DLog:13> func: doTest(), thread: { number: 1, name: main }
 ```
 
@@ -1009,7 +1002,7 @@ doTest()
 
 Outputs:
 
-```bash
+```sh
 • 12:37:24.101 [DLOG] [TRACE] <DLog:11> func: doTest(), queue: com.apple.main-thread
 ```
 
@@ -1036,7 +1029,7 @@ DispatchQueue.global().async {
 
 Outputs:
 
-```bash
+```sh
 • 13:01:32.859 [DLOG] [TRACE] <DLog:9> func: doTest(), thread: { number: 1, qos: userInteractive }
 • 13:01:32.910 [DLOG] [TRACE] <DLog:9> func: doTest(), thread: { number: 3, qos: userInitiated }
 ```
@@ -1069,14 +1062,12 @@ func first() {
 	second()
 }
 
-...
-
 first()
 ```
 
 Outputs:
 
-```bash
+```sh
 • 23:06:24.092 [DLOG] [TRACE] <AppDelegate:45> stack: [
 0: { symbols: Test.third() -> () }
 1: { symbols: Test.second() -> () }
@@ -1087,7 +1078,7 @@ Outputs:
 
 ### `IntervalConfiguration`
 
-You can change the view options of interval statistics with `intervalConfiguration` property of `LogConfiguration` to show needed information or use `.all`.
+You can change the view options of interval statistics with `intervalConfiguration` property of `LogConfiguration` to show needed information such as: `.count`, `.min`, `.max` etc. Or you can use `.all` to output all parameters.
 
 ```swift
 var config = LogConfiguration()
@@ -1102,7 +1093,7 @@ log.interval("signpost") {
 
 Outputs:
 
-```bash
+```sh
 • 23:26:40.978 [DLOG] [INTERVAL] <DLog:13> signpost: { duration: 3.2, count: 1, total: 3.2, min: 3.2, max: 3.2, average: 3.2 }
 ```
 
@@ -1118,7 +1109,7 @@ Outputs:
 
 Add `DLog` package dependency to your `Package.swift` file:
 
-``` swift
+```swift
 let package = Package(
 	...
 	dependencies: [
