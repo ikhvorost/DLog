@@ -143,8 +143,8 @@ Log the current function name and a message (if it is provided) to help in debug
 
 ```swift
 func startup() {
-	log.trace("Start")
-	log.trace()
+    log.trace("Start")
+    log.trace()
 }
 
 startup()
@@ -164,10 +164,10 @@ Log a debug message to help debug problems during the development:
 ```swift
 let session = URLSession(configuration: .default)
 session.dataTask(with: URL(string: "https://apple.com")!) { data, response, error in
-	guard let http = response as? HTTPURLResponse else { return }
+    guard let http = response as? HTTPURLResponse else { return }
 
-	let text = HTTPURLResponse.localizedString(forStatusCode: http.statusCode)
-	log.debug("\(http.url!.absoluteString): \(http.statusCode) - \(text)")
+    let text = HTTPURLResponse.localizedString(forStatusCode: http.statusCode)
+    log.debug("\(http.url!.absoluteString): \(http.statusCode) - \(text)")
 }
 .resume()
 ```
@@ -200,10 +200,10 @@ Log an error that occurred during the execution of your code.
 let fromURL = URL(fileURLWithPath: "source.txt")
 let toURL = URL(fileURLWithPath: "destination.txt")
 do {
-	try FileManager.default.moveItem(at: fromURL, to: toURL)
+    try FileManager.default.moveItem(at: fromURL, to: toURL)
 }
 catch {
-	log.error(error.localizedDescription)
+    log.error(error.localizedDescription)
 }
 ```
 
@@ -240,8 +240,8 @@ Log a critical bug that occurred during the execution in your code.
 
 ```swift
 guard let modelURL = Bundle.main.url(forResource: "DataModel", withExtension:"momd") else {
-	log.fault("Error loading model from bundle")
-	abort()
+    log.fault("Error loading model from bundle")
+    abort()
 }
 ```
 
@@ -257,12 +257,12 @@ Outputs:
 
 ```swift
 log.scope("Loading") { scope in
-	if let path = Bundle.main.path(forResource: "data", ofType: "json") {
-		scope.info("File: \(path)")
-		if let data = try? String(contentsOfFile: path) {
-			scope.debug("Loaded \(data.count) bytes")
-		}
-	}
+    if let path = Bundle.main.path(forResource: "data", ofType: "json") {
+        scope.info("File: \(path)")
+        if let data = try? String(contentsOfFile: path) {
+            scope.debug("Loaded \(data.count) bytes")
+        }
+    }
 }
 ```
 
@@ -286,7 +286,7 @@ You can get duration value of a finished scope programatically:
 
 ```swift
 var scope = log.scope("scope") { _ in
-	...
+    ...
 }
 
 print(scope.duration)
@@ -300,16 +300,16 @@ scope.enter()
 
 let session = URLSession(configuration: .default)
 session.dataTask(with: URL(string: "https://apple.com")!) { data, response, error in
-	defer {
-		scope.leave()
-	}
+    defer {
+        scope.leave()
+    }
 
-	guard let data = data, let http = response as? HTTPURLResponse else {
-		return
-	}
+    guard let data = data, let http = response as? HTTPURLResponse else {
+        return
+    }
 
-	scope.debug("\(http.url!.absoluteString) - HTTP \(http.statusCode)")
-	scope.debug("Loaded: \(data.count) bytes")
+    scope.debug("\(http.url!.absoluteString) - HTTP \(http.statusCode)")
+    scope.debug("Loaded: \(data.count) bytes")
 }
 .resume()
 ```
@@ -327,19 +327,19 @@ Scopes can be nested one into one and that implements a global stack of scopes:
 
 ```swift
 log.scope("Loading") { scope1 in
-	if let url = Bundle.main.url(forResource: "data", withExtension: "json") {
-		scope1.info("File: \(url)")
+    if let url = Bundle.main.url(forResource: "data", withExtension: "json") {
+        scope1.info("File: \(url)")
 
-		if let data = try? Data(contentsOf: url) {
-			scope1.debug("Loaded \(data.count) bytes")
+        if let data = try? Data(contentsOf: url) {
+            scope1.debug("Loaded \(data.count) bytes")
 
-			log.scope("Parsing") { scope2 in
-				if let items = try? JSONDecoder().decode([Item].self, from: data) {
-					scope2.debug("Parsed \(items.count) items")
-				}
-			}
-		}
-	}
+            log.scope("Parsing") { scope2 in
+                if let items = try? JSONDecoder().decode([Item].self, from: data) {
+                    scope2.debug("Parsed \(items.count) items")
+                }
+            }
+        }
+    }
 }
 ```
 
@@ -361,10 +361,10 @@ Outputs:
 
 ```swift
 for _ in 0..<10 {
-	log.interval("Sort") {
-		var arr = (1...10000).map {_ in arc4random()}
-		arr.sort()
-	}
+    log.interval("Sort") {
+        var arr = (1...10000).map {_ in arc4random()}
+        arr.sort()
+    }
 }
 ```
 
@@ -392,7 +392,7 @@ You can get all metrics values of the interval programatically:
 
 ```swift
 let interval = log.interval("signpost") {
-	...
+    ...
 }
 
 print(interval.count)
@@ -411,11 +411,11 @@ interval.begin()
 
 let asset = AVURLAsset(url: url)
 asset.loadValuesAsynchronously(forKeys: ["duration"]) {
-	let status = asset.statusOfValue(forKey: "duration", error: nil)
-	if status == .loaded {
-		log.info("Duration: \(asset.duration.value)")
-	}
-	interval.end()
+    let status = asset.statusOfValue(forKey: "duration", error: nil)
+    if status == .loaded {
+        log.info("Duration: \(asset.duration.value)")
+    }
+    interval.end()
 }
 ```
 
@@ -461,19 +461,19 @@ It supports thee styles:
 
 ```swift
 let outputs = [
-	"Plain" : Text(style: .plain),
-	"Emoji" : Text(style: .emoji),
-	"Colored" : Text(style: .colored),
+    "Plain" : Text(style: .plain),
+    "Emoji" : Text(style: .emoji),
+    "Colored" : Text(style: .colored),
 ]
 
 for (name, output) in outputs {
-	let log = DLog(output)
+    let log = DLog(output)
 
-	print(name)
-	print(log.info("info")!)
-	print(log.error("error")!)
-	print(log.fault("fatal")!)
-	print("")
+    print(name)
+    print(log.info("info")!)
+    print(log.error("error")!)
+    print(log.fault("fatal")!)
+    print("")
 }
 ```
 
@@ -572,7 +572,7 @@ let file = File(path: "/users/user/dlog.txt", source: .textColored)
 let log = DLog(file)
 
 log.scope("File") { scope in
-	scope.info("It's a file")
+    scope.info("It's a file")
 }
 ```
 File "dlog.txt":
@@ -622,11 +622,11 @@ DLog's scopes map to the system logger activities:
 let log = DLog(.oslog)
 
 log.scope("Loading") { scope1 in
-	scope1.info("start")
-	log.scope("Parsing") { scope2 in
-		scope2.debug("Parsed 1000 items")
-	}
-	scope1.info("finish")
+    scope1.info("start")
+    log.scope("Parsing") { scope2 in
+        scope2.debug("Parsed 1000 items")
+    }
+    scope1.info("finish")
 }
 ```
 
@@ -640,11 +640,11 @@ DLog's intervals map to the system logger signposts:
 let log = DLog(.oslog)
 
 for _ in 0..<10 {
-	log.interval("Sorting") {
-		let delay = [0.1, 0.2, 0.3].randomElement()!
-		Thread.sleep(forTimeInterval: delay)
-		log.debug("Sorted")
-	}
+    log.interval("Sorting") {
+        let delay = [0.1, 0.2, 0.3].randomElement()!
+        Thread.sleep(forTimeInterval: delay)
+        log.debug("Sorted")
+    }
 }
 ```
 
@@ -669,13 +669,13 @@ Then the output connects and sends your log messages to `NetConsole`:
 let log = DLog(Net())
 
 log.scope("Main") { scope1 in
-	scope1.trace("Start")
-	log.scope("Subtask") { scope2 in
-		scope2.info("Validation")
-		scope2.error("Token is invalid")
-		scope2.debug("Retry")
-	}
-	scope1.info("Close connection")
+    scope1.trace("Start")
+    log.scope("Subtask") { scope2 in
+        scope2.info("Validation")
+        scope2.error("Token is invalid")
+        scope2.debug("Retry")
+    }
+    scope1.info("Close connection")
 }
 ```
 
@@ -685,7 +685,7 @@ log.scope("Main") { scope1 in
 > <string>Looking for local tcp Bonjour  service</string>
 > <key>NSBonjourServices</key>
 > <array>
-> 	<string>_dlog._tcp</string>
+>     <string>_dlog._tcp</string>
 > </array>
 > ```
 
@@ -849,25 +849,25 @@ Outputs:
 
 ```swift
 let filter = Filter { item in
-	let name = "Load"
-	if let scope = item as? LogScope {
-		return scope.text() == name
-	}
-	return item.scope?.text() == name
+    let name = "Load"
+    if let scope = item as? LogScope {
+        return scope.text() == name
+    }
+    return item.scope?.text() == name
 }
 
 let log = DLog(.textPlain => filter => .stdout)
 
 log.trace("trace")
 log.scope("Load") { scope1 in
-	scope1.debug("debug")
+    scope1.debug("debug")
 
-	log.scope("Parse") { scope2 in
-		scope2.log("log")
-		scope2.info("info")
-	}
+    log.scope("Parse") { scope2 in
+        scope2.log("log")
+        scope2.info("info")
+    }
 
-	scope1.error("error")
+    scope1.error("error")
 }
 log.fault("fault")
 ```
@@ -889,9 +889,9 @@ It is the shared disabled logger constant that doesn't emit any log message and 
 // Logging is enabled for `Debug` build configuration only
 
 #if DEBUG
-	let log = DLog(.textPlain => .file(path))
+    let log = DLog(.textPlain => .file(path))
 #else
-	let log = DLog.disabled
+    let log = DLog.disabled
 #endif
 ```
 
@@ -909,14 +909,14 @@ let log = DLog.disabled
 
 log.log("start")
 log.scope("scope") { scope in
-	scope.debug("debug")
+    scope.debug("debug")
 
-	print("scope code")
+    print("scope code")
 }
 log.interval("signpost") {
-	log.info("info")
+    log.info("info")
 
-	print("signpost code")
+    print("signpost code")
 }
 log.log("finish")
 ```
@@ -973,7 +973,7 @@ By default `trace` method uses `.compact` view option to produce information abo
 let log = DLog()
 
 func doTest() {
-	log.trace()
+    log.trace()
 }
 
 doTest()
@@ -994,7 +994,7 @@ config.traceConfiguration.options = [.function, .queue]
 let log = DLog(configuration: config)
 
 func doTest() {
-	log.trace()
+    log.trace()
 }
 
 doTest()
@@ -1017,13 +1017,13 @@ config.traceConfiguration.threadConfiguration.options = [.number, .qos]
 let log = DLog(configuration: config)
 
 func doTest() {
-	log.trace()
+    log.trace()
 }
 
 doTest()
 
 DispatchQueue.global().async {
-	doTest()
+    doTest()
 }
 ```
 
@@ -1040,26 +1040,26 @@ The `trace` method can output the call stack backtrace of the current thread at 
 
 ```swift
 var configuration: LogConfiguration = {
-	var config = DLog.defaultConfiguration
-	config.traceConfiguration.options = [.stack]
-	config.traceConfiguration.stackConfiguration.options = [.symbols]
-	config.traceConfiguration.stackConfiguration.style = .column
-	config.traceConfiguration.stackConfiguration.depth = 3
-	return config
+    var config = DLog.defaultConfiguration
+    config.traceConfiguration.options = [.stack]
+    config.traceConfiguration.stackConfiguration.options = [.symbols]
+    config.traceConfiguration.stackConfiguration.style = .column
+    config.traceConfiguration.stackConfiguration.depth = 3
+    return config
 }()
 
 let log = DLog(configuration: configuration)
 
 func third() {
-	log.trace()
+    log.trace()
 }
 
 func second() {
-	third()
+    third()
 }
 
 func first() {
-	second()
+    second()
 }
 
 first()
@@ -1087,7 +1087,7 @@ config.intervalConfiguration.options = [.all]
 let log = DLog(configuration: config)
 
 log.interval("signpost") {
-	Thread.sleep(forTimeInterval: 3)
+    Thread.sleep(forTimeInterval: 3)
 }
 ```
 
@@ -1111,18 +1111,18 @@ Add `DLog` package dependency to your `Package.swift` file:
 
 ```swift
 let package = Package(
-	...
-	dependencies: [
-    	.package(url: "https://github.com/ikhvorost/DLog.git", from: "1.0.0")
-	],
-	targets: [
-		.target(name: "YourPackage",
-			dependencies: [
-				.product(name: "DLog", package: "DLog")
-			]
-		),
-		...
-	...
+    ...
+    dependencies: [
+        .package(url: "https://github.com/ikhvorost/DLog.git", from: "1.0.0")
+    ],
+    targets: [
+        .target(name: "YourPackage",
+            dependencies: [
+                .product(name: "DLog", package: "DLog")
+            ]
+        ),
+        ...
+    ...
 )
 ```
 
