@@ -498,7 +498,7 @@ Colored
 
 Colored text in Terminal:
 
-<img src="Images/dlog-text-colored.png" alt="DLog: Colored log in Terminal"><br>
+<img src="Images/dlog-text-colored.png" alt="DLog: Colored text log in Terminal"><br>
 
 You can also use shortcuts `.textPlain`, `.textEmoji` and `.textColored` to create the output:
 
@@ -577,7 +577,7 @@ log.scope("File") { scope in
 ```
 File "dlog.txt":
 
-<img src="Images/dlog-file-colored.png" alt="DLog: Colored text in a file."><br>
+<img src="Images/dlog-file-colored.png" alt="DLog: Colored text log in a file."><br>
 
 ### OSLog
 
@@ -690,7 +690,7 @@ log.scope("Main") { scope1 in
 > ```
 
 Terminal:
-<p><img src="Images/dlog-net-console.png" alt="DLog: NetConsole"></p>
+<p><img src="Images/dlog-net-console.png" alt="DLog: Colored text log in NetConsole"></p>
 
 
 By default `Net` uses `Text(style: .colored)` output as a source but you can set other:
