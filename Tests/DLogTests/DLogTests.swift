@@ -3,7 +3,7 @@ import XCTest
 import DLog
 //@testable import DLog
 
-// MARK: - Utils
+// MARK: - Extensions
 
 /// String errors
 extension String : LocalizedError {
@@ -25,6 +25,31 @@ extension DispatchSemaphore {
 		return DispatchSemaphore(value: 1)
 	}
 }
+
+extension XCTestCase {
+
+	func wait(count: UInt, timeout: TimeInterval = 1, repeat r: UInt = 1, name: String = #function, closure: ([XCTestExpectation]) -> Void) {
+		guard count > 0, r > 0 else { return }
+
+		let exps = (0..<r * count).map { _ in expectation(description: name) }
+
+		for i in 0..<r {
+			let start = Int(i * count)
+			let end = start + Int(count) - 1
+			closure(Array(exps[start...end]))
+		}
+
+		wait(for: exps, timeout: timeout)
+	}
+
+	func wait(timeout: TimeInterval = 1, name: String = #function, closure: (XCTestExpectation) -> Void) {
+		wait(count: 1, timeout: timeout, name: name) { expectations in
+			closure(expectations[0])
+		}
+	}
+}
+
+// MARK: - Utils
 
 func delay(_ sec: Double = 0.25) {
 	Thread.sleep(forTimeInterval: sec)
@@ -120,20 +145,6 @@ fileprivate func testAll(_ logger: LogProtocol, categoryTag: String = CategoryTa
 }
 
 final class DLogTests: XCTestCase {
-	
-	func wait(count: Int, timeout: TimeInterval = 1, name: String = #function, closure: ([XCTestExpectation]) -> Void) {
-		let expectations = (0..<count).map { _ in expectation(description: name) }
-		
-		closure(expectations)
-		
-		wait(for: expectations, timeout: timeout)
-	}
-	
-	func wait(_ timeout: TimeInterval = 1, name: String = #function, closure: (XCTestExpectation) -> Void) {
-		wait(count: 1, timeout: timeout, name: name) { expectations in
-			closure(expectations[0])
-		}
-	}
 	
 	// MARK: Tests -
 	
