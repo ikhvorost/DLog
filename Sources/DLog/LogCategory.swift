@@ -35,7 +35,7 @@ import Foundation
 /// 	let netLog = log["NET"]
 /// 	let netLog.log("Hello Net!")
 ///
-public class LogCategory: LogProtocol {
+public class LogCategory: NSObject, LogProtocol {
 	/// LogProtocol parameters
 	public let params: LogParams
 	

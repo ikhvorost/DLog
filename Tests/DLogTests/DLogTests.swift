@@ -350,7 +350,7 @@ final class DLogTests: XCTestCase {
 		let test: (LogProtocol, XCTestExpectation) -> Void = { log, expectation in
 			log.log(failString())
 			log.trace(failString())
-			log.debug(failString())
+			log.debug("\(failString())")
 			log.info(failString())
 			log.warning(failString())
 			log.error(failString())

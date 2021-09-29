@@ -17,8 +17,10 @@ let package = Package(
 	],
 	targets: [
 		.target(name: "DLog"),
+		.target(name: "DLogObjC", dependencies: ["DLog"]),
 		.target(name: "NetConsole"),
 		.testTarget(name: "DLogTests", dependencies: ["DLog"]),
+		.testTarget(name: "DLogTestsObjC", dependencies: ["DLogObjC"]),
 	],
 	swiftLanguageVersions: [.v5]
 )

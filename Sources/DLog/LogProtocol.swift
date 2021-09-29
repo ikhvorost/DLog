@@ -33,6 +33,10 @@ public struct LogParams {
 	let scope: LogScope?
 }
 
+public typealias LogClosure = ((String, String, String, UInt) -> String?)
+public typealias TraceClosure = ((String, String, String, UInt, [NSNumber]) -> String?)
+public typealias AssertClosure = ((Bool, String, String, String, UInt) -> String?)
+
 /// Base logger protocol
 ///
 public protocol LogProtocol {
@@ -79,8 +83,8 @@ extension LogProtocol {
 	///
 	@discardableResult
 	public func trace(_ text: @escaping @autoclosure () -> String? = nil,
-					  addresses: [NSNumber] = Thread.callStackReturnAddresses,
-					  file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+					  file: String = #file, function: String = #function, line: UInt = #line,
+					  addresses: [NSNumber] = Thread.callStackReturnAddresses) -> String? {
 		let message: () -> String = {
 			traceInfo(title: text(),
 					  function: function,

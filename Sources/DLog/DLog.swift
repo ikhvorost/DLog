@@ -94,7 +94,7 @@ public struct LogConfiguration {
 
 /// The central class to emit log messages to specified outputs using one of the methods corresponding to a log level.
 ///
-public class DLog: LogProtocol {
+public class DLog: NSObject, LogProtocol {
 	
 	private let output: LogOutput?
 	let config: LogConfiguration
@@ -107,6 +107,7 @@ public class DLog: LogProtocol {
 	///
 	/// 	let log = DLog.disabled
 	///
+	@objc
 	public static let disabled = DLog(nil)
 	
 	/// The default configuration.
@@ -114,9 +115,6 @@ public class DLog: LogProtocol {
 	
 	var disabled : Bool { output == nil }
 	
-	/// LogProtocol parameters
-	public lazy var params = LogParams(logger: self, category: "DLOG", scope: nil)
-
 	/// Creates a logger object that assigns log messages to a specified category.
 	///
 	/// You can define category name to differentiate unique areas and parts of your app and DLog uses this value
@@ -126,6 +124,7 @@ public class DLog: LogProtocol {
 	/// 	let netLog = log["NET"]
 	/// 	let netLog.log("Hello Net!")
 	///
+	@objc
 	public subscript(category: String) -> LogCategory {
 		LogCategory(logger: self, category: category)
 	}
@@ -144,6 +143,12 @@ public class DLog: LogProtocol {
 	public init(_ output: LogOutput? = .stdout, configuration: LogConfiguration = DLog.defaultConfiguration) {
 		self.output = output
 		self.config = configuration
+	}
+	
+	@objc
+	override public init() {
+		self.output = .stdout
+		self.config = DLog.defaultConfiguration
 	}
 
 	// Scope
@@ -236,5 +241,50 @@ public class DLog: LogProtocol {
 		}
 
 		return interval
+	}
+	
+	// MARK: - LogProtocol
+	
+	/// LogProtocol parameters
+	public lazy var params = LogParams(logger: self, category: "DLOG", scope: nil)
+
+	@objc
+	public lazy var log: LogClosure = { (text, file, function, line) in
+		(self as LogProtocol).log(text, file: file, function: function, line: line)
+	}
+	
+	@objc
+	public lazy var trace: TraceClosure = { (text, file, function, line, addresses) in
+		(self as LogProtocol).trace(text, file: file, function: function, line: line, addresses: addresses)
+	}
+	
+	@objc
+	public lazy var debug: LogClosure = { (text, file, function, line) in
+		(self as LogProtocol).debug(text, file: file, function: function, line: line)
+	}
+	
+	@objc
+	public lazy var info: LogClosure = { (text, file, function, line) in
+		(self as LogProtocol).info(text, file: file, function: function, line: line)
+	}
+	
+	@objc
+	public lazy var warning: LogClosure = { (text, file, function, line) in
+		(self as LogProtocol).warning(text, file: file, function: function, line: line)
+	}
+	
+	@objc
+	public lazy var error: LogClosure = { (text, file, function, line) in
+		(self as LogProtocol).error(text, file: file, function: function, line: line)
+	}
+	
+	@objc
+	public lazy var assert: AssertClosure = { (condition, text, file, function, line) in
+		(self as LogProtocol).assert(condition, text, file: file, function: function, line: line)
+	}
+	
+	@objc
+	public lazy var fault: LogClosure = { (text, file, function, line) in
+		(self as LogProtocol).fault(text, file: file, function: function, line: line)
 	}
 }
