@@ -67,7 +67,7 @@ public enum LogType : Int {
 ///
 /// It contains all available properties of the log message.
 ///
-public class LogItem {
+public class LogItem: NSObject {
 	/// The timestamp of this log message.
 	internal(set) public var time = Date()
 	
@@ -115,9 +115,6 @@ public class LogScope : LogItem, LogProtocol {
 	let uid = UUID()
 	var os_state = os_activity_scope_state_s()
 	@Atomic var entered = false
-	
-	/// LogProtocol parameters
-	public lazy var params = LogParams(logger: logger, category: category, scope: self)
 	
 	/// A global level of a scope
 	internal(set) public var level: Int = 0
@@ -172,5 +169,50 @@ public class LogScope : LogItem, LogProtocol {
 		duration = -time.timeIntervalSinceNow
 		
 		logger.leave(scope: self)
+	}
+	
+	// MARK: - LogProtocol
+	
+	/// LogProtocol parameters
+	public lazy var params = LogParams(logger: logger, category: category, scope: self)
+	
+	@objc
+	public lazy var log: LogClosure = { (text, file, function, line) in
+		(self as LogProtocol).log(text, file: file, function: function, line: line)
+	}
+	
+	@objc
+	public lazy var trace: TraceClosure = { (text, file, function, line, addresses) in
+		(self as LogProtocol).trace(text, file: file, function: function, line: line, addresses: addresses)
+	}
+	
+	@objc
+	public lazy var debug: LogClosure = { (text, file, function, line) in
+		(self as LogProtocol).debug(text, file: file, function: function, line: line)
+	}
+	
+	@objc
+	public lazy var info: LogClosure = { (text, file, function, line) in
+		(self as LogProtocol).info(text, file: file, function: function, line: line)
+	}
+	
+	@objc
+	public lazy var warning: LogClosure = { (text, file, function, line) in
+		(self as LogProtocol).warning(text, file: file, function: function, line: line)
+	}
+	
+	@objc
+	public lazy var error: LogClosure = { (text, file, function, line) in
+		(self as LogProtocol).error(text, file: file, function: function, line: line)
+	}
+	
+	@objc
+	public lazy var assert: AssertClosure = { (condition, text, file, function, line) in
+		(self as LogProtocol).assert(condition, text, file: file, function: function, line: line)
+	}
+	
+	@objc
+	public lazy var fault: LogClosure = { (text, file, function, line) in
+		(self as LogProtocol).fault(text, file: file, function: function, line: line)
 	}
 }

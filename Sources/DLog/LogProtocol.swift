@@ -27,21 +27,37 @@ import Foundation
 
 /// LogProtocol parameters
 ///
-public struct LogParams {
+public class LogParams : NSObject {
 	let logger: DLog
 	let category: String
 	let scope: LogScope?
+	
+	public init(logger: DLog, category: String, scope: LogScope?) {
+		self.logger = logger
+		self.category = category
+		self.scope = scope
+	}
 }
-
-public typealias LogClosure = ((String, String, String, UInt) -> String?)
-public typealias TraceClosure = ((String, String, String, UInt, [NSNumber]) -> String?)
-public typealias AssertClosure = ((Bool, String, String, String, UInt) -> String?)
 
 /// Base logger protocol
 ///
+@objc
 public protocol LogProtocol {
+	typealias LogClosure = ((String, String, String, UInt) -> String?)
+	typealias TraceClosure = ((String, String, String, UInt, [NSNumber]) -> String?)
+	typealias AssertClosure = ((Bool, String, String, String, UInt) -> String?)
+	
 	/// LogProtocol parameters
 	var params: LogParams { get }
+	
+	var log: LogClosure { get }
+	var trace: TraceClosure { get }
+	var debug: LogClosure { get }
+	var info: LogClosure { get }
+	var warning: LogClosure { get }
+	var error: LogClosure { get }
+	var assert: AssertClosure { get }
+	var fault: LogClosure { get }
 }
 
 extension LogProtocol {
@@ -89,7 +105,7 @@ extension LogProtocol {
 			traceInfo(title: text(),
 					  function: function,
 					  addresses: addresses.dropFirst(),
-					  config: params.logger.config.traceConfiguration)
+					  config: self.params.logger.config.traceConfiguration)
 		}
 		return params.logger.log(text: message, type: .trace, category: params.category, scope: params.scope, file: file, function: function, line: line)
 	}

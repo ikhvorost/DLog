@@ -13,6 +13,18 @@
 
 @end
 
+void testAll(id<LogProtocol> logger, NSString *category) {
+	XCTAssert([logger.log(@"log") match:@" log"]);
+	XCTAssert([logger.trace(@"trace") match:@" trace"]);
+	XCTAssert([logger.debug(@"debug") match:@" debug"]);
+	XCTAssert([logger.info(@"info") match:@" info"]);
+	XCTAssert([logger.warning(@"warning") match:@" warning"]);
+	XCTAssert([logger.error(@"error") match:@" error"]);
+	XCTAssertNil(logger.assert(YES, @"assert"));
+	XCTAssert([logger.assert(NO, @"assert") match:@" assert"]);
+	XCTAssert([logger.fault(@"fault") match:@" fault"]);
+}
+
 @interface DLogTestsObjC : XCTestCase
 @end
  
@@ -27,22 +39,14 @@
 	let logger = [DLog new];
 	XCTAssertNotNil(logger);
 	
-	XCTAssert([logger.log(@"log") match:@" log"]);
-	XCTAssert([logger.trace(@"trace") match:@" trace"]);
-	XCTAssert([logger.debug(@"debug") match:@" debug"]);
-	XCTAssert([logger.info(@"info") match:@" info"]);
-	XCTAssert([logger.warning(@"warning") match:@" warning"]);
-	XCTAssert([logger.error(@"error") match:@" error"]);
-	XCTAssert([logger.assert(NO, @"assert") match:@" assert"]);
-	XCTAssert([logger.fault(@"fault") match:@" fault"]);
+	testAll(logger, nil);
 }
 
 - (void)test_Disabled {
 	let logger = DLog.disabled;
 	XCTAssertNotNil(logger);
 	
-	let text = logger.log(@"disabled");
-	XCTAssertNil(text);
+	XCTAssertNil(logger.log(@"disabled"));
 }
 
 - (void)test_Category {
@@ -50,7 +54,7 @@
 	let category = logger[@"NET"];
 	XCTAssertNotNil(category);
 	
-	//XCTAssert([category.debug(@"debug") match:@" debug"]);
+	testAll(category, @"NET");
 }
  
 @end
