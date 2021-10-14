@@ -75,7 +75,7 @@ public class LogItem: NSObject {
 	public let category: String
 	
 	/// The scope of this log message.
-	public let scope: LogScope?
+	public let _scope: LogScope?
 	
 	/// The log level of this log message.
 	public let type: LogType
@@ -96,7 +96,7 @@ public class LogItem: NSObject {
 
 	init(category: String, scope: LogScope?, type: LogType, file: String, funcName: String, line: UInt, text: (() -> String)!, config: LogConfiguration) {
 		self.category = category
-		self.scope = scope
+		self._scope = scope
 		self.type = type
 		self.fileName = ((file as NSString).lastPathComponent as NSString).deletingPathExtension
 		self.funcName = funcName
@@ -140,6 +140,7 @@ public class LogScope : LogItem, LogProtocol {
 	///
 	/// 	scope.leave()
 	///
+	@objc
 	public func enter() {
 		guard !entered else { return }
 		entered.toggle()
@@ -162,6 +163,7 @@ public class LogScope : LogItem, LogProtocol {
 	///
 	/// 	scope.leave()
 	///
+	@objc
 	public func leave() {
 		guard entered else { return }
 		entered.toggle()
@@ -214,5 +216,10 @@ public class LogScope : LogItem, LogProtocol {
 	@objc
 	public lazy var fault: LogClosure = { (text, file, function, line) in
 		(self as LogProtocol).fault(text, file: file, function: function, line: line)
+	}
+	
+	@objc
+	public lazy var scope: ScopeClosure = { (name, file, function, line, closure) in
+		(self as LogProtocol).scope(name, file: file, function: function, line: line, closure: closure)
 	}
 }

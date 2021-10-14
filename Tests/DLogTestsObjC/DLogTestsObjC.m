@@ -13,16 +13,26 @@
 
 @end
 
-void testAll(id<LogProtocol> logger, NSString *category) {
-	XCTAssert([logger.log(@"log") match:@" log"]);
-	XCTAssert([logger.trace(@"trace") match:@" trace"]);
-	XCTAssert([logger.debug(@"debug") match:@" debug"]);
-	XCTAssert([logger.info(@"info") match:@" info"]);
-	XCTAssert([logger.warning(@"warning") match:@" warning"]);
-	XCTAssert([logger.error(@"error") match:@" error"]);
+
+#define CategoryTag @"\\[DLOG\\]"
+#define Padding @"[\\|\\s]+"
+#define LevelTag @"\\[\\S+\\] "
+#define Location @"<DLogTestsObjC:[0-9]+> "
+
+static NSString* matchString(NSString* category, NSString* text) {
+	return [NSString stringWithFormat:@"%@" Padding LevelTag Location @"%@", (category ? category : CategoryTag), text];
+}
+
+static void testAll(id<LogProtocol> logger, NSString *category) {
+	XCTAssert([logger.log(@"log") match:matchString(category, @"log")]);
+	XCTAssert([logger.trace(@"trace") match:matchString(category, @"trace")]);
+	XCTAssert([logger.debug(@"debug") match:matchString(category, @"debug")]);
+	XCTAssert([logger.info(@"info") match:matchString(category, @"info")]);
+	XCTAssert([logger.warning(@"warning") match:matchString(category, @"warning")]);
+	XCTAssert([logger.error(@"error") match:matchString(category, @"error")]);
 	XCTAssertNil(logger.assert(YES, @"assert"));
-	XCTAssert([logger.assert(NO, @"assert") match:@" assert"]);
-	XCTAssert([logger.fault(@"fault") match:@" fault"]);
+	XCTAssert([logger.assert(NO, @"assert") match:matchString(category, @"assert")]);
+	XCTAssert([logger.fault(@"fault") match:matchString(category, @"fault")]);
 }
 
 @interface DLogTestsObjC : XCTestCase
@@ -54,7 +64,24 @@ void testAll(id<LogProtocol> logger, NSString *category) {
 	let category = logger[@"NET"];
 	XCTAssertNotNil(category);
 	
-	testAll(category, @"NET");
+	testAll(category, @"\\[NET\\]");
+}
+
+- (void)test_Scope {
+	let logger = [DLog new];
+	
+	XCTAssertNotNil(logger);
+	
+	logger.scope(@"Scope 1", ^(LogScope* scope){
+		testAll(scope, nil);
+	});
+	
+	let scope = logger.scope(@"Scope 2");
+	[scope enter];
+	
+	testAll(scope, nil);
+
+	[scope leave];
 }
  
 @end

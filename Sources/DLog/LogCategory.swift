@@ -84,4 +84,9 @@ public class LogCategory: NSObject, LogProtocol {
 	public lazy var fault: LogClosure = { (text, file, function, line) in
 		(self as LogProtocol).fault(text, file: file, function: function, line: line)
 	}
+	
+	@objc
+	public lazy var scope: ScopeClosure = { (name, file, function, line, closure) in
+		(self as LogProtocol).scope(name, file: file, function: function, line: line, closure: closure)
+	}
 }

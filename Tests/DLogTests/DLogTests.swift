@@ -315,7 +315,7 @@ final class DLogTests: XCTestCase {
 		XCTAssertNotNil(read_stdout { textLog.scope("scope hello") { _ in } })
 		
 		// Scope
-		let scopeLog = DLog(.textPlain => .filter { ($0 as? LogScope)?.text() == "Load" || $0.scope?.text() == "Load" } => .stdout)
+		let scopeLog = DLog(.textPlain => .filter { ($0 as? LogScope)?.text() == "Load" || $0._scope?.text() == "Load" } => .stdout)
 		//let scopeLog = DLog(.textPlain => .filter { $0.scope?.level == 1 } => .stdout)
 		XCTAssertNil(scopeLog.info("info"))
 		XCTAssertNotNil(read_stdout {

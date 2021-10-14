@@ -39,13 +39,16 @@ public class LogParams : NSObject {
 	}
 }
 
+
 /// Base logger protocol
 ///
 @objc
 public protocol LogProtocol {
-	typealias LogClosure = ((String, String, String, UInt) -> String?)
-	typealias TraceClosure = ((String, String, String, UInt, [NSNumber]) -> String?)
-	typealias AssertClosure = ((Bool, String, String, String, UInt) -> String?)
+	typealias LogClosure = (String, String, String, UInt) -> String?
+	typealias TraceClosure = (String, String, String, UInt, [NSNumber]) -> String?
+	typealias AssertClosure = (Bool, String, String, String, UInt) -> String?
+	typealias ScopeClosure = (String, String, String, UInt, ((LogScope) -> Void)?) -> LogScope
+	typealias IntervalClosure = (StaticString, String, String, UInt, (() -> Void)?) -> LogInterval
 	
 	/// LogProtocol parameters
 	var params: LogParams { get }
@@ -58,6 +61,8 @@ public protocol LogProtocol {
 	var error: LogClosure { get }
 	var assert: AssertClosure { get }
 	var fault: LogClosure { get }
+	var scope: ScopeClosure { get }
+	//var interval: IntervalClosure { get }
 }
 
 extension LogProtocol {
