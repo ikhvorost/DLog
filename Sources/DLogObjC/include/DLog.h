@@ -1,14 +1,5 @@
 @import DLog;
 
-#define STATIC_CONST(type, code) ^type() { \
-	static type object; \
-	static dispatch_once_t onceToken; \
-	dispatch_once(&onceToken, ^{ \
-		object = (code); \
-	}); \
-	return object; \
-};
-
 
 #define VARGS_(_10, _9, _8, _7, _6, _5, _4, _3, _2, _1, N, ...) N
 #define VARGS(...) VARGS_(__VA_ARGS__, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)

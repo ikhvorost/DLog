@@ -24,6 +24,8 @@ static NSString* matchString(NSString* category, NSString* text) {
 }
 
 static void testAll(id<LogProtocol> logger, NSString *category) {
+	XCTAssertNotNil(logger);
+	
 	XCTAssert([logger.log(@"log") match:matchString(category, @"log")]);
 	XCTAssert([logger.trace(@"trace") match:matchString(category, @"trace")]);
 	XCTAssert([logger.debug(@"debug") match:matchString(category, @"debug")]);
@@ -40,11 +42,6 @@ static void testAll(id<LogProtocol> logger, NSString *category) {
  
 @implementation DLogTestsObjC
 
-- (void)test_StaticConst {
-	let array = STATIC_CONST(NSArray*, (@[@1, @2, @3, @4]));
-	XCTAssert(array().count == 4);
-}
- 
 - (void)test_Levels {
 	let logger = [DLog new];
 	XCTAssertNotNil(logger);
@@ -61,6 +58,8 @@ static void testAll(id<LogProtocol> logger, NSString *category) {
 
 - (void)test_Category {
 	let logger = [DLog new];
+	XCTAssertNotNil(logger);
+	
 	let category = logger[@"NET"];
 	XCTAssertNotNil(category);
 	
@@ -69,7 +68,6 @@ static void testAll(id<LogProtocol> logger, NSString *category) {
 
 - (void)test_Scope {
 	let logger = [DLog new];
-	
 	XCTAssertNotNil(logger);
 	
 	logger.scope(@"Scope 1", ^(LogScope* scope){
@@ -77,6 +75,7 @@ static void testAll(id<LogProtocol> logger, NSString *category) {
 	});
 	
 	let scope = logger.scope(@"Scope 2");
+	XCTAssertNotNil(scope);
 	[scope enter];
 	
 	testAll(scope, nil);
