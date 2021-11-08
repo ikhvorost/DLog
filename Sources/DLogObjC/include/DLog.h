@@ -21,3 +21,7 @@
 #define scope_2(name, block) scope((name),  @(__FILE__).lastPathComponent, @(__FUNCTION__), __LINE__, (block))
 #define scope_1(name) scope_2(name, nil)
 #define scope(...) CONCAT(scope_, VARGS(__VA_ARGS__))(__VA_ARGS__)
+
+#define interval_2(name, block) interval((name),  @(__FILE__).lastPathComponent, @(__FUNCTION__), __LINE__, (block))
+#define interval_1(name) interval_2(name, nil)
+#define interval(...) CONCAT(interval_, VARGS(__VA_ARGS__))(__VA_ARGS__)

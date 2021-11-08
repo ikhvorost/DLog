@@ -222,4 +222,9 @@ public class LogScope : LogItem, LogProtocol {
 	public lazy var scope: ScopeClosure = { (name, file, function, line, closure) in
 		(self as LogProtocol).scope(name, file: file, function: function, line: line, closure: closure)
 	}
+	
+	@objc
+	public lazy var interval: IntervalClosure = { (name, file, function, line, closure) in
+		(self as LogProtocol).interval(name: name, file: file, function: function, line: line, closure: closure)
+	}
 }

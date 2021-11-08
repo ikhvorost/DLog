@@ -98,7 +98,8 @@ public class LogInterval : LogItem {
 	private let logger: DLog
 	@Atomic private var begun = false
 	
-	let name: StaticString
+	let name: String
+	let staticName: StaticString?
 	
 	// SignpostID
 	private var _signpostID: Any? = nil
@@ -125,10 +126,18 @@ public class LogInterval : LogItem {
 	/// An average time duration
 	internal(set) public var avg: TimeInterval = 0
 	
-	init(logger: DLog, category: String, scope: LogScope?, file: String, funcName: String, line: UInt, name: StaticString, config: LogConfiguration) {
+	init(logger: DLog, category: String, scope: LogScope?, name: String?, staticName: StaticString?, file: String, funcName: String, line: UInt, config: LogConfiguration) {
 		self.id = "\(file):\(funcName):\(line)".hash
 		self.logger = logger
-		self.name = name
+		
+		if let name = staticName {
+			self.name = "\(name)"
+			self.staticName = staticName
+		}
+		else {
+			self.name = name ?? ""
+			self.staticName = nil
+		}
 		
 		super.init(category: category, scope: scope, type: .interval, file: file, funcName: funcName, line: line, text: nil, config: config)
 		
@@ -141,7 +150,7 @@ public class LogInterval : LogItem {
 				(.max, "max", { "\(Text.stringFromTime(interval: self.max))" }),
 				(.average, "average", { "\(Text.stringFromTime(interval: self.avg))" })
 			]
-			return jsonDescription(title: "\(name)", items: items, options: config.intervalConfiguration.options)
+			return jsonDescription(title: self.name, items: items, options: config.intervalConfiguration.options)
 		}
 	}
 	

@@ -48,7 +48,7 @@ public protocol LogProtocol {
 	typealias TraceClosure = (String, String, String, UInt, [NSNumber]) -> String?
 	typealias AssertClosure = (Bool, String, String, String, UInt) -> String?
 	typealias ScopeClosure = (String, String, String, UInt, ((LogScope) -> Void)?) -> LogScope
-	typealias IntervalClosure = (StaticString, String, String, UInt, (() -> Void)?) -> LogInterval
+	typealias IntervalClosure = (String, String, String, UInt, (() -> Void)?) -> LogInterval
 	
 	/// LogProtocol parameters
 	var params: LogParams { get }
@@ -62,7 +62,7 @@ public protocol LogProtocol {
 	var assert: AssertClosure { get }
 	var fault: LogClosure { get }
 	var scope: ScopeClosure { get }
-	//var interval: IntervalClosure { get }
+	var interval: IntervalClosure { get }
 }
 
 extension LogProtocol {
@@ -279,7 +279,12 @@ extension LogProtocol {
 	/// - Returns: An `LogInterval` object for the new interval.
 	///
 	@discardableResult
-	public func interval(_ name: StaticString, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval {
+	public func interval(_ staticName: StaticString, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval {
+		params.logger.interval(staticName: staticName, category: params.category, scope: params.scope, file: file, function: function, line: line, closure: closure)
+	}
+	
+	@discardableResult
+	func interval(name: String, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval {
 		params.logger.interval(name: name, category: params.category, scope: params.scope, file: file, function: function, line: line, closure: closure)
 	}
 }

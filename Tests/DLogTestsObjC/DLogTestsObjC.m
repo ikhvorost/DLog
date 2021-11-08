@@ -70,7 +70,7 @@ static void testAll(id<LogProtocol> logger, NSString *category) {
 	let logger = [DLog new];
 	XCTAssertNotNil(logger);
 	
-	logger.scope(@"Scope 1", ^(LogScope* scope){
+	logger.scope(@"Scope 1", ^(LogScope* scope) {
 		testAll(scope, nil);
 	});
 	
@@ -83,4 +83,16 @@ static void testAll(id<LogProtocol> logger, NSString *category) {
 	[scope leave];
 }
  
+
+- (void)test_Interval {
+	let logger = [DLog new];
+	XCTAssertNotNil(logger);
+	
+	logger.interval(@"Interval 1", ^{
+		logger.debug(@"debug");
+	});
+	
+}
+
+
 @end

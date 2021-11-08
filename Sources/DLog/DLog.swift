@@ -224,14 +224,15 @@ public class DLog: NSObject, LogProtocol {
 		return scope
 	}
 
-	func interval(name: StaticString, category: String, scope: LogScope?, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
+	func interval(name: String? = nil, staticName: StaticString? = nil, category: String, scope: LogScope?, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
 		let interval = LogInterval(logger: self,
 							  category: category,
 							  scope: scope,
+							  name: name,
+							  staticName: staticName,
 							  file: file,
 							  funcName: function,
 							  line: line,
-							  name: name,
 							  config: config)
 		
 		if let block = closure {
@@ -291,5 +292,10 @@ public class DLog: NSObject, LogProtocol {
 	@objc
 	public lazy var scope: ScopeClosure = { (name, file, function, line, closure) in
 		(self as LogProtocol).scope(name, file: file, function: function, line: line, closure: closure)
+	}
+	
+	@objc
+	public lazy var interval: IntervalClosure = { (name, file, function, line, closure) in
+		(self as LogProtocol).interval(name: name, file: file, function: function, line: line, closure: closure)
 	}
 }

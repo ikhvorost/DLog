@@ -240,10 +240,14 @@ final class DLogTests: XCTestCase {
 	
 	func test_oslog() {
 		let log = DLog(.oslog)
-		XCTAssertNotNil(log.debug("oslog"))
+		XCTAssertNotNil(log.debug("debug"))
+		log.interval("signpost") {
+			log.debug("signpost")
+		}
+		
 		
 		let log2 = DLog(.oslog("com.dlog.test"))
-		XCTAssertNotNil(log2.debug("oslog"))
+		XCTAssertNotNil(log2.debug("debug"))
 	}
 	
 	// MARK: - Net

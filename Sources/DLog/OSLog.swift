@@ -126,12 +126,17 @@ public class OSLog : LogOutput {
 			interval.signpostID = OSSignpostID(log: log)
 		}
 
-		os_signpost(.begin, log: log, name: interval.name, signpostID: interval.signpostID!)
+		if let name = interval.staticName {
+			os_signpost(.begin, log: log, name: name, signpostID: interval.signpostID!)
+		}
 	}
 	
 	override func intervalEnd(interval: LogInterval, scopes: [LogScope]) -> String? {
 		let log = oslog(category: interval.category)
-		os_signpost(.end, log: log, name: interval.name, signpostID: interval.signpostID!)
+		
+		if let name = interval.staticName {
+			os_signpost(.end, log: log, name: name, signpostID: interval.signpostID!)
+		}
 		return super.intervalEnd(interval: interval, scopes: scopes)
 	}
 }
