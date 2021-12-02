@@ -31,7 +31,7 @@ import os.log
 ///
 /// A log type controls the conditions under which a message should be logged.
 ///
-public enum LogType : Int {
+@objc public enum LogType : Int {
 	/// The default log level to capture non critical information.
 	case log
 	
@@ -69,28 +69,28 @@ public enum LogType : Int {
 ///
 public class LogItem: NSObject {
 	/// The timestamp of this log message.
-	internal(set) public var time = Date()
+    @objc internal(set) public var time = Date()
 	
 	/// The category of this log message.
-	public let category: String
+    @objc public let category: String
 	
 	/// The scope of this log message.
-	public let _scope: LogScope?
+    @objc public let _scope: LogScope?
 	
 	/// The log level of this log message.
-	public let type: LogType
+    @objc public let type: LogType
 	
 	/// The file name this log message originates from.
-	public let fileName: String
+    @objc  public let fileName: String
 	
 	/// The function name this log message originates from.
-	public let funcName: String
+    @objc  public let funcName: String
 	
 	/// The line number of code this log message originates from.
-	public let line: UInt
+    @objc public let line: UInt
 		
 	/// The text of this log message.
-	internal(set) public var text: (() -> String)!
+    @objc internal(set) public var text: (() -> String)!
 	
 	let config: LogConfiguration
 

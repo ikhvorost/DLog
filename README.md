@@ -38,6 +38,7 @@ DLog is the development logger that supports emoji and colored text output, oslo
 		- [`ThreadConfiguration`](#threadconfiguration)
 		- [`StackConfiguration`](#stackconfiguration)
 	- [`IntervalConfiguration`](#intervalconfiguration)
+- [Objective-C](#objective-c)
 - [Installation](#installation)
 - [License](#license)
 
@@ -1096,6 +1097,10 @@ Outputs:
 ```sh
 • 23:26:40.978 [DLOG] [INTERVAL] <DLog:13> signpost: { duration: 3.2, count: 1, total: 3.2, min: 3.2, max: 3.2, average: 3.2 }
 ```
+
+## Objective-C
+
+
 
 ## Installation
 

@@ -144,11 +144,29 @@ public class DLog: NSObject, LogProtocol {
 		self.output = output
 		self.config = configuration
 	}
+    
+    @objc
+    public convenience init(outputs: [LogOutput]) {
+        let output: LogOutput?
+        if outputs.count == 0 {
+            output = .stdout
+        }
+        else {
+            output = outputs.count == 1
+                ? outputs.first
+                : outputs.reduce(.textPlain, =>)
+        }
+        self.init(output, configuration: DLog.defaultConfiguration)
+    }
+    
+    @objc
+    public convenience init(output: LogOutput) {
+        self.init(outputs: [output])
+    }
 	
 	@objc
-	override public init() {
-		self.output = .stdout
-		self.config = DLog.defaultConfiguration
+    public override convenience init() {
+        self.init(outputs: [])
 	}
 
 	// Scope

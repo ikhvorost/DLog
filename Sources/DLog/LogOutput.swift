@@ -29,33 +29,49 @@ import Foundation
 ///
 public class LogOutput : NSObject {
 	/// Creates `Text` output with plain style.
-	public static var textPlain: Text { Text(style: .plain) }
-	/// Creates `Text` output with emoji style.
-	public static var textEmoji: Text { Text(style: .emoji) }
-	/// Creates `Text` output with colored style (ANSI escape codes).
-	public static var textColored: Text { Text(style: .colored) }
+    @objc
+    public static var textPlain: Text { Text(style: .plain) }
+	
+    /// Creates `Text` output with emoji style.
+    @objc
+    public static var textEmoji: Text { Text(style: .emoji) }
+	
+    /// Creates `Text` output with colored style (ANSI escape codes).
+    @objc
+    public static var textColored: Text { Text(style: .colored) }
 	
 	/// Creates `Standard` output for `stdout` stream.
-	public static var stdout: Standard { Standard() }
-	/// Creates `Standard` output for `stderr` stream.
-	public static var stderr: Standard { Standard(stream: Darwin.stderr) }
+    @objc(stdOut)
+    public static var stdout: Standard { Standard() }
+	
+    /// Creates `Standard` output for `stderr` stream.
+    @objc(stdErr)
+    public static var stderr: Standard { Standard(stream: Darwin.stderr) }
 	
 	/// Creates `OSLog` output with default subsystem name: `com.dlog.logger`.
-	public static var oslog: OSLog { OSLog() }
+    @objc
+    public static var oslog: OSLog { OSLog() }
+    
 	/// Creates `OSLog` output with a subsystem name.
-	public static func oslog(_ subsystem: String) -> OSLog { OSLog(subsystem: subsystem) }
+    @objc
+    public static func oslog(_ subsystem: String) -> OSLog { OSLog(subsystem: subsystem) }
 	
 	/// Creates `Filter` output with a block that is applied to the log message to be evaluated.
-	public static func filter(_ block: @escaping (LogItem) -> Bool) -> Filter { Filter(block: block) }
+    @objc
+    public static func filter(_ block: @escaping (LogItem) -> Bool) -> Filter { Filter(block: block) }
 	
 	/// Creates `File` output with a file path to write.
-	public static func file(_ path: String, append: Bool = false) -> File { File(path: path, append: append) }
+    @objc
+    public static func file(_ path: String, append: Bool = false) -> File { File(path: path, append: append) }
 	
 #if !os(watchOS)
 	/// Creates `Net` output for default service name: `DLog`.
-	public static var net: Net { Net() }
+    @objc
+    public static var net: Net { Net() }
+    
 	/// Creates `Net` output for a service name.
-	public static func net(_ name: String) -> Net { Net(name: name) }
+    @objc
+    public static func net(_ name: String) -> Net { Net(name: name) }
 #endif
 
 	/// A source output.
