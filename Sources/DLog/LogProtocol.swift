@@ -39,252 +39,258 @@ public class LogParams : NSObject {
 	}
 }
 
-
-/// Base logger protocol
+/// Base logger class
 ///
 @objc
-public protocol LogProtocol {
-	typealias LogClosure = (String, String, String, UInt) -> String?
-	typealias TraceClosure = (String, String, String, UInt, [NSNumber]) -> String?
-	typealias AssertClosure = (Bool, String, String, String, UInt) -> String?
-	typealias ScopeClosure = (String, String, String, UInt, ((LogScope) -> Void)?) -> LogScope
-	typealias IntervalClosure = (String, String, String, UInt, (() -> Void)?) -> LogInterval
-	
-	/// LogProtocol parameters
-	var params: LogParams { get }
-	
-	var log: LogClosure { get }
-	var trace: TraceClosure { get }
-	var debug: LogClosure { get }
-	var info: LogClosure { get }
-	var warning: LogClosure { get }
-	var error: LogClosure { get }
-	var assert: AssertClosure { get }
-	var fault: LogClosure { get }
-	var scope: ScopeClosure { get }
-	var interval: IntervalClosure { get }
-}
-
-extension LogProtocol {
-	
-	/// Logs a message that is essential to troubleshoot problems later.
-	///
-	/// This method logs the message using the default log level.
-	///
-	///		let log = DLog()
-	///		log.log("message")
-	///
-	/// - Parameters:
-	/// 	- text: The message to be logged that can be used with any string interpolation literal.
-	/// 	- file: The file this log message originates from (defaults to `#file`).
-	/// 	- function: The function this log message originates from (defaults to `#function`).
-	/// 	- line: The line this log message originates (defaults to `#line`).
-	///
-	/// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
-	///
-	@discardableResult
-	public func log(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		params.logger.log(text: text, type: .log, category: params.category, scope: params.scope, file: file, function: function, line: line)
-	}
-	
-	/// Logs trace information to help debug problems during the development of your code.
-	///
-	/// Use it during development to record information that might aid you in debugging problems later.
-	///
-	///		let log = DLog()
-	///		log.trace("message")
-	///
-	/// - Parameters:
-	/// 	- text: The message to be logged that can be used with any string interpolation literal.
-	/// 	- file: The file this log message originates from (defaults to `#file`).
-	/// 	- function: The function this log message originates from (defaults to `#function`).
-	/// 	- line: The line this log message originates (defaults to `#line`).
-	///
-	/// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
-	///
-	@discardableResult
-	public func trace(_ text: @escaping @autoclosure () -> String? = nil,
-					  file: String = #file, function: String = #function, line: UInt = #line,
-					  addresses: [NSNumber] = Thread.callStackReturnAddresses) -> String? {
-		let message: () -> String = {
-			traceInfo(title: text(),
-					  function: function,
-					  addresses: addresses.dropFirst(),
-					  config: self.params.logger.config.traceConfiguration)
-		}
-		return params.logger.log(text: message, type: .trace, category: params.category, scope: params.scope, file: file, function: function, line: line)
-	}
-	
-	/// Logs a message to help debug problems during the development of your code.
-	///
-	/// Use this method during development to record information that might aid you in debugging problems later.
-	///
-	///		let log = DLog()
-	///		log.debug("message")
-	///
-	/// - Parameters:
-	/// 	- text: The message to be logged that can be used with any string interpolation literal.
-	/// 	- file: The file this log message originates from (defaults to `#file`).
-	/// 	- function: The function this log message originates from (defaults to `#function`).
-	/// 	- line: The line this log message originates (defaults to `#line`).
-	///
-	/// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
-	///
-	@discardableResult
-	public func debug(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		return params.logger.log(text: text, type: .debug, category: params.category, scope: params.scope, file: file, function: function, line: line)
-	}
-	
-	/// Logs a message that is helpful, but not essential, to diagnose issues with your code.
-	///
-	/// Use this method to capture information messages and helpful data.
-	///
-	///		let log = DLog()
-	///		log.info("message")
-	///
-	/// - Parameters:
-	/// 	- text: The message to be logged that can be used with any string interpolation literal.
-	/// 	- file: The file this log message originates from (defaults to `#file`).
-	/// 	- function: The function this log message originates from (defaults to `#function`).
-	/// 	- line: The line this log message originates (defaults to `#line`).
-	///
-	/// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
-	///
-	@discardableResult
-	public func info(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		params.logger.log(text: text, type: .info, category: params.category, scope: params.scope, file: file, function: function, line: line)
-	}
-	
-	/// Logs a warning that occurred during the execution of your code.
-	///
-	/// Use this method to capture information about things that might result in an error.
-	///
-	///		let log = DLog()
-	///		log.warning("message")
-	///
-	/// - Parameters:
-	/// 	- text: The message to be logged that can be used with any string interpolation literal.
-	/// 	- file: The file this log message originates from (defaults to `#file`).
-	/// 	- function: The function this log message originates from (defaults to `#function`).
-	/// 	- line: The line this log message originates (defaults to `#line`).
-	///
-	/// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
-	///
-	@discardableResult
-	public func warning(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		params.logger.log(text: text, type: .warning, category: params.category, scope: params.scope, file: file, function: function, line: line)
-	}
-	
-	/// Logs an error that occurred during the execution of your code.
-	///
-	/// Use this method to report errors.
-	///
-	///		let log = DLog()
-	///		log.error("message")
-	///
-	/// - Parameters:
-	/// 	- text: The message to be logged that can be used with any string interpolation literal.
-	/// 	- file: The file this log message originates from (defaults to `#file`).
-	/// 	- function: The function this log message originates from (defaults to `#function`).
-	/// 	- line: The line this log message originates (defaults to `#line`).
-	///
-	/// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
-	///
-	@discardableResult
-	public func error(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		params.logger.log(text: text, type: .error, category: params.category, scope: params.scope, file: file, function: function, line: line)
-	}
-	
-	/// Logs a traditional C-style assert notice with an optional message.
-	///
-	/// Use this function for internal sanity checks.
-	///
-	///		let log = DLog()
-	///		log.assert(condition, "message")
-	///
-	/// - Parameters:
-	/// 	- condition: The condition to test.
-	/// 	- text: A string to print if `condition` is evaluated to `false`. The default is an empty string.
-	/// 	- file: The file this log message originates from (defaults to `#file`).
-	/// 	- function: The function this log message originates from (defaults to `#function`).
-	/// 	- line: The line this log message originates (defaults to `#line`).
-	///
-	/// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
-	///
-	@discardableResult
-	public func assert(_ condition: @autoclosure () -> Bool, _ text: @escaping @autoclosure () -> String = "", file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		guard !(params.logger.disabled || condition()) else { return nil }
-		return params.logger.log(text: text, type: .assert, category: params.category, scope: params.scope, file: file, function: function, line: line)
-	}
-	
-	/// Logs a bug or fault that occurred during the execution of your code.
-	///
-	/// Use this method to capture critical errors that occurred during the execution of your code.
-	///
-	///		let log = DLog()
-	///		log.fault("message")
-	///
-	/// - Parameters:
-	/// 	- text: The message to be logged that can be used with any string interpolation literal.
-	/// 	- file: The file this log message originates from (defaults to `#file`).
-	/// 	- function: The function this log message originates from (defaults to `#function`).
-	/// 	- line: The line this log message originates (defaults to `#line`).
-	///
-	/// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
-	///
-	@discardableResult
-	public func fault(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-		params.logger.log(text: text, type: .fault, category: params.category, scope: params.scope, file: file, function: function, line: line)
-	}
-	
-	/// Creates a scope object that can assign log messages to itself.
-	///
-	/// Scope provides a mechanism for grouping log messages in your program.
-	///
-	///		let log = DLog()
-	///		log.scope("Auth") { scope in
-	///			scope.log("message")
-	///		}
-	///
-	/// - Parameters:
-	/// 	- name: The name of new scope object.
-	/// 	- file: The file this log message originates from (defaults to `#file`).
-	/// 	- function: The function this log message originates from (defaults to `#function`).
-	/// 	- line: The line this log message originates (defaults to `#line`).
-	/// 	- closure: A closure to be executed with the scope. The block takes a single `LogScope` parameter and has no return value.
-	///
-	/// - Returns: An `LogScope` object for the new scope.
-	///
-	@discardableResult
-	public func scope(_ name: String, file: String = #file, function: String = #function, line: UInt = #line, closure: ((LogScope) -> Void)? = nil) -> LogScope {
-		params.logger.scope(name: name, category: params.category, file: file, function: function, line: line, closure: closure)
-	}
-	
-	/// Creates an interval object that logs a detailed message with accumulated statistics.
-	///
-	/// Logs a point of interest in your code as time intervals for debugging performances.
-	///
-	///		let log = DLog()
-	///		log.interval("Sorting") {
-	///			...
-	///		}
-	///
-	/// - Parameters:
-	/// 	- name: The name of new interval object.
-	/// 	- file: The file this log message originates from (defaults to `#file`).
-	/// 	- function: The function this log message originates from (defaults to `#function`).
-	/// 	- line: The line this log message originates (defaults to `#line`).
-	/// 	- closure: A closure to be executed with the interval.
-	///
-	/// - Returns: An `LogInterval` object for the new interval.
-	///
-	@discardableResult
-	public func interval(_ staticName: StaticString, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval {
-		params.logger.interval(staticName: staticName, category: params.category, scope: params.scope, file: file, function: function, line: line, closure: closure)
-	}
-	
-	@discardableResult
-	func interval(name: String, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval {
-		params.logger.interval(name: name, category: params.category, scope: params.scope, file: file, function: function, line: line, closure: closure)
-	}
+public class LogProtocol: NSObject {
+    
+    /// LogProtocol parameters
+    var params: LogParams?
+    
+    /// Logs a message that is essential to troubleshoot problems later.
+    ///
+    /// This method logs the message using the default log level.
+    ///
+    ///		let log = DLog()
+    ///		log.log("message")
+    ///
+    /// - Parameters:
+    /// 	- text: The message to be logged that can be used with any string interpolation literal.
+    /// 	- file: The file this log message originates from (defaults to `#file`).
+    /// 	- function: The function this log message originates from (defaults to `#function`).
+    /// 	- line: The line this log message originates (defaults to `#line`).
+    ///
+    /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
+    ///
+    @objc
+    @discardableResult
+    public func log(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+        guard let params = params else { return nil }
+        return params.logger.log(text: text, type: .log, category: params.category, scope: params.scope, file: file, function: function, line: line)
+    }
+    
+    /// Logs trace information to help debug problems during the development of your code.
+    ///
+    /// Use it during development to record information that might aid you in debugging problems later.
+    ///
+    ///		let log = DLog()
+    ///		log.trace("message")
+    ///
+    /// - Parameters:
+    /// 	- text: The message to be logged that can be used with any string interpolation literal.
+    /// 	- file: The file this log message originates from (defaults to `#file`).
+    /// 	- function: The function this log message originates from (defaults to `#function`).
+    /// 	- line: The line this log message originates (defaults to `#line`).
+    ///
+    /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
+    ///
+    @objc
+    @discardableResult
+    public func trace(_ text: @escaping @autoclosure () -> String? = nil,
+                      file: String = #file, function: String = #function, line: UInt = #line,
+                      addresses: [NSNumber] = Thread.callStackReturnAddresses) -> String? {
+        guard let params = params else { return nil }
+        let message: () -> String = {
+            traceInfo(title: text(),
+                      function: function,
+                      addresses: addresses.dropFirst(),
+                      config: params.logger.config.traceConfiguration)
+        }
+        return params.logger.log(text: message, type: .trace, category: params.category, scope: params.scope, file: file, function: function, line: line)
+    }
+    
+    /// Logs a message to help debug problems during the development of your code.
+    ///
+    /// Use this method during development to record information that might aid you in debugging problems later.
+    ///
+    ///		let log = DLog()
+    ///		log.debug("message")
+    ///
+    /// - Parameters:
+    /// 	- text: The message to be logged that can be used with any string interpolation literal.
+    /// 	- file: The file this log message originates from (defaults to `#file`).
+    /// 	- function: The function this log message originates from (defaults to `#function`).
+    /// 	- line: The line this log message originates (defaults to `#line`).
+    ///
+    /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
+    ///
+    @objc
+    @discardableResult
+    public func debug(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+        guard let params = params else { return nil }
+        return params.logger.log(text: text, type: .debug, category: params.category, scope: params.scope, file: file, function: function, line: line)
+    }
+    
+    /// Logs a message that is helpful, but not essential, to diagnose issues with your code.
+    ///
+    /// Use this method to capture information messages and helpful data.
+    ///
+    ///		let log = DLog()
+    ///		log.info("message")
+    ///
+    /// - Parameters:
+    /// 	- text: The message to be logged that can be used with any string interpolation literal.
+    /// 	- file: The file this log message originates from (defaults to `#file`).
+    /// 	- function: The function this log message originates from (defaults to `#function`).
+    /// 	- line: The line this log message originates (defaults to `#line`).
+    ///
+    /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
+    ///
+    @objc
+    @discardableResult
+    public func info(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+        guard let params = params else { return nil }
+        return params.logger.log(text: text, type: .info, category: params.category, scope: params.scope, file: file, function: function, line: line)
+    }
+    
+    /// Logs a warning that occurred during the execution of your code.
+    ///
+    /// Use this method to capture information about things that might result in an error.
+    ///
+    ///		let log = DLog()
+    ///		log.warning("message")
+    ///
+    /// - Parameters:
+    /// 	- text: The message to be logged that can be used with any string interpolation literal.
+    /// 	- file: The file this log message originates from (defaults to `#file`).
+    /// 	- function: The function this log message originates from (defaults to `#function`).
+    /// 	- line: The line this log message originates (defaults to `#line`).
+    ///
+    /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
+    ///
+    @objc
+    @discardableResult
+    public func warning(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+        guard let params = params else { return nil }
+        return params.logger.log(text: text, type: .warning, category: params.category, scope: params.scope, file: file, function: function, line: line)
+    }
+    
+    /// Logs an error that occurred during the execution of your code.
+    ///
+    /// Use this method to report errors.
+    ///
+    ///		let log = DLog()
+    ///		log.error("message")
+    ///
+    /// - Parameters:
+    /// 	- text: The message to be logged that can be used with any string interpolation literal.
+    /// 	- file: The file this log message originates from (defaults to `#file`).
+    /// 	- function: The function this log message originates from (defaults to `#function`).
+    /// 	- line: The line this log message originates (defaults to `#line`).
+    ///
+    /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
+    ///
+    @objc
+    @discardableResult
+    public func error(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+        guard let params = params else { return nil }
+        return params.logger.log(text: text, type: .error, category: params.category, scope: params.scope, file: file, function: function, line: line)
+    }
+    
+    /// Logs a traditional C-style assert notice with an optional message.
+    ///
+    /// Use this function for internal sanity checks.
+    ///
+    ///		let log = DLog()
+    ///		log.assert(condition, "message")
+    ///
+    /// - Parameters:
+    /// 	- condition: The condition to test.
+    /// 	- text: A string to print if `condition` is evaluated to `false`. The default is an empty string.
+    /// 	- file: The file this log message originates from (defaults to `#file`).
+    /// 	- function: The function this log message originates from (defaults to `#function`).
+    /// 	- line: The line this log message originates (defaults to `#line`).
+    ///
+    /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
+    ///
+    @objc
+    @discardableResult
+    public func assert(_ condition: @autoclosure () -> Bool, _ text: @escaping @autoclosure () -> String = "", file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+        guard let params = params, !(params.logger.disabled || condition()) else { return nil }
+        return params.logger.log(text: text, type: .assert, category: params.category, scope: params.scope, file: file, function: function, line: line)
+    }
+    
+    /// Logs a bug or fault that occurred during the execution of your code.
+    ///
+    /// Use this method to capture critical errors that occurred during the execution of your code.
+    ///
+    ///		let log = DLog()
+    ///		log.fault("message")
+    ///
+    /// - Parameters:
+    /// 	- text: The message to be logged that can be used with any string interpolation literal.
+    /// 	- file: The file this log message originates from (defaults to `#file`).
+    /// 	- function: The function this log message originates from (defaults to `#function`).
+    /// 	- line: The line this log message originates (defaults to `#line`).
+    ///
+    /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
+    ///
+    @objc
+    @discardableResult
+    public func fault(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+        guard let params = params else { return nil }
+        return params.logger.log(text: text, type: .fault, category: params.category, scope: params.scope, file: file, function: function, line: line)
+    }
+    
+    /// Creates a scope object that can assign log messages to itself.
+    ///
+    /// Scope provides a mechanism for grouping log messages in your program.
+    ///
+    ///		let log = DLog()
+    ///		log.scope("Auth") { scope in
+    ///			scope.log("message")
+    ///		}
+    ///
+    /// - Parameters:
+    /// 	- name: The name of new scope object.
+    /// 	- file: The file this log message originates from (defaults to `#file`).
+    /// 	- function: The function this log message originates from (defaults to `#function`).
+    /// 	- line: The line this log message originates (defaults to `#line`).
+    /// 	- closure: A closure to be executed with the scope. The block takes a single `LogScope` parameter and has no return value.
+    ///
+    /// - Returns: An `LogScope` object for the new scope.
+    ///
+    @objc
+    @discardableResult
+    public func scope(_ name: String, file: String = #file, function: String = #function, line: UInt = #line, closure: ((LogScope) -> Void)? = nil) -> LogScope {
+        guard let params = params else {
+            return .disabled
+        }
+        return params.logger.scope(name: name, category: params.category, file: file, function: function, line: line, closure: closure)
+    }
+    
+    /// Creates an interval object that logs a detailed message with accumulated statistics.
+    ///
+    /// Logs a point of interest in your code as time intervals for debugging performances.
+    ///
+    ///		let log = DLog()
+    ///		log.interval("Sorting") {
+    ///			...
+    ///		}
+    ///
+    /// - Parameters:
+    /// 	- name: The name of new interval object.
+    /// 	- file: The file this log message originates from (defaults to `#file`).
+    /// 	- function: The function this log message originates from (defaults to `#function`).
+    /// 	- line: The line this log message originates (defaults to `#line`).
+    /// 	- closure: A closure to be executed with the interval.
+    ///
+    /// - Returns: An `LogInterval` object for the new interval.
+    ///
+    @discardableResult
+    public func interval(_ staticName: StaticString, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval {
+        guard let params = params else {
+            return .disabled
+        }
+        return params.logger.interval(staticName: staticName, category: params.category, scope: params.scope, file: file, function: function, line: line, closure: closure)
+    }
+    
+    @objc
+    @discardableResult
+    public func interval(name: String, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval {
+        guard let params = params else {
+            return .disabled
+        }
+        return params.logger.interval(name: name, category: params.category, scope: params.scope, file: file, function: function, line: line, closure: closure)
+    }
 }

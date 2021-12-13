@@ -35,63 +35,9 @@ import Foundation
 /// 	let netLog = log["NET"]
 /// 	let netLog.log("Hello Net!")
 ///
-public class LogCategory: NSObject, LogProtocol {
+public class LogCategory: LogProtocol {
 	init(logger: DLog, category: String) {
+        super.init()
 		params = LogParams(logger: logger, category: category, scope: nil)
-	}
-	
-	// MARK: - LogProtocol
-	
-	/// LogProtocol parameters
-	public let params: LogParams
-	
-	@objc
-	public lazy var log: LogClosure = { (text, file, function, line) in
-		(self as LogProtocol).log(text, file: file, function: function, line: line)
-	}
-	
-	@objc
-	public lazy var trace: TraceClosure = { (text, file, function, line, addresses) in
-		(self as LogProtocol).trace(text, file: file, function: function, line: line, addresses: addresses)
-	}
-	
-	@objc
-	public lazy var debug: LogClosure = { (text, file, function, line) in
-		(self as LogProtocol).debug(text, file: file, function: function, line: line)
-	}
-	
-	@objc
-	public lazy var info: LogClosure = { (text, file, function, line) in
-		(self as LogProtocol).info(text, file: file, function: function, line: line)
-	}
-	
-	@objc
-	public lazy var warning: LogClosure = { (text, file, function, line) in
-		(self as LogProtocol).warning(text, file: file, function: function, line: line)
-	}
-	
-	@objc
-	public lazy var error: LogClosure = { (text, file, function, line) in
-		(self as LogProtocol).error(text, file: file, function: function, line: line)
-	}
-	
-	@objc
-	public lazy var assert: AssertClosure = { (condition, text, file, function, line) in
-		(self as LogProtocol).assert(condition, text, file: file, function: function, line: line)
-	}
-	
-	@objc
-	public lazy var fault: LogClosure = { (text, file, function, line) in
-		(self as LogProtocol).fault(text, file: file, function: function, line: line)
-	}
-	
-	@objc
-	public lazy var scope: ScopeClosure = { (name, file, function, line, closure) in
-		(self as LogProtocol).scope(name, file: file, function: function, line: line, closure: closure)
-	}
-	
-	@objc
-	public lazy var interval: IntervalClosure = { (name, file, function, line, closure) in
-		(self as LogProtocol).interval(name: name, file: file, function: function, line: line, closure: closure)
 	}
 }

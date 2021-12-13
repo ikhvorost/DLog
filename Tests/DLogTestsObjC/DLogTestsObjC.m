@@ -75,7 +75,7 @@ static NSString* read_stderr(VoidBlock block) {
 
 #pragma mark - Tests
 
-static void testAll(id<LogProtocol> logger, NSString *category) {
+static void testAll(LogProtocol* logger, NSString *category) {
 	XCTAssertNotNil(logger);
     
     XCTAssert([logger.log(@"log") match:matchString(category, @"log")]);
@@ -101,8 +101,8 @@ static void testAll(id<LogProtocol> logger, NSString *category) {
 - (void)test_Levels {
 	let logger = [DLog new];
 	XCTAssertNotNil(logger);
-	
-	testAll(logger, nil);
+    
+    testAll(logger, nil);
 }
 
 - (void)test_Scope {
@@ -159,7 +159,7 @@ static void testAll(id<LogProtocol> logger, NSString *category) {
     ];
     
     for (LogOutput* output in outputs) {
-        let logger = [[DLog alloc] initWithOutput:output];
+        let logger = [[DLog alloc] initWithOutputs:@[output]];
         XCTAssertNotNil(logger);
         
         logger.debug(@"debug");
@@ -180,7 +180,7 @@ static void testAll(id<LogProtocol> logger, NSString *category) {
         return
             [logItem.time compare:NSDate.now] == NSOrderedAscending &&
             [logItem.category isEqualToString:@"DLOG"] &&
-            [logItem._scope.text() isEqualToString:@"Scope"] &&
+            [logItem.scope.text() isEqualToString:@"Scope"] &&
             logItem.type == LogTypeDebug &&
             [logItem.fileName isEqualToString:@"DLogTestsObjC"] &&
             [logItem.funcName isEqualToString:@"-[DLogTestsObjC test_Filter]"] &&

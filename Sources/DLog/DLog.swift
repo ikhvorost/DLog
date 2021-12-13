@@ -94,7 +94,7 @@ public struct LogConfiguration {
 
 /// The central class to emit log messages to specified outputs using one of the methods corresponding to a log level.
 ///
-public class DLog: NSObject, LogProtocol {
+public class DLog: LogProtocol {
 	
 	private let output: LogOutput?
 	let config: LogConfiguration
@@ -143,6 +143,8 @@ public class DLog: NSObject, LogProtocol {
 	public init(_ output: LogOutput? = .stdout, configuration: LogConfiguration = DLog.defaultConfiguration) {
 		self.output = output
 		self.config = configuration
+        super.init()
+        params = LogParams(logger: self, category: "DLOG", scope: nil)
 	}
     
     @objc
@@ -160,11 +162,6 @@ public class DLog: NSObject, LogProtocol {
     }
     
     @objc
-    public convenience init(output: LogOutput) {
-        self.init(outputs: [output])
-    }
-	
-	@objc
     public override convenience init() {
         self.init(outputs: [])
 	}
@@ -260,60 +257,5 @@ public class DLog: NSObject, LogProtocol {
 		}
 
 		return interval
-	}
-	
-	// MARK: - LogProtocol
-	
-	/// LogProtocol parameters
-	public lazy var params = LogParams(logger: self, category: "DLOG", scope: nil)
-
-	@objc
-	public lazy var log: LogClosure = { (text, file, function, line) in
-		(self as LogProtocol).log(text, file: file, function: function, line: line)
-	}
-	
-	@objc
-	public lazy var trace: TraceClosure = { (text, file, function, line, addresses) in
-		(self as LogProtocol).trace(text, file: file, function: function, line: line, addresses: addresses)
-	}
-	
-	@objc
-	public lazy var debug: LogClosure = { (text, file, function, line) in
-		(self as LogProtocol).debug(text, file: file, function: function, line: line)
-	}
-	
-	@objc
-	public lazy var info: LogClosure = { (text, file, function, line) in
-		(self as LogProtocol).info(text, file: file, function: function, line: line)
-	}
-	
-	@objc
-	public lazy var warning: LogClosure = { (text, file, function, line) in
-		(self as LogProtocol).warning(text, file: file, function: function, line: line)
-	}
-	
-	@objc
-	public lazy var error: LogClosure = { (text, file, function, line) in
-		(self as LogProtocol).error(text, file: file, function: function, line: line)
-	}
-	
-	@objc
-	public lazy var assert: AssertClosure = { (condition, text, file, function, line) in
-		(self as LogProtocol).assert(condition, text, file: file, function: function, line: line)
-	}
-	
-	@objc
-	public lazy var fault: LogClosure = { (text, file, function, line) in
-		(self as LogProtocol).fault(text, file: file, function: function, line: line)
-	}
-	
-	@objc
-	public lazy var scope: ScopeClosure = { (name, file, function, line, closure) in
-		(self as LogProtocol).scope(name, file: file, function: function, line: line, closure: closure)
-	}
-	
-	@objc
-	public lazy var interval: IntervalClosure = { (name, file, function, line, closure) in
-		(self as LogProtocol).interval(name: name, file: file, function: function, line: line, closure: closure)
 	}
 }

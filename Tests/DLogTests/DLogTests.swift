@@ -280,7 +280,7 @@ final class DLogTests: XCTestCase {
 	
 	func test_Filter() {
 		// Time
-		let timeLog = DLog(.textPlain => .filter { $0.time < Date() } => .stdout)
+        let timeLog = DLog(.textPlain => .filter { $0.time < Date() } => .stdout)
 		XCTAssertNotNil(timeLog.info("info"))
 		
 		// Category
@@ -319,7 +319,7 @@ final class DLogTests: XCTestCase {
 		XCTAssertNotNil(read_stdout { textLog.scope("scope hello") { _ in } })
 		
 		// Scope
-		let scopeLog = DLog(.textPlain => .filter { ($0 as? LogScope)?.text() == "Load" || $0._scope?.text() == "Load" } => .stdout)
+		let scopeLog = DLog(.textPlain => .filter { ($0 as? LogScope)?.text() == "Load" || $0.scope?.text() == "Load" } => .stdout)
 		//let scopeLog = DLog(.textPlain => .filter { $0.scope?.level == 1 } => .stdout)
 		XCTAssertNil(scopeLog.info("info"))
 		XCTAssertNotNil(read_stdout {
@@ -816,7 +816,6 @@ final class TraceTests: XCTestCase {
 		config.traceConfiguration.options = .all
 
 		let log = DLog(configuration: config)
-
 		XCTAssert(log.trace()?.match(#"\#(Location) func: test_TraceConfigAll\(\), queue: com.apple.main-thread, thread: \{ number: 1, name: main \}, stack: \[ 0: \{ symbols:"#) == true)
 	}
 }

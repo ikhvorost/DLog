@@ -24,14 +24,14 @@
 //
 
 import Foundation
-import os.log
 
 
 /// Logging levels supported by the logger.
 ///
 /// A log type controls the conditions under which a message should be logged.
 ///
-@objc public enum LogType : Int {
+@objc
+public enum LogType : Int {
 	/// The default log level to capture non critical information.
 	case log
 	
@@ -67,7 +67,7 @@ import os.log
 ///
 /// It contains all available properties of the log message.
 ///
-public class LogItem: NSObject {
+public class LogItem: LogProtocol {
 	/// The timestamp of this log message.
     @objc internal(set) public var time = Date()
 	
@@ -75,7 +75,7 @@ public class LogItem: NSObject {
     @objc public let category: String
 	
 	/// The scope of this log message.
-    @objc public let _scope: LogScope?
+    @objc public let scope: LogScope?
 	
 	/// The log level of this log message.
     @objc public let type: LogType
@@ -93,10 +93,10 @@ public class LogItem: NSObject {
     @objc internal(set) public var text: (() -> String)!
 	
 	let config: LogConfiguration
-
-	init(category: String, scope: LogScope?, type: LogType, file: String, funcName: String, line: UInt, text: (() -> String)!, config: LogConfiguration) {
+    
+    init(category: String, scope: LogScope?, type: LogType, file: String, funcName: String, line: UInt, text: (() -> String)!, config: LogConfiguration) {
 		self.category = category
-		self._scope = scope
+		self.scope = scope
 		self.type = type
 		self.fileName = ((file as NSString).lastPathComponent as NSString).deletingPathExtension
 		self.funcName = funcName
@@ -104,127 +104,9 @@ public class LogItem: NSObject {
 		self.text = text
 		self.config = config
 	}
-}
-
-/// An object that represents a scope triggered by the user.
-///
-/// Scope provides a mechanism for grouping log messages.
-///
-public class LogScope : LogItem, LogProtocol {
-	let logger: DLog
-	let uid = UUID()
-	var os_state = os_activity_scope_state_s()
-	@Atomic var entered = false
-	
-	/// A global level of a scope
-	internal(set) public var level: Int = 0
-	
-	/// A time duration of a scope
-	private(set) public var duration: TimeInterval = 0
-	
-	init(logger: DLog, category: String, file: String, funcName: String, line: UInt, name: @autoclosure @escaping () -> String, config: LogConfiguration) {
-		self.logger = logger
-		super.init(category: category, scope: nil, type: .scope, file: file, funcName: funcName, line: line, text: name, config: config)
-	}
-	
-	/// Start a scope.
-	///
-	/// A scope can be created and then used for logging grouped log messages.
-	///
-	/// 	let log = DLog()
-	/// 	let scope = log.scope("Auth")
-	/// 	scope.enter()
-	///
-	/// 	scope.log("message")
-	/// 	...
-	///
-	/// 	scope.leave()
-	///
-	@objc
-	public func enter() {
-		guard !entered else { return }
-		entered.toggle()
-		
-		time = Date()
-		duration = 0
-		logger.enter(scope: self)
-	}
-	
-	/// Finish a scope.
-	///
-	/// A scope can be created and then used for logging grouped log messages.
-	///
-	/// 	let log = DLog()
-	/// 	let scope = log.scope("Auth")
-	/// 	scope.enter()
-	///
-	/// 	scope.log("message")
-	/// 	...
-	///
-	/// 	scope.leave()
-	///
-	@objc
-	public func leave() {
-		guard entered else { return }
-		entered.toggle()
-		
-		duration = -time.timeIntervalSinceNow
-		
-		logger.leave(scope: self)
-	}
-	
-	// MARK: - LogProtocol
-	
-	/// LogProtocol parameters
-	public lazy var params = LogParams(logger: logger, category: category, scope: self)
-	
-	@objc
-	public lazy var log: LogClosure = { (text, file, function, line) in
-		(self as LogProtocol).log(text, file: file, function: function, line: line)
-	}
-	
-	@objc
-	public lazy var trace: TraceClosure = { (text, file, function, line, addresses) in
-		(self as LogProtocol).trace(text, file: file, function: function, line: line, addresses: addresses)
-	}
-	
-	@objc
-	public lazy var debug: LogClosure = { (text, file, function, line) in
-		(self as LogProtocol).debug(text, file: file, function: function, line: line)
-	}
-	
-	@objc
-	public lazy var info: LogClosure = { (text, file, function, line) in
-		(self as LogProtocol).info(text, file: file, function: function, line: line)
-	}
-	
-	@objc
-	public lazy var warning: LogClosure = { (text, file, function, line) in
-		(self as LogProtocol).warning(text, file: file, function: function, line: line)
-	}
-	
-	@objc
-	public lazy var error: LogClosure = { (text, file, function, line) in
-		(self as LogProtocol).error(text, file: file, function: function, line: line)
-	}
-	
-	@objc
-	public lazy var assert: AssertClosure = { (condition, text, file, function, line) in
-		(self as LogProtocol).assert(condition, text, file: file, function: function, line: line)
-	}
-	
-	@objc
-	public lazy var fault: LogClosure = { (text, file, function, line) in
-		(self as LogProtocol).fault(text, file: file, function: function, line: line)
-	}
-	
-	@objc
-	public lazy var scope: ScopeClosure = { (name, file, function, line, closure) in
-		(self as LogProtocol).scope(name, file: file, function: function, line: line, closure: closure)
-	}
-	
-	@objc
-	public lazy var interval: IntervalClosure = { (name, file, function, line, closure) in
-		(self as LogProtocol).interval(name: name, file: file, function: function, line: line, closure: closure)
-	}
+    
+    @objc
+    convenience init(type: LogType) {
+        self.init(category: "", scope: nil, type: type, file: "", funcName: "", line: 0, text: { "" }, config: LogConfiguration())
+    }
 }

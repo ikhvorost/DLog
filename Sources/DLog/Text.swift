@@ -192,11 +192,11 @@ public class Text : LogOutput {
 		
 		var sign = { "\(item.config.sign)" }
 		var time = { Self.dateFormatter.string(from: item.time) }
-		var level = { String(format: "[%02d]", item._scope?.level ?? 0) }
+		var level = { String(format: "[%02d]", item.scope?.level ?? 0) }
 		var category = { "[\(item.category)]" }
 		let padding: () -> String = {
 			var text = ""
-			if let scope = item._scope, scope.entered {
+			if let scope = item.scope, scope.entered {
 				for level in 1...scope.level {
 					let scope = scopes.first(where: { $0.level == level })
 					text += scope != nil ? "| " : "  "
@@ -218,7 +218,7 @@ public class Text : LogOutput {
 				
 				sign = { "\(item.config.sign)".color(.dim) }
 				time = { Self.dateFormatter.string(from: item.time).color(.dim) }
-				level = { String(format: "[%02d]", item._scope?.level ?? 0).color(.dim) }
+				level = { String(format: "[%02d]", item.scope?.level ?? 0).color(.dim) }
 				category = { "\(item.category.color(.textBlue))" }
 				type = { " \(item.type.title) ".color(tag.colors) }
 				location = { "<\(item.fileName):\(item.line)>".color([.dim, tag.textColor]) }
