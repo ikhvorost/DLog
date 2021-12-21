@@ -164,12 +164,6 @@ final class DLogTests: XCTestCase {
 	
 	// MARK: - Text
 	
-	func test_textPlain() {
-		let log = DLog()
-		
-		testAll(log)
-	}
-	
 	func test_textEmoji() {
 		let log = DLog(.textEmoji => .stdout)
 		
@@ -183,6 +177,7 @@ final class DLogTests: XCTestCase {
 		XCTAssert(log.warning("warning")?.match(#"\#(CategoryTag) ⚠️ \#(WarningTag) \#(Location) warning"#) == true)
 		XCTAssert(log.error("error")?.match(#"\#(CategoryTag) ⚠️ \#(ErrorTag) \#(Location) error"#) == true)
 		
+        XCTAssertNil(log.assert(true))
 		XCTAssert(log.assert(false)?.match(#"\#(CategoryTag) 🅰️ \#(AssertTag) \#(Location)"#) == true)
 		XCTAssert(log.fault("fault")?.match(#"\#(CategoryTag) 🆘 \#(FaultTag) \#(Location) fault"#) == true)
 		

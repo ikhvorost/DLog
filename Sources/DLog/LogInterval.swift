@@ -111,21 +111,27 @@ public class LogInterval : LogItem {
 	}
 	
 	/// A time duration
+    @objc
 	private(set) public var duration: TimeInterval = 0
 	
 	/// A number of total calls
+    @objc
 	internal(set) public var count = 0
 	
 	/// A total time duration of all calls
+    @objc
 	internal(set) public var total: TimeInterval = 0
 	
 	/// A minimum time duration
+    @objc
 	internal(set) public var min: TimeInterval = 0
 	
 	/// A maximum time duration
+    @objc
 	internal(set) public var max: TimeInterval = 0
 	
 	/// An average time duration
+    @objc
 	internal(set) public var avg: TimeInterval = 0
     
     private init() {

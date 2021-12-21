@@ -25,10 +25,12 @@
 
 #pragma mark - Utils
 
+//#define Sign @"•"
+//#define Time @"\\d{2}:\\d{2}:\\d{2}\\.\\d{3}"
 #define CategoryTag @"\\[DLOG\\]"
 #define Padding @"[\\|\\s]+"
 #define LevelTag @"\\[\\S+\\] "
-#define Location @"<DLogTestsObjC:[0-9]+> "
+#define Location @"<DLogTestsObjC:\\d+> "
 
 static NSString* matchString(NSString* category, NSString* text) {
 	return [NSString stringWithFormat:@"%@" Padding LevelTag Location @"%@", (category ?: CategoryTag), text];
@@ -37,7 +39,7 @@ static NSString* matchString(NSString* category, NSString* text) {
 typedef void (^VoidBlock)(void);
 
 static NSString* readStream(int file, FILE* stream, VoidBlock block) {
-    let result = [NSMutableString new];
+    __block NSMutableString* result = nil;
     
     let pipe = [NSPipe new];
     
@@ -47,6 +49,10 @@ static NSString* readStream(int file, FILE* stream, VoidBlock block) {
     
     pipe.fileHandleForReading.readabilityHandler = ^(NSFileHandle* handle) {
         let text = [[NSString alloc] initWithData:handle.availableData encoding: NSUTF8StringEncoding];
+        
+        if (result == nil) {
+            result = [NSMutableString new];
+        }
         [result appendString:text];
     };
     
@@ -60,7 +66,9 @@ static NSString* readStream(int file, FILE* stream, VoidBlock block) {
     close(original);
     
     // Print
-    printf("%s\n", result.UTF8String);
+    if (result != nil) {
+        printf("%s\n", result.UTF8String);
+    }
     
     return result;
 }
@@ -78,19 +86,23 @@ static NSString* read_stderr(VoidBlock block) {
 static void testAll(LogProtocol* logger, NSString *category) {
 	XCTAssertNotNil(logger);
     
-    XCTAssert([logger.log(@"log") match:matchString(category, @"log")]);
-    XCTAssert([logger.log(@"log %d", 123) match:matchString(category, @"log 123")]);
+    XCTAssertTrue([logger.log(@"log") match:matchString(category, @"log")]);
+    XCTAssertTrue([logger.log(@"log %d", 123) match:matchString(category, @"log 123")]);
+    XCTAssertTrue([logger.log(@"%@", @"hello") match:matchString(category, @"hello")]);
     
-	XCTAssert([logger.trace(@"trace") match:matchString(category, @"trace")]);
-	XCTAssert([logger.debug(@"debug") match:matchString(category, @"debug")]);
-	XCTAssert([logger.info(@"info") match:matchString(category, @"info")]);
-	XCTAssert([logger.warning(@"warning") match:matchString(category, @"warning")]);
-	XCTAssert([logger.error(@"error") match:matchString(category, @"error")]);
+    //XCTAssertTrue([logger.trace() match:matchString(category, @"trace")]);
+	XCTAssertTrue([logger.trace(@"trace") match:matchString(category, @"trace")]);
     
+	XCTAssertTrue([logger.debug(@"debug") match:matchString(category, @"debug")]);
+	XCTAssertTrue([logger.info(@"info") match:matchString(category, @"info")]);
+	XCTAssertTrue([logger.warning(@"warning") match:matchString(category, @"warning")]);
+	XCTAssertTrue([logger.error(@"error") match:matchString(category, @"error")]);
+    
+    //XCTAssertNil(logger.assert(YES));
     XCTAssertNil(logger.assert(YES, @"assert"));
-	XCTAssert([logger.assert(NO, @"assert") match:matchString(category, @"assert")]);
+	XCTAssertTrue([logger.assert(NO, @"assert") match:matchString(category, @"assert")]);
     
-	XCTAssert([logger.fault(@"fault") match:matchString(category, @"fault")]);
+	XCTAssertTrue([logger.fault(@"fault") match:matchString(category, @"fault")]);
 }
 
 @interface DLogTestsObjC : XCTestCase
@@ -98,47 +110,81 @@ static void testAll(LogProtocol* logger, NSString *category) {
  
 @implementation DLogTestsObjC
 
-- (void)test_Levels {
+- (void)test_Log {
 	let logger = [DLog new];
 	XCTAssertNotNil(logger);
     
     testAll(logger, nil);
 }
 
+- (void)test_Category {
+    let logger = [DLog new];
+    XCTAssertNotNil(logger);
+    
+    let net = logger[@"NET"];
+    XCTAssertNotNil(net);
+    
+    testAll(net, @"\\[NET\\]");
+}
+
+- (void)test_Emoji {
+    let logger = [[DLog alloc] initWithOutputs:@[LogOutput.textEmoji, LogOutput.stdOut]];
+    XCTAssertNotNil(logger);
+    
+    XCTAssertTrue([logger.log(@"log") match:@"💬"]);
+    XCTAssertTrue([logger.trace(@"trace") match:@"#️⃣"]);
+    XCTAssertTrue([logger.debug(@"debug") match:@"▶️"]);
+    XCTAssertTrue([logger.info(@"info") match:@"✅"]);
+    XCTAssertTrue([logger.warning(@"warning") match:@"⚠️"]);
+    XCTAssertTrue([logger.error(@"error") match:@"⚠️"]);
+    XCTAssertTrue([logger.assert(false, @"assert") match:@"🅰️"]);
+    XCTAssertTrue([logger.fault(@"fault") match:@"🆘"]);
+}
+
+- (void)test_stdOutErr {
+    let logOut = [[DLog alloc] initWithOutputs:@[LogOutput.textPlain, LogOutput.stdOut]];
+    XCTAssert([read_stdout(^{ logOut.trace(@"trace"); }) match: @"test_stdOutErr"]);
+    
+    let logErr = [[DLog alloc] initWithOutputs:@[LogOutput.textPlain, LogOutput.stdErr]];
+    XCTAssert([read_stderr(^{ logErr.trace(@"trace"); }) match: @"test_stdOutErr"]);
+}
+
 - (void)test_Scope {
 	let logger = [DLog new];
 	XCTAssertNotNil(logger);
 	
-	logger.scope(@"Scope 1", ^(LogScope* scope) {
+    var scope = logger.scope(@"Scope 1", ^(LogScope* scope) {
 		testAll(scope, nil);
 	});
+    XCTAssertNotNil(scope);
 	
-	let scope = logger.scope(@"Scope 2");
+	scope = logger.scope(@"Scope 2");
 	XCTAssertNotNil(scope);
-	[scope enter];
-	
-	testAll(scope, nil);
-
-	[scope leave];
+    
+    let text = read_stdout(^{
+        [scope enter];
+        testAll(scope, nil);
+        [scope leave];
+    });
+    XCTAssertTrue([text match:@"└ \\[Scope 2\\] \\(\\d\\.\\d\\)"]);
 }
  
 - (void)test_Interval {
 	let logger = [DLog new];
 	XCTAssertNotNil(logger);
 	
-	logger.interval(@"Interval 1", ^{
-		logger.debug(@"debug");
+	let interval = logger.interval(@"interval", ^{
+        [NSThread sleep];
 	});
-}
-
-- (void)test_Category {
-    let logger = [DLog new];
-    XCTAssertNotNil(logger);
     
-    let category = logger[@"NET"];
-    XCTAssertNotNil(category);
+    //XCTAssertTrue([read_stdout(^{ logger.interval(@"signpost", ^{}); }) match:@"\\[INTERVAL\\] " Location @"signpost"]);
     
-    testAll(category, @"\\[NET\\]");
+    XCTAssertTrue(interval.duration >= 0.25);
+    XCTAssertTrue(interval.count == 1);
+    XCTAssertTrue(interval.total > 0.25);
+    XCTAssertTrue(interval.min >= 0.25);
+    XCTAssertTrue(interval.max >= 0.25);
+    XCTAssertTrue(interval.avg >= 0.25);
 }
 
 - (void)test_AllOutputs {
@@ -166,9 +212,6 @@ static void testAll(LogProtocol* logger, NSString *category) {
     }
     
     [NSThread sleep];
-}
-
-- (void)test_Pipeline {
 }
 
 - (void)test_Filter {
@@ -205,8 +248,22 @@ static void testAll(LogProtocol* logger, NSString *category) {
 - (void)test_Disabled {
     let logger = DLog.disabled;
     XCTAssertNotNil(logger);
-    
-    XCTAssertNil(logger.log(@"log"));
+ 
+    let text = read_stdout(^{
+        logger.log(@"log");
+        logger.trace(@"trace");
+        logger.debug(@"debug");
+        logger.info(@"info");
+        logger.warning(@"warning");
+        logger.error(@"error");
+        logger.assert(NO, @"assert");
+        logger.fault(@"fault");
+        logger.scope(@"scope", ^(LogScope* scope) {
+            scope.error(@"error");
+        });
+        logger.interval(@"interval", ^{});
+    });
+    XCTAssertNil(text);
 }
 
 @end

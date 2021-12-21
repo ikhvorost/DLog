@@ -10,7 +10,15 @@
 	@(__FILE__).lastPathComponent, @(__FUNCTION__), __LINE__
 
 #define log(format, ...) log(DLOG_PARAMS(format, ##__VA_ARGS__))
+
 #define trace(format, ...) trace(DLOG_PARAMS(format, ##__VA_ARGS__), NSThread.callStackReturnAddresses)
+//#define trace() trace(nil)
+//#define trace_2(format, ...) trace(DLOG_PARAMS(format, ##__VA_ARGS__))
+//#define trace_1(format, ...) trace(DLOG_PARAMS(format, ##__VA_ARGS__))
+//#define trace_0() trace_1(nil)
+//#define trace(...) DLOG_CONCAT(trace_, DLOG_VARGS(__VA_ARGS__))(__VA_ARGS__)
+//#define trace(...) trace(DLOG_PARAMS(format, ##__VA_ARGS__), NSThread.callStackReturnAddresses)
+
 #define debug(format, ...) debug(DLOG_PARAMS(format, ##__VA_ARGS__))
 #define info(format, ...) info(DLOG_PARAMS(format, ##__VA_ARGS__))
 #define warning(format, ...) warning(DLOG_PARAMS(format, ##__VA_ARGS__))
