@@ -1,8 +1,8 @@
 @import DLog;
 
 
-#define DLOG_VARGS_(_2, _1, N, ...) N
-#define DLOG_VARGS(...) DLOG_VARGS_(__VA_ARGS__, 2, 1, 0)
+#define DLOG_VARGS_(_3, _2, _1, N, ...) N
+#define DLOG_VARGS(...) DLOG_VARGS_(__VA_ARGS__, 3, 2, 1, 0)
 #define DLOG_CONCAT_(a, b) a##b
 #define DLOG_CONCAT(a, b) DLOG_CONCAT_(a, b)
 
@@ -24,7 +24,10 @@
 #ifdef assert
 #undef assert
 #endif
-#define assert(c, format, ...) assert((c), DLOG_PARAMS(format, ##__VA_ARGS__))
+#define assert_3(condition, format, ...) assert((condition), DLOG_PARAMS(format, ##__VA_ARGS__))
+#define assert_2(condition, format) assert_3((condition), format)
+#define assert_1(condition) assert_2((condition), nil)
+#define assert(...) DLOG_CONCAT(assert_, DLOG_VARGS(__VA_ARGS__))(__VA_ARGS__)
 
 #define fault(format, ...) fault(DLOG_PARAMS(format, ##__VA_ARGS__))
 
