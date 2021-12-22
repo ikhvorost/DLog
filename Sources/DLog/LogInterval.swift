@@ -180,6 +180,7 @@ public class LogInterval : LogItem {
 	/// 	...
 	/// 	interval.end()
 	///
+    @objc
 	public func begin() {
 		guard !begun else { return }
 		begun.toggle()
@@ -199,6 +200,7 @@ public class LogInterval : LogItem {
 	/// 	...
 	/// 	interval.end()
 	///
+    @objc
 	public func end() {
 		guard begun else { return }
 		begun.toggle()

@@ -17,8 +17,12 @@
 
 @implementation NSThread (Delay)
 
++ (void)sleep:(NSTimeInterval)ti {
+    [self sleepForTimeInterval: ti];
+}
+
 + (void)sleep {
-    [self sleepForTimeInterval: 0.25];
+    [self sleep: 0.25];
 }
 
 @end
@@ -53,7 +57,9 @@ static NSString* readStream(int file, FILE* stream, VoidBlock block) {
         if (result == nil) {
             result = [NSMutableString new];
         }
-        [result appendString:text];
+        if (text.length) {
+            [result appendString:text];
+        }
     };
     
     block();
@@ -67,7 +73,7 @@ static NSString* readStream(int file, FILE* stream, VoidBlock block) {
     
     // Print
     if (result != nil) {
-        printf("%s\n", result.UTF8String);
+        printf("%s", result.UTF8String);
     }
     
     return result;
@@ -182,14 +188,19 @@ static void testAll(LogProtocol* logger, NSString *category) {
         [NSThread sleep];
 	});
     
-    //XCTAssertTrue([read_stdout(^{ logger.interval(@"signpost", ^{}); }) match:@"\\[INTERVAL\\] " Location @"signpost"]);
-    
     XCTAssertTrue(interval.duration >= 0.25);
     XCTAssertTrue(interval.count == 1);
     XCTAssertTrue(interval.total > 0.25);
     XCTAssertTrue(interval.min >= 0.25);
     XCTAssertTrue(interval.max >= 0.25);
     XCTAssertTrue(interval.avg >= 0.25);
+    
+    let text = read_stdout(^{
+        [interval begin];
+        [NSThread sleep];
+        [interval end];
+    });
+    XCTAssertTrue([text match:@"interval:"]);
 }
 
 - (void)test_AllOutputs {
@@ -266,7 +277,7 @@ static void testAll(LogProtocol* logger, NSString *category) {
         logger.scope(@"scope", ^(LogScope* scope) {
             scope.error(@"error");
         });
-        logger.interval(@"interval", ^{});
+        logger.interval(@"interval", ^{ [NSThread sleep]; });
     });
     XCTAssertNil(text);
 }
