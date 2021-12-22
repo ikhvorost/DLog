@@ -88,10 +88,11 @@ static void testAll(LogProtocol* logger, NSString *category) {
     
     XCTAssertTrue([logger.log(@"log") match:matchString(category, @"log")]);
     XCTAssertTrue([logger.log(@"log %d", 123) match:matchString(category, @"log 123")]);
-    XCTAssertTrue([logger.log(@"%@", @"hello") match:matchString(category, @"hello")]);
+    XCTAssertTrue([logger.log(@"%@ %@", @"hello", @"world") match:matchString(category, @"hello world")]);
     
-    //XCTAssertTrue([logger.trace() match:matchString(category, @"trace")]);
-	XCTAssertTrue([logger.trace(@"trace") match:matchString(category, @"trace")]);
+    XCTAssertTrue([logger.trace() match:matchString(category, @"func: testAll")]);
+    XCTAssertTrue([logger.trace(@"trace") match:matchString(category, @"trace:")]);
+    XCTAssertTrue([logger.trace(@"trace %d", 1) match:matchString(category, @"trace 1:")]);
     
 	XCTAssertTrue([logger.debug(@"debug") match:matchString(category, @"debug")]);
 	XCTAssertTrue([logger.info(@"info") match:matchString(category, @"info")]);
@@ -132,7 +133,7 @@ static void testAll(LogProtocol* logger, NSString *category) {
     XCTAssertNotNil(logger);
     
     XCTAssertTrue([logger.log(@"log") match:@"💬"]);
-    XCTAssertTrue([logger.trace(@"trace") match:@"#️⃣"]);
+    XCTAssertTrue([logger.trace() match:@"#️⃣"]);
     XCTAssertTrue([logger.debug(@"debug") match:@"▶️"]);
     XCTAssertTrue([logger.info(@"info") match:@"✅"]);
     XCTAssertTrue([logger.warning(@"warning") match:@"⚠️"]);
@@ -143,10 +144,10 @@ static void testAll(LogProtocol* logger, NSString *category) {
 
 - (void)test_stdOutErr {
     let logOut = [[DLog alloc] initWithOutputs:@[LogOutput.textPlain, LogOutput.stdOut]];
-    XCTAssert([read_stdout(^{ logOut.trace(@"trace"); }) match: @"test_stdOutErr"]);
+    XCTAssert([read_stdout(^{ logOut.trace(); }) match: @"test_stdOutErr"]);
     
     let logErr = [[DLog alloc] initWithOutputs:@[LogOutput.textPlain, LogOutput.stdErr]];
-    XCTAssert([read_stderr(^{ logErr.trace(@"trace"); }) match: @"test_stdOutErr"]);
+    XCTAssert([read_stderr(^{ logErr.trace(); }) match: @"test_stdOutErr"]);
 }
 
 - (void)test_Scope {
@@ -251,7 +252,7 @@ static void testAll(LogProtocol* logger, NSString *category) {
  
     let text = read_stdout(^{
         logger.log(@"log");
-        logger.trace(@"trace");
+        logger.trace();
         logger.debug(@"debug");
         logger.info(@"info");
         logger.warning(@"warning");
