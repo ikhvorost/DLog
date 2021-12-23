@@ -104,9 +104,4 @@ public class LogItem: LogProtocol {
 		self.text = text
 		self.config = config
 	}
-    
-    @objc
-    convenience init(type: LogType) {
-        self.init(category: "", scope: nil, type: type, file: "", funcName: "", line: 0, text: { "" }, config: LogConfiguration())
-    }
 }

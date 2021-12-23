@@ -113,8 +113,6 @@ public class DLog: LogProtocol {
 	/// The default configuration.
 	public static let defaultConfiguration = LogConfiguration()
 	
-	var disabled : Bool { output == nil }
-	
 	/// Creates a logger object that assigns log messages to a specified category.
 	///
 	/// You can define category name to differentiate unique areas and parts of your app and DLog uses this value
@@ -240,15 +238,15 @@ public class DLog: LogProtocol {
 	}
 
 	func interval(name: String? = nil, staticName: StaticString? = nil, category: String, scope: LogScope?, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
-		let interval = LogInterval(logger: self,
-							  category: category,
-							  scope: scope,
-							  name: name,
-							  staticName: staticName,
-							  file: file,
-							  funcName: function,
-							  line: line,
-							  config: config)
+        let interval = LogInterval(logger: self,
+                                   category: category,
+                                   scope: scope,
+                                   name: name,
+                                   staticName: staticName,
+                                   file: file,
+                                   funcName: function,
+                                   line: line,
+                                   config: config)
 		
 		if let block = closure {
 			interval.begin()

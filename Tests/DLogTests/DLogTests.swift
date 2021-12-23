@@ -135,9 +135,11 @@ fileprivate func testAll(_ logger: LogProtocol, categoryTag: String = CategoryTa
 	XCTAssert(logger.warning("warning")?.match(#"\#(categoryTag)\#(padding)\#(WarningTag) \#(Location) warning"#) == true)
 	XCTAssert(logger.error("error")?.match(#"\#(categoryTag)\#(padding)\#(ErrorTag) \#(Location) error"#) == true)
 	
+    XCTAssertNil(logger.assert(true))
 	XCTAssertNil(logger.assert(true, "assert"))
 	XCTAssert(logger.assert(false)?.match(#"\#(categoryTag)\#(padding)\#(AssertTag) \#(Location)"#) == true)
 	XCTAssert(logger.assert(false, "assert")?.match(#"\#(categoryTag)\#(padding)\#(AssertTag) \#(Location) assert"#) == true)
+    
 	XCTAssert(logger.fault("fault")?.match(#"\#(categoryTag)\#(padding)\#(FaultTag) \#(Location) fault"#) == true)
 	
 	XCTAssert(read_stdout { logger.scope("scope") { _ in delay() } }?.match(#"\#(categoryTag)\#(padding)└ \[scope\] \(0\.[0-9]{3}\)"#) == true)
@@ -331,6 +333,27 @@ final class DLogTests: XCTestCase {
 		})
 		XCTAssertNil(scopeLog.fault("fault"))
 	}
+    
+    func test_FilterItem() {
+        let logger = DLog(.textPlain =>
+        .filter { item in
+            XCTAssertNil(item.log("log"))
+            XCTAssertNil(item.trace())
+            XCTAssertNil(item.debug("debug"))
+            XCTAssertNil(item.info("info"))
+            XCTAssertNil(item.warning("warning"))
+            XCTAssertNil(item.error("error"))
+            XCTAssertNil(item.assert(false))
+            XCTAssertNil(item.fault("fault"))
+            XCTAssertNil(read_stdout { item.interval("interval") { delay() } })
+            item.scope("scope") { scope in
+                XCTAssertNil(scope.log("log"))
+            }
+            return true
+        } => .stdout)
+        
+        logger.log("log")
+    }
 	
 	// MARK: - Disabled
 	
@@ -375,7 +398,6 @@ final class DLogTests: XCTestCase {
 			)
 		}
 	}
-	
 	
 	// MARK: - Thread safe
 	// categories, scopes, interavls

@@ -82,9 +82,7 @@ public struct IntervalConfiguration {
 /// Interval logs a point of interest in your code as running time statistics for debugging performance.
 ///
 public class LogInterval : LogItem {
-    static let disabled = LogInterval()
-    
-	@Atomic static private var intervals = [Int : IntervalData]()
+    @Atomic static private var intervals = [Int : IntervalData]()
 	
 	private static func intervalData(id: Int) -> IntervalData {
 		if let data = Self.intervals[id] {
@@ -134,15 +132,7 @@ public class LogInterval : LogItem {
     @objc
 	internal(set) public var avg: TimeInterval = 0
     
-    private init() {
-        id = 0
-        logger = .disabled
-        name = ""
-        staticName = ""
-        super.init(type: .interval)
-    }
-	
-	init(logger: DLog, category: String, scope: LogScope?, name: String?, staticName: StaticString?, file: String, funcName: String, line: UInt, config: LogConfiguration) {
+    init(logger: DLog, category: String, scope: LogScope?, name: String?, staticName: StaticString?, file: String, funcName: String, line: UInt, config: LogConfiguration) {
 		self.id = "\(file):\(funcName):\(line)".hash
 		self.logger = logger
 		

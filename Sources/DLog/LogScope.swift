@@ -32,8 +32,6 @@ import os.log
 /// Scope provides a mechanism for grouping log messages.
 ///
 public class LogScope : LogItem {
-    static let disabled = LogScope()
-    
     let logger: DLog
     let uid = UUID()
     var os_state = os_activity_scope_state_s()
@@ -45,11 +43,6 @@ public class LogScope : LogItem {
     /// A time duration of a scope
     private(set) public var duration: TimeInterval = 0
         
-    private init() {
-        self.logger = .disabled
-        super.init(type: .scope)
-    }
-    
     init(logger: DLog, category: String, file: String, funcName: String, line: UInt, name: @autoclosure @escaping () -> String, config: LogConfiguration) {
         self.logger = logger
         super.init(category: category, scope: nil, type: .scope, file: file, funcName: funcName, line: line, text: name, config: config)

@@ -45,7 +45,7 @@ public class LogParams : NSObject {
 public class LogProtocol: NSObject {
     
     /// LogProtocol parameters
-    var params: LogParams?
+    lazy var params: LogParams = LogParams(logger: .disabled, category: "", scope: nil)
     
     /// Logs a message that is essential to troubleshoot problems later.
     ///
@@ -65,7 +65,6 @@ public class LogProtocol: NSObject {
     @objc
     @discardableResult
     public func log(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-        guard let params = params else { return nil }
         return params.logger.log(text: text, type: .log, category: params.category, scope: params.scope, file: file, function: function, line: line)
     }
     
@@ -89,12 +88,11 @@ public class LogProtocol: NSObject {
     public func trace(_ text: @escaping @autoclosure () -> String? = nil,
                       file: String = #file, function: String = #function, line: UInt = #line,
                       addresses: [NSNumber] = Thread.callStackReturnAddresses) -> String? {
-        guard let params = params else { return nil }
         let message: () -> String = {
             traceInfo(title: text(),
                       function: function,
                       addresses: addresses.dropFirst(),
-                      config: params.logger.config.traceConfiguration)
+                      config: self.params.logger.config.traceConfiguration)
         }
         return params.logger.log(text: message, type: .trace, category: params.category, scope: params.scope, file: file, function: function, line: line)
     }
@@ -117,7 +115,6 @@ public class LogProtocol: NSObject {
     @objc
     @discardableResult
     public func debug(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-        guard let params = params else { return nil }
         return params.logger.log(text: text, type: .debug, category: params.category, scope: params.scope, file: file, function: function, line: line)
     }
     
@@ -139,7 +136,6 @@ public class LogProtocol: NSObject {
     @objc
     @discardableResult
     public func info(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-        guard let params = params else { return nil }
         return params.logger.log(text: text, type: .info, category: params.category, scope: params.scope, file: file, function: function, line: line)
     }
     
@@ -161,7 +157,6 @@ public class LogProtocol: NSObject {
     @objc
     @discardableResult
     public func warning(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-        guard let params = params else { return nil }
         return params.logger.log(text: text, type: .warning, category: params.category, scope: params.scope, file: file, function: function, line: line)
     }
     
@@ -183,7 +178,6 @@ public class LogProtocol: NSObject {
     @objc
     @discardableResult
     public func error(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-        guard let params = params else { return nil }
         return params.logger.log(text: text, type: .error, category: params.category, scope: params.scope, file: file, function: function, line: line)
     }
     
@@ -206,7 +200,7 @@ public class LogProtocol: NSObject {
     @objc
     @discardableResult
     public func assert(_ condition: @autoclosure () -> Bool, _ text: @escaping @autoclosure () -> String = "", file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-        guard let params = params, !(params.logger.disabled || condition()) else { return nil }
+        guard params.logger != .disabled && !condition()  else { return nil }
         return params.logger.log(text: text, type: .assert, category: params.category, scope: params.scope, file: file, function: function, line: line)
     }
     
@@ -228,7 +222,6 @@ public class LogProtocol: NSObject {
     @objc
     @discardableResult
     public func fault(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-        guard let params = params else { return nil }
         return params.logger.log(text: text, type: .fault, category: params.category, scope: params.scope, file: file, function: function, line: line)
     }
     
@@ -253,9 +246,6 @@ public class LogProtocol: NSObject {
     @objc
     @discardableResult
     public func scope(_ name: String, file: String = #file, function: String = #function, line: UInt = #line, closure: ((LogScope) -> Void)? = nil) -> LogScope {
-        guard let params = params else {
-            return .disabled
-        }
         return params.logger.scope(name: name, category: params.category, file: file, function: function, line: line, closure: closure)
     }
     
@@ -279,18 +269,12 @@ public class LogProtocol: NSObject {
     ///
     @discardableResult
     public func interval(_ staticName: StaticString, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval {
-        guard let params = params else {
-            return .disabled
-        }
         return params.logger.interval(staticName: staticName, category: params.category, scope: params.scope, file: file, function: function, line: line, closure: closure)
     }
     
     @objc
     @discardableResult
     public func interval(name: String, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval {
-        guard let params = params else {
-            return .disabled
-        }
         return params.logger.interval(name: name, category: params.category, scope: params.scope, file: file, function: function, line: line, closure: closure)
     }
 }
