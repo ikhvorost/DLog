@@ -237,7 +237,7 @@ public class DLog: LogProtocol {
 		return scope
 	}
 
-	func interval(name: String? = nil, staticName: StaticString? = nil, category: String, scope: LogScope?, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
+	func interval(name: String, staticName: StaticString? = nil, category: String, scope: LogScope?, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
         let interval = LogInterval(logger: self,
                                    category: category,
                                    scope: scope,

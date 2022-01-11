@@ -269,7 +269,7 @@ public class LogProtocol: NSObject {
     ///
     @discardableResult
     public func interval(_ staticName: StaticString, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval {
-        return params.logger.interval(staticName: staticName, category: params.category, scope: params.scope, file: file, function: function, line: line, closure: closure)
+        return params.logger.interval(name: "\(staticName)", staticName: staticName, category: params.category, scope: params.scope, file: file, function: function, line: line, closure: closure)
     }
     
     @objc

@@ -164,7 +164,8 @@ fileprivate extension QualityOfService {
 	]
 	
 	var description : String {
-		return Self.names[self] ?? "unknown"
+        precondition(Self.names[self] != nil)
+        return Self.names[self]!
 	}
 }
 

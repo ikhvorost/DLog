@@ -132,18 +132,11 @@ public class LogInterval : LogItem {
     @objc
 	internal(set) public var avg: TimeInterval = 0
     
-    init(logger: DLog, category: String, scope: LogScope?, name: String?, staticName: StaticString?, file: String, funcName: String, line: UInt, config: LogConfiguration) {
+    init(logger: DLog, category: String, scope: LogScope?, name: String, staticName: StaticString?, file: String, funcName: String, line: UInt, config: LogConfiguration) {
 		self.id = "\(file):\(funcName):\(line)".hash
 		self.logger = logger
-		
-		if let name = staticName {
-			self.name = "\(name)"
-			self.staticName = staticName
-		}
-		else {
-			self.name = name ?? ""
-			self.staticName = nil
-		}
+        self.name = name
+		self.staticName = staticName
 		
 		super.init(category: category, scope: scope, type: .interval, file: file, funcName: funcName, line: line, text: nil, config: config)
 		
