@@ -32,7 +32,7 @@ public class LogParams : NSObject {
 	let category: String
 	let scope: LogScope?
 	
-	public init(logger: DLog, category: String, scope: LogScope?) {
+	init(logger: DLog, category: String, scope: LogScope?) {
 		self.logger = logger
 		self.category = category
 		self.scope = scope
@@ -268,13 +268,14 @@ public class LogProtocol: NSObject {
     /// - Returns: An `LogInterval` object for the new interval.
     ///
     @discardableResult
-    public func interval(_ staticName: StaticString, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval {
-        return params.logger.interval(name: "\(staticName)", staticName: staticName, category: params.category, scope: params.scope, file: file, function: function, line: line, closure: closure)
+    public func interval(_ name: StaticString, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval {
+        return params.logger.interval(name: "\(name)", staticName: name, category: params.category, scope: params.scope, file: file, function: function, line: line, closure: closure)
     }
     
+    /// Creates an interval object for Objective-C code.
     @objc
     @discardableResult
-    public func interval(name: String, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval {
-        return params.logger.interval(name: name, category: params.category, scope: params.scope, file: file, function: function, line: line, closure: closure)
+    public func interval(name: String, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
+        return params.logger.interval(name: name, staticName: nil, category: params.category, scope: params.scope, file: file, function: function, line: line, closure: closure)
     }
 }

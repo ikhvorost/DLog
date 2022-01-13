@@ -120,6 +120,8 @@ public class LogOutput : NSObject {
 precedencegroup ForwardPipe {
 	associativity: left
 }
+/// Pipeline operator which defines a combined output from two outputs
+/// where the first one is a source and second is a target
 infix operator => : ForwardPipe
 
 extension LogOutput {
@@ -134,5 +136,4 @@ extension LogOutput {
 		right.source = left
 		return right
 	}
-	
 }

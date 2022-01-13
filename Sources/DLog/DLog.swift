@@ -145,23 +145,38 @@ public class DLog: LogProtocol {
         params = LogParams(logger: self, category: "DLOG", scope: nil)
 	}
     
+    /// Creates the logger instance with a list of linked outputs for both swift and objective-c code.
+    ///
+    /// Swift:
+    ///
+    ///     let logger = DLog([.textPlain, .stdout])
+    ///
+    /// Objective-C:
+    ///
+    ///     DLog* logger = [[DLog alloc] initWithOutputs:@[LogOutput.textPlain, filter, LogOutput.stdOut]];
+    ///
+    /// - Parameters:
+    ///     - outputs: An array of outputs.
+    ///
     @objc
     public convenience init(outputs: [LogOutput]) {
-        let output: LogOutput?
-        if outputs.count == 0 {
-            output = .stdout
-        }
-        else {
-            output = outputs.count == 1
-                ? outputs.first
-                : outputs.reduce(.textPlain, =>)
-        }
-        self.init(output, configuration: DLog.defaultConfiguration)
+        let output: LogOutput? = {
+            if outputs.count == 0 {
+                return .stdout
+            }
+            else {
+                return outputs.count == 1
+                    ? outputs.first
+                    : outputs.reduce(.textPlain, =>)
+            }
+        }()
+        self.init(output)
     }
     
+    /// Creates the default logger.
     @objc
     public override convenience init() {
-        self.init(outputs: [])
+        self.init(_:configuration:)()
 	}
 
 	// Scope
@@ -237,7 +252,7 @@ public class DLog: LogProtocol {
 		return scope
 	}
 
-	func interval(name: String, staticName: StaticString? = nil, category: String, scope: LogScope?, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
+	func interval(name: String, staticName: StaticString?, category: String, scope: LogScope?, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
         let interval = LogInterval(logger: self,
                                    category: category,
                                    scope: scope,
