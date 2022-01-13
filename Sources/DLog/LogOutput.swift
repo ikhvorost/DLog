@@ -130,7 +130,7 @@ extension LogOutput {
 	///
 	/// The operator allows to create a list of linked outputs.
 	///
-	/// 	let log = DLog(.textEmoji => .stdout => .file("dlog.txt"))
+	/// 	let logger = DLog(.textEmoji => .stdout => .file("dlog.txt"))
 	///
 	public static func => (left: LogOutput, right: LogOutput) -> LogOutput {
 		right.source = left

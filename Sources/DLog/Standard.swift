@@ -34,8 +34,8 @@ public class Standard : LogOutput {
 	
 	/// Creates `Standard` output object.
 	///
-	/// 	let log = DLog(Standard())
-	/// 	log.info("It's standard output")
+	/// 	let logger = DLog(Standard())
+	/// 	logger.info("It's standard output")
 	///
 	/// - Parameters:
 	///		- stream: POSIX stream: `Darwin.stdout`, `Darwin.stderr`.

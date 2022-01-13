@@ -101,11 +101,11 @@ public class DLog: LogProtocol {
 
 	@Atomic private var scopes = [LogScope]()
 	
-	/// The shared disabled log.
+	/// The shared disabled logger.
 	///
 	/// Using this constant prevents from logging messages.
 	///
-	/// 	let log = DLog.disabled
+	/// 	let logger = DLog.disabled
 	///
 	@objc
 	public static let disabled = DLog(nil)
@@ -118,9 +118,9 @@ public class DLog: LogProtocol {
 	/// You can define category name to differentiate unique areas and parts of your app and DLog uses this value
 	/// to categorize and filter related log messages.
 	///
-	/// 	let log = DLog()
-	/// 	let netLog = log["NET"]
-	/// 	let netLog.log("Hello Net!")
+	/// 	let logger = DLog()
+	/// 	let netLogger = logger["NET"]
+	/// 	let netLogger.log("Hello Net!")
 	///
 	@objc
 	public subscript(category: String) -> LogCategory {
@@ -132,8 +132,8 @@ public class DLog: LogProtocol {
 	/// Create an instance and use it to log text messages about your app’s behaviour and to help you assess the state
 	/// of your app later. You also can choose a target output and a log level to indicate the severity of that message.
 	///
-	/// 	let log = DLog()
-	///     log.log("Hello DLog!")
+	/// 	let logger = DLog()
+	///     logger.log("Hello DLog!")
 	///
 	/// - Parameters:
 	/// 	- output: A target output object. If it is omitted the logger uses `stdout` by default.

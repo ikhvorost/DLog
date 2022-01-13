@@ -35,7 +35,7 @@ public class Filter : LogOutput {
 	/// Represents a pipe middleware output that can filter log messages by available fields of an evaluated object.
 	///
 	///		// Logs debug messages only
-	///		let log = DLog(.textPlain => .filter { $0.type == .debug } => .stdout)
+	///		let logger = DLog(.textPlain => .filter { $0.type == .debug } => .stdout)
 	///
 	/// - Parameters:
 	/// 	- block: The block is applied to the object to be evaluated.

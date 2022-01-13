@@ -53,8 +53,8 @@ public class LogScope : LogItem {
     ///
     /// A scope can be created and then used for logging grouped log messages.
     ///
-    ///     let log = DLog()
-    ///     let scope = log.scope("Auth")
+    ///     let logger = DLog()
+    ///     let scope = logger.scope("Auth")
     ///     scope.enter()
     ///
     ///     scope.log("message")
@@ -76,8 +76,8 @@ public class LogScope : LogItem {
     ///
     /// A scope can be created and then used for logging grouped log messages.
     ///
-    ///     let log = DLog()
-    ///     let scope = log.scope("Auth")
+    ///     let logger = DLog()
+    ///     let scope = logger.scope("Auth")
     ///     scope.enter()
     ///
     ///     scope.log("message")

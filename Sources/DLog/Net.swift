@@ -72,7 +72,7 @@ public class Net : LogOutput {
 	///
 	/// To connect to a specific instance of the service in your network you should provide an unique name to both `NetConsole` and `Net` output.
 	///
-	///		let log = DLog(Net(name: "MyNetConsole"))
+	///		let logger = DLog(Net(name: "MyNetConsole"))
 	///
 	/// - Parameters:
 	/// 	- name: A name of `NetConsole` service (defaults to `"DLog"`)

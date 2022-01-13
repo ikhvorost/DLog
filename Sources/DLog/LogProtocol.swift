@@ -51,8 +51,8 @@ public class LogProtocol: NSObject {
     ///
     /// This method logs the message using the default log level.
     ///
-    ///		let log = DLog()
-    ///		log.log("message")
+    ///		let logger = DLog()
+    ///		logger.log("message")
     ///
     /// - Parameters:
     /// 	- text: The message to be logged that can be used with any string interpolation literal.
@@ -72,8 +72,8 @@ public class LogProtocol: NSObject {
     ///
     /// Use it during development to record information that might aid you in debugging problems later.
     ///
-    ///		let log = DLog()
-    ///		log.trace("message")
+    ///		let logger = DLog()
+    ///		logger.trace("message")
     ///
     /// - Parameters:
     /// 	- text: The message to be logged that can be used with any string interpolation literal.
@@ -101,8 +101,8 @@ public class LogProtocol: NSObject {
     ///
     /// Use this method during development to record information that might aid you in debugging problems later.
     ///
-    ///		let log = DLog()
-    ///		log.debug("message")
+    ///		let logger = DLog()
+    ///		logger.debug("message")
     ///
     /// - Parameters:
     /// 	- text: The message to be logged that can be used with any string interpolation literal.
@@ -122,8 +122,8 @@ public class LogProtocol: NSObject {
     ///
     /// Use this method to capture information messages and helpful data.
     ///
-    ///		let log = DLog()
-    ///		log.info("message")
+    ///		let logger = DLog()
+    ///		logger.info("message")
     ///
     /// - Parameters:
     /// 	- text: The message to be logged that can be used with any string interpolation literal.
@@ -143,8 +143,8 @@ public class LogProtocol: NSObject {
     ///
     /// Use this method to capture information about things that might result in an error.
     ///
-    ///		let log = DLog()
-    ///		log.warning("message")
+    ///		let logger = DLog()
+    ///		logger.warning("message")
     ///
     /// - Parameters:
     /// 	- text: The message to be logged that can be used with any string interpolation literal.
@@ -164,8 +164,8 @@ public class LogProtocol: NSObject {
     ///
     /// Use this method to report errors.
     ///
-    ///		let log = DLog()
-    ///		log.error("message")
+    ///		let logger = DLog()
+    ///		logger.error("message")
     ///
     /// - Parameters:
     /// 	- text: The message to be logged that can be used with any string interpolation literal.
@@ -185,8 +185,8 @@ public class LogProtocol: NSObject {
     ///
     /// Use this function for internal sanity checks.
     ///
-    ///		let log = DLog()
-    ///		log.assert(condition, "message")
+    ///		let logger = DLog()
+    ///		logger.assert(condition, "message")
     ///
     /// - Parameters:
     /// 	- condition: The condition to test.
@@ -208,8 +208,8 @@ public class LogProtocol: NSObject {
     ///
     /// Use this method to capture critical errors that occurred during the execution of your code.
     ///
-    ///		let log = DLog()
-    ///		log.fault("message")
+    ///		let logger = DLog()
+    ///		logger.fault("message")
     ///
     /// - Parameters:
     /// 	- text: The message to be logged that can be used with any string interpolation literal.
@@ -229,8 +229,8 @@ public class LogProtocol: NSObject {
     ///
     /// Scope provides a mechanism for grouping log messages in your program.
     ///
-    ///		let log = DLog()
-    ///		log.scope("Auth") { scope in
+    ///		let logger = DLog()
+    ///		logger.scope("Auth") { scope in
     ///			scope.log("message")
     ///		}
     ///
@@ -253,8 +253,8 @@ public class LogProtocol: NSObject {
     ///
     /// Logs a point of interest in your code as time intervals for debugging performances.
     ///
-    ///		let log = DLog()
-    ///		log.interval("Sorting") {
+    ///		let logger = DLog()
+    ///		logger.interval("Sorting") {
     ///			...
     ///		}
     ///

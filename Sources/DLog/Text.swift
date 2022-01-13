@@ -148,8 +148,8 @@ public class Text : LogOutput {
 	
 	/// Creates `Text` source output object.
 	///
-	/// 	let log = DLog(Text(style: .emoji))
-	/// 	log.info("It's emoji text")
+	/// 	let logger = DLog(Text(style: .emoji))
+	/// 	logger.info("It's emoji text")
 	///
 	/// - Parameters:
 	///		- style: Style of text to output (defaults to `.plain`).

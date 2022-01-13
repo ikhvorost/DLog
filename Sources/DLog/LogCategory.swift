@@ -31,9 +31,9 @@ import Foundation
 /// You can define category name to differentiate unique areas and parts of your app and the logger can use this value
 /// to categorize and filter related log messages.
 ///
-/// 	let log = DLog()
-/// 	let netLog = log["NET"]
-/// 	let netLog.log("Hello Net!")
+/// 	let logger = DLog()
+/// 	let netLogger = logger["NET"]
+/// 	let netLogger.log("Hello Net!")
 ///
 public class LogCategory: LogProtocol {
 	init(logger: DLog, category: String) {

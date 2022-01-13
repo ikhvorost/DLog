@@ -37,8 +37,8 @@ public class File : LogOutput {
 	/// You can use the file output to write text messages to a file by a provided path.
 	///
 	///		let file = File(path: "/users/user/dlog.txt")
-	/// 	let log = DLog(file)
-	///		log.info("It's a file")
+	/// 	let logger = DLog(file)
+	///		logger.info("It's a file")
 	///
 	/// - Parameters:
 	/// 	- path: The path to the file to access.

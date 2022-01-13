@@ -67,7 +67,7 @@ public class OSLog : LogOutput {
 	/// To create OSLog you can use subsystem strings that identify major functional areas of your app, and you specify
 	/// them in reverse DNS notation—for example, com.your_company.your_subsystem_name.
 	///
-	/// 	let log = DLog(OSLog(subsystem: "com.myapp.logger"))
+	/// 	let logger = DLog(OSLog(subsystem: "com.myapp.logger"))
 	///
 	/// - Parameters:
 	///		- subsystem: An identifier string, in reverse DNS notation, that represents the subsystem that’s performing

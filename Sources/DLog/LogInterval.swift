@@ -157,8 +157,8 @@ public class LogInterval : LogItem {
 	///
 	/// A time interval can be created and then used for logging running time statistics.
 	///
-	/// 	let log = DLog()
-	/// 	let interval = log.interval("Sort")
+	/// 	let logger = DLog()
+	/// 	let interval = logger.interval("Sort")
 	/// 	interval.begin()
 	/// 	...
 	/// 	interval.end()
@@ -177,8 +177,8 @@ public class LogInterval : LogItem {
 	///
 	/// A time interval can be created and then used for logging running time statistics.
 	///
-	/// 	let log = DLog()
-	/// 	let interval = log.interval("Sort")
+	/// 	let logger = DLog()
+	/// 	let interval = logger.interval("Sort")
 	/// 	interval.begin()
 	/// 	...
 	/// 	interval.end()
