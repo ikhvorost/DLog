@@ -1,4 +1,5 @@
 @import DLog;
+@import Foundation;
 
 
 #define DLOG_VARGS_(_3, _2, _1, N, ...) N
