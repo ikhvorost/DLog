@@ -116,7 +116,7 @@ let ErrorTag = #"\[ERROR\]"#
 let AssertTag = #"\[ASSERT\]"#
 let FaultTag = #"\[FAULT\]"#
 
-let Location = "<DLogTests:[0-9]+>"
+let Location = "<DLogTests.swift:[0-9]+>"
 let SECS = #"[0-9]+\.[0-9]{3}"#
 let Interval = #"\{ duration: \#(SECS), average: \#(SECS) \}"#
 
@@ -294,7 +294,7 @@ final class DLogTests: XCTestCase {
 		XCTAssertNil(read_stdout { typeLogger.scope("scope") { _ in } })
 		
 		// File name
-		let fileLogger = DLog(.textPlain => .filter { $0.fileName == "DLogTests" } => .stdout)
+		let fileLogger = DLog(.textPlain => .filter { $0.fileName == "DLogTests.swift" } => .stdout)
 		XCTAssertNotNil(fileLogger.info("info"))
 		
 		// Func name

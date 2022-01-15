@@ -34,7 +34,7 @@
 #define CategoryTag @"\\[DLOG\\]"
 #define Padding @"[\\|\\s]+"
 #define LevelTag @"\\[\\S+\\] "
-#define Location @"<DLogTestsObjC:\\d+> "
+#define Location @"<DLogTestsObjC.m:\\d+> "
 
 static NSString* matchString(NSString* category, NSString* text) {
 	return [NSString stringWithFormat:@"%@" Padding LevelTag Location @"%@", (category ?: CategoryTag), text];
@@ -241,7 +241,7 @@ static void testAll(LogProtocol* logger, NSString *category) {
             [logItem.category isEqualToString:@"DLOG"] &&
             [logItem.scope.text() isEqualToString:@"Scope"] &&
             logItem.type == LogTypeDebug &&
-            [logItem.fileName isEqualToString:@"DLogTestsObjC"] &&
+            [logItem.fileName isEqualToString:@"DLogTestsObjC.m"] &&
             [logItem.funcName isEqualToString:@"-[DLogTestsObjC test_Filter]"] &&
             (logItem.line > __LINE__) &&
             [logItem.text() isEqualToString:@"debug"];
