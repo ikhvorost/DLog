@@ -60,7 +60,7 @@ logger.log("Hello DLog!")
 Outputs:
 
 ```sh
-• 23:59:11.710 [DLOG] [LOG] <DLog:12> Hello DLog!
+• 23:59:11.710 [DLOG] [LOG] <DLog.swift:12> Hello DLog!
 ```
 
 Where:
@@ -68,7 +68,7 @@ Where:
 - `23:59:11.710` - timestamp (HH:mm:ss.SSS)
 - `[DLOG]` - category tag ('DLOG' by default)
 - `[LOG]` - log type tag
-- `<DLog:12>` - location (fileName:line), without file extension
+- `<DLog.swift:12>` - location (fileName:line), without file extension
 - `Hello DLog!` - message
 
 `DLog` outputs text logs to `stdout` by default but you can use the other outputs such as: `stderr`, filter, file, OSLog, Net. For instance:
@@ -91,9 +91,9 @@ logger.assert(false, "Assert message")
 Outputs:
 
 ```sh
-• 00:03:07.179 [DLOG] ✅ [INFO] <DLog:6> Info message
-• 00:03:07.181 [DLOG] 💬 [LOG] <DLog:7> Log message
-• 00:03:07.181 [DLOG] 🅰️ [ASSERT] <DLog:8> Assert message
+• 00:03:07.179 [DLOG] ✅ [INFO] <DLog.swift:6> Info message
+• 00:03:07.181 [DLOG] 💬 [LOG] <DLog.swift:7> Log message
+• 00:03:07.181 [DLOG] 🅰️ [ASSERT] <DLog.swift:8> Assert message
 ```
 
 `=>` is pipeline operator and it can be used for creating a list of outputs:
@@ -120,7 +120,7 @@ logger.log("App start")
 Outputs:
 
 ```sh
-• 23:40:23.545 [DLOG] [LOG] <DLog:12> App start
+• 23:40:23.545 [DLOG] [LOG] <DLog.swift:12> App start
 ```
 
 ### `info`
@@ -135,7 +135,7 @@ logger.info("uuid: \(uuid)")
 Outputs:
 
 ```sh
-• 23:44:30.702 [DLOG] [INFO] <DLog:13> uuid: 8A71D2B9-29F1-4330-A4C2-69988E3FE172
+• 23:44:30.702 [DLOG] [INFO] <DLog.swift:13> uuid: 8A71D2B9-29F1-4330-A4C2-69988E3FE172
 ```
 
 ### `trace`
@@ -154,8 +154,8 @@ startup()
 Outputs:
 
 ```sh
-• 23:45:31.198 [DLOG] [TRACE] <DLog:13> Start: { func: startup(), thread: { number: 1, name: main } }
-• 23:45:31.216 [DLOG] [TRACE] <DLog:14> func: startup(), thread: { number: 1, name: main }
+• 23:45:31.198 [DLOG] [TRACE] <DLog.swift:13> Start: { func: startup(), thread: { number: 1, name: main } }
+• 23:45:31.216 [DLOG] [TRACE] <DLog.swift:14> func: startup(), thread: { number: 1, name: main }
 ```
 
 ### `debug`
@@ -176,7 +176,7 @@ session.dataTask(with: URL(string: "https://apple.com")!) { data, response, erro
 Outputs:
 
 ```sh
-• 23:49:16.562 [DLOG] [DEBUG] <DLog:17> https://www.apple.com/: 200 - no error
+• 23:49:16.562 [DLOG] [DEBUG] <DLog.swift:17> https://www.apple.com/: 200 - no error
 ```
 
 ### `warning`
@@ -190,7 +190,7 @@ logger.warning("No Internet connection.")
 Outputs:
 
 ```sh
-• 23:49:55.757 [DLOG] [WARNING] <DLog:12> No Internet connection.
+• 23:49:55.757 [DLOG] [WARNING] <DLog.swift:12> No Internet connection.
 ```
 
 ### `error`
@@ -211,7 +211,7 @@ catch {
 Outputs:
 
 ```sh
-• 23:50:39.560 [DLOG] [ERROR] <DLog:18> “source.txt” couldn’t be moved to “Macintosh HD” because either the former doesn’t exist, or the folder containing the latter doesn’t exist.
+• 23:50:39.560 [DLOG] [ERROR] <DLog.swift:18> “source.txt” couldn’t be moved to “Macintosh HD” because either the former doesn’t exist, or the folder containing the latter doesn’t exist.
 ```
 
 ### `assert`
@@ -230,8 +230,8 @@ logger.assert(password.isEmpty == false, "Password is empty")
 Outputs:
 
 ```sh
-• 23:54:19.420 [DLOG] [ASSERT] <DLog:16>
-• 23:54:19.422 [DLOG] [ASSERT] <DLog:17> Password is empty
+• 23:54:19.420 [DLOG] [ASSERT] <DLog.swift:16>
+• 23:54:19.422 [DLOG] [ASSERT] <DLog.swift:17> Password is empty
 
 ```
 
@@ -249,7 +249,7 @@ guard let modelURL = Bundle.main.url(forResource: "DataModel", withExtension:"mo
 Outputs:
 
 ```sh
-• 23:55:07.445 [DLOG] [FAULT] <DLog:13> Error loading model from bundle
+• 23:55:07.445 [DLOG] [FAULT] <DLog.swift:13> Error loading model from bundle
 ```
 
 ## Scope
@@ -273,8 +273,8 @@ Outputs:
 
 ```sh
 • 23:57:13.410 [DLOG] ┌ [Loading]
-• 23:57:13.427 [DLOG] | [INFO] <DLog:14> File: path/data.json
-• 23:57:13.443 [DLOG] | [DEBUG] <DLog:16> Loaded 121 bytes
+• 23:57:13.427 [DLOG] | [INFO] <DLog.swift:14> File: path/data.json
+• 23:57:13.443 [DLOG] | [DEBUG] <DLog.swift:16> Loaded 121 bytes
 • 23:57:13.443 [DLOG] └ [Loading] (0.33)
 
 ```
@@ -319,8 +319,8 @@ Outputs:
 
 ```sh
 • 00:01:24.158 [DLOG] ┌ [Request]
-• 00:01:24.829 [DLOG] | [DEBUG] <DLog:25> https://www.apple.com/ - HTTP 200
-• 00:01:24.830 [DLOG] | [DEBUG] <DLog:26> Loaded: 74454 bytes
+• 00:01:24.829 [DLOG] | [DEBUG] <DLog.swift:25> https://www.apple.com/ - HTTP 200
+• 00:01:24.830 [DLOG] | [DEBUG] <DLog.swift:26> Loaded: 74454 bytes
 • 00:01:24.830 [DLOG] └ [Request] (0.671)
 ```
 
@@ -348,10 +348,10 @@ Outputs:
 
 ```sh
 • 00:03:13.552 [DLOG] ┌ [Loading]
-• 00:03:13.554 [DLOG] | [INFO] <DLog:20> File: file:///path/data.json
-• 00:03:13.555 [DLOG] | [DEBUG] <DLog:23> Loaded 121 bytes
+• 00:03:13.554 [DLOG] | [INFO] <DLog.swift:20> File: file:///path/data.json
+• 00:03:13.555 [DLOG] | [DEBUG] <DLog.swift:23> Loaded 121 bytes
 • 00:03:13.555 [DLOG] | ┌ [Parsing]
-• 00:03:13.557 [DLOG] | | [DEBUG] <DLog:27> Parsed 3 items
+• 00:03:13.557 [DLOG] | | [DEBUG] <DLog.swift:27> Parsed 3 items
 • 00:03:13.557 [DLOG] | └ [Parsing] (0.2)
 • 00:03:13.609 [DLOG] └ [Loading] (0.56)
 ```
@@ -372,16 +372,16 @@ for _ in 0..<10 {
 Outputs:
 
 ```sh
-• 00:05:09.932 [DLOG] [INTERVAL] <DLog:19> Sort: { duration: 0.270, average: 0.270 }
-• 00:05:10.162 [DLOG] [INTERVAL] <DLog:19> Sort: { duration: 0.216, average: 0.243 }
-• 00:05:10.380 [DLOG] [INTERVAL] <DLog:19> Sort: { duration: 0.215, average: 0.234 }
-• 00:05:10.608 [DLOG] [INTERVAL] <DLog:19> Sort: { duration: 0.225, average: 0.231 }
-• 00:05:10.829 [DLOG] [INTERVAL] <DLog:19> Sort: { duration: 0.217, average: 0.229 }
-• 00:05:11.057 [DLOG] [INTERVAL] <DLog:19> Sort: { duration: 0.225, average: 0.228 }
-• 00:05:11.275 [DLOG] [INTERVAL] <DLog:19> Sort: { duration: 0.214, average: 0.226 }
-• 00:05:11.497 [DLOG] [INTERVAL] <DLog:19> Sort: { duration: 0.219, average: 0.225 }
-• 00:05:11.712 [DLOG] [INTERVAL] <DLog:19> Sort: { duration: 0.212, average: 0.224 }
-• 00:05:11.925 [DLOG] [INTERVAL] <DLog:19> Sort: { duration: 0.209, average: 0.222 }
+• 00:05:09.932 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.270, average: 0.270 }
+• 00:05:10.162 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.216, average: 0.243 }
+• 00:05:10.380 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.215, average: 0.234 }
+• 00:05:10.608 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.225, average: 0.231 }
+• 00:05:10.829 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.217, average: 0.229 }
+• 00:05:11.057 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.225, average: 0.228 }
+• 00:05:11.275 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.214, average: 0.226 }
+• 00:05:11.497 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.219, average: 0.225 }
+• 00:05:11.712 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.212, average: 0.224 }
+• 00:05:11.925 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.209, average: 0.222 }
 ```
 
 Where:
@@ -423,8 +423,8 @@ asset.loadValuesAsynchronously(forKeys: ["duration"]) {
 Outputs:
 
 ```sh
-• 00:10:17.982 [DLOG] [INFO] <DLog:27> Duration: 5532776
-• 00:10:17.983 [DLOG] [INTERVAL] <DLog:20> Video: { duration: 2.376, average: 2.376 }
+• 00:10:17.982 [DLOG] [INFO] <DLog.swift:27> Duration: 5532776
+• 00:10:17.983 [DLOG] [INTERVAL] <DLog.swift:20> Video: { duration: 2.376, average: 2.376 }
 ```
 
 ## Category
@@ -444,9 +444,9 @@ tableLogger.debug("Updating with network response.")
 Outputs:
 
 ```sh
-• 00:11:30.660 [DLOG] [DEBUG] <DLog:22> Refresh
-• 00:11:30.661 [NET] [DEBUG] <DLog:23> Successfully fetched recordings.
-• 00:11:30.661 [TABLE] [DEBUG] <DLog:24> Updating with network response.
+• 00:11:30.660 [DLOG] [DEBUG] <DLog.swift:22> Refresh
+• 00:11:30.661 [NET] [DEBUG] <DLog.swift:23> Successfully fetched recordings.
+• 00:11:30.661 [TABLE] [DEBUG] <DLog.swift:24> Updating with network response.
 ```
 
 ## Outputs
@@ -482,24 +482,24 @@ Outputs:
 
 ```sh
 Plain
-• 00:12:31.718 [DLOG] [INFO] <DLog:25> info
-• 00:12:31.719 [DLOG] [ERROR] <DLog:26> error
-• 00:12:31.720 [DLOG] [FAULT] <DLog:27> fatal
+• 00:12:31.718 [DLOG] [INFO] <DLog.swift:25> info
+• 00:12:31.719 [DLOG] [ERROR] <DLog.swift:26> error
+• 00:12:31.720 [DLOG] [FAULT] <DLog.swift:27> fatal
 
 Emoji
-• 00:12:31.720 [DLOG] ✅ [INFO] <DLog:25> info
-• 00:12:31.721 [DLOG] ⚠️ [ERROR] <DLog:26> error
-• 00:12:31.734 [DLOG] 🆘 [FAULT] <DLog:27> fatal
+• 00:12:31.720 [DLOG] ✅ [INFO] <DLog.swift:25> info
+• 00:12:31.721 [DLOG] ⚠️ [ERROR] <DLog.swift:26> error
+• 00:12:31.734 [DLOG] 🆘 [FAULT] <DLog.swift:27> fatal
 
 Colored
-[2m•[0m [2m00:12:31.735[0m [34mDLOG[0m [42m[37m INFO [0m [2m[32m<DLog:25>[0m [32minfo[0m
-[2m•[0m [2m00:12:31.735[0m [34mDLOG[0m [43m[30m ERROR [0m [2m[33m<DLog:26>[0m [33merror[0m
-[2m•[0m [2m00:12:31.735[0m [34mDLOG[0m [41m[37m[5m FAULT [0m [2m[31m<DLog:27>[0m [31mfatal[0m
+[2m•[0m [2m00:12:31.735[0m [34mDLOG[0m [42m[37m INFO [0m [2m[32m<DLog.swift:25>[0m [32minfo[0m
+[2m•[0m [2m00:12:31.735[0m [34mDLOG[0m [43m[30m ERROR [0m [2m[33m<DLog.swift:26>[0m [33merror[0m
+[2m•[0m [2m00:12:31.735[0m [34mDLOG[0m [41m[37m[5m FAULT [0m [2m[31m<DLog.swift:27>[0m [31mfatal[0m
 ```
 
 Colored text in Terminal:
 
-<img src="Images/dlog-text-colored.png" alt="DLog: Colored text log in Terminal"><br>
+<img src="Images/dlog-text-colored.png" alt="DLog.swift: Colored text log in Terminal"><br>
 
 You can also use shortcuts `.textPlain`, `.textEmoji` and `.textColored` to create the output:
 
@@ -540,7 +540,7 @@ logger.info("Emoji")
 Outputs:
 
 ```sh
-• 00:15:25.602 [DLOG] ✅ [INFO] <DLog:18> Emoji
+• 00:15:25.602 [DLOG] ✅ [INFO] <DLog.swift:18> Emoji
 ```
 
 ### File
@@ -810,7 +810,7 @@ netLogger.info("info")
 Outputs:
 
 ```sh
-• 00:17:58.076 [NET] [INFO] <DLog:19> info
+• 00:17:58.076 [NET] [INFO] <DLog.swift:19> info
 ```
 
 2) Log debug messages only
@@ -827,7 +827,7 @@ logger.error("error")
 Outputs:
 
 ```sh
-• 00:18:23.638 [DLOG] [DEBUG] <DLog:19> debug
+• 00:18:23.638 [DLOG] [DEBUG] <DLog.swift:19> debug
 ```
 
 3) Log messages that contain "hello" string only
@@ -843,7 +843,7 @@ logger.info("info")
 Outputs:
 
 ```sh
-• 00:19:17.821 [DLOG] [LOG] <DLog:18> hello world
+• 00:19:17.821 [DLOG] [LOG] <DLog.swift:18> hello world
 ```
 
 3) Log messages which are related to a specific scope:
@@ -877,8 +877,8 @@ Outputs:
 
 ```sh
 • 00:19:59.573 [DLOG] ┌ [Load]
-• 00:19:59.573 [DLOG] | [DEBUG] <DLog:27> debug
-• 00:19:59.586 [DLOG] | [ERROR] <DLog:34> error
+• 00:19:59.573 [DLOG] | [DEBUG] <DLog.swift:27> debug
+• 00:19:59.586 [DLOG] | [ERROR] <DLog.swift:34> error
 • 00:19:59.586 [DLOG] └ [Load] (0.13)
 ```
 
@@ -943,7 +943,7 @@ logger.info("Info message")
 Outputs:
 
 ```sh
-• 23:53:16.116 [DLOG] [INFO] <DLog:12> Info message
+• 23:53:16.116 [DLOG] [INFO] <DLog.swift:12> Info message
 ```
 
 To new appearance that includes your start sign and timestamp only:
@@ -983,7 +983,7 @@ doTest()
 Outputs:
 
 ```sh
-• 12:20:47.137 [DLOG] [TRACE] <DLog:13> func: doTest(), thread: { number: 1, name: main }
+• 12:20:47.137 [DLOG] [TRACE] <DLog.swift:13> func: doTest(), thread: { number: 1, name: main }
 ```
 
 But you can change it to show a function and queue names:
@@ -1004,7 +1004,7 @@ doTest()
 Outputs:
 
 ```sh
-• 12:37:24.101 [DLOG] [TRACE] <DLog:11> func: doTest(), queue: com.apple.main-thread
+• 12:37:24.101 [DLOG] [TRACE] <DLog.swift:11> func: doTest(), queue: com.apple.main-thread
 ```
 
 #### `ThreadConfiguration`
@@ -1031,8 +1031,8 @@ DispatchQueue.global().async {
 Outputs:
 
 ```sh
-• 13:01:32.859 [DLOG] [TRACE] <DLog:9> func: doTest(), thread: { number: 1, qos: userInteractive }
-• 13:01:32.910 [DLOG] [TRACE] <DLog:9> func: doTest(), thread: { number: 3, qos: userInitiated }
+• 13:01:32.859 [DLOG] [TRACE] <DLog.swift:9> func: doTest(), thread: { number: 1, qos: userInteractive }
+• 13:01:32.910 [DLOG] [TRACE] <DLog.swift:9> func: doTest(), thread: { number: 3, qos: userInitiated }
 ```
 
 #### `StackConfiguration`
@@ -1095,12 +1095,116 @@ logger.interval("signpost") {
 Outputs:
 
 ```sh
-• 23:26:40.978 [DLOG] [INTERVAL] <DLog:13> signpost: { duration: 3.2, count: 1, total: 3.2, min: 3.2, max: 3.2, average: 3.2 }
+• 23:26:40.978 [DLOG] [INTERVAL] <DLog.swift:13> signpost: { duration: 3.2, count: 1, total: 3.2, min: 3.2, max: 3.2, average: 3.2 }
 ```
 
 ## Objective-C
 
+DLog exposes all functionality to Objective-C via `DLogObjC` library and it's very useful in projects with mixed code so you can log messages, create scopes and intervals, share global loggers etc.
 
+**Log levels**
+
+``` objective-c
+@import DLogObjC;
+
+DLog* logger = [DLog new];
+
+logger.log(@"log");
+logger.trace(@"trace");
+logger.debug(@"debug");
+logger.info(@"info");
+logger.warning(@"warning");
+logger.error(@"error");
+logger.assert(NO, @"assert");
+logger.fault(@"fault");
+```
+
+Also you can format log messages:
+
+``` objective-c
+logger.info(@"Version: %@, build: %d", @"1.2.0", 123);
+```
+
+Output:
+
+``` sh
+• 20:54:48.348 [DLOG] [INFO] <Test.m:16> Version: 1.2.0, build: 123
+```
+
+**Scope**
+
+``` objective-c
+LogScope* scope = logger.scope(@"Scope1", ^(LogScope* scope) {
+    scope.debug(@"debug1");
+});
+
+// OR
+
+scope = logger.scope(@"Scope2");
+[scope enter];
+scope.debug(@"debug2");
+[scope leave];
+```
+
+**Interval**
+
+``` objective-c
+LogInterval* interval = logger.interval(@"interval", ^{
+    [NSThread sleepForTimeInterval:0.25];
+});
+
+// OR
+
+[interval begin];
+[NSThread sleepForTimeInterval:0.25];
+[interval end];
+```
+
+**Category**
+
+``` objective-c
+LogProtocol* netLogger = logger[@"NET"];
+netLogger.log(@"net logger");
+```
+
+**Pipeline**
+
+``` objective-c
+DLog* logger = [[DLog alloc] initWithOutputs:@[LogOutput.textEmoji, LogOutput.stdOut]];
+logger.info(@"info");
+```
+
+Outputs:
+
+```sh
+• 14:17:07.306 [DLOG] ✅ [INFO] <Test.m:15> info
+```
+
+**Filter**
+
+``` objective-c
+// Debug messages only
+LogOutput* filter = [LogOutput filter:^BOOL(LogItem* logItem) {
+    return logItem.type == LogTypeDebug;
+}];
+
+DLog* logger = [[DLog alloc] initWithOutputs:@[LogOutput.textPlain, filter, LogOutput.stdOut]];
+logger.log(@"log");
+logger.info(@"info");
+logger.debug(@"debug");
+```
+
+Outputs:
+
+```sh
+• 14:19:50.212 [DLOG] [DEBUG] <Test.m:21> debug
+```
+
+**Disabled**
+
+``` objective-c
+DLog* logger = DLog.disabled;
+```
 
 ## Installation
 
