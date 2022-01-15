@@ -98,7 +98,7 @@ public class LogItem: LogProtocol {
 		self.category = category
 		self.scope = scope
 		self.type = type
-		self.fileName = ((file as NSString).lastPathComponent as NSString).deletingPathExtension
+		self.fileName = (file as NSString).lastPathComponent
 		self.funcName = funcName
 		self.line = line
 		self.text = text
