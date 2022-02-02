@@ -38,7 +38,7 @@
     };
 }
 
-- (AssertBlock)assert {
+- (AssertBlock)assertion {
     return ^(BOOL condition, NSString* text, NSString* file, NSString* func, NSUInteger line){
         return [self assert:^{ return condition; } :^{ return text; } file:file function:func line:line];
     };

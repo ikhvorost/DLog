@@ -22,13 +22,10 @@
 #define warning(format, ...) warning(DLOG_PARAMS(format, ##__VA_ARGS__))
 #define error(format, ...) error(DLOG_PARAMS(format, ##__VA_ARGS__))
 
-#ifdef assert
-#undef assert
-#endif
-#define assert_3(condition, format, ...) assert((condition), DLOG_PARAMS(format, ##__VA_ARGS__))
+#define assert_3(condition, format, ...) assertion((condition), DLOG_PARAMS(format, ##__VA_ARGS__))
 #define assert_2(condition, format) assert_3((condition), format)
 #define assert_1(condition) assert_2((condition), nil)
-#define assert(...) DLOG_CONCAT(assert_, DLOG_VARGS(__VA_ARGS__))(__VA_ARGS__)
+#define assertion(...) DLOG_CONCAT(assert_, DLOG_VARGS(__VA_ARGS__))(__VA_ARGS__)
 
 #define fault(format, ...) fault(DLOG_PARAMS(format, ##__VA_ARGS__))
 
@@ -56,7 +53,7 @@ typedef LogInterval* (^IntervalBlock)(NSString*, NSString*, NSString*, NSUIntege
 @property (nonatomic, readonly) LogBlock info;
 @property (nonatomic, readonly) LogBlock warning;
 @property (nonatomic, readonly) LogBlock error;
-@property (nonatomic, readonly) AssertBlock assert;
+@property (nonatomic, readonly) AssertBlock assertion;
 @property (nonatomic, readonly) LogBlock fault;
 @property (nonatomic, readonly) ScopeBlock scope;
 @property (nonatomic, readonly) IntervalBlock interval;

@@ -105,12 +105,12 @@ static void testAll(LogProtocol* logger, NSString *category) {
 	XCTAssertTrue([logger.warning(@"warning") match:matchString(category, @"warning")]);
 	XCTAssertTrue([logger.error(@"error") match:matchString(category, @"error")]);
     
-    XCTAssertNil(logger.assert(YES));
-    XCTAssertNil(logger.assert(YES, @"assert"));
-    XCTAssertNil(logger.assert(YES, @"assert %d", 1));
-    XCTAssertNotNil(logger.assert(NO));
-    XCTAssertTrue([logger.assert(NO, @"assert") match:matchString(category, @"assert")]);
-    XCTAssertTrue([logger.assert(NO, @"assert %d", 1) match:matchString(category, @"assert 1")]);
+    XCTAssertNil(logger.assertion(YES));
+    XCTAssertNil(logger.assertion(YES, @"assert"));
+    XCTAssertNil(logger.assertion(YES, @"assert %d", 1));
+    XCTAssertNotNil(logger.assertion(NO));
+    XCTAssertTrue([logger.assertion(NO, @"assert") match:matchString(category, @"assert")]);
+    XCTAssertTrue([logger.assertion(NO, @"assert %d", 1) match:matchString(category, @"assert 1")]);
     
 	XCTAssertTrue([logger.fault(@"fault") match:matchString(category, @"fault")]);
     XCTAssertTrue([logger.fault(@"fault %d", 1) match:matchString(category, @"fault 1")]);
@@ -148,7 +148,7 @@ static void testAll(LogProtocol* logger, NSString *category) {
     XCTAssertTrue([logger.info(@"info") match:@"✅"]);
     XCTAssertTrue([logger.warning(@"warning") match:@"⚠️"]);
     XCTAssertTrue([logger.error(@"error") match:@"⚠️"]);
-    XCTAssertTrue([logger.assert(NO) match:@"🅰️"]);
+    XCTAssertTrue([logger.assertion(NO) match:@"🅰️"]);
     XCTAssertTrue([logger.fault(@"fault") match:@"🆘"]);
 }
 
@@ -272,7 +272,7 @@ static void testAll(LogProtocol* logger, NSString *category) {
         logger.info(@"info");
         logger.warning(@"warning");
         logger.error(@"error");
-        logger.assert(NO);
+        logger.assertion(NO);
         logger.fault(@"fault");
         logger.scope(@"scope", ^(LogScope* scope) {
             scope.error(@"error");
