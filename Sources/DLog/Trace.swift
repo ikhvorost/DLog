@@ -60,7 +60,7 @@ public struct ThreadOptions: OptionSet {
 }
 
 /// Contains configuration values regarding to thread info.
-public struct ThreadConfiguration {
+public struct ThreadConfig {
 	
 	/// Set which info from threads should be used. Default value is `ThreadOptions.compact`.
 	public var options: ThreadOptions = .compact
@@ -99,7 +99,7 @@ public enum StackViewStyle {
 }
 
 /// Contains configuration values regarding to stack info
-public struct StackConfiguration {
+public struct StackConfig {
 	/// Set which info from stacks should be used. Default value is `StackOptions.symbols`.
 	public var options: StackOptions = .symbols
 	
@@ -140,15 +140,15 @@ public struct TraceOptions: OptionSet {
 }
 
 /// Contains configuration values regarding to the `trace` method.
-public struct TraceConfiguration {
+public struct TraceConfig {
 	/// Set which info from the `trace` method should be used. Default value is `TraceOptions.compact`.
 	public var options: TraceOptions = .compact
 	
 	/// Configuration of thread info
-	public var threadConfiguration = ThreadConfiguration()
+	public var threadConfig = ThreadConfig()
 	
 	/// Configuration of stack info
-	public var stackConfiguration = StackConfiguration()
+	public var stackConfig = StackConfig()
 }
 
 // MARK: - Thread
@@ -174,7 +174,7 @@ fileprivate extension Thread {
 	// <NSThread: 0x100d04870>{number = 1, name = main}
 	static let regexThread = try! NSRegularExpression(pattern: "number = ([0-9]+), name = ([^}]+)")
 	
-	func description(config: ThreadConfiguration) -> String {
+	func description(config: ThreadConfig) -> String {
 		var number = ""
 		var name = ""
 		let nsString = description as NSString
@@ -225,7 +225,7 @@ fileprivate func demangle(_ mangled: String) -> String? {
 	return nil
 }
 
-fileprivate func stack(_ addresses: ArraySlice<NSNumber>, config: StackConfiguration) -> String {
+fileprivate func stack(_ addresses: ArraySlice<NSNumber>, config: StackConfig) -> String {
 	var info = dl_info()
 	
 	var separator = "\n"
@@ -270,13 +270,13 @@ fileprivate func stack(_ addresses: ArraySlice<NSNumber>, config: StackConfigura
 	return "[\n\(text) ]"
 }
 
-func traceInfo(title: String?, function: String, addresses: ArraySlice<NSNumber>, config: TraceConfiguration) -> String {
+func traceInfo(title: String?, function: String, addresses: ArraySlice<NSNumber>, config: TraceConfig) -> String {
 	
 	let items: [(TraceOptions, String, () -> String)] = [
 		(.function, "func", { function }),
 		(.queue, "queue", { "\(String(cString: __dispatch_queue_get_label(nil)))" }),
-		(.thread, "thread", { "\(Thread.current.description(config: config.threadConfiguration))" }),
-		(.stack, "stack", { "\(stack(addresses, config: config.stackConfiguration))" }),
+		(.thread, "thread", { "\(Thread.current.description(config: config.threadConfig))" }),
+		(.stack, "stack", { "\(stack(addresses, config: config.stackConfig))" }),
 	]
 	
 	return jsonDescription(title: title ?? "", items: items, options: config.options)

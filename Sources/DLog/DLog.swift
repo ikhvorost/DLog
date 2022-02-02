@@ -75,7 +75,7 @@ public struct LogOptions: OptionSet {
 }
 
 /// Contains configuration values regarding to the logger
-public struct LogConfiguration {
+public struct LogConfig {
 	/// Start sign of the logger
 	public var sign: Character = "•"
 	
@@ -83,10 +83,10 @@ public struct LogConfiguration {
 	public var options: LogOptions = .regular
 	
 	/// Configuration of the `trace` method
-	public var traceConfiguration = TraceConfiguration()
+	public var traceConfig = TraceConfig()
 	
 	/// Configuration of intervals
-	public var intervalConfiguration = IntervalConfiguration()
+	public var intervalConfig = IntervalConfig()
 	
 	/// Creates the logger's default configuration.
 	public init() {}
@@ -97,7 +97,7 @@ public struct LogConfiguration {
 public class DLog: LogProtocol {
 	
 	private let output: LogOutput?
-	let config: LogConfiguration
+	let config: LogConfig
 
 	@Atomic private var scopes = [LogScope]()
 	
@@ -111,7 +111,7 @@ public class DLog: LogProtocol {
 	public static let disabled = DLog(nil)
 	
 	/// The default configuration.
-	public static let defaultConfiguration = LogConfiguration()
+	public static let defaultConfig = LogConfig()
 	
 	/// Creates a logger object that assigns log messages to a specified category.
 	///
@@ -138,9 +138,9 @@ public class DLog: LogProtocol {
 	/// - Parameters:
 	/// 	- output: A target output object. If it is omitted the logger uses `stdout` by default.
 	///
-	public init(_ output: LogOutput? = .stdout, configuration: LogConfiguration = DLog.defaultConfiguration) {
+	public init(_ output: LogOutput? = .stdout, config: LogConfig = DLog.defaultConfig) {
 		self.output = output
-		self.config = configuration
+		self.config = config
         super.init()
         params = LogParams(logger: self, category: "DLOG", scope: nil)
 	}
@@ -176,7 +176,7 @@ public class DLog: LogProtocol {
     /// Creates the default logger.
     @objc
     public override convenience init() {
-        self.init(_:configuration:)()
+        self.init(_:config:)()
 	}
 
 	// Scope

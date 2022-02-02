@@ -92,9 +92,9 @@ public class LogItem: LogProtocol {
 	/// The text of this log message.
     @objc internal(set) public var text: (() -> String)!
 	
-	let config: LogConfiguration
+	let config: LogConfig
     
-    init(category: String, scope: LogScope?, type: LogType, file: String, funcName: String, line: UInt, text: (() -> String)!, config: LogConfiguration) {
+    init(category: String, scope: LogScope?, type: LogType, file: String, funcName: String, line: UInt, text: (() -> String)!, config: LogConfig) {
 		self.category = category
 		self.scope = scope
 		self.type = type

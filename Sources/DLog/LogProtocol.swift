@@ -92,7 +92,7 @@ public class LogProtocol: NSObject {
             traceInfo(title: text(),
                       function: function,
                       addresses: addresses.dropFirst(),
-                      config: self.params.logger.config.traceConfiguration)
+                      config: self.params.logger.config.traceConfig)
         }
         return params.logger.log(text: message, type: .trace, category: params.category, scope: params.scope, file: file, function: function, line: line)
     }

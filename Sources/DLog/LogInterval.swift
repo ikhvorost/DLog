@@ -71,7 +71,7 @@ public struct IntervalOptions: OptionSet {
 }
 
 /// Contains configuration values regarding to intervals.
-public struct IntervalConfiguration {
+public struct IntervalConfig {
 	
 	/// Set which info from the intervals should be used. Default value is `IntervalOptions.compact`.
 	public var options: IntervalOptions = .compact
@@ -132,7 +132,7 @@ public class LogInterval : LogItem {
     @objc
 	internal(set) public var avg: TimeInterval = 0
     
-    init(logger: DLog, category: String, scope: LogScope?, name: String, staticName: StaticString?, file: String, funcName: String, line: UInt, config: LogConfiguration) {
+    init(logger: DLog, category: String, scope: LogScope?, name: String, staticName: StaticString?, file: String, funcName: String, line: UInt, config: LogConfig) {
 		self.id = "\(file):\(funcName):\(line)".hash
 		self.logger = logger
         self.name = name
@@ -149,7 +149,7 @@ public class LogInterval : LogItem {
 				(.max, "max", { "\(Text.stringFromTime(interval: self.max))" }),
 				(.average, "average", { "\(Text.stringFromTime(interval: self.avg))" })
 			]
-			return jsonDescription(title: self.name, items: items, options: config.intervalConfiguration.options)
+			return jsonDescription(title: self.name, items: items, options: config.intervalConfig.options)
 		}
 	}
 	
