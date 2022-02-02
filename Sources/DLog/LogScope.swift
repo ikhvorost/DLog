@@ -46,7 +46,7 @@ public class LogScope : LogItem {
     init(logger: DLog, category: String, file: String, funcName: String, line: UInt, name: @autoclosure @escaping () -> String, config: LogConfig) {
         self.logger = logger
         super.init(category: category, scope: nil, type: .scope, file: file, funcName: funcName, line: line, text: name, config: config)
-        self.params = LogParams(logger: logger, category: category, scope: self)
+        self.params = LogParams(logger: logger, category: category, scope: self, config: nil)
     }
     
     /// Start a scope.

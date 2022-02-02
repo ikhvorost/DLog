@@ -270,16 +270,16 @@ fileprivate func stack(_ addresses: ArraySlice<NSNumber>, config: StackConfig) -
 	return "[\n\(text) ]"
 }
 
-func traceInfo(title: String?, function: String, addresses: ArraySlice<NSNumber>, config: TraceConfig) -> String {
+func traceInfo(title: String?, function: String, addresses: ArraySlice<NSNumber>, traceConfig: TraceConfig) -> String {
 	
 	let items: [(TraceOptions, String, () -> String)] = [
 		(.function, "func", { function }),
 		(.queue, "queue", { "\(String(cString: __dispatch_queue_get_label(nil)))" }),
-		(.thread, "thread", { "\(Thread.current.description(config: config.threadConfig))" }),
-		(.stack, "stack", { "\(stack(addresses, config: config.stackConfig))" }),
+		(.thread, "thread", { "\(Thread.current.description(config: traceConfig.threadConfig))" }),
+		(.stack, "stack", { "\(stack(addresses, config: traceConfig.stackConfig))" }),
 	]
 	
-	return jsonDescription(title: title ?? "", items: items, options: config.options)
+	return jsonDescription(title: title ?? "", items: items, options: traceConfig.options)
 }
 
 func jsonDescription<Option: OptionSet>(title: String, items: [(Option, String, () -> String)], options: Option, braces: Bool = false) -> String {

@@ -31,11 +31,13 @@ public class LogParams : NSObject {
 	let logger: DLog
 	let category: String
 	let scope: LogScope?
+    let config: LogConfig?
 	
-	init(logger: DLog, category: String, scope: LogScope?) {
+	init(logger: DLog, category: String, scope: LogScope?, config: LogConfig?) {
 		self.logger = logger
 		self.category = category
 		self.scope = scope
+        self.config = config
 	}
 }
 
@@ -45,7 +47,7 @@ public class LogParams : NSObject {
 public class LogProtocol: NSObject {
     
     /// LogProtocol parameters
-    lazy var params: LogParams = LogParams(logger: .disabled, category: "", scope: nil)
+    lazy var params: LogParams = LogParams(logger: .disabled, category: "", scope: nil, config: nil)
     
     /// Logs a message that is essential to troubleshoot problems later.
     ///
@@ -65,7 +67,7 @@ public class LogProtocol: NSObject {
     @objc
     @discardableResult
     public func log(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-        return params.logger.log(text: text, type: .log, category: params.category, scope: params.scope, file: file, function: function, line: line)
+        return params.logger.log(text: text, type: .log, category: params.category, scope: params.scope, config: params.config, file: file, function: function, line: line)
     }
     
     /// Logs trace information to help debug problems during the development of your code.
@@ -89,12 +91,14 @@ public class LogProtocol: NSObject {
                       file: String = #file, function: String = #function, line: UInt = #line,
                       addresses: [NSNumber] = Thread.callStackReturnAddresses) -> String? {
         let message: () -> String = {
-            traceInfo(title: text(),
-                      function: function,
-                      addresses: addresses.dropFirst(),
-                      config: self.params.logger.config.traceConfig)
+            precondition(self.params.logger.params.config != nil)
+            let traceConfig = self.params.config?.traceConfig ?? self.params.logger.params.config!.traceConfig
+            return traceInfo(title: text(),
+                             function: function,
+                             addresses: addresses.dropFirst(),
+                             traceConfig: traceConfig)
         }
-        return params.logger.log(text: message, type: .trace, category: params.category, scope: params.scope, file: file, function: function, line: line)
+        return params.logger.log(text: message, type: .trace, category: params.category, scope: params.scope, config: params.config, file: file, function: function, line: line)
     }
     
     /// Logs a message to help debug problems during the development of your code.
@@ -115,7 +119,7 @@ public class LogProtocol: NSObject {
     @objc
     @discardableResult
     public func debug(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-        return params.logger.log(text: text, type: .debug, category: params.category, scope: params.scope, file: file, function: function, line: line)
+        return params.logger.log(text: text, type: .debug, category: params.category, scope: params.scope, config: params.config, file: file, function: function, line: line)
     }
     
     /// Logs a message that is helpful, but not essential, to diagnose issues with your code.
@@ -136,7 +140,7 @@ public class LogProtocol: NSObject {
     @objc
     @discardableResult
     public func info(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-        return params.logger.log(text: text, type: .info, category: params.category, scope: params.scope, file: file, function: function, line: line)
+        return params.logger.log(text: text, type: .info, category: params.category, scope: params.scope, config: params.config, file: file, function: function, line: line)
     }
     
     /// Logs a warning that occurred during the execution of your code.
@@ -157,7 +161,7 @@ public class LogProtocol: NSObject {
     @objc
     @discardableResult
     public func warning(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-        return params.logger.log(text: text, type: .warning, category: params.category, scope: params.scope, file: file, function: function, line: line)
+        return params.logger.log(text: text, type: .warning, category: params.category, scope: params.scope, config: params.config, file: file, function: function, line: line)
     }
     
     /// Logs an error that occurred during the execution of your code.
@@ -178,7 +182,7 @@ public class LogProtocol: NSObject {
     @objc
     @discardableResult
     public func error(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-        return params.logger.log(text: text, type: .error, category: params.category, scope: params.scope, file: file, function: function, line: line)
+        return params.logger.log(text: text, type: .error, category: params.category, scope: params.scope, config: params.config, file: file, function: function, line: line)
     }
     
     /// Logs a traditional C-style assert notice with an optional message.
@@ -201,7 +205,7 @@ public class LogProtocol: NSObject {
     @discardableResult
     public func assert(_ condition: @autoclosure () -> Bool, _ text: @escaping @autoclosure () -> String = "", file: String = #file, function: String = #function, line: UInt = #line) -> String? {
         guard params.logger != .disabled && !condition()  else { return nil }
-        return params.logger.log(text: text, type: .assert, category: params.category, scope: params.scope, file: file, function: function, line: line)
+        return params.logger.log(text: text, type: .assert, category: params.category, scope: params.scope, config: params.config, file: file, function: function, line: line)
     }
     
     /// Logs a bug or fault that occurred during the execution of your code.
@@ -222,7 +226,7 @@ public class LogProtocol: NSObject {
     @objc
     @discardableResult
     public func fault(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-        return params.logger.log(text: text, type: .fault, category: params.category, scope: params.scope, file: file, function: function, line: line)
+        return params.logger.log(text: text, type: .fault, category: params.category, scope: params.scope, config: params.config, file: file, function: function, line: line)
     }
     
     /// Creates a scope object that can assign log messages to itself.
@@ -246,7 +250,7 @@ public class LogProtocol: NSObject {
     @objc
     @discardableResult
     public func scope(_ name: String, file: String = #file, function: String = #function, line: UInt = #line, closure: ((LogScope) -> Void)? = nil) -> LogScope {
-        return params.logger.scope(name: name, category: params.category, file: file, function: function, line: line, closure: closure)
+        return params.logger.scope(name: name, category: params.category, config: params.config, file: file, function: function, line: line, closure: closure)
     }
     
     /// Creates an interval object that logs a detailed message with accumulated statistics.
@@ -269,13 +273,13 @@ public class LogProtocol: NSObject {
     ///
     @discardableResult
     public func interval(_ name: StaticString, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval {
-        return params.logger.interval(name: "\(name)", staticName: name, category: params.category, scope: params.scope, file: file, function: function, line: line, closure: closure)
+        return params.logger.interval(name: "\(name)", staticName: name, category: params.category, scope: params.scope, config: params.config, file: file, function: function, line: line, closure: closure)
     }
     
     /// Creates an interval object for Objective-C code.
     @objc
     @discardableResult
     public func interval(name: String, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
-        return params.logger.interval(name: name, staticName: nil, category: params.category, scope: params.scope, file: file, function: function, line: line, closure: closure)
+        return params.logger.interval(name: name, staticName: nil, category: params.category, scope: params.scope, config: params.config, file: file, function: function, line: line, closure: closure)
     }
 }

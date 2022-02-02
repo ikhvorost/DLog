@@ -97,7 +97,6 @@ public struct LogConfig {
 public class DLog: LogProtocol {
 	
 	private let output: LogOutput?
-	let config: LogConfig
 
 	@Atomic private var scopes = [LogScope]()
 	
@@ -110,9 +109,6 @@ public class DLog: LogProtocol {
 	@objc
 	public static let disabled = DLog(nil)
 	
-	/// The default configuration.
-	public static let defaultConfig = LogConfig()
-	
 	/// Creates a logger object that assigns log messages to a specified category.
 	///
 	/// You can define category name to differentiate unique areas and parts of your app and DLog uses this value
@@ -123,9 +119,13 @@ public class DLog: LogProtocol {
 	/// 	let netLogger.log("Hello Net!")
 	///
 	@objc
-	public subscript(category: String) -> LogCategory {
-		LogCategory(logger: self, category: category)
+	public subscript(name: String) -> LogCategory {
+		LogCategory(logger: self, category: name)
 	}
+    
+    public func category(name: String, config: LogConfig? = nil) -> LogCategory {
+        LogCategory(logger: self, category: name, config: config)
+    }
 
 	/// Creates the logger instance with a target output object.
 	///
@@ -138,11 +138,10 @@ public class DLog: LogProtocol {
 	/// - Parameters:
 	/// 	- output: A target output object. If it is omitted the logger uses `stdout` by default.
 	///
-	public init(_ output: LogOutput? = .stdout, config: LogConfig = DLog.defaultConfig) {
+	public init(_ output: LogOutput? = .stdout, config: LogConfig = LogConfig()) {
 		self.output = output
-		self.config = config
-        super.init()
-        params = LogParams(logger: self, category: "DLOG", scope: nil)
+		super.init()
+        params = LogParams(logger: self, category: "DLOG", scope: nil, config: config)
 	}
     
     /// Creates the logger instance with a list of linked outputs for both swift and objective-c code.
@@ -219,9 +218,11 @@ public class DLog: LogProtocol {
 		out.intervalEnd(interval: interval, scopes: scopes)
 	}
 
-	func log(text: @escaping () -> String, type: LogType, category: String, scope: LogScope?, file: String, function: String, line: UInt) -> String? {
-		guard let out = output else { return nil }
+	func log(text: @escaping () -> String, type: LogType, category: String, scope: LogScope?, config: LogConfig?, file: String, function: String, line: UInt) -> String? {
+        guard let out = output else { return nil }
 
+        precondition(params.config != nil)
+        
 		let item = LogItem(
 			category: category,
 			scope: scope,
@@ -230,18 +231,20 @@ public class DLog: LogProtocol {
 			funcName: function,
 			line: line,
 			text: text,
-			config: config)
+            config: config ?? params.config!)
 		return out.log(item: item, scopes: scopes)
 	}
 
-	func scope(name: String, category: String, file: String, function: String, line: UInt, closure: ((LogScope) -> Void)?) -> LogScope {
-		let scope = LogScope(logger: self,
+	func scope(name: String, category: String, config: LogConfig?, file: String, function: String, line: UInt, closure: ((LogScope) -> Void)?) -> LogScope {
+        precondition(params.config != nil)
+        
+        let scope = LogScope(logger: self,
 							 category: category,
 							 file: file,
 							 funcName: function,
 							 line: line,
 							 name: name,
-							 config: config)
+                             config: config ?? params.config!)
 
 		if let block = closure {
 			scope.enter()
@@ -252,7 +255,9 @@ public class DLog: LogProtocol {
 		return scope
 	}
 
-	func interval(name: String, staticName: StaticString?, category: String, scope: LogScope?, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
+	func interval(name: String, staticName: StaticString?, category: String, scope: LogScope?, config: LogConfig?, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
+        precondition(params.config != nil)
+        
         let interval = LogInterval(logger: self,
                                    category: category,
                                    scope: scope,
@@ -261,7 +266,7 @@ public class DLog: LogProtocol {
                                    file: file,
                                    funcName: function,
                                    line: line,
-                                   config: config)
+                                   config: config ?? params.config!)
 		
 		if let block = closure {
 			interval.begin()

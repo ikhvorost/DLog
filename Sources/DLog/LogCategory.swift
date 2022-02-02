@@ -36,8 +36,8 @@ import Foundation
 /// 	let netLogger.log("Hello Net!")
 ///
 public class LogCategory: LogProtocol {
-	init(logger: DLog, category: String) {
+    init(logger: DLog, category: String, config: LogConfig? = nil) {
         super.init()
-		params = LogParams(logger: logger, category: category, scope: nil)
+		params = LogParams(logger: logger, category: category, scope: nil, config: config)
 	}
 }
