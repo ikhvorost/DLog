@@ -152,7 +152,7 @@ public class DLog: LogProtocol {
 		out.intervalEnd(interval: interval, scopes: scopes)
 	}
 
-	func log(text: @escaping () -> String, type: LogType, category: String, scope: LogScope?, config: LogConfig?, file: String, function: String, line: UInt) -> String? {
+	func log(message: @escaping () -> LogMessage, type: LogType, category: String, scope: LogScope?, config: LogConfig?, file: String, function: String, line: UInt) -> String? {
         guard let out = output else { return nil }
 
         precondition(params.config != nil)
@@ -164,12 +164,12 @@ public class DLog: LogProtocol {
 			file: file,
 			funcName: function,
 			line: line,
-			text: text,
+            message: message,
             config: config ?? params.config!)
 		return out.log(item: item, scopes: scopes)
 	}
 
-	func scope(name: String, category: String, config: LogConfig?, file: String, function: String, line: UInt, closure: ((LogScope) -> Void)?) -> LogScope {
+	func scope(name: @escaping () -> LogMessage, category: String, config: LogConfig?, file: String, function: String, line: UInt, closure: ((LogScope) -> Void)?) -> LogScope {
         precondition(params.config != nil)
         
         let scope = LogScope(logger: self,

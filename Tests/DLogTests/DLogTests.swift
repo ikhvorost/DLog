@@ -308,7 +308,7 @@ final class DLogTests: XCTestCase {
 		XCTAssertNotNil(lineLogger.info("info"))
 		
 		// Text
-		let textLogger = DLog(.textPlain => .filter { $0.text().contains("hello") } => .stdout)
+        let textLogger = DLog(.textPlain => .filter { $0.text.contains("hello") } => .stdout)
 		XCTAssertNotNil(textLogger.info("hello world"))
 		XCTAssertNotNil(textLogger.debug("hello"))
 		XCTAssertNil(textLogger.info("info"))
@@ -318,7 +318,7 @@ final class DLogTests: XCTestCase {
 		XCTAssertNotNil(read_stdout { textLogger.scope("scope hello") { _ in } })
 		
 		// Scope
-		let scopeLogger = DLog(.textPlain => .filter { ($0 as? LogScope)?.text() == "Load" || $0.scope?.text() == "Load" } => .stdout)
+        let scopeLogger = DLog(.textPlain => .filter { ($0 as? LogScope)?.text == "Load" || $0.scope?.text == "Load" } => .stdout)
 		//let scopeLog = DLog(.textPlain => .filter { $0.scope?.level == 1 } => .stdout)
 		XCTAssertNil(scopeLogger.info("info"))
 		XCTAssertNotNil(read_stdout {
@@ -366,20 +366,20 @@ final class DLogTests: XCTestCase {
 			return false
 		}
 		
-		let failString: () -> String = {
+		let failMessage: () -> LogMessage = {
 			XCTFail()
 			return ""
 		}
 		
 		let test: (LogProtocol, XCTestExpectation) -> Void = { logger, expectation in
-			logger.log(failString())
-			logger.trace(failString())
-			logger.debug("\(failString())")
-			logger.info(failString())
-			logger.warning(failString())
-			logger.error(failString())
-			logger.fault(failString())
-			logger.assert(failBool(), failString())
+			logger.log(failMessage())
+            logger.trace(failMessage())
+			logger.debug("\(failMessage())")
+			logger.info(failMessage())
+			logger.warning(failMessage())
+			logger.error(failMessage())
+			logger.fault(failMessage())
+			logger.assert(failBool(), failMessage())
 			logger.scope("scope") { _ in expectation.fulfill() }
 			logger.interval("interval") { expectation.fulfill() }
 		}
@@ -482,6 +482,18 @@ final class DLogTests: XCTestCase {
         XCTAssert(read_stdout { logger.interval("signpost") { delay() }}?.match(#"\#(Sign) \#(Time) \#(CategoryTag) \#(IntervalTag) \#(Location) signpost: \#(Interval)"#) == true)
         XCTAssert(read_stdout { viewLogger.interval("signpost") { delay() }}?.match(#"\#(Sign) \#(Time) \[VIEW\] \#(IntervalTag) \#(Location) signpost: \#(Interval)"#) == true)
         XCTAssert(read_stdout { netLogger.interval("signpost") { delay() }}?.match(#"> \#(Time) \#(Level) \[NET\] \#(IntervalTag) signpost: \{ total: \#(SECS) \}"#) == true)
+    }
+    
+    // MARK: - Privacy
+    
+    func test_Privacy() {
+        let logger = DLog()
+        
+        let cardNumber = "1234 5678 9012 3456"
+        
+        XCTAssert(logger.log("Card: \(cardNumber)")?.match(cardNumber) == true)
+        XCTAssert(logger.log("Card: \(cardNumber, privacy: .public)")?.match(cardNumber) == true)
+        XCTAssert(logger.log("Card: \(cardNumber, privacy: .private)")?.match("<private>") == true)
     }
 }
 

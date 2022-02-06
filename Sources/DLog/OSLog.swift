@@ -94,19 +94,19 @@ public class OSLog : LogOutput {
 	// MARK: - LogOutput
 	
 	override func log(item: LogItem, scopes: [LogScope]) -> String? {
-		let log = oslog(category: item.category)
+        let log = oslog(category: item.category)
 		
 		let location = "<\(item.fileName):\(item.line)>"
 		
 		assert(Self.types[item.type] != nil)
 		let type = Self.types[item.type]!
-		os_log("%{public}@ %{public}@", dso: Self.dso, log: log, type: type, location, item.text())
+        os_log("%{public}@ %{public}@", dso: Self.dso, log: log, type: type, location, item.text)
 	
 		return super.log(item: item, scopes: scopes)
 	}
 	
 	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
-		let activity = _os_activity_create(Self.dso, strdup(scope.text()), Self.OS_ACTIVITY_CURRENT, OS_ACTIVITY_FLAG_DEFAULT)
+        let activity = _os_activity_create(Self.dso, strdup(scope.text), Self.OS_ACTIVITY_CURRENT, OS_ACTIVITY_FLAG_DEFAULT)
 		os_activity_scope_enter(activity, &scope.os_state)
 		
 		return super.scopeEnter(scope: scope, scopes: scopes)

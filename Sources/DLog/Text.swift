@@ -188,7 +188,7 @@ public class Text : LogOutput {
 	}
 	
 	private func textMessage(item: LogItem, scopes: [LogScope]) -> String {
-		assert(item.type != .scope)
+        precondition(item.type != .scope)
 		
 		var sign = { "\(item.config.sign)" }
 		var time = { Self.dateFormatter.string(from: item.time) }
@@ -206,7 +206,7 @@ public class Text : LogOutput {
 		}
 		var type = { "[\(item.type.title)]" }
 		var location = { "<\(item.fileName):\(item.line)>" }
-		var text = item.text()
+        var text = item.text
 		
 		switch style {
 			case .plain:
@@ -242,7 +242,7 @@ public class Text : LogOutput {
 	}
 
 	private func textScope(scope: LogScope, scopes: [LogScope]) -> String {
-		let start = scope.duration == 0
+        let start = scope.duration == 0
 		
 		var sign = { "\(scope.config.sign)" }
 		var time = start ? Self.dateFormatter.string(from: scope.time) : Self.dateFormatter.string(from: scope.time.addingTimeInterval(scope.duration))
@@ -258,19 +258,19 @@ public class Text : LogOutput {
 			text += start ? "┌" : "└"
 			return text
 		}
-		var text = "[\(scope.text())] \(ms ?? "")"
+        var text = "[\(scope.text)] \(ms ?? "")"
 		
-		switch style {
-			case .emoji, .plain:
-				break
-
-			case .colored:
-				sign = { "\(scope.config.sign)".color(.dim) }
-				time = time.color(.dim)
-				level = { String(format: "[%02d]", scope.level).color(.dim) }
-				category = { scope.category.color(.textBlue) }
-				text = "[\(scope.text().color(.textMagenta))] \((ms ?? "").color(.dim))"
-		}
+        switch style {
+        case .emoji, .plain:
+            break
+            
+        case .colored:
+            sign = { "\(scope.config.sign)".color(.dim) }
+            time = time.color(.dim)
+            level = { String(format: "[%02d]", scope.level).color(.dim) }
+            category = { scope.category.color(.textBlue) }
+            text = "[\(scope.text.color(.textMagenta))] \((ms ?? "").color(.dim))"
+        }
 	
 		let items: [(LogOptions, () -> String)] = [
 			(.sign, sign),

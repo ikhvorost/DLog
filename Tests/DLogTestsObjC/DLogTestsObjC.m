@@ -233,18 +233,18 @@ static void testAll(LogProtocol* logger, NSString *category) {
 - (void)test_Filter {
     let filter = [LogOutput filter:^BOOL(LogItem* logItem) {
         if ([logItem isKindOfClass:LogScope.class]) {
-            return [logItem.text() isEqualToString:@"Scope"];
+            return [logItem.text isEqualToString:@"Scope"];
         }
         
         return
             [logItem.time compare:NSDate.now] == NSOrderedAscending &&
             [logItem.category isEqualToString:@"DLOG"] &&
-            [logItem.scope.text() isEqualToString:@"Scope"] &&
+            [logItem.scope.text isEqualToString:@"Scope"] &&
             logItem.type == LogTypeDebug &&
             [logItem.fileName isEqualToString:@"DLogTestsObjC.m"] &&
             [logItem.funcName isEqualToString:@"-[DLogTestsObjC test_Filter]"] &&
             (logItem.line > __LINE__) &&
-            [logItem.text() isEqualToString:@"debug"];
+            [logItem.text isEqualToString:@"debug"];
     }];
     XCTAssertNotNil(filter);
     

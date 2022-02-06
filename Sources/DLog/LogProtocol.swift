@@ -66,8 +66,8 @@ public class LogProtocol: NSObject {
     ///
     @objc
     @discardableResult
-    public func log(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-        return params.logger.log(text: text, type: .log, category: params.category, scope: params.scope, config: params.config, file: file, function: function, line: line)
+    public func log(_ message: @escaping @autoclosure () -> LogMessage, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+        return params.logger.log(message: message, type: .log, category: params.category, scope: params.scope, config: params.config, file: file, function: function, line: line)
     }
     
     /// Logs trace information to help debug problems during the development of your code.
@@ -87,18 +87,19 @@ public class LogProtocol: NSObject {
     ///
     @objc
     @discardableResult
-    public func trace(_ text: @escaping @autoclosure () -> String? = nil,
+    public func trace(_ message: @escaping @autoclosure () -> LogMessage? = nil,
                       file: String = #file, function: String = #function, line: UInt = #line,
                       addresses: [NSNumber] = Thread.callStackReturnAddresses) -> String? {
-        let message: () -> String = {
+        let msg: () -> LogMessage = {
             precondition(self.params.logger.params.config != nil)
             let traceConfig = self.params.config?.traceConfig ?? self.params.logger.params.config!.traceConfig
-            return traceInfo(title: text(),
-                             function: function,
-                             addresses: addresses.dropFirst(),
-                             traceConfig: traceConfig)
+            let info = traceInfo(title: message()?.description,
+                                 function: function,
+                                 addresses: addresses.dropFirst(),
+                                 traceConfig: traceConfig)
+            return LogMessage(stringLiteral: info)
         }
-        return params.logger.log(text: message, type: .trace, category: params.category, scope: params.scope, config: params.config, file: file, function: function, line: line)
+        return params.logger.log(message: msg, type: .trace, category: params.category, scope: params.scope, config: params.config, file: file, function: function, line: line)
     }
     
     /// Logs a message to help debug problems during the development of your code.
@@ -118,8 +119,8 @@ public class LogProtocol: NSObject {
     ///
     @objc
     @discardableResult
-    public func debug(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-        return params.logger.log(text: text, type: .debug, category: params.category, scope: params.scope, config: params.config, file: file, function: function, line: line)
+    public func debug(_ message: @escaping @autoclosure () -> LogMessage, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+        return params.logger.log(message: message, type: .debug, category: params.category, scope: params.scope, config: params.config, file: file, function: function, line: line)
     }
     
     /// Logs a message that is helpful, but not essential, to diagnose issues with your code.
@@ -139,8 +140,8 @@ public class LogProtocol: NSObject {
     ///
     @objc
     @discardableResult
-    public func info(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-        return params.logger.log(text: text, type: .info, category: params.category, scope: params.scope, config: params.config, file: file, function: function, line: line)
+    public func info(_ message: @escaping @autoclosure () -> LogMessage, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+        return params.logger.log(message: message, type: .info, category: params.category, scope: params.scope, config: params.config, file: file, function: function, line: line)
     }
     
     /// Logs a warning that occurred during the execution of your code.
@@ -160,8 +161,8 @@ public class LogProtocol: NSObject {
     ///
     @objc
     @discardableResult
-    public func warning(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-        return params.logger.log(text: text, type: .warning, category: params.category, scope: params.scope, config: params.config, file: file, function: function, line: line)
+    public func warning(_ message: @escaping @autoclosure () -> LogMessage, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+        return params.logger.log(message: message, type: .warning, category: params.category, scope: params.scope, config: params.config, file: file, function: function, line: line)
     }
     
     /// Logs an error that occurred during the execution of your code.
@@ -181,8 +182,8 @@ public class LogProtocol: NSObject {
     ///
     @objc
     @discardableResult
-    public func error(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-        return params.logger.log(text: text, type: .error, category: params.category, scope: params.scope, config: params.config, file: file, function: function, line: line)
+    public func error(_ message: @escaping @autoclosure () -> LogMessage, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+        return params.logger.log(message: message, type: .error, category: params.category, scope: params.scope, config: params.config, file: file, function: function, line: line)
     }
     
     /// Logs a traditional C-style assert notice with an optional message.
@@ -203,9 +204,9 @@ public class LogProtocol: NSObject {
     ///
     @objc
     @discardableResult
-    public func assert(_ condition: @autoclosure () -> Bool, _ text: @escaping @autoclosure () -> String = "", file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+    public func assert(_ condition: @autoclosure () -> Bool, _ message: @escaping @autoclosure () -> LogMessage = "", file: String = #file, function: String = #function, line: UInt = #line) -> String? {
         guard params.logger != .disabled && !condition()  else { return nil }
-        return params.logger.log(text: text, type: .assert, category: params.category, scope: params.scope, config: params.config, file: file, function: function, line: line)
+        return params.logger.log(message: message, type: .assert, category: params.category, scope: params.scope, config: params.config, file: file, function: function, line: line)
     }
     
     /// Logs a bug or fault that occurred during the execution of your code.
@@ -225,8 +226,8 @@ public class LogProtocol: NSObject {
     ///
     @objc
     @discardableResult
-    public func fault(_ text: @escaping @autoclosure () -> String, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-        return params.logger.log(text: text, type: .fault, category: params.category, scope: params.scope, config: params.config, file: file, function: function, line: line)
+    public func fault(_ message: @escaping @autoclosure () -> LogMessage, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
+        return params.logger.log(message: message, type: .fault, category: params.category, scope: params.scope, config: params.config, file: file, function: function, line: line)
     }
     
     /// Creates a scope object that can assign log messages to itself.
@@ -249,7 +250,7 @@ public class LogProtocol: NSObject {
     ///
     @objc
     @discardableResult
-    public func scope(_ name: String, file: String = #file, function: String = #function, line: UInt = #line, closure: ((LogScope) -> Void)? = nil) -> LogScope {
+    public func scope(_ name: @escaping @autoclosure () -> LogMessage, file: String = #file, function: String = #function, line: UInt = #line, closure: ((LogScope) -> Void)? = nil) -> LogScope {
         return params.logger.scope(name: name, category: params.category, config: params.config, file: file, function: function, line: line, closure: closure)
     }
     

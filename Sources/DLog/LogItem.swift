@@ -90,18 +90,23 @@ public class LogItem: LogProtocol {
     @objc public let line: UInt
 		
 	/// The text of this log message.
-    @objc internal(set) public var text: (() -> String)!
+    @objc var message: (() -> LogMessage)!
+    
+    @objc public var text: String {
+        precondition(message != nil)
+        return message().description
+    }
 	
 	let config: LogConfig
     
-    init(category: String, scope: LogScope?, type: LogType, file: String, funcName: String, line: UInt, text: (() -> String)!, config: LogConfig) {
+    init(category: String, scope: LogScope?, type: LogType, file: String, funcName: String, line: UInt, message: (() -> LogMessage)!, config: LogConfig) {
 		self.category = category
 		self.scope = scope
 		self.type = type
 		self.fileName = (file as NSString).lastPathComponent
 		self.funcName = funcName
 		self.line = line
-		self.text = text
+		self.message = message
 		self.config = config
 	}
 }

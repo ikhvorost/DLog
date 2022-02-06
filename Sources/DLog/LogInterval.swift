@@ -96,9 +96,9 @@ public class LogInterval : LogItem {
         self.name = name
 		self.staticName = staticName
 		
-		super.init(category: category, scope: scope, type: .interval, file: file, funcName: funcName, line: line, text: nil, config: config)
+		super.init(category: category, scope: scope, type: .interval, file: file, funcName: funcName, line: line, message: nil, config: config)
 		
-		text = {
+		message = {
 			let items: [(IntervalOptions, String, () -> String)] = [
 				(.duration, "duration", { "\(Text.stringFromTime(interval: self.duration))" }),
 				(.count, "count", { "\(self.count)" }),
@@ -107,7 +107,8 @@ public class LogInterval : LogItem {
 				(.max, "max", { "\(Text.stringFromTime(interval: self.max))" }),
 				(.average, "average", { "\(Text.stringFromTime(interval: self.avg))" })
 			]
-			return jsonDescription(title: self.name, items: items, options: config.intervalConfig.options)
+			let json = jsonDescription(title: self.name, items: items, options: config.intervalConfig.options)
+            return LogMessage(stringLiteral: json)
 		}
 	}
 	
