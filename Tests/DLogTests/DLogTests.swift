@@ -484,16 +484,20 @@ final class DLogTests: XCTestCase {
         XCTAssert(read_stdout { netLogger.interval("signpost") { delay() }}?.match(#"> \#(Time) \#(Level) \[NET\] \#(IntervalTag) signpost: \{ total: \#(SECS) \}"#) == true)
     }
     
-    // MARK: - Privacy
-    
     func test_Privacy() {
         let logger = DLog()
         
         let cardNumber = "1234 5678 9012 3456"
         
-        XCTAssert(logger.log("Card: \(cardNumber)")?.match(cardNumber) == true)
-        XCTAssert(logger.log("Card: \(cardNumber, privacy: .public)")?.match(cardNumber) == true)
-        XCTAssert(logger.log("Card: \(cardNumber, privacy: .private)")?.match("<private>") == true)
+        XCTAssert(logger.log("Default: \(cardNumber)")?.match(cardNumber) == true)
+        XCTAssert(logger.log("Public: \(cardNumber, privacy: .public)")?.match(cardNumber) == true)
+        XCTAssert(logger.log("Private: \(cardNumber, privacy: .private)")?.match("<private>") == true)
+        XCTAssert(logger.log("Private hash: \(cardNumber, privacy: .private(mask: .hash))")?.match(cardNumber) == false)
+        XCTAssert(logger.log("Private random: \(cardNumber, privacy: .private(mask: .random))")?.match(cardNumber) == false)
+        XCTAssert(logger.log("Private redact: \(cardNumber, privacy: .private(mask: .redact))")?.match("0000 0000 0000 0000") == true)
+        XCTAssert(logger.log("Private shuffle: \(cardNumber, privacy: .private(mask: .shuffle))")?.match(cardNumber) == false)
+        XCTAssert(logger.log("Private partial: \(cardNumber, privacy: .private(mask: .partial(first: 1, last: 4)))")?.match("1\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*3456") == true)
+        XCTAssert(logger.log("Private custom: \(cardNumber, privacy: .private(mask: .custom(value: "<null>")))")?.match("<null>") == true)
     }
 }
 

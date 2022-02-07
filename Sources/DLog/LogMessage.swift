@@ -23,20 +23,16 @@
 //  THE SOFTWARE.
 //
 
+
 import Foundation
 
-fileprivate extension String {
-    func replaceCharactersFromSet(characterSet: CharacterSet, replacementString: String) -> String {
-        return components(separatedBy: characterSet).joined(separator: replacementString)
-    }
-}
 
 public enum LogPrivacy {
     public enum Mask {
         case hash
+        case random
         case redact
         case shuffle
-        case random
         case partial(first: Int, last: Int)
         case custom(value: String)
     }
@@ -60,28 +56,55 @@ public class LogStringInterpolation: StringInterpolationProtocol {
         output.append(literal)
     }
     
-    static let lettersAndDigits: CharacterSet = .letters.union(.decimalDigits)
+    static let letters: [Character] = {
+        let lower = (Unicode.Scalar("a").value...Unicode.Scalar("z").value)
+        let upper = (Unicode.Scalar("A").value...Unicode.Scalar("Z").value)
+        return [lower, upper].joined()
+            .compactMap(UnicodeScalar.init)
+            .map(Character.init)
+    }()
+    
+    static let digits: [Character] = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+    
+//    static let symbols: [Character] = ["!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "-", "_", "=", "+",
+//                                       "[", "{", "]", "}", "\\", "|",
+//                                       ";", ":", "'", "\"",
+//                                       ",", "<", ".", ">", "/", "?"]
     
     static func redact(_ text: String) -> String {
-        text
-            .replaceCharactersFromSet(characterSet: .letters, replacementString: "X")
-            .replaceCharactersFromSet(characterSet: .decimalDigits, replacementString: "0")
-            .replaceCharactersFromSet(characterSet: lettersAndDigits.inverted, replacementString: "?")
+        let count = text.count
+        guard count > 0 else {
+            return text
+        }
+        
+        var array = Array(text)
+        for i in 0...count-1 {
+            if array[i].isLetter {
+                array[i] = "X"
+            }
+            else if array[i].isNumber {
+                array[i] = "0"
+            }
+        }
+        return String(array)
     }
     
     static func partial(_ text: String, first: Int, last: Int) -> String {
         let count = text.count
-        guard count > 1 else {
+        guard count > 0 else {
             return text
         }
         
-        guard count > first + last else {
+        let f = first > 0 ? first : 0
+        let l = last > 0 ? last : 0
+        
+        guard count > f + l else {
             return String(repeating: "*", count: count)
         }
         
-        let start = text.index(text.startIndex, offsetBy: first)
-        let end = text.index(text.endIndex, offsetBy: -(last + 1))
-        let replacement = String(repeating: "*", count: count - (first + last))
+        let start = text.index(text.startIndex, offsetBy: f)
+        let end = text.index(text.endIndex, offsetBy: -(l + 1))
+        let replacement = String(repeating: "*", count: count - (f + l))
         return text.replacingCharacters(in: start...end, with: replacement)
     }
     
@@ -105,48 +128,28 @@ public class LogStringInterpolation: StringInterpolationProtocol {
             .joined(separator: " ")
     }
     
-    static let letters: [Character] = {
-        (Unicode.Scalar("a").value...Unicode.Scalar("z").value)
-            .compactMap(UnicodeScalar.init)
-            .map(Character.init)
-    }()
-    static let decimalDigits: [Character] = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
-    static let symbols: [Character] = ["!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "-", "_", "=", "+",
-                                       "[", "{", "]", "}", "\\", "|",
-                                       ";", ":", "'", "\"",
-                                       ",", "<", ".", ">", "/", "?"]
-    
     static func random(_ text: String) -> String {
-        text.components(separatedBy: .whitespacesAndNewlines)
-            .map {
-                let count = $0.count
-                guard count > 1 else {
-                    return $0
-                }
-                
-                var array = Array($0)
-                for i in 0...count-1 {
-                    guard let scalar = Unicode.Scalar(array[i].unicodeScalars.map { $0.value }.reduce(0, +)) else {
-                        continue
-                    }
-                    
-                    if CharacterSet.letters.contains(scalar) {
-                        array[i] = letters.randomElement()!
-                    }
-                    else if CharacterSet.decimalDigits.contains(scalar) {
-                        array[i] = decimalDigits.randomElement()!
-                    }
-                    else {
-                        array[i] = symbols.randomElement()!
-                    }
-                }
-                return String(array)
+        let count = text.count
+        guard count > 0 else {
+            return text
+        }
+        
+        var array = Array(text)
+        for i in 0...count-1 {
+            if array[i].isLetter {
+                array[i] = letters.randomElement()!
             }
-            .joined(separator: " ")
+            else if array[i].isNumber {
+                array[i] = digits.randomElement()!
+            }
+            //else {
+            //    array[i] = symbols.randomElement()!
+            //}
+        }
+        return String(array)
     }
     
     public func appendInterpolation<T>(_ arg: T, privacy: LogPrivacy = .public) where T: CustomStringConvertible {
-        
         var text = arg.description
         
         switch privacy {
@@ -186,7 +189,6 @@ public class LogStringInterpolation: StringInterpolationProtocol {
     }
 }
 
-@objc
 public class LogMessage: NSObject, ExpressibleByStringLiteral, ExpressibleByStringInterpolation {
     
     private var _description: String

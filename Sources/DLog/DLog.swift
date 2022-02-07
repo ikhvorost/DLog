@@ -152,33 +152,33 @@ public class DLog: LogProtocol {
 		out.intervalEnd(interval: interval, scopes: scopes)
 	}
 
-	func log(message: @escaping () -> LogMessage, type: LogType, category: String, scope: LogScope?, config: LogConfig?, file: String, function: String, line: UInt) -> String? {
+    func log(message: @escaping () -> LogMessage, type: LogType, params: LogParams, file: String, function: String, line: UInt) -> String? {
         guard let out = output else { return nil }
 
-        precondition(params.config != nil)
+        precondition(self.params.config != nil)
         
 		let item = LogItem(
-			category: category,
-			scope: scope,
+            category: params.category,
+            scope: params.scope,
 			type: type,
 			file: file,
 			funcName: function,
 			line: line,
             message: message,
-            config: config ?? params.config!)
+            config: params.config ?? self.params.config!)
 		return out.log(item: item, scopes: scopes)
 	}
 
-	func scope(name: @escaping () -> LogMessage, category: String, config: LogConfig?, file: String, function: String, line: UInt, closure: ((LogScope) -> Void)?) -> LogScope {
-        precondition(params.config != nil)
+	func scope(name: @escaping () -> LogMessage, params: LogParams, file: String, function: String, line: UInt, closure: ((LogScope) -> Void)?) -> LogScope {
+        precondition(self.params.config != nil)
         
         let scope = LogScope(logger: self,
-							 category: category,
+                             category: params.category,
 							 file: file,
 							 funcName: function,
 							 line: line,
 							 name: name,
-                             config: config ?? params.config!)
+                             config: params.config ?? self.params.config!)
 
 		if let block = closure {
 			scope.enter()
@@ -189,18 +189,18 @@ public class DLog: LogProtocol {
 		return scope
 	}
 
-	func interval(name: String, staticName: StaticString?, category: String, scope: LogScope?, config: LogConfig?, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
-        precondition(params.config != nil)
+	func interval(name: String, staticName: StaticString?, params: LogParams, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
+        precondition(self.params.config != nil)
         
         let interval = LogInterval(logger: self,
-                                   category: category,
-                                   scope: scope,
+                                   category: params.category,
+                                   scope: params.scope,
                                    name: name,
                                    staticName: staticName,
                                    file: file,
                                    funcName: function,
                                    line: line,
-                                   config: config ?? params.config!)
+                                   config: params.config ?? self.params.config!)
 		
 		if let block = closure {
 			interval.begin()
