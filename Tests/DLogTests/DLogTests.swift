@@ -488,16 +488,39 @@ final class DLogTests: XCTestCase {
         let logger = DLog()
         
         let cardNumber = "1234 5678 9012 3456"
+        let greeting = "Hello World!"
         
         XCTAssert(logger.log("Default: \(cardNumber)")?.match(cardNumber) == true)
         XCTAssert(logger.log("Public: \(cardNumber, privacy: .public)")?.match(cardNumber) == true)
+        
         XCTAssert(logger.log("Private: \(cardNumber, privacy: .private)")?.match("<private>") == true)
-        XCTAssert(logger.log("Private hash: \(cardNumber, privacy: .private(mask: .hash))")?.match(cardNumber) == false)
+        
+        XCTAssert(logger.log("Private hash: \(cardNumber, privacy: .private(mask: .hash))")?.match("[0-9a-fA-F]{8}") == true)
+        
         XCTAssert(logger.log("Private random: \(cardNumber, privacy: .private(mask: .random))")?.match(cardNumber) == false)
+        XCTAssert(logger.log("Private random: \(greeting, privacy: .private(mask: .random))")?.match(greeting) == false)
+        
         XCTAssert(logger.log("Private redact: \(cardNumber, privacy: .private(mask: .redact))")?.match("0000 0000 0000 0000") == true)
+        XCTAssert(logger.log("Private redact: \(greeting, privacy: .private(mask: .redact))")?.match("XXXXX XXXXX!") == true)
+        
         XCTAssert(logger.log("Private shuffle: \(cardNumber, privacy: .private(mask: .shuffle))")?.match(cardNumber) == false)
-        XCTAssert(logger.log("Private partial: \(cardNumber, privacy: .private(mask: .partial(first: 1, last: 4)))")?.match("1\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*3456") == true)
+        XCTAssert(logger.log("Private shuffle: \(greeting, privacy: .private(mask: .shuffle))")?.match(greeting) == false)
+        
         XCTAssert(logger.log("Private custom: \(cardNumber, privacy: .private(mask: .custom(value: "<null>")))")?.match("<null>") == true)
+        
+        XCTAssert(logger.log("Private partial: \(cardNumber, privacy: .private(mask: .partial(first: -1, last: -2)))")?.match("[\\*]{19}") == true)
+        XCTAssert(logger.log("Private partial: \(cardNumber, privacy: .private(mask: .partial(first: 0, last: 0)))")?.match("[\\*]{19}") == true)
+        XCTAssert(logger.log("Private partial: \(cardNumber, privacy: .private(mask: .partial(first: 1, last: 4)))")?.match("1[\\*]{14}3456") == true)
+        XCTAssert(logger.log("Private partial: \(cardNumber, privacy: .private(mask: .partial(first: 10, last: 10)))")?.match(cardNumber) == true)
+        
+        XCTAssert(logger.log("Private reduce: \(cardNumber, privacy: .private(mask: .reduce(length: -3)))")?.match("...") == true)
+        XCTAssert(logger.log("Private reduce: \(cardNumber, privacy: .private(mask: .reduce(length: 0)))")?.match("...") == true)
+        XCTAssert(logger.log("Private reduce: \(cardNumber, privacy: .private(mask: .reduce(length: 1)))")?.match("...6") == true)
+        XCTAssert(logger.log("Private reduce: \(cardNumber, privacy: .private(mask: .reduce(length: 2)))")?.match("1...6") == true)
+        XCTAssert(logger.log("Private reduce: \(cardNumber, privacy: .private(mask: .reduce(length: 7)))")?.match("123...3456") == true)
+        XCTAssert(logger.log("Private reduce: \(cardNumber, privacy: .private(mask: .reduce(length: 100)))")?.match(cardNumber) == true)
+        XCTAssert(logger.log("Private reduce: \(greeting, privacy: .private(mask: .reduce(length: 6)))")?.match("Hel...ld!") == true)
+        
     }
 }
 
