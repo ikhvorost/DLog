@@ -555,6 +555,10 @@ final class InterpolationTests: XCTestCase {
         
         // Privacy
         XCTAssert(logger.log("\(date, format: .dateStyle(date: .short), privacy: .private(mask: .redact))")?.match("0/00/00") == true)
+        
+        // Locale
+        let locale = Locale(identifier: "en_GB")
+        XCTAssert(logger.log("\(date, format: .dateStyle(date: .medium, time: .short, locale: locale))")?.match("16 Feb 2022 at 17:42") == true)
     }
     
     func test_NumberFormat() {
@@ -571,6 +575,10 @@ final class InterpolationTests: XCTestCase {
         
         // Privacy
         XCTAssert(logger.log("\(number, format: .number(style: .decimal), privacy: .private(mask: .redact))")?.match("0,000,000,000") == true)
+        
+        // Locale
+        let locale = Locale(identifier: "en_GB")
+        XCTAssert(logger.log("\(number, format: .number(style: .currency, locale: locale))")?.match("\\£1,234,567,890\\.00") == true)
     }
     
     func test_ByteCountFormat() {

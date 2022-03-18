@@ -28,20 +28,17 @@ import Foundation
 
 
 public enum LogDateFormatter {
-    case dateStyle(date: DateFormatter.Style = .none, time: DateFormatter.Style = .none)
+    case dateStyle(date: DateFormatter.Style = .none, time: DateFormatter.Style = .none, locale: Locale = Locale(identifier: "en_US"))
     case dateCustom(format: String)
     
-    private static var formatter: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US")
-        return f
-    }()
+    private static let formatter = DateFormatter()
     
     func string(from date: Date) -> String {
         synchronized(Self.formatter) {
             switch self {
 
-            case let .dateStyle(dateStyle, timeStyle):
+            case let .dateStyle(dateStyle, timeStyle, locale):
+                Self.formatter.locale = locale
                 Self.formatter.dateStyle = dateStyle
                 Self.formatter.timeStyle = timeStyle
                 return Self.formatter.string(from: date)
@@ -56,19 +53,16 @@ public enum LogDateFormatter {
 
 
 public enum LogNumberFormatter {
-    case number(style: NumberFormatter.Style)
+    case number(style: NumberFormatter.Style, locale: Locale = Locale(identifier: "en_US"))
     
-    private static var formatter: NumberFormatter = {
-        let f = NumberFormatter()
-        f.locale = Locale(identifier: "en_US")
-        return f
-    }()
+    private static let formatter = NumberFormatter()
     
     func string(from number: Int) -> String {
         synchronized(Self.formatter) {
             switch self {
                 
-            case let .number(style):
+            case let .number(style, locale):
+                Self.formatter.locale = locale
                 Self.formatter.numberStyle = style
                 return Self.formatter.string(from: NSNumber(value: number)) ?? ""
             }
@@ -79,7 +73,7 @@ public enum LogNumberFormatter {
 public enum LogByteCountFormatter {
     case byteCount(countStyle: ByteCountFormatter.CountStyle = .file, allowedUnits: ByteCountFormatter.Units = .useMB)
     
-    private static var formatter = ByteCountFormatter()
+    private static let formatter = ByteCountFormatter()
     
     func string(from byteCount: Int64) -> String {
         synchronized(Self.formatter) {
