@@ -483,12 +483,16 @@ final class DLogTests: XCTestCase {
         XCTAssert(read_stdout { viewLogger.interval("signpost") { delay() }}?.match(#"\#(Sign) \#(Time) \[VIEW\] \#(IntervalTag) \#(Location) signpost: \#(Interval)"#) == true)
         XCTAssert(read_stdout { netLogger.interval("signpost") { delay() }}?.match(#"> \#(Time) \#(Level) \[NET\] \#(IntervalTag) signpost: \{ total: \#(SECS) \}"#) == true)
     }
+}
+
+final class InterpolationTests: XCTestCase {
     
     func test_Privacy() {
         let logger = DLog()
         
         let cardNumber = "1234 5678 9012 3456"
         let greeting = "Hello World!"
+        let number = 1234567890
         
         XCTAssert(logger.log("Default: \(cardNumber)")?.match(cardNumber) == true)
         XCTAssert(logger.log("Public: \(cardNumber, privacy: .public)")?.match(cardNumber) == true)
@@ -521,6 +525,75 @@ final class DLogTests: XCTestCase {
         XCTAssert(logger.log("Private reduce: \(cardNumber, privacy: .private(mask: .reduce(length: 100)))")?.match(cardNumber) == true)
         XCTAssert(logger.log("Private reduce: \(greeting, privacy: .private(mask: .reduce(length: 6)))")?.match("Hel...ld!") == true)
         
+        
+        XCTAssert(logger.log("Private reduce: \(number, privacy: .private(mask: .reduce(length: 6)))")?.match("123...890") == true)
+    }
+    
+    func test_DateFormat() {
+        let logger = DLog()
+        
+        let date = Date(timeIntervalSince1970: 1645026131) // 2022-02-16 15:42:11 +0000
+        
+        // Date only
+        XCTAssert(logger.log("\(date, format: .dateStyle(date: .short))")?.match("2/16/22") == true)
+        XCTAssert(logger.log("\(date, format: .dateStyle(date: .medium))")?.match("Feb 16, 2022") == true)
+        XCTAssert(logger.log("\(date, format: .dateStyle(date: .long))")?.match("February 16, 2022") == true)
+        XCTAssert(logger.log("\(date, format: .dateStyle(date: .full))")?.match("Wednesday, February 16, 2022") == true)
+        
+        // Time only
+        XCTAssert(logger.log("\(date, format: .dateStyle(time: .short))")?.match("5:42 PM") == true)
+        XCTAssert(logger.log("\(date, format: .dateStyle(time: .medium))")?.match("5:42:11 PM") == true)
+        XCTAssert(logger.log("\(date, format: .dateStyle(time: .long))")?.match("5:42:11 PM GMT\\+2") == true)
+        XCTAssert(logger.log("\(date, format: .dateStyle(time: .full))")?.match("5:42:11 PM Eastern European Standard Time") == true)
+        
+        // Both
+        XCTAssert(logger.log("\(date, format: .dateStyle())")?.match("22") == false)
+        XCTAssert(logger.log("\(date, format: .dateStyle(date: .medium, time: .short))")?.match("Feb 16, 2022 at 5:42 PM") == true)
+
+        // Custom
+        XCTAssert(logger.log("\(date, format: .dateCustom(format: "dd-MM-yyyy"))")?.match("16-02-2022") == true)
+        
+        // Privacy
+        XCTAssert(logger.log("\(date, format: .dateStyle(date: .short), privacy: .private(mask: .redact))")?.match("0/00/00") == true)
+    }
+    
+    func test_NumberFormat() {
+        let logger = DLog()
+        
+        let number = 1_234_567_890
+        
+        XCTAssert(logger.log("\(number, format: .number(style: .none))")?.match("\(number)") == true)
+        XCTAssert(logger.log("\(number, format: .number(style: .decimal))")?.match("1,234,567,890") == true)
+        XCTAssert(logger.log("\(number, format: .number(style: .currency))")?.match("\\$1,234,567,890\\.00") == true)
+        XCTAssert(logger.log("\(number, format: .number(style: .percent))")?.match("123,456,789,000%") == true)
+        XCTAssert(logger.log("\(number, format: .number(style: .scientific))")?.match("1.23456789E9") == true)
+        XCTAssert(logger.log("\(number, format: .number(style: .spellOut))")?.match("one billion two hundred thirty-four million five hundred sixty-seven thousand eight hundred ninety") == true)
+        
+        // Privacy
+        XCTAssert(logger.log("\(number, format: .number(style: .decimal), privacy: .private(mask: .redact))")?.match("0,000,000,000") == true)
+    }
+    
+    func test_ByteCountFormat() {
+        let logger = DLog()
+        
+        let value: Int64 = 20_234_557
+        
+        // Count style
+        XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .file))")?.match("20,2 MB") == true)
+        XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .memory))")?.match("19,3 MB") == true)
+        XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .decimal))")?.match("20,2 MB") == true)
+        XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .binary))")?.match("19,3 MB") == true)
+        
+        // Allowed Units
+        XCTAssert(logger.log("\(value, format: .byteCount(allowedUnits: .useBytes))")?.match("20 234 557 bytes") == true)
+        XCTAssert(logger.log("\(value, format: .byteCount(allowedUnits: .useKB))")?.match("20 235 KB") == true)
+        XCTAssert(logger.log("\(value, format: .byteCount(allowedUnits: .useGB))")?.match("0,02 GB") == true)
+        
+        // Both
+        XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .memory, allowedUnits: .useGB))")?.match("0,02 GB") == true)
+        
+        // Privacy
+        XCTAssert(logger.log("\(value, format: .byteCount(allowedUnits: .useMB), privacy: .private(mask: .redact))")?.match("00,0 XX") == true)
     }
 }
 

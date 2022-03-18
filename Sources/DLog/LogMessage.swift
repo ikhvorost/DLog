@@ -38,10 +38,27 @@ public class LogStringInterpolation: StringInterpolationProtocol {
         output.append(literal)
     }
     
-    public func appendInterpolation<T>(_ arg: T, privacy: LogPrivacy = .public) where T: CustomStringConvertible {
-        let text = arg.description
-        let mask = privacy.mask(text)
-        output.append(mask)
+    public func appendInterpolation<T: CustomStringConvertible>(_ arg: T, privacy: LogPrivacy = .public) {
+        let text = privacy.mask(arg.description)
+        output.append(text)
+    }
+    
+    public func appendInterpolation(_ date: Date, format: LogDateFormatter, privacy: LogPrivacy = .public) {
+        let text = format.string(from: date)
+        let masked = privacy.mask(text)
+        output.append(masked)
+    }
+    
+    public func appendInterpolation(_ number: Int, format: LogNumberFormatter, privacy: LogPrivacy = .public) {
+        let text = format.string(from: number)
+        let masked = privacy.mask(text)
+        output.append(masked)
+    }
+    
+    public func appendInterpolation(_ byteCount: Int64, format: LogByteCountFormatter, privacy: LogPrivacy = .public) {
+        let text = format.string(from: byteCount)
+        let masked = privacy.mask(text)
+        output.append(masked)
     }
 }
 
@@ -51,16 +68,12 @@ public class LogMessage: NSObject, ExpressibleByStringLiteral, ExpressibleByStri
     
     public override var description: String { _description }
 
+    @objc
     public required init(stringLiteral value: String) {
         _description = value
     }
 
     public required init(stringInterpolation: LogStringInterpolation) {
         _description = stringInterpolation.output
-    }
-    
-    @objc
-    public static func message(_ value: String) -> Self {
-        Self.init(stringLiteral: value)
     }
 }
