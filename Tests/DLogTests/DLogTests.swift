@@ -5,6 +5,13 @@ import DLog
 
 // MARK: - Extensions
 
+
+// Locale: en_US
+extension NSLocale {
+    @objc
+    static let currentLocale = NSLocale(localeIdentifier: "en_US")
+}
+
 /// String errors
 extension String : LocalizedError {
 	public var errorDescription: String? { return self }
@@ -587,21 +594,21 @@ final class InterpolationTests: XCTestCase {
         let value: Int64 = 20_234_557
         
         // Count style
-        XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .file))")?.match("20,2 MB") == true)
-        XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .memory))")?.match("19,3 MB") == true)
-        XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .decimal))")?.match("20,2 MB") == true)
-        XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .binary))")?.match("19,3 MB") == true)
+        XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .file))")?.match("20.2 MB") == true)
+        XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .memory))")?.match("19.3 MB") == true)
+        XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .decimal))")?.match("20.2 MB") == true)
+        XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .binary))")?.match("19.3 MB") == true)
         
         // Allowed Units
-        XCTAssert(logger.log("\(value, format: .byteCount(allowedUnits: .useBytes))")?.match("20 234 557 bytes") == true)
-        XCTAssert(logger.log("\(value, format: .byteCount(allowedUnits: .useKB))")?.match("20 235 KB") == true)
-        XCTAssert(logger.log("\(value, format: .byteCount(allowedUnits: .useGB))")?.match("0,02 GB") == true)
+        XCTAssert(logger.log("\(value, format: .byteCount(allowedUnits: .useBytes))")?.match("20,234,557 bytes") == true)
+        XCTAssert(logger.log("\(value, format: .byteCount(allowedUnits: .useKB))")?.match("20,235 KB") == true)
+        XCTAssert(logger.log("\(value, format: .byteCount(allowedUnits: .useGB))")?.match("0.02 GB") == true)
         
         // Both
-        XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .memory, allowedUnits: .useGB))")?.match("0,02 GB") == true)
+        XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .memory, allowedUnits: .useGB))")?.match("0.02 GB") == true)
         
         // Privacy
-        XCTAssert(logger.log("\(value, format: .byteCount(allowedUnits: .useMB), privacy: .private(mask: .redact))")?.match("00,0 XX") == true)
+        XCTAssert(logger.log("\(value, format: .byteCount(allowedUnits: .useMB), privacy: .private(mask: .redact))")?.match("00.0 XX") == true)
     }
 }
 
