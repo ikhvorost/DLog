@@ -12,6 +12,13 @@ extension NSLocale {
     static let currentLocale = NSLocale(localeIdentifier: "en_US")
 }
 
+// Time zone: GMT
+// NSTimeZone.default = TimeZone(abbreviation: "GMT")!
+extension NSTimeZone {
+    @objc
+    static let defaultTimeZone = TimeZone(abbreviation: "GMT")
+}
+
 /// String errors
 extension String : LocalizedError {
 	public var errorDescription: String? { return self }
@@ -540,7 +547,7 @@ final class InterpolationTests: XCTestCase {
         let logger = DLog()
         
         let date = Date(timeIntervalSince1970: 1645026131) // 2022-02-16 15:42:11 +0000
-        
+
         // Date only
         XCTAssert(logger.log("\(date, format: .dateStyle(date: .short))")?.match("2/16/22") == true)
         XCTAssert(logger.log("\(date, format: .dateStyle(date: .medium))")?.match("Feb 16, 2022") == true)
@@ -548,14 +555,14 @@ final class InterpolationTests: XCTestCase {
         XCTAssert(logger.log("\(date, format: .dateStyle(date: .full))")?.match("Wednesday, February 16, 2022") == true)
         
         // Time only
-        XCTAssert(logger.log("\(date, format: .dateStyle(time: .short))")?.match("5:42 PM") == true)
-        XCTAssert(logger.log("\(date, format: .dateStyle(time: .medium))")?.match("5:42:11 PM") == true)
-        XCTAssert(logger.log("\(date, format: .dateStyle(time: .long))")?.match("5:42:11 PM GMT\\+2") == true)
-        XCTAssert(logger.log("\(date, format: .dateStyle(time: .full))")?.match("5:42:11 PM Eastern European Standard Time") == true)
+        XCTAssert(logger.log("\(date, format: .dateStyle(time: .short))")?.match("3:42 PM") == true)
+        XCTAssert(logger.log("\(date, format: .dateStyle(time: .medium))")?.match("3:42:11 PM") == true)
+        XCTAssert(logger.log("\(date, format: .dateStyle(time: .long))")?.match("3:42:11 PM GMT") == true)
+        XCTAssert(logger.log("\(date, format: .dateStyle(time: .full))")?.match("3:42:11 PM Greenwich Mean Time") == true)
         
         // Both
         XCTAssert(logger.log("\(date, format: .dateStyle())")?.match("22") == false)
-        XCTAssert(logger.log("\(date, format: .dateStyle(date: .medium, time: .short))")?.match("Feb 16, 2022 at 5:42 PM") == true)
+        XCTAssert(logger.log("\(date, format: .dateStyle(date: .medium, time: .short))")?.match("Feb 16, 2022 at 3:42 PM") == true)
 
         // Custom
         XCTAssert(logger.log("\(date, format: .dateCustom(format: "dd-MM-yyyy"))")?.match("16-02-2022") == true)
@@ -565,7 +572,7 @@ final class InterpolationTests: XCTestCase {
         
         // Locale
         let locale = Locale(identifier: "en_GB")
-        XCTAssert(logger.log("\(date, format: .dateStyle(date: .medium, time: .short, locale: locale))")?.match("16 Feb 2022 at 17:42") == true)
+        XCTAssert(logger.log("\(date, format: .dateStyle(date: .medium, time: .short, locale: locale))")?.match("16 Feb 2022 at 15:42") == true)
     }
     
     func test_NumberFormat() {
