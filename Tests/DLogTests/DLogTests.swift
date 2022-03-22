@@ -617,6 +617,23 @@ final class InterpolationTests: XCTestCase {
         // Privacy
         XCTAssert(logger.log("\(value, format: .byteCount(allowedUnits: .useMB), privacy: .private(mask: .redact))")?.match("00.0 XX") == true)
     }
+    
+    func test_FormatConcurent() {
+        let logger = DLog()
+        
+        for _ in 0...20 {
+            DispatchQueue.global().async {
+                let date = Date(timeIntervalSince1970: 1645026131) // 2022-02-16 15:42:11 +0000
+                XCTAssert(logger.log("\(date, format: .dateStyle(date: .short))")?.match("2/16/22") == true)
+                
+                let number = 1_234_567_890
+                XCTAssert(logger.log("\(number, format: .number(style: .none))")?.match("\(number)") == true)
+                
+                let value: Int64 = 20_234_557
+                XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .file))")?.match("20.2 MB") == true)
+            }
+        }
+    }
 }
 
 final class IntervalTests: XCTestCase {
