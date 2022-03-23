@@ -92,8 +92,9 @@ public class LogProtocol: NSObject {
                       addresses: [NSNumber] = Thread.callStackReturnAddresses) -> String? {
         let msg: () -> LogMessage = {
             precondition(self.params.logger.params.config != nil)
+            
             let traceConfig = self.params.config?.traceConfig ?? self.params.logger.params.config!.traceConfig
-            let info = traceInfo(title: message()?.description,
+            let info = traceInfo(title: message()?.text,
                                  function: function,
                                  addresses: addresses.dropFirst(),
                                  traceConfig: traceConfig)

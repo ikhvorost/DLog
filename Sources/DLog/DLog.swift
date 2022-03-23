@@ -49,14 +49,30 @@ public class DLog: LogProtocol {
 	/// to categorize and filter related log messages.
 	///
 	/// 	let logger = DLog()
-	/// 	let netLogger = logger["NET"]
-	/// 	let netLogger.log("Hello Net!")
+	///     let netLogger = logger["NET"]
+	///     let netLogger.log("Hello Net!")
 	///
+    /// - Parameters:
+    ///     - name: Name of category.
 	@objc
 	public subscript(name: String) -> LogCategory {
 		LogCategory(logger: self, category: name)
 	}
     
+    /// Creates a logger object with a configuration that assigns log messages to a specified category.
+    ///
+    /// You can define category name to differentiate unique areas and parts of your app and DLog uses this value
+    /// to categorize and filter related log messages.
+    ///
+    ///     var config = LogConfig()
+    ///     config.sign = ">"
+    ///
+    ///     let logger = DLog()
+    ///     let netLogger = logger.category(name: "NET", config: config)
+    ///
+    /// - Parameters:
+    ///     - name: Name of category.
+    ///     - config: Configuration of category.
     public func category(name: String, config: LogConfig? = nil) -> LogCategory {
         LogCategory(logger: self, category: name, config: config)
     }

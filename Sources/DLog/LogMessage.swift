@@ -26,35 +26,64 @@
 
 import Foundation
 
-
+/// Represents a string interpolation passed to the logger.
+///
+/// - Warning: Do not call this function directly. It will be called automatically when interpolating
+/// a value of generic type in the string interpolations passed to the logger.
+///
 public class LogStringInterpolation: StringInterpolationProtocol {
-    var output = ""
+    fileprivate var output = ""
 
+    /// Creates an empty instance ready to be filled with string literal content.
     public required init(literalCapacity: Int, interpolationCount: Int) {
         output.reserveCapacity(literalCapacity * 2)
     }
 
+    /// Appends a literal segment to the interpolation.
     public func appendLiteral(_ literal: String) {
         output.append(literal)
     }
     
+    /// Defines interpolation for expressions of any type.
+    ///
+    /// - Parameters:
+    ///   - arg: The interpolated value of any type.
+    ///   - privacy: A privacy qualifier which is either private or public. Defaults to public.
     public func appendInterpolation<T: CustomStringConvertible>(_ arg: T, privacy: LogPrivacy = .public) {
         let text = privacy.mask(arg.description)
         output.append(text)
     }
     
+    /// Defines interpolation for expressions of date type.
+    ///
+    /// - Parameters:
+    ///   - date: A date value.
+    ///   - format: Format options for date.
+    ///   - privacy: A privacy qualifier which is either private or public. Defaults to public.
     public func appendInterpolation(_ date: Date, format: LogDateFormatter, privacy: LogPrivacy = .public) {
         let text = format.string(from: date)
         let masked = privacy.mask(text)
         output.append(masked)
     }
     
+    /// Defines interpolation for expressions of numbers.
+    ///
+    /// - Parameters:
+    ///   - number: A number value.
+    ///   - format: Format options for number.
+    ///   - privacy: A privacy qualifier which is either private or public. Defaults to public.
     public func appendInterpolation(_ number: Int, format: LogNumberFormatter, privacy: LogPrivacy = .public) {
         let text = format.string(from: number)
         let masked = privacy.mask(text)
         output.append(masked)
     }
     
+    /// Defines interpolation for expressions of byte count.
+    ///
+    /// - Parameters:
+    ///   - byteCount: A byte count value.
+    ///   - format: Format options for byte count.
+    ///   - privacy: A privacy qualifier which is either private or public. Defaults to public.
     public func appendInterpolation(_ byteCount: Int64, format: LogByteCountFormatter, privacy: LogPrivacy = .public) {
         let text = format.string(from: byteCount)
         let masked = privacy.mask(text)
@@ -62,18 +91,26 @@ public class LogStringInterpolation: StringInterpolationProtocol {
     }
 }
 
+/// An object that represents a log message.
+///
+/// Represents a message passed to the logger. This type should be created from a string
+/// interpolation or a string literal.
+///
+/// - Warning: Do not explicitly refer to this type. It will be implicitly created by the compiler
+/// when you pass a string interpolation to the logger.
+///
 public class LogMessage: NSObject, ExpressibleByStringLiteral, ExpressibleByStringInterpolation {
     
-    private var _description: String
+    var text: String
     
-    public override var description: String { _description }
-
+    /// Creates an instance initialized to the given string value.
     @objc
     public required init(stringLiteral value: String) {
-        _description = value
+        text = value
     }
 
+    /// Creates an instance of a log message from a string interpolation.
     public required init(stringInterpolation: LogStringInterpolation) {
-        _description = stringInterpolation.output
+        text = stringInterpolation.output
     }
 }

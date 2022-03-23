@@ -26,21 +26,60 @@
 
 import Foundation
 
-
+/// Privacy options for specifying privacy level of the interpolated expressions
+/// in the string interpolations passed to the logger.
 public enum LogPrivacy {
+    
+    /// Mask options for `private` privacy level.
     public enum Mask {
+        /// Hash a value in the logs.
         case hash
+        
+        /// Randomise a value in the logs.
         case random
+        
+        /// Redact a value in the logs.
         case redact
+        
+        /// Shuffle a value in the logs.
         case shuffle
+        
+        /// Replace a value with a custom string in the logs.
+        /// - Parameters:
+        ///   - value: A custom string.
         case custom(value: String)
+        
+        /// Reduce a value to a string with specified length in the logs.
+        /// - Parameters:
+        ///    - length: Length of an output string.
         case reduce(length: Int)
+        
+        /// Show parts of a value in the logs.
+        /// - Parameters:
+        ///    - first: Count of first visible characters.
+        ///    - last: Count of last visible characters.
         case partial(first: Int, last: Int)
     }
     
+    /// Sets the privacy level of an interpolated value to public.
+    ///
+    /// When the privacy level is public, the value will be displayed
+    /// normally without any redaction in the logs.
     case `public`
+    
+    /// Sets the privacy level of an interpolated value to private and
+    /// applies a `mask` to the interpolated value to redacted it.
+    ///
+    /// When the privacy level is private, the value will be redacted in the logs.
+    ///
+    /// - Parameters:
+    ///   - mask: Mask to use with the privacy option.
     case `private`(mask: Mask)
     
+    /// Sets the privacy level of an interpolated value to private.
+    ///
+    /// When the privacy level is private, the value will be redacted in the logs.
+    ///
     public static var `private`: Self {
         .private(mask: .custom(value: "<private>"))
     }

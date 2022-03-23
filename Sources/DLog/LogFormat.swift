@@ -26,9 +26,18 @@
 
 import Foundation
 
-
+/// Format options for date.
 public enum LogDateFormatter {
-    case dateStyle(date: DateFormatter.Style = .none, time: DateFormatter.Style = .none, locale: Locale = Locale(identifier: "en_US"))
+    /// Format date with style and locale.
+    /// - Parameters:
+    ///    - dateStyle: Format style for date.
+    ///    - timeStyle: Format style for time.
+    ///    - locale: The locale for the receiver.
+    case date(dateStyle: DateFormatter.Style = .none, timeStyle: DateFormatter.Style = .none, locale: Locale? = nil)
+    
+    /// Format date with a custom format string.
+    /// - Parameters:
+    ///    - format: Custom format string.
     case dateCustom(format: String)
     
     private static let formatter = DateFormatter()
@@ -37,7 +46,7 @@ public enum LogDateFormatter {
         synchronized(Self.formatter) {
             switch self {
 
-            case let .dateStyle(dateStyle, timeStyle, locale):
+            case let .date(dateStyle, timeStyle, locale):
                 Self.formatter.locale = locale
                 Self.formatter.dateStyle = dateStyle
                 Self.formatter.timeStyle = timeStyle
@@ -51,9 +60,13 @@ public enum LogDateFormatter {
     }
 }
 
-
+/// Format options for number.
 public enum LogNumberFormatter {
-    case number(style: NumberFormatter.Style, locale: Locale = Locale(identifier: "en_US"))
+    /// Format number with style and locale.
+    /// - Parameters:
+    ///   - style: Format style for number.
+    ///   - locale: The locale for the receiver.
+    case number(style: NumberFormatter.Style, locale: Locale? = nil)
     
     private static let formatter = NumberFormatter()
     
@@ -70,7 +83,12 @@ public enum LogNumberFormatter {
     }
 }
 
+/// Format options for byte count.
 public enum LogByteCountFormatter {
+    /// Format byte count with style and units.
+    /// - Parameters:
+    ///  - countStyle: Style of counts.
+    ///  - allowedUnits: Units to display.
     case byteCount(countStyle: ByteCountFormatter.CountStyle = .file, allowedUnits: ByteCountFormatter.Units = .useMB)
     
     private static let formatter = ByteCountFormatter()

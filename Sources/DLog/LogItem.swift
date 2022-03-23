@@ -89,17 +89,17 @@ public class LogItem: LogProtocol {
 	/// The line number of code this log message originates from.
     @objc public let line: UInt
 		
-	/// The text of this log message.
-    @objc var message: (() -> LogMessage)!
+	@objc var message: (() -> LogMessage)!
     
+    /// The text of this log message.
     @objc public var text: String {
         precondition(message != nil)
-        return message().description
+        return message().text
     }
 	
 	let config: LogConfig
     
-    init(category: String, scope: LogScope?, type: LogType, file: String, funcName: String, line: UInt, message: (() -> LogMessage)!, config: LogConfig) {
+    init(category: String, scope: LogScope?, type: LogType, file: String, funcName: String, line: UInt, message: (() -> LogMessage)?, config: LogConfig) {
 		self.category = category
 		self.scope = scope
 		self.type = type
