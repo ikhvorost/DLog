@@ -128,6 +128,13 @@ static void testAll(LogProtocol* logger, NSString *category) {
     testAll(logger, nil);
 }
 
+- (void)test_LogWithOutputs {
+    let logger = [[DLog alloc] initWithOutputs:@[]];
+    XCTAssertNotNil(logger);
+    
+    XCTAssert([read_stdout(^{ logger.trace(); }) match: @"test_LogWithOutputs"]);
+}
+
 - (void)test_Category {
     let logger = [DLog new];
     XCTAssertNotNil(logger);

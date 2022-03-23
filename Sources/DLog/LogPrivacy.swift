@@ -211,6 +211,7 @@ public enum LogPrivacy {
             return text
             
         case .private(let mask):
+            // Debugger
             guard Self.isDebugger else {
                 return text
             }

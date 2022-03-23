@@ -109,16 +109,17 @@ public class DLog: LogProtocol {
     ///
     @objc
     public convenience init(outputs: [LogOutput]) {
-        let output: LogOutput? = {
-            if outputs.count == 0 {
-                return .stdout
-            }
-            else {
-                return outputs.count == 1
-                    ? outputs.first
-                    : outputs.reduce(.textPlain, =>)
-            }
-        }()
+        var output: LogOutput?
+        
+        if outputs.count == 0 {
+            output = .stdout
+        }
+        else {
+            output = outputs.count == 1
+                ? outputs.first
+                : outputs.reduce(.textPlain, =>)
+        }
+
         self.init(output)
     }
     

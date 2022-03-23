@@ -77,7 +77,7 @@ public enum LogNumberFormatter {
             case let .number(style, locale):
                 Self.formatter.locale = locale
                 Self.formatter.numberStyle = style
-                return Self.formatter.string(from: NSNumber(value: number)) ?? ""
+                return Self.formatter.string(from: NSNumber(value: number))!
             }
         }
     }
