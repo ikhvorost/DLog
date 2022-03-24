@@ -20,7 +20,7 @@ DLog is the development logger that supports emoji and colored text output, oslo
 - [Pipeline](#pipeline)
 - [Filter](#filter)
 - [.disabled](#disabled)
-- [Configuration](#configuration): [TraceConfiguration](#traceconfiguration), [ThreadConfiguration](#threadconfiguration), [StackConfiguration](#stackconfiguration), [IntervalConfiguration](#intervalconfiguration)
+- [Configuration](#configuration): [TraceConfig](#traceconfig), [ThreadConfig](#threadconfig), [StackConfig](#stackconfig), [IntervalConfig](#intervalconfig)
 - [Objective-C](#objective-c)
 - [Installation](#installation)
 - [License](#license)
@@ -914,7 +914,7 @@ signpost code
 
 ## Configuration
 
-You can customize the logger's output by setting which info from the logger should be used. `LogConfiguration` is a root struct to configure the logger which contains common settings for log messages.
+You can customize the logger's output by setting which info from the logger should be used. `LogConfig` is a root struct to configure the logger which contains common settings for log messages.
 
 For instance you can change the default view of log messages which includes a start sign, category, log type and location:
 
@@ -932,11 +932,11 @@ Outputs:
 To new appearance that includes your start sign and timestamp only:
 
 ```swift
-var config = DLog.defaultConfiguration // Or: var config = LogConfiguration()
+var config = LogConfig()
 config.sign = ">"
 config.options = [.sign, .time]
 
-let logger = DLog(configuration: config)
+let logger = DLog(config: config)
 
 logger.info("Info message")
 ```
@@ -947,7 +947,7 @@ Outputs:
 > 00:01:24.380 Info message
 ```
 
-### `TraceConfiguration`
+### `TraceConfig`
 
 It contains configuration values regarding to the `trace` method which includes trace view options, thread and stack configurations.
 
@@ -972,10 +972,10 @@ Outputs:
 But you can change it to show a function and queue names:
 
 ```swift
-var config = DLog.defaultConfiguration
-config.traceConfiguration.options = [.function, .queue]
+var config = LogConfig()
+config.traceConfig.options = [.function, .queue]
 
-let logger = DLog(configuration: config)
+let logger = DLog(config: config)
 
 func doTest() {
     logger.trace()
@@ -990,15 +990,15 @@ Outputs:
 • 12:37:24.101 [DLOG] [TRACE] <DLog.swift:11> func: doTest(), queue: com.apple.main-thread
 ```
 
-#### `ThreadConfiguration`
+#### `ThreadConfig`
 
-The trace configuration has `threadConfiguration` property to change view options of thread info. For instance the logger can print the current QoS of threads.
+The trace configuration has `threadConfig` property to change view options of thread info. For instance the logger can print the current QoS of threads.
 
 ```swift
-var config = DLog.defaultConfiguration
-config.traceConfiguration.threadConfiguration.options = [.number, .qos]
+var config = LogConfig()
+config.traceConfig.threadConfig.options = [.number, .qos]
 
-let logger = DLog(configuration: config)
+let logger = DLog(config: config)
 
 func doTest() {
     logger.trace()
@@ -1018,21 +1018,18 @@ Outputs:
 • 13:01:32.910 [DLOG] [TRACE] <DLog.swift:9> func: doTest(), thread: { number: 3, qos: userInitiated }
 ```
 
-#### `StackConfiguration`
+#### `StackConfig`
 
-The `trace` method can output the call stack backtrace of the current thread at the moment this method was called. To enable this feature you should configure stack view options, style and depth with `stackConfiguration` property:
+The `trace` method can output the call stack backtrace of the current thread at the moment this method was called. To enable this feature you should configure stack view options, style and depth with `stackConfig` property:
 
 ```swift
-var configuration: LogConfiguration = {
-    var config = DLog.defaultConfiguration
-    config.traceConfiguration.options = [.stack]
-    config.traceConfiguration.stackConfiguration.options = [.symbols]
-    config.traceConfiguration.stackConfiguration.style = .column
-    config.traceConfiguration.stackConfiguration.depth = 3
-    return config
-}()
+var config = LogConfig()
+config.traceConfig.options = [.stack]
+config.traceConfig.stackConfig.options = [.symbols]
+config.traceConfig.stackConfig.style = .column
+config.traceConfig.stackConfig.depth = 3
 
-let logger = DLog(configuration: configuration)
+let logger = DLog(config: config)
 
 func third() {
     logger.trace()
@@ -1060,15 +1057,15 @@ Outputs:
 
 > NOTE: A full call stack backtrace is available in Debug mode only.
 
-### `IntervalConfiguration`
+### `IntervalConfig`
 
-You can change the view options of interval statistics with `intervalConfiguration` property of `LogConfiguration` to show needed information such as: `.count`, `.min`, `.max` etc. Or you can use `.all` to output all parameters.
+You can change the view options of interval statistics with `intervalConfig` property of `LogConfig` to show needed information such as: `.count`, `.min`, `.max` etc. Or you can use `.all` to output all parameters.
 
 ```swift
-var config = LogConfiguration()
-config.intervalConfiguration.options = [.all]
+var config = LogConfig()
+config.intervalConfig.options = [.all]
 
-let logger = DLog(configuration: config)
+let logger = DLog(config: config)
 
 logger.interval("signpost") {
     Thread.sleep(forTimeInterval: 3)
