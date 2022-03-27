@@ -82,18 +82,18 @@ fileprivate typealias Swift_Demangle = @convention(c) (_ mangledName: UnsafePoin
 													   _ outputBufferSize: UnsafeMutablePointer<Int>?,
 													   _ flags: UInt32) -> UnsafeMutablePointer<Int8>?
 
-fileprivate let swift_demangle: Swift_Demangle? = {
-	let RTLD_DEFAULT = dlopen(nil, RTLD_NOW)
-	if let sym = dlsym(RTLD_DEFAULT, "swift_demangle") {
-		return unsafeBitCast(sym, to: Swift_Demangle.self)
-	}
-	return nil
+fileprivate let swift_demangle: Swift_Demangle = {
+    let RTLD_DEFAULT = UnsafeMutableRawPointer(bitPattern: -2)
+	guard let sym = dlsym(RTLD_DEFAULT, "swift_demangle") else {
+        fatalError("'swift_demangle' symbol not found")
+    }
+    return unsafeBitCast(sym, to: Swift_Demangle.self)
 }()
 
 fileprivate func demangle(_ mangled: String) -> String? {
 	guard mangled.hasPrefix("$s") else { return nil }
 	
-	if let cString = swift_demangle?(mangled, mangled.count, nil, nil, 0) {
+	if let cString = swift_demangle(mangled, mangled.count, nil, nil, 0) {
 		defer { cString.deallocate() }
 		return String(cString: cString)
 	}
