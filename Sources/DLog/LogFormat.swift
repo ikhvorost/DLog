@@ -28,7 +28,7 @@ import Foundation
 
 /// Format options for date.
 public enum LogDateFormatter {
-    /// Format date with style and locale.
+    /// Format date with date/time styles and locale.
     /// - Parameters:
     ///    - dateStyle: Format style for date.
     ///    - timeStyle: Format style for time.
@@ -85,7 +85,7 @@ public enum LogNumberFormatter {
 
 /// Format options for byte count.
 public enum LogByteCountFormatter {
-    /// Format byte count with style and units.
+    /// Format byte count with style and unit.
     /// - Parameters:
     ///  - countStyle: Style of counts.
     ///  - allowedUnits: Units to display.
