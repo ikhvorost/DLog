@@ -35,15 +35,7 @@ import os.activity
 /// retrieve log information such as: `Console` and `Instruments` apps, command line tool `"log"` etc.
 ///
 public class OSLog : LogOutput {
-	
-	// Handle to dynamic shared object
-	private static var dso = UnsafeMutableRawPointer(mutating: #dsohandle)
-	
-	// Load the symbol dynamically, since it is not exposed to Swift.
-	private static let RTLD_DEFAULT = UnsafeMutableRawPointer(bitPattern: -2)
-	private static let OS_ACTIVITY_NONE = unsafeBitCast(dlsym(RTLD_DEFAULT, "_os_activity_none"), to: os_activity_t.self)
-	private static let OS_ACTIVITY_CURRENT = unsafeBitCast(dlsym(RTLD_DEFAULT, "_os_activity_current"), to: os_activity_t.self)
-	
+    
 	private static let types: [LogType : OSLogType] = [
 		.log : .default,
 		// Debug
@@ -100,13 +92,13 @@ public class OSLog : LogOutput {
 		
 		assert(Self.types[item.type] != nil)
 		let type = Self.types[item.type]!
-        os_log("%{public}@ %{public}@", dso: Self.dso, log: log, type: type, location, item.text)
+        os_log("%{public}@ %{public}@", dso: Dynamic.dso, log: log, type: type, location, item.text)
 	
 		return super.log(item: item, scopes: scopes)
 	}
 	
 	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
-        let activity = _os_activity_create(Self.dso, strdup(scope.text), Self.OS_ACTIVITY_CURRENT, OS_ACTIVITY_FLAG_DEFAULT)
+        let activity = _os_activity_create(Dynamic.dso, strdup(scope.text), Dynamic.OS_ACTIVITY_CURRENT, OS_ACTIVITY_FLAG_DEFAULT)
 		os_activity_scope_enter(activity, &scope.os_state)
 		
 		return super.scopeEnter(scope: scope, scopes: scopes)
