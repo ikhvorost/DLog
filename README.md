@@ -14,7 +14,7 @@ DLog is the development logger that supports emoji and colored text output, oslo
 - [Getting started](#getting-started)
 - [Log levels](#log-levels): [log](#log), [info](#info), [trace](#trace), [debug](#debug), [warning](#warning), [error](#error), [assert](#assert), [fault](#fault)
 - [Privacy](#privacy): [public](#public), [private](#private)
-- [Formatters](#formatters)
+- [Format](#format): [date](#date), [number](#number), [byteCount](#bytecount)
 - [Scope](#scope)
 - [Interval](#interval)
 - [Category](#category)
@@ -44,7 +44,7 @@ logger.log("Hello DLog!")
 
 Outputs:
 
-```sh
+```
 • 23:59:11.710 [DLOG] [LOG] <DLog.swift:12> Hello DLog!
 ```
 
@@ -75,7 +75,7 @@ logger.assert(false, "Assert message")
 
 Outputs:
 
-```sh
+```
 • 00:03:07.179 [DLOG] ✅ [INFO] <DLog.swift:6> Info message
 • 00:03:07.181 [DLOG] 💬 [LOG] <DLog.swift:7> Log message
 • 00:03:07.181 [DLOG] 🅰️ [ASSERT] <DLog.swift:8> Assert message
@@ -104,7 +104,7 @@ logger.log("App start")
 
 Outputs:
 
-```sh
+```
 • 23:40:23.545 [DLOG] [LOG] <DLog.swift:12> App start
 ```
 
@@ -119,7 +119,7 @@ logger.info("uuid: \(uuid)")
 
 Outputs:
 
-```sh
+```
 • 23:44:30.702 [DLOG] [INFO] <DLog.swift:13> uuid: 8A71D2B9-29F1-4330-A4C2-69988E3FE172
 ```
 
@@ -138,7 +138,7 @@ startup()
 
 Outputs:
 
-```sh
+```
 • 23:45:31.198 [DLOG] [TRACE] <DLog.swift:13> Start: { func: startup(), thread: { number: 1, name: main } }
 • 23:45:31.216 [DLOG] [TRACE] <DLog.swift:14> func: startup(), thread: { number: 1, name: main }
 ```
@@ -160,7 +160,7 @@ session.dataTask(with: URL(string: "https://apple.com")!) { data, response, erro
 
 Outputs:
 
-```sh
+```
 • 23:49:16.562 [DLOG] [DEBUG] <DLog.swift:17> https://www.apple.com/: 200 - no error
 ```
 
@@ -174,7 +174,7 @@ logger.warning("No Internet connection.")
 
 Outputs:
 
-```sh
+```
 • 23:49:55.757 [DLOG] [WARNING] <DLog.swift:12> No Internet connection.
 ```
 
@@ -195,7 +195,7 @@ catch {
 
 Outputs:
 
-```sh
+```
 • 23:50:39.560 [DLOG] [ERROR] <DLog.swift:18> “source.txt” couldn’t be moved to “Macintosh HD” because either the former doesn’t exist, or the folder containing the latter doesn’t exist.
 ```
 
@@ -214,7 +214,7 @@ logger.assert(password.isEmpty == false, "Password is empty")
 
 Outputs:
 
-```sh
+```
 • 23:54:19.420 [DLOG] [ASSERT] <DLog.swift:16>
 • 23:54:19.422 [DLOG] [ASSERT] <DLog.swift:17> Password is empty
 
@@ -233,7 +233,7 @@ guard let modelURL = Bundle.main.url(forResource: "DataModel", withExtension:"mo
 
 Outputs:
 
-```sh
+```
 • 23:55:07.445 [DLOG] [FAULT] <DLog.swift:13> Error loading model from bundle
 ```
 
@@ -262,9 +262,7 @@ Outputs:
 
 Because users can have access to log messages that your app generates, use the `private` privacy options to hide potentially sensitive information. For example, you might use it to hide or mask an account information or personal data.
 
-**`private`**
-
-The standard option to always redact a value with the generic string.
+The standard `private` option redacts a value with the generic string.
 
 ```swift
 let phoneNumber = "+11234567890"
@@ -277,9 +275,11 @@ Outputs:
 • 12:04:29.758 [DLOG] [LOG] <DLogTests.swift:508> <private>
 ```
 
-**`private(mask: .hash)`**
+> NOTE: DLog logs the data with `private` option as `public` when the XCode debugger is attached.
 
-The mask option to redact a value with its a hash value in the logs.
+####`private(mask: .hash)`
+
+The mask option to redact a value with its hash value in the logs.
 
 ```swift
 logger.log("\(phoneNumber, privacy: .private(mask: .hash))")
@@ -291,7 +291,7 @@ Outputs:
 • 12:09:14.892 [DLOG] [LOG] <DLogTests.swift:508> ECD0ACC2
 ```
 
-**`private(mask: .random)`**
+####`private(mask: .random)`
 
 The mask option to redact a value with a random values for each symbol in the logs.
 
@@ -305,7 +305,7 @@ Outputs:
 • 12:16:19.109 [DLOG] [LOG] <DLogTests.swift:508> =15277829896
 ```
 
-**`private(mask: .redact)`**
+####`private(mask: .redact)`
 
 The mask option to redact a value with a generic values for each symbol in the logs.
 
@@ -319,7 +319,7 @@ Outputs:
 • 12:20:02.217 [DLOG] [LOG] <DLogTests.swift:508> +00000000000
 ```
 
-**`private(mask: .shuffle)`**
+####`private(mask: .shuffle)`
 
 The mask option to redact a value with a shuffled value from all symbols in the logs.
 
@@ -333,7 +333,7 @@ Outputs:
 • 12:23:01.864 [DLOG] [LOG] <DLogTests.swift:508> 47681901+352
 ```
 
-**`private(mask: .custom(value:))`**
+####`private(mask: .custom(value:))`
 
 The mask option to redact a value with a custom string value in the logs.
 
@@ -347,7 +347,7 @@ Outputs:
 • 12:28:55.105 [DLOG] [LOG] <DLogTests.swift:508> <phone>
 ```
 
-**`private(mask: .reduce(length:))`**
+####`private(mask: .reduce(length:))`
 
 The mask option to redact a value with its reduced value of a provided length in the logs.
 
@@ -361,7 +361,7 @@ Outputs:
 • 12:30:48.076 [DLOG] [LOG] <DLogTests.swift:508> +1...890
 ```
 
-**`private(mask: .partial(first:, last:))`**
+####`private(mask: .partial(first:, last:))`
 
 The mask option to redact a value with its parts from start and end of provided lengths in the logs.
 
@@ -375,8 +375,91 @@ Outputs:
 • 12:36:58.950 [DLOG] [LOG] <DLogTests.swift:508> +1*********0
 ```
 
-## Formatters
+## Format
 
+DLog formats values in log messages based on the default settings, but you can apply custom formatting to your variables to make them more readable.
+
+### date
+
+####`date(dateStyle:, timeStyle:, locale:)`
+
+Format date with date/time styles and locale.
+
+```swift
+let date = Date()
+logger.log("\(date, format: .date(dateStyle: .medium))")
+logger.log("\(date, format: .date(timeStyle: .short))")
+logger.log("\(date, format: .date(dateStyle: .medium, timeStyle: .short))")
+logger.log("\(date, format: .date(dateStyle: .medium, timeStyle: .short, locale: Locale(identifier: "en_GB")))")
+```
+
+Outputs:
+
+```
+• 18:12:52.604 [DLOG] [LOG] <DLogTests.swift:555> Mar 30, 2022
+• 18:12:52.605 [DLOG] [LOG] <DLogTests.swift:556> 6:12 PM
+• 18:12:52.606 [DLOG] [LOG] <DLogTests.swift:557> Mar 30, 2022 at 6:12 PM
+• 18:12:52.606 [DLOG] [LOG] <DLogTests.swift:559> 30 Mar 2022 at 18:12
+```
+
+####`dateCustom(format:)`
+
+Format date with a custom format string.
+
+```swift
+let date = Date()
+logger.log("\(date, format: .dateCustom(format: "dd-MM-yyyy"))")
+```
+
+Outputs:
+
+```
+• 18:12:52.606 [DLOG] [LOG] <DLogTests.swift:558> 30-03-2022
+```
+
+### number
+
+####`number(style:, locale:)`
+
+Format number with style and locale.
+
+```swift
+let number = 1_234
+logger.log("\(number, format: .number(style: .decimal))")
+logger.log("\(number, format: .number(style: .currency))")
+logger.log("\(number, format: .number(style: .spellOut))")
+logger.log("\(number, format: .number(style: .currency, locale: Locale(identifier: "en_GB")))")
+```
+
+Outputs:
+
+```
+• 18:26:58.437 [DLOG] [LOG] <DLogTests.swift:587> 1,234
+• 18:26:58.439 [DLOG] [LOG] <DLogTests.swift:588> $1,234.00
+• 18:26:58.439 [DLOG] [LOG] <DLogTests.swift:589> one thousand two hundred thirty-four
+• 18:26:58.441 [DLOG] [LOG] <DLogTests.swift:590> £1,234.00
+```
+
+### byteCount
+
+####`byteCount(countStyle:, allowedUnits:)`
+
+Format byte count with style and unit.
+
+```swift
+let value: Int64 = 20_234_557
+logger.log("\(value, format: .byteCount(countStyle: .file))")
+logger.log("\(value, format: .byteCount(allowedUnits: .useBytes))")
+logger.log("\(value, format: .byteCount(countStyle: .memory, allowedUnits: .useGB))")
+```
+
+Outputs:
+
+```
+• 18:40:42.817 [DLOG] [LOG] <DLogTests.swift:608> 20.2 MB
+• 18:40:42.821 [DLOG] [LOG] <DLogTests.swift:609> 20,234,557 bytes
+• 18:40:42.821 [DLOG] [LOG] <DLogTests.swift:610> 0.02 GB
+```
 
 ## Scope
 
@@ -397,7 +480,7 @@ logger.scope("Loading") { scope in
 
 Outputs:
 
-```sh
+```
 • 23:57:13.410 [DLOG] ┌ [Loading]
 • 23:57:13.427 [DLOG] | [INFO] <DLog.swift:14> File: path/data.json
 • 23:57:13.443 [DLOG] | [DEBUG] <DLog.swift:16> Loaded 121 bytes
@@ -443,7 +526,7 @@ session.dataTask(with: URL(string: "https://apple.com")!) { data, response, erro
 
 Outputs:
 
-```sh
+```
 • 00:01:24.158 [DLOG] ┌ [Request]
 • 00:01:24.829 [DLOG] | [DEBUG] <DLog.swift:25> https://www.apple.com/ - HTTP 200
 • 00:01:24.830 [DLOG] | [DEBUG] <DLog.swift:26> Loaded: 74454 bytes
@@ -472,7 +555,7 @@ logger.scope("Loading") { scope1 in
 
 Outputs:
 
-```sh
+```
 • 00:03:13.552 [DLOG] ┌ [Loading]
 • 00:03:13.554 [DLOG] | [INFO] <DLog.swift:20> File: file:///path/data.json
 • 00:03:13.555 [DLOG] | [DEBUG] <DLog.swift:23> Loaded 121 bytes
@@ -497,7 +580,7 @@ for _ in 0..<10 {
 
 Outputs:
 
-```sh
+```
 • 00:05:09.932 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.270, average: 0.270 }
 • 00:05:10.162 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.216, average: 0.243 }
 • 00:05:10.380 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.215, average: 0.234 }
@@ -548,7 +631,7 @@ asset.loadValuesAsynchronously(forKeys: ["duration"]) {
 
 Outputs:
 
-```sh
+```
 • 00:10:17.982 [DLOG] [INFO] <DLog.swift:27> Duration: 5532776
 • 00:10:17.983 [DLOG] [INTERVAL] <DLog.swift:20> Video: { duration: 2.376, average: 2.376 }
 ```
@@ -569,7 +652,7 @@ tableLogger.debug("Updating with network response.")
 
 Outputs:
 
-```sh
+```
 • 00:11:30.660 [DLOG] [DEBUG] <DLog.swift:22> Refresh
 • 00:11:30.661 [NET] [DEBUG] <DLog.swift:23> Successfully fetched recordings.
 • 00:11:30.661 [TABLE] [DEBUG] <DLog.swift:24> Updating with network response.
@@ -632,7 +715,7 @@ for (name, output) in outputs {
 
 Outputs:
 
-```sh
+```
 Plain
 • 00:12:31.718 [DLOG] [INFO] <DLog.swift:25> info
 • 00:12:31.719 [DLOG] [ERROR] <DLog.swift:26> error
@@ -691,7 +774,7 @@ logger.info("Emoji")
 
 Outputs:
 
-```sh
+```
 • 00:15:25.602 [DLOG] ✅ [INFO] <DLog.swift:18> Emoji
 ```
 
@@ -961,7 +1044,7 @@ netLogger.info("info")
 
 Outputs:
 
-```sh
+```
 • 00:17:58.076 [NET] [INFO] <DLog.swift:19> info
 ```
 
@@ -978,7 +1061,7 @@ logger.error("error")
 
 Outputs:
 
-```sh
+```
 • 00:18:23.638 [DLOG] [DEBUG] <DLog.swift:19> debug
 ```
 
@@ -994,7 +1077,7 @@ logger.info("info")
 
 Outputs:
 
-```sh
+```
 • 00:19:17.821 [DLOG] [LOG] <DLog.swift:18> hello world
 ```
 
@@ -1027,7 +1110,7 @@ logger.fault("fault")
 
 Outputs:
 
-```sh
+```
 • 00:19:59.573 [DLOG] ┌ [Load]
 • 00:19:59.573 [DLOG] | [DEBUG] <DLog.swift:27> debug
 • 00:19:59.586 [DLOG] | [ERROR] <DLog.swift:34> error
@@ -1076,7 +1159,7 @@ logger.log("finish")
 
 Outputs:
 
-```sh
+```
 scope code
 signpost code
 ```
@@ -1094,7 +1177,7 @@ logger.info("Info message")
 
 Outputs:
 
-```sh
+```
 • 23:53:16.116 [DLOG] [INFO] <DLog.swift:12> Info message
 ```
 
@@ -1112,7 +1195,7 @@ logger.info("Info message")
 
 Outputs:
 
-```sh
+```
 > 00:01:24.380 Info message
 ```
 
@@ -1134,7 +1217,7 @@ doTest()
 
 Outputs:
 
-```sh
+```
 • 12:20:47.137 [DLOG] [TRACE] <DLog.swift:13> func: doTest(), thread: { number: 1, name: main }
 ```
 
@@ -1155,7 +1238,7 @@ doTest()
 
 Outputs:
 
-```sh
+```
 • 12:37:24.101 [DLOG] [TRACE] <DLog.swift:11> func: doTest(), queue: com.apple.main-thread
 ```
 
@@ -1182,7 +1265,7 @@ DispatchQueue.global().async {
 
 Outputs:
 
-```sh
+```
 • 13:01:32.859 [DLOG] [TRACE] <DLog.swift:9> func: doTest(), thread: { number: 1, qos: userInteractive }
 • 13:01:32.910 [DLOG] [TRACE] <DLog.swift:9> func: doTest(), thread: { number: 3, qos: userInitiated }
 ```
@@ -1217,7 +1300,7 @@ first()
 
 Outputs:
 
-```sh
+```
 • 23:06:24.092 [DLOG] [TRACE] <AppDelegate:45> stack: [
 0: { symbols: Test.third() -> () }
 1: { symbols: Test.second() -> () }
@@ -1243,7 +1326,7 @@ logger.interval("signpost") {
 
 Outputs:
 
-```sh
+```
 • 23:26:40.978 [DLOG] [INTERVAL] <DLog.swift:13> signpost: { duration: 3.2, count: 1, total: 3.2, min: 3.2, max: 3.2, average: 3.2 }
 ```
 
@@ -1325,7 +1408,7 @@ logger.info(@"info");
 
 Outputs:
 
-```sh
+```
 • 14:17:07.306 [DLOG] ✅ [INFO] <Test.m:15> info
 ```
 
@@ -1345,7 +1428,7 @@ logger.debug(@"debug");
 
 Outputs:
 
-```sh
+```
 • 14:19:50.212 [DLOG] [DEBUG] <Test.m:21> debug
 ```
 
