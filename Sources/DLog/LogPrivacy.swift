@@ -83,9 +83,9 @@ public enum LogPrivacy {
         .private(mask: .custom(value: "<private>"))
     }
     
-    private static var isDebugger: Bool {
+    private static let isDebugger: Bool = {
         getppid() != 1
-    }
+    }()
     
     private static let letters: [Character] = {
         let lower = (Unicode.Scalar("a").value...Unicode.Scalar("z").value)
@@ -211,7 +211,7 @@ public enum LogPrivacy {
             
         case .private(let mask):
             // Debugger
-            guard Self.isDebugger else {
+            guard Self.isDebugger == false else {
                 return text
             }
             
