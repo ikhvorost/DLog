@@ -13,6 +13,8 @@ DLog is the development logger that supports emoji and colored text output, oslo
 
 - [Getting started](#getting-started)
 - [Log levels](#log-levels): [log](#log), [info](#info), [trace](#trace), [debug](#debug), [warning](#warning), [error](#error), [assert](#assert), [fault](#fault)
+- [Privacy](#privacy): [public](#public), [private](#private)
+- [Formatters](#formatters)
 - [Scope](#scope)
 - [Interval](#interval)
 - [Category](#category)
@@ -235,6 +237,147 @@ Outputs:
 • 23:55:07.445 [DLOG] [FAULT] <DLog.swift:13> Error loading model from bundle
 ```
 
+## Privacy
+
+Privacy options allow to manage the visibility of values in log messages.
+
+### `public`
+
+It applies to all values in log messages by default and the values will be visible in logs.
+
+```swift
+let phoneNumber = "+11234567890"
+logger.log("\(phoneNumber)") // public by default
+logger.log("\(phoneNumber, privacy: .public)")
+```
+
+Outputs:
+
+```
+• 20:16:18.628 [DLOG] [LOG] <DLogTests.swift:481> +11234567890
+• 20:16:18.629 [DLOG] [LOG] <DLogTests.swift:482> +11234567890
+```
+
+### `private`
+
+Because users can have access to log messages that your app generates, use the `private` privacy options to hide potentially sensitive information. For example, you might use it to hide or mask an account information or personal data.
+
+**`private`**
+
+The standard option to always redact a value with the generic string.
+
+```swift
+let phoneNumber = "+11234567890"
+logger.log("\(phoneNumber, privacy: .private)")
+```
+
+Outputs:
+
+```
+• 12:04:29.758 [DLOG] [LOG] <DLogTests.swift:508> <private>
+```
+
+**`private(mask: .hash)`**
+
+The mask option to redact a value with its a hash value in the logs.
+
+```swift
+logger.log("\(phoneNumber, privacy: .private(mask: .hash))")
+```
+
+Outputs:
+
+```
+• 12:09:14.892 [DLOG] [LOG] <DLogTests.swift:508> ECD0ACC2
+```
+
+**`private(mask: .random)`**
+
+The mask option to redact a value with a random values for each symbol in the logs.
+
+```swift
+logger.log("\(phoneNumber, privacy: .private(mask: .random))")
+```
+
+Outputs:
+
+```
+• 12:16:19.109 [DLOG] [LOG] <DLogTests.swift:508> =15277829896
+```
+
+**`private(mask: .redact)`**
+
+The mask option to redact a value with a generic values for each symbol in the logs.
+
+```swift
+logger.log("\(phoneNumber, privacy: .private(mask: .redact))")
+```
+
+Outputs:
+
+```
+• 12:20:02.217 [DLOG] [LOG] <DLogTests.swift:508> +00000000000
+```
+
+**`private(mask: .shuffle)`**
+
+The mask option to redact a value with a shuffled value from all symbols in the logs.
+
+```swift
+logger.log("\(phoneNumber, privacy: .private(mask: .shuffle))")
+```
+
+Outputs:
+
+```
+• 12:23:01.864 [DLOG] [LOG] <DLogTests.swift:508> 47681901+352
+```
+
+**`private(mask: .custom(value:))`**
+
+The mask option to redact a value with a custom string value in the logs.
+
+```swift
+logger.log("\(phoneNumber, privacy: .private(mask: .custom(value: "<phone>")))")
+```
+
+Outputs:
+
+```
+• 12:28:55.105 [DLOG] [LOG] <DLogTests.swift:508> <phone>
+```
+
+**`private(mask: .reduce(length:))`**
+
+The mask option to redact a value with its reduced value of a provided length in the logs.
+
+```swift
+logger.log("\(phoneNumber, privacy: .private(mask: .reduce(length: 5)))")
+```
+
+Outputs:
+
+```
+• 12:30:48.076 [DLOG] [LOG] <DLogTests.swift:508> +1...890
+```
+
+**`private(mask: .partial(first:, last:))`**
+
+The mask option to redact a value with its parts from start and end of provided lengths in the logs.
+
+```swift
+logger.log("\(phoneNumber, privacy: .private(mask: .partial(first: 2, last: 1)))")
+```
+
+Outputs:
+
+```
+• 12:36:58.950 [DLOG] [LOG] <DLogTests.swift:508> +1*********0
+```
+
+## Formatters
+
+
 ## Scope
 
 `scope` provides a mechanism for grouping work that's done in your program, so that can see all log messages related to a defined scope of your code in a tree view:
@@ -430,6 +573,32 @@ Outputs:
 • 00:11:30.660 [DLOG] [DEBUG] <DLog.swift:22> Refresh
 • 00:11:30.661 [NET] [DEBUG] <DLog.swift:23> Successfully fetched recordings.
 • 00:11:30.661 [TABLE] [DEBUG] <DLog.swift:24> Updating with network response.
+```
+
+**Configuration**
+
+You can apply your specific configuration to your category to change the default log messages appearance, visible info and details etc. (See more: [Configuration](#configuration) )
+
+For instance:
+
+```swift
+let logger = DLog()
+
+var config = LogConfig()
+config.sign = ">"
+config.options = [.sign, .time, .category, .type]
+config.traceConfig.options = [.queue]
+
+let netLogger = logger.category(name: "NET", config: config)
+
+logger.trace("default")
+netLogger.trace("net")
+```
+
+Outputs:
+```
+• 13:31:43.773 [DLOG] [TRACE] <DLogTests.swift:487> default: { func: test_Config(), thread: { number: 1, name: main } }
+> 13:31:43.775 [NET] [TRACE] net: { queue: com.apple.main-thread }
 ```
 
 ## Outputs

@@ -26,8 +26,7 @@
 
 import Foundation
 
-/// Privacy options for specifying privacy level of the interpolated expressions
-/// in the string interpolations passed to the logger.
+/// The privacy options that determine when to redact or display values in log messages.
 public enum LogPrivacy {
     
     /// Mask options for `private` privacy level.
@@ -61,14 +60,14 @@ public enum LogPrivacy {
         case partial(first: Int, last: Int)
     }
     
-    /// Sets the privacy level of an interpolated value to public.
+    /// Sets the privacy level of a log message to public.
     ///
     /// When the privacy level is public, the value will be displayed
     /// normally without any redaction in the logs.
     case `public`
     
-    /// Sets the privacy level of an interpolated value to private and
-    /// applies a `mask` to the interpolated value to redacted it.
+    /// Sets the privacy level of a log message to private and
+    /// applies a `mask` to redacted it.
     ///
     /// When the privacy level is private, the value will be redacted in the logs.
     ///
@@ -76,7 +75,7 @@ public enum LogPrivacy {
     ///   - mask: Mask to use with the privacy option.
     case `private`(mask: Mask)
     
-    /// Sets the privacy level of an interpolated value to private.
+    /// Sets the privacy level of a log message to private.
     ///
     /// When the privacy level is private, the value will be redacted in the logs.
     ///
