@@ -499,7 +499,7 @@ final class DLogTests: XCTestCase {
     }
 }
 
-final class InterpolationTests: XCTestCase {
+final class PrivacyFormatTests: XCTestCase {
     
     func test_Privacy() {
         let logger = DLog()

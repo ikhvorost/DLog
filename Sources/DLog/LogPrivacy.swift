@@ -91,6 +91,8 @@ public enum LogPrivacy {
         return (info.kp_proc.p_flag & P_TRACED) != 0
     }()
     
+    private static let isXCTest: Bool = { NSClassFromString("XCTest") != nil }()
+    
     private static let letters: [Character] = {
         let lower = (Unicode.Scalar("a").value...Unicode.Scalar("z").value)
         let upper = (Unicode.Scalar("A").value...Unicode.Scalar("Z").value)
@@ -214,8 +216,8 @@ public enum LogPrivacy {
             return text
             
         case .private(let mask):
-            // Debugger
-            guard Self.isDebugger == false else {
+            // XCTest or Debugger
+            guard Self.isDebugger == false || Self.isXCTest else {
                 return text
             }
             
