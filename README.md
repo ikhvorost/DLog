@@ -277,7 +277,7 @@ Outputs:
 
 > NOTE: DLog logs the data with `private` option as `public` when the XCode debugger is attached.
 
-####`private(mask: .hash)`
+#### `private(mask: .hash)`
 
 The mask option to redact a value with its hash value in the logs.
 
@@ -291,7 +291,7 @@ Outputs:
 • 12:09:14.892 [DLOG] [LOG] <DLogTests.swift:508> ECD0ACC2
 ```
 
-####`private(mask: .random)`
+#### `private(mask: .random)`
 
 The mask option to redact a value with a random values for each symbol in the logs.
 
@@ -305,7 +305,7 @@ Outputs:
 • 12:16:19.109 [DLOG] [LOG] <DLogTests.swift:508> =15277829896
 ```
 
-####`private(mask: .redact)`
+#### `private(mask: .redact)`
 
 The mask option to redact a value with a generic values for each symbol in the logs.
 
@@ -319,7 +319,7 @@ Outputs:
 • 12:20:02.217 [DLOG] [LOG] <DLogTests.swift:508> +00000000000
 ```
 
-####`private(mask: .shuffle)`
+#### `private(mask: .shuffle)`
 
 The mask option to redact a value with a shuffled value from all symbols in the logs.
 
@@ -333,7 +333,7 @@ Outputs:
 • 12:23:01.864 [DLOG] [LOG] <DLogTests.swift:508> 47681901+352
 ```
 
-####`private(mask: .custom(value:))`
+#### `private(mask: .custom(value:))`
 
 The mask option to redact a value with a custom string value in the logs.
 
@@ -347,7 +347,7 @@ Outputs:
 • 12:28:55.105 [DLOG] [LOG] <DLogTests.swift:508> <phone>
 ```
 
-####`private(mask: .reduce(length:))`
+#### `private(mask: .reduce(length:))`
 
 The mask option to redact a value with its reduced value of a provided length in the logs.
 
@@ -361,7 +361,7 @@ Outputs:
 • 12:30:48.076 [DLOG] [LOG] <DLogTests.swift:508> +1...890
 ```
 
-####`private(mask: .partial(first:, last:))`
+#### `private(mask: .partial(first:, last:))`
 
 The mask option to redact a value with its parts from start and end of provided lengths in the logs.
 
@@ -381,7 +381,7 @@ DLog formats values in log messages based on the default settings, but you can a
 
 ### date
 
-####`date(dateStyle:, timeStyle:, locale:)`
+#### `date(dateStyle:, timeStyle:, locale:)`
 
 Format date with date/time styles and locale.
 
@@ -402,7 +402,7 @@ Outputs:
 • 18:12:52.606 [DLOG] [LOG] <DLogTests.swift:559> 30 Mar 2022 at 18:12
 ```
 
-####`dateCustom(format:)`
+#### `dateCustom(format:)`
 
 Format date with a custom format string.
 
@@ -419,7 +419,7 @@ Outputs:
 
 ### number
 
-####`number(style:, locale:)`
+#### `number(style:, locale:)`
 
 Format number with style and locale.
 
@@ -442,7 +442,7 @@ Outputs:
 
 ### byteCount
 
-####`byteCount(countStyle:, allowedUnits:)`
+#### `byteCount(countStyle:, allowedUnits:)`
 
 Format byte count with style and unit.
 
