@@ -83,23 +83,43 @@ public enum LogNumberFormatter {
     }
 }
 
-/// Format options for byte count.
-public enum LogByteCountFormatter {
+public enum LogIntFormatter {
+    case binary
+    
+    case octal(includePrefix: Bool = false)
+    public static let octal = Self.octal()
+    
+    case hex(includePrefix: Bool = false, uppercase: Bool = false)
+    public static let hex = Self.hex()
+    
     /// Format byte count with style and unit.
     /// - Parameters:
     ///  - countStyle: Style of counts.
     ///  - allowedUnits: Units to display.
     case byteCount(countStyle: ByteCountFormatter.CountStyle = .file, allowedUnits: ByteCountFormatter.Units = .useMB)
     
-    private static let formatter = ByteCountFormatter()
+    private static let byteCountFormatter = ByteCountFormatter()
     
-    func string(from byteCount: Int64) -> String {
-        synchronized(Self.formatter) {
-            switch self {
-            case let .byteCount(countStyle, allowedUnits):
-                Self.formatter.countStyle = countStyle
-                Self.formatter.allowedUnits = allowedUnits
-                return Self.formatter.string(fromByteCount: byteCount)
+    func string<T: FixedWidthInteger>(from value: T) -> String {
+        switch self {
+        case .binary:
+            return String(value, radix: 2)
+            
+        case let .octal(includePrefix):
+            let prefix = includePrefix ? "0o" : ""
+            let oct = String(value, radix: 8)
+            return "\(prefix)\(oct)"
+            
+        case let .hex(includePrefix, uppercase):
+            let prefix = includePrefix ? "0x" : ""
+            let hex = String(value, radix: 16, uppercase: uppercase)
+            return "\(prefix)\(hex)"
+            
+        case let .byteCount(countStyle, allowedUnits):
+            return synchronized(Self.byteCountFormatter) {
+                Self.byteCountFormatter.countStyle = countStyle
+                Self.byteCountFormatter.allowedUnits = allowedUnits
+                return Self.byteCountFormatter.string(fromByteCount: Int64(value))
             }
         }
     }

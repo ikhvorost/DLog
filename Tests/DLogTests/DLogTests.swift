@@ -26,7 +26,7 @@ extension String : LocalizedError {
 
 extension String {
     func match(_ pattern: String) -> Bool {
-		self.range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil
+		self.range(of: pattern, options: [.regularExpression]) != nil
     }
 }
 
@@ -501,6 +501,34 @@ final class DLogTests: XCTestCase {
 
 final class PrivacyFormatTests: XCTestCase {
     
+    
+    func test_logMessage() {
+        let logger = DLog()
+        
+        // Any
+        let text: Any = "some text"
+        XCTAssert(logger.debug("\(text)")?.match("some text") == true)
+        
+        // Error
+        let error = NSError(domain: "domain", code: 100, userInfo: [NSLocalizedDescriptionKey : "error"])
+        XCTAssert(logger.error("\(error)")?.match("Error Domain=domain Code=100 \"error\" UserInfo=\\{NSLocalizedDescription=error\\}") == true)
+        XCTAssert(logger.error("\(error as Error)")?.match("Error Domain=domain Code=100 \"error\" UserInfo=\\{NSLocalizedDescription=error\\}") == true)
+        XCTAssert(logger.error("\(error.localizedDescription)")?.match("error") == true)
+        
+        // Enum
+        enum MyEnum { case one, two }
+        let myEnum = MyEnum.one
+        XCTAssert(logger.error("\(myEnum)")?.match("one") == true)
+        XCTAssert(logger.error("\(MyEnum.one)")?.match("one") == true)
+        
+        // OptionSet
+        XCTAssert(logger.error("\(NSCalendar.Options.matchLast)")?.match("NSCalendarOptions\\(rawValue: 8192\\)") == true)
+        
+        // Notification
+        let notification = Notification.Name.NSCalendarDayChanged
+        XCTAssert(logger.debug("\(notification.rawValue)")?.match("NSCalendarDayChanged") == true)
+    }
+    
     func test_Privacy() {
         let logger = DLog()
         
@@ -552,6 +580,9 @@ final class PrivacyFormatTests: XCTestCase {
         let logger = DLog()
         
         let date = Date(timeIntervalSince1970: 1645026131) // 2022-02-16 15:42:11 +0000
+        
+        // Default
+        XCTAssert(logger.log("\(date)")?.match("2022-02-16 15:42:11 \\+0000") == true)
 
         // Date only
         XCTAssert(logger.log("\(date, format: .date(dateStyle: .short))")?.match("2/16/22") == true)
@@ -585,6 +616,8 @@ final class PrivacyFormatTests: XCTestCase {
         
         let number = 1_234_567_890
         
+        XCTAssert(logger.log("\(number)")?.match("\(number)") == true)
+        
         XCTAssert(logger.log("\(number, format: .number(style: .none))")?.match("\(number)") == true)
         XCTAssert(logger.log("\(number, format: .number(style: .decimal))")?.match("1,234,567,890") == true)
         XCTAssert(logger.log("\(number, format: .number(style: .currency))")?.match("\\$1,234,567,890\\.00") == true)
@@ -600,10 +633,28 @@ final class PrivacyFormatTests: XCTestCase {
         XCTAssert(logger.log("\(number, format: .number(style: .currency, locale: locale))")?.match("\\£1,234,567,890\\.00") == true)
     }
     
-    func test_ByteCountFormat() {
+    func test_IntFormat() {
         let logger = DLog()
         
-        let value: Int64 = 20_234_557
+        let value = 20_234_557
+        
+        // Default
+        XCTAssert(logger.log("\(value)")?.match("20234557") == true)
+        
+        // Binary
+        XCTAssert(logger.log("\(8, format: .binary)")?.match("1000") == true)
+        
+        // Octal
+        XCTAssert(logger.log("\(10, format: .octal)")?.match("12") == true)
+        XCTAssert(logger.log("\(10, format: .octal(includePrefix: true))")?.match("0o12") == true)
+        
+        // Hex
+        XCTAssert(logger.log("\(value, format: .hex)")?.match("134c13d") == true)
+        XCTAssert(logger.log("\(value, format: .hex(includePrefix: true))")?.match("0x134c13d") == true)
+        XCTAssert(logger.log("\(value, format: .hex(uppercase: true))")?.match("134C13D") == true)
+        XCTAssert(logger.log("\(value, format: .hex(includePrefix: true, uppercase: true))")?.match("0x134C13D") == true)
+                
+        // Byte count
         
         // Count style
         XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .file))")?.match("20.2 MB") == true)

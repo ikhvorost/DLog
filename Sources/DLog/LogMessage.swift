@@ -49,9 +49,10 @@ public class LogStringInterpolation: StringInterpolationProtocol {
     /// - Parameters:
     ///   - arg: The interpolated value of any type.
     ///   - privacy: A privacy qualifier which is either private or public. Defaults to public.
-    public func appendInterpolation<T: CustomStringConvertible>(_ arg: T, privacy: LogPrivacy = .public) {
-        let text = privacy.mask(arg.description)
-        output.append(text)
+    public func appendInterpolation(_ arg: @autoclosure @escaping () -> Any, privacy: LogPrivacy = .public) {
+        let text = String(describing: arg())
+        let masked = privacy.mask(text)
+        output.append(masked)
     }
     
     /// Defines interpolation for expressions of date type.
@@ -60,8 +61,8 @@ public class LogStringInterpolation: StringInterpolationProtocol {
     ///   - date: A date value.
     ///   - format: Format options for date.
     ///   - privacy: A privacy qualifier which is either private or public. Defaults to public.
-    public func appendInterpolation(_ date: Date, format: LogDateFormatter, privacy: LogPrivacy = .public) {
-        let text = format.string(from: date)
+    public func appendInterpolation(_ date: @autoclosure @escaping () -> Date, format: LogDateFormatter, privacy: LogPrivacy = .public) {
+        let text = format.string(from: date())
         let masked = privacy.mask(text)
         output.append(masked)
     }
@@ -72,20 +73,20 @@ public class LogStringInterpolation: StringInterpolationProtocol {
     ///   - number: A number value.
     ///   - format: Format options for number.
     ///   - privacy: A privacy qualifier which is either private or public. Defaults to public.
-    public func appendInterpolation(_ number: Int, format: LogNumberFormatter, privacy: LogPrivacy = .public) {
-        let text = format.string(from: number)
+    public func appendInterpolation(_ number: @autoclosure @escaping () -> Int, format: LogNumberFormatter, privacy: LogPrivacy = .public) {
+        let text = format.string(from: number())
         let masked = privacy.mask(text)
         output.append(masked)
     }
     
-    /// Defines interpolation for expressions of byte count.
+    /// Defines interpolation for expressions of integer values.
     ///
     /// - Parameters:
-    ///   - byteCount: A byte count value.
-    ///   - format: Format options for byte count.
+    ///   - value: A integer value.
+    ///   - format: Format options for a value.
     ///   - privacy: A privacy qualifier which is either private or public. Defaults to public.
-    public func appendInterpolation(_ byteCount: Int64, format: LogByteCountFormatter, privacy: LogPrivacy = .public) {
-        let text = format.string(from: byteCount)
+    public func appendInterpolation<T: FixedWidthInteger>(_ value: @autoclosure @escaping () -> T, format: LogIntFormatter, privacy: LogPrivacy = .public) {
+        let text = format.string(from: value())
         let masked = privacy.mask(text)
         output.append(masked)
     }
