@@ -499,9 +499,8 @@ final class DLogTests: XCTestCase {
     }
 }
 
-final class PrivacyFormatTests: XCTestCase {
-    
-    
+final class FormatTests: XCTestCase {
+        
     func test_logMessage() {
         let logger = DLog()
         
@@ -611,28 +610,6 @@ final class PrivacyFormatTests: XCTestCase {
         XCTAssert(logger.log("\(date, format: .date(dateStyle: .medium, timeStyle: .short, locale: locale))")?.match("16 Feb 2022 at 15:42") == true)
     }
     
-    func test_NumberFormat() {
-        let logger = DLog()
-        
-        let number = 1_234_567_890
-        
-        XCTAssert(logger.log("\(number)")?.match("\(number)") == true)
-        
-        XCTAssert(logger.log("\(number, format: .number(style: .none))")?.match("\(number)") == true)
-        XCTAssert(logger.log("\(number, format: .number(style: .decimal))")?.match("1,234,567,890") == true)
-        XCTAssert(logger.log("\(number, format: .number(style: .currency))")?.match("\\$1,234,567,890\\.00") == true)
-        XCTAssert(logger.log("\(number, format: .number(style: .percent))")?.match("123,456,789,000%") == true)
-        XCTAssert(logger.log("\(number, format: .number(style: .scientific))")?.match("1.23456789E9") == true)
-        XCTAssert(logger.log("\(number, format: .number(style: .spellOut))")?.match("one billion two hundred thirty-four million five hundred sixty-seven thousand eight hundred ninety") == true)
-        
-        // Privacy
-        XCTAssert(logger.log("\(number, format: .number(style: .decimal), privacy: .private(mask: .redact))")?.match("0,000,000,000") == true)
-        
-        // Locale
-        let locale = Locale(identifier: "en_GB")
-        XCTAssert(logger.log("\(number, format: .number(style: .currency, locale: locale))")?.match("\\£1,234,567,890\\.00") == true)
-    }
-    
     func test_IntFormat() {
         let logger = DLog()
         
@@ -653,7 +630,7 @@ final class PrivacyFormatTests: XCTestCase {
         XCTAssert(logger.log("\(value, format: .hex(includePrefix: true))")?.match("0x134c13d") == true)
         XCTAssert(logger.log("\(value, format: .hex(uppercase: true))")?.match("134C13D") == true)
         XCTAssert(logger.log("\(value, format: .hex(includePrefix: true, uppercase: true))")?.match("0x134C13D") == true)
-                
+        
         // Byte count
         
         // Count style
@@ -672,6 +649,101 @@ final class PrivacyFormatTests: XCTestCase {
         
         // Privacy
         XCTAssert(logger.log("\(value, format: .byteCount(allowedUnits: .useMB), privacy: .private(mask: .redact))")?.match("00.0 XX") == true)
+        
+        //
+        // Number
+        //
+        
+        let number = 1_234
+        
+        XCTAssert(logger.log("\(number)")?.match("\(number)") == true)
+        
+        XCTAssert(logger.log("\(number, format: .number(style: .none))")?.match("\(number)") == true)
+        XCTAssert(logger.log("\(number, format: .number(style: .decimal))")?.match("1,234") == true)
+        XCTAssert(logger.log("\(number, format: .number(style: .currency))")?.match("\\$1,234\\.00") == true)
+        XCTAssert(logger.log("\(number, format: .number(style: .percent))")?.match("123,400%") == true)
+        XCTAssert(logger.log("\(number, format: .number(style: .scientific))")?.match("1.234E3") == true)
+        XCTAssert(logger.log("\(number, format: .number(style: .spellOut))")?.match("one thousand two hundred thirty-four") == true)
+        
+        // Privacy
+        XCTAssert(logger.log("\(number, format: .number(style: .decimal), privacy: .private(mask: .redact))")?.match("0,000") == true)
+        
+        // Locale
+        let locale = Locale(identifier: "en_GB")
+        XCTAssert(logger.log("\(number, format: .number(style: .currency, locale: locale))")?.match("\\£1,234\\.00") == true)
+    }
+    
+    func test_DoubleFormat() {
+        let logger = DLog()
+        
+        let value = 12.345
+        
+        // Default
+        XCTAssert(logger.log("\(value)")?.match("12.345") == true)
+        
+        // Fixed
+        XCTAssert(logger.log("\(value, format: .fixed)")?.match("12.345000") == true)
+        XCTAssert(logger.log("\(value, format: .fixed(precision: 2))")?.match("12.35") == true)
+        
+        // Hex
+        XCTAssert(logger.log("\(value, format: .hex)")?.match("1\\.8b0a3d70a3d71p\\+3") == true)
+        XCTAssert(logger.log("\(value, format: .hex(includePrefix: true))")?.match("0x1\\.8b0a3d70a3d71p\\+3") == true)
+        XCTAssert(logger.log("\(value, format: .hex(uppercase: true))")?.match("1\\.8B0A3D70A3D71P\\+3") == true)
+        XCTAssert(logger.log("\(value, format: .hex(includePrefix: true, uppercase: true))")?.match("0x1\\.8B0A3D70A3D71P\\+3") == true)
+        
+        // Exponential
+        XCTAssert(logger.log("\(value, format: .exponential)")?.match("1\\.234500e\\+01") == true)
+        XCTAssert(logger.log("\(value, format: .exponential(precision: 2))")?.match("1\\.23e\\+01") == true)
+        
+        // Hybrid
+        XCTAssert(logger.log("\(value, format: .hybrid)")?.match("12.345") == true)
+        XCTAssert(logger.log("\(value, format: .hybrid(precision: 1))")?.match("1e\\+01") == true)
+        
+        // Privacy
+        XCTAssert(logger.log("\(value, format: .hybrid(precision: 1), privacy: .private(mask: .redact))")?.match("0X\\+00") == true)
+        
+        //
+        // Number
+        //
+        
+        let number = 1_234.56
+        
+        XCTAssert(logger.log("\(number)")?.match("\(number)") == true)
+        
+        XCTAssert(logger.log("\(number, format: .number(style: .none))")?.match("1235") == true)
+        XCTAssert(logger.log("\(number, format: .number(style: .decimal))")?.match("1,234.56") == true)
+        XCTAssert(logger.log("\(number, format: .number(style: .currency))")?.match("\\$1,234\\.56") == true)
+        XCTAssert(logger.log("\(number, format: .number(style: .percent))")?.match("123,456%") == true)
+        XCTAssert(logger.log("\(number, format: .number(style: .scientific))")?.match("1.23456E3") == true)
+        XCTAssert(logger.log("\(number, format: .number(style: .spellOut))")?.match("one thousand two hundred thirty-four") == true)
+        
+        // Privacy
+        XCTAssert(logger.log("\(number, format: .number(style: .decimal), privacy: .private(mask: .redact))")?.match("0,000.00") == true)
+        
+        // Locale
+        let locale = Locale(identifier: "en_GB")
+        XCTAssert(logger.log("\(number, format: .number(style: .currency, locale: locale))")?.match("\\£1,234\\.56") == true)
+    }
+    
+    func test_BoolFormat() {
+        let logger = DLog()
+        
+        let value = true
+        
+        // Default
+        XCTAssert(logger.log("\(value)")?.match("true") == true)
+        
+        // Binary
+        XCTAssert(logger.log("\(value, format: .binary)")?.match("1") == true)
+        XCTAssert(logger.log("\(!value, format: .binary)")?.match("0") == true)
+        
+        // Answer
+        XCTAssert(logger.log("\(value, format: .answer)")?.match("yes") == true)
+        XCTAssert(logger.log("\(!value, format: .answer)")?.match("no") == true)
+        
+        // Toggle
+        XCTAssert(logger.log("\(value, format: .toggle)")?.match("on") == true)
+        XCTAssert(logger.log("\(!value, format: .toggle)")?.match("off") == true)
     }
     
     func test_FormatConcurent() {

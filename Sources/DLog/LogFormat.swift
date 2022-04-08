@@ -28,6 +28,7 @@ import Foundation
 
 /// Format options for date.
 public enum LogDateFormatter {
+    
     /// Format date with date/time styles and locale.
     /// - Parameters:
     ///    - dateStyle: Format style for date.
@@ -42,7 +43,7 @@ public enum LogDateFormatter {
     
     private static let formatter = DateFormatter()
     
-    func string(from date: Date) -> String {
+    func string(from value: Date) -> String {
         synchronized(Self.formatter) {
             switch self {
 
@@ -50,34 +51,11 @@ public enum LogDateFormatter {
                 Self.formatter.locale = locale
                 Self.formatter.dateStyle = dateStyle
                 Self.formatter.timeStyle = timeStyle
-                return Self.formatter.string(from: date)
+                return Self.formatter.string(from: value)
 
             case let .dateCustom(format):
                 Self.formatter.dateFormat = format
-                return Self.formatter.string(from: date)
-            }
-        }
-    }
-}
-
-/// Format options for number.
-public enum LogNumberFormatter {
-    /// Format number with style and locale.
-    /// - Parameters:
-    ///   - style: Format style for number.
-    ///   - locale: The locale for the receiver.
-    case number(style: NumberFormatter.Style, locale: Locale? = nil)
-    
-    private static let formatter = NumberFormatter()
-    
-    func string(from number: Int) -> String {
-        synchronized(Self.formatter) {
-            switch self {
-                
-            case let .number(style, locale):
-                Self.formatter.locale = locale
-                Self.formatter.numberStyle = style
-                return Self.formatter.string(from: NSNumber(value: number))!
+                return Self.formatter.string(from: value)
             }
         }
     }
@@ -98,9 +76,16 @@ public enum LogIntFormatter {
     ///  - allowedUnits: Units to display.
     case byteCount(countStyle: ByteCountFormatter.CountStyle = .file, allowedUnits: ByteCountFormatter.Units = .useMB)
     
-    private static let byteCountFormatter = ByteCountFormatter()
+    /// Format number with style and locale.
+    /// - Parameters:
+    ///   - style: Format style for number.
+    ///   - locale: The locale for the receiver.
+    case number(style: NumberFormatter.Style, locale: Locale? = nil)
     
-    func string<T: FixedWidthInteger>(from value: T) -> String {
+    private static let byteCountFormatter = ByteCountFormatter()
+    private static let numberFormatter = NumberFormatter()
+    
+    func string<T: BinaryInteger>(from value: T) -> String {
         switch self {
         case .binary:
             return String(value, radix: 2)
@@ -121,6 +106,93 @@ public enum LogIntFormatter {
                 Self.byteCountFormatter.allowedUnits = allowedUnits
                 return Self.byteCountFormatter.string(fromByteCount: Int64(value))
             }
+        
+        case let .number(style, locale):
+            return synchronized(Self.numberFormatter) {
+                Self.numberFormatter.locale = locale
+                Self.numberFormatter.numberStyle = style
+                return Self.numberFormatter.string(from: NSNumber(value: Double(value)))!
+            }
+        }
+    }
+}
+
+public enum LogDoubleFormatter {
+    case fixed(precision: Int = 0)
+    public static let fixed = Self.fixed(precision: 0)
+    
+    case hex(includePrefix: Bool = false, uppercase: Bool = false)
+    public static let hex = Self.hex()
+    
+    case exponential(precision: Int)
+    public static let exponential = Self.exponential(precision: 0)
+    
+    case hybrid(precision: Int)
+    public static let hybrid = Self.hybrid(precision: 0)
+    
+    /// Format number with style and locale.
+    /// - Parameters:
+    ///   - style: Format style for number.
+    ///   - locale: The locale for the receiver.
+    case number(style: NumberFormatter.Style, locale: Locale? = nil)
+    
+    private static let numberFormatter = NumberFormatter()
+    
+    func string<T: BinaryFloatingPoint>(from value: T) -> String {
+        switch self {
+        case let .fixed(precision):
+            return precision > 0
+                ? String(format: "%.\(precision)f", Double(value))
+                : String(format: "%f", Double(value))
+            
+        case let .hex(includePrefix, uppercase):
+            var text = String(format: "%a", Double(value)).replacingOccurrences(of: "0x", with: "")
+            if uppercase {
+                text = text.uppercased()
+            }
+            return "\(includePrefix ? "0x" : "")\(text)"
+            
+        case let .exponential(precision):
+            return precision > 0
+                ? String(format: "%.\(precision)e", Double(value))
+                : String(format: "%e", Double(value))
+            
+        case let .hybrid(precision):
+            return precision > 0
+                ? String(format: "%.\(precision)g", Double(value))
+                : String(format: "%g", Double(value))
+            
+        case let .number(style, locale):
+            return synchronized(Self.numberFormatter) {
+                Self.numberFormatter.locale = locale
+                Self.numberFormatter.numberStyle = style
+                return Self.numberFormatter.string(from: NSNumber(value: Double(value)))!
+            }
+        }
+    }
+}
+
+/// The formatting options for Boolean values.
+public enum LogBoolFormatter {
+    /// Displays an interpolated boolean value as 1 or 0.
+    case binary
+    
+    /// Displays an interpolated boolean value as yes or no.
+    case answer
+    
+    /// Displays an interpolated boolean value as on or off.
+    case toggle
+    
+    func string(from value: Bool) -> String {
+        switch self {
+        case .binary:
+            return value ? "1" : "0"
+            
+        case .toggle:
+            return value ? "on" : "off"
+            
+        case .answer:
+            return value ? "yes" : "no"
         }
     }
 }

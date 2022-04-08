@@ -9,7 +9,7 @@
 
 <p align="center"><img src="Images/dlog.png" alt="DLog: Modern logger with pipelines for Swift"></p>
 
-DLog is the development logger that supports emoji and colored text output, oslog, pipelines, filtering, scopes, intervals, stack backtrace and more.
+DLog is the development logger for Swift that supports emoji and colored text output, oslog, pipelines, filtering, scopes, intervals, stack backtrace and more.
 
 - [Getting started](#getting-started)
 - [Log levels](#log-levels): [log](#log), [info](#info), [trace](#trace), [debug](#debug), [warning](#warning), [error](#error), [assert](#assert), [fault](#fault)

@@ -44,13 +44,13 @@ public class LogStringInterpolation: StringInterpolationProtocol {
         output.append(literal)
     }
     
-    /// Defines interpolation for expressions of any type.
+    /// Defines interpolation for expressions of Any type.
     ///
     /// - Parameters:
-    ///   - arg: The interpolated value of any type.
+    ///   - arg: The interpolated value of Any type.
     ///   - privacy: A privacy qualifier which is either private or public. Defaults to public.
-    public func appendInterpolation(_ arg: @autoclosure @escaping () -> Any, privacy: LogPrivacy = .public) {
-        let text = String(describing: arg())
+    public func appendInterpolation(_ value: @autoclosure @escaping () -> Any, privacy: LogPrivacy = .public) {
+        let text = String(describing: value())
         let masked = privacy.mask(text)
         output.append(masked)
     }
@@ -61,20 +61,8 @@ public class LogStringInterpolation: StringInterpolationProtocol {
     ///   - date: A date value.
     ///   - format: Format options for date.
     ///   - privacy: A privacy qualifier which is either private or public. Defaults to public.
-    public func appendInterpolation(_ date: @autoclosure @escaping () -> Date, format: LogDateFormatter, privacy: LogPrivacy = .public) {
-        let text = format.string(from: date())
-        let masked = privacy.mask(text)
-        output.append(masked)
-    }
-    
-    /// Defines interpolation for expressions of numbers.
-    ///
-    /// - Parameters:
-    ///   - number: A number value.
-    ///   - format: Format options for number.
-    ///   - privacy: A privacy qualifier which is either private or public. Defaults to public.
-    public func appendInterpolation(_ number: @autoclosure @escaping () -> Int, format: LogNumberFormatter, privacy: LogPrivacy = .public) {
-        let text = format.string(from: number())
+    public func appendInterpolation(_ value: @autoclosure @escaping () -> Date, format: LogDateFormatter, privacy: LogPrivacy = .public) {
+        let text = format.string(from: value())
         let masked = privacy.mask(text)
         output.append(masked)
     }
@@ -85,11 +73,25 @@ public class LogStringInterpolation: StringInterpolationProtocol {
     ///   - value: A integer value.
     ///   - format: Format options for a value.
     ///   - privacy: A privacy qualifier which is either private or public. Defaults to public.
-    public func appendInterpolation<T: FixedWidthInteger>(_ value: @autoclosure @escaping () -> T, format: LogIntFormatter, privacy: LogPrivacy = .public) {
+    public func appendInterpolation<T: BinaryInteger>(_ value: @autoclosure @escaping () -> T, format: LogIntFormatter, privacy: LogPrivacy = .public) {
         let text = format.string(from: value())
         let masked = privacy.mask(text)
         output.append(masked)
     }
+    
+    
+    public func appendInterpolation<T: BinaryFloatingPoint>(_ value: @autoclosure @escaping () -> T, format: LogDoubleFormatter, privacy: LogPrivacy = .public) {
+        let text = format.string(from: value())
+        let masked = privacy.mask(text)
+        output.append(masked)
+    }
+    
+    public func appendInterpolation(_ value: @autoclosure @escaping () -> Bool, format: LogBoolFormatter, privacy: LogPrivacy = .public) {
+        let text = format.string(from: value())
+        let masked = privacy.mask(text)
+        output.append(masked)
+    }
+    
 }
 
 /// An object that represents a log message.
