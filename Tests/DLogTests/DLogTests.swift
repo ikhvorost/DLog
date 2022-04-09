@@ -526,6 +526,10 @@ final class FormatTests: XCTestCase {
         // Notification
         let notification = Notification.Name.NSCalendarDayChanged
         XCTAssert(logger.debug("\(notification.rawValue)")?.match("NSCalendarDayChanged") == true)
+        
+        // Array
+        let array = [1, 2, 3]
+        XCTAssert(logger.debug("\(array)")?.match("\\[1, 2, 3\\]") == true)
     }
     
     func test_Privacy() {
@@ -634,6 +638,8 @@ final class FormatTests: XCTestCase {
         // Byte count
         
         // Count style
+        XCTAssert(logger.log("\(1000, format: .byteCount)")?.match("1 KB") == true)
+        
         XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .file))")?.match("20.2 MB") == true)
         XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .memory))")?.match("19.3 MB") == true)
         XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .decimal))")?.match("20.2 MB") == true)
@@ -671,6 +677,19 @@ final class FormatTests: XCTestCase {
         // Locale
         let locale = Locale(identifier: "en_GB")
         XCTAssert(logger.log("\(number, format: .number(style: .currency, locale: locale))")?.match("\\£1,234\\.00") == true)
+        
+        // HTTP
+        XCTAssert(logger.log("\(200, format: .httpStatusCode)")?.match("no error") == true)
+        XCTAssert(logger.log("\(400, format: .httpStatusCode)")?.match("bad request") == true)
+        XCTAssert(logger.log("\(404, format: .httpStatusCode)")?.match("not found") == true)
+        XCTAssert(logger.log("\(500, format: .httpStatusCode)")?.match("internal server error") == true)
+        
+        // IPv4
+        let ip4 = 0x0100007f // 16777343
+        XCTAssert(logger.log("\(0, format: .ipv4Address)")?.match("0.0.0.0") == true)
+        XCTAssert(logger.log("\(ip4, format: .ipv4Address)")?.match("127.0.0.1") == true)
+        XCTAssert(logger.log("\(-ip4, format: .ipv4Address)")?.match("127.0.0.1") == false)
+        XCTAssert(logger.log("\(0x0101a8c0, format: .ipv4Address)")?.match("192.168.1.1") == true)
     }
     
     func test_DoubleFormat() {

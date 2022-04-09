@@ -25,6 +25,7 @@
 
 
 import Foundation
+import Network
 
 /// Format options for date.
 public enum LogDateFormatter {
@@ -75,6 +76,7 @@ public enum LogIntFormatter {
     ///  - countStyle: Style of counts.
     ///  - allowedUnits: Units to display.
     case byteCount(countStyle: ByteCountFormatter.CountStyle = .file, allowedUnits: ByteCountFormatter.Units = .useMB)
+    public static let byteCount = Self.byteCount(allowedUnits: .useAll)
     
     /// Format number with style and locale.
     /// - Parameters:
@@ -82,6 +84,14 @@ public enum LogIntFormatter {
     ///   - locale: The locale for the receiver.
     case number(style: NumberFormatter.Style, locale: Locale? = nil)
     
+    /// Displays a localized string corresponding to a specified HTTP status code.
+    case httpStatusCode
+    
+    /// Displays an interpolated Int32 value as IPv4 address.
+    /// For instance, 0x0100007f would be displayed as 127.0.0.1
+    case ipv4Address
+    
+    // Formatters
     private static let byteCountFormatter = ByteCountFormatter()
     private static let numberFormatter = NumberFormatter()
     
@@ -113,6 +123,14 @@ public enum LogIntFormatter {
                 Self.numberFormatter.numberStyle = style
                 return Self.numberFormatter.string(from: NSNumber(value: Double(value)))!
             }
+            
+        case .httpStatusCode:
+            return "HTTP \(value): \(HTTPURLResponse.localizedString(forStatusCode: Int(value)))"
+            
+        case .ipv4Address:
+            guard value >= 0 else { return "" }
+            let data = withUnsafeBytes(of: UInt32(value)) { Data($0) }
+            return IPv4Address(data)!.debugDescription
         }
     }
 }
@@ -136,6 +154,7 @@ public enum LogDoubleFormatter {
     ///   - locale: The locale for the receiver.
     case number(style: NumberFormatter.Style, locale: Locale? = nil)
     
+    // Formatters
     private static let numberFormatter = NumberFormatter()
     
     func string<T: BinaryFloatingPoint>(from value: T) -> String {
