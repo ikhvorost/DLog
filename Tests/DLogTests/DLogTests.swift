@@ -656,14 +656,9 @@ final class FormatTests: XCTestCase {
         // Privacy
         XCTAssert(logger.log("\(value, format: .byteCount(allowedUnits: .useMB), privacy: .private(mask: .redact))")?.match("00.0 XX") == true)
         
-        //
         // Number
-        //
-        
         let number = 1_234
-        
         XCTAssert(logger.log("\(number)")?.match("\(number)") == true)
-        
         XCTAssert(logger.log("\(number, format: .number(style: .none))")?.match("\(number)") == true)
         XCTAssert(logger.log("\(number, format: .number(style: .decimal))")?.match("1,234") == true)
         XCTAssert(logger.log("\(number, format: .number(style: .currency))")?.match("\\$1,234\\.00") == true)
@@ -677,6 +672,7 @@ final class FormatTests: XCTestCase {
         // Locale
         let locale = Locale(identifier: "en_GB")
         XCTAssert(logger.log("\(number, format: .number(style: .currency, locale: locale))")?.match("\\£1,234\\.00") == true)
+        // Number
         
         // HTTP
         XCTAssert(logger.log("\(200, format: .httpStatusCode)")?.match("no error") == true)
@@ -721,12 +717,8 @@ final class FormatTests: XCTestCase {
         // Privacy
         XCTAssert(logger.log("\(value, format: .hybrid(precision: 1), privacy: .private(mask: .redact))")?.match("0X\\+00") == true)
         
-        //
         // Number
-        //
-        
         let number = 1_234.56
-        
         XCTAssert(logger.log("\(number)")?.match("\(number)") == true)
         
         XCTAssert(logger.log("\(number, format: .number(style: .none))")?.match("1235") == true)
@@ -734,7 +726,7 @@ final class FormatTests: XCTestCase {
         XCTAssert(logger.log("\(number, format: .number(style: .currency))")?.match("\\$1,234\\.56") == true)
         XCTAssert(logger.log("\(number, format: .number(style: .percent))")?.match("123,456%") == true)
         XCTAssert(logger.log("\(number, format: .number(style: .scientific))")?.match("1.23456E3") == true)
-        XCTAssert(logger.log("\(number, format: .number(style: .spellOut))")?.match("one thousand two hundred thirty-four") == true)
+        XCTAssert(logger.log("\(number, format: .number(style: .spellOut))")?.match("one thousand two hundred thirty-four point five six") == true)
         
         // Privacy
         XCTAssert(logger.log("\(number, format: .number(style: .decimal), privacy: .private(mask: .redact))")?.match("0,000.00") == true)
@@ -742,6 +734,7 @@ final class FormatTests: XCTestCase {
         // Locale
         let locale = Locale(identifier: "en_GB")
         XCTAssert(logger.log("\(number, format: .number(style: .currency, locale: locale))")?.match("\\£1,234\\.56") == true)
+        // Number
     }
     
     func test_BoolFormat() {

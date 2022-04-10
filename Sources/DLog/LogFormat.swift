@@ -28,16 +28,18 @@ import Foundation
 import Network
 
 /// Format options for date.
-public enum LogDateFormatter {
+public enum LogDateFormatting {
     
-    /// Format date with date/time styles and locale.
+    /// Displays a date value with the specified parameters.
+    ///
     /// - Parameters:
-    ///    - dateStyle: Format style for date.
-    ///    - timeStyle: Format style for time.
-    ///    - locale: The locale for the receiver.
+    ///    - dateStyle: Format style for date. The default is `none`.
+    ///    - timeStyle: Format style for time. The default is `none`.
+    ///    - locale: The locale for the receiver. The default is `nil`.
     case date(dateStyle: DateFormatter.Style = .none, timeStyle: DateFormatter.Style = .none, locale: Locale? = nil)
     
-    /// Format date with a custom format string.
+    /// Displays a date value with the specified format.
+    ///
     /// - Parameters:
     ///    - format: Custom format string.
     case dateCustom(format: String)
@@ -62,32 +64,54 @@ public enum LogDateFormatter {
     }
 }
 
-public enum LogIntFormatter {
+/// Format options for integers.
+public enum LogIntFormatting {
+    /// Displays an integer value in binary format.
     case binary
     
+    /// Displays an integer value in octal format with the specified parameters.
+    ///
+    /// - Parameters:
+    ///   - includePrefix: Pass `true` to add a prefix 0o. The default is `false`.
     case octal(includePrefix: Bool = false)
+    
+    /// Displays an integer value in octal format.
     public static let octal = Self.octal()
     
+    /// Displays an integer value in hexadecimal format with the specified
+    /// parameters.
+    ///
+    /// - Parameters:
+    ///   - includePrefix: Pass `true` to add a prefix 0x. The default is `false`.
+    ///   - uppercase: Pass `true` to use uppercase letters
+    ///   or `false` to use lowercase letters. The default is `false`.
     case hex(includePrefix: Bool = false, uppercase: Bool = false)
+    
+    /// Displays an integer value in hexadecimal format.
     public static let hex = Self.hex()
     
-    /// Format byte count with style and unit.
+    /// Displays an integer value in byte count format with the specified parameters.
+    ///
     /// - Parameters:
-    ///  - countStyle: Style of counts.
-    ///  - allowedUnits: Units to display.
+    ///  - countStyle: Style of counts. The default is `file`.
+    ///  - allowedUnits: Units to display. The default is `useMB`.
     case byteCount(countStyle: ByteCountFormatter.CountStyle = .file, allowedUnits: ByteCountFormatter.Units = .useMB)
+    
+    /// Displays an integer value in byte count format.
     public static let byteCount = Self.byteCount(allowedUnits: .useAll)
     
-    /// Format number with style and locale.
+    /// Displays an integer value in number format with the specified parameters.
+    ///
     /// - Parameters:
     ///   - style: Format style for number.
-    ///   - locale: The locale for the receiver.
+    ///   - locale: The locale for the receiver. The default is `nil`.
     case number(style: NumberFormatter.Style, locale: Locale? = nil)
     
     /// Displays a localized string corresponding to a specified HTTP status code.
     case httpStatusCode
     
-    /// Displays an interpolated Int32 value as IPv4 address.
+    /// Displays an integer value (Int32) as IPv4 address.
+    ///
     /// For instance, 0x0100007f would be displayed as 127.0.0.1
     case ipv4Address
     
@@ -135,23 +159,52 @@ public enum LogIntFormatter {
     }
 }
 
-public enum LogDoubleFormatter {
+/// Format options for floating-point numbers.
+public enum LogFloatFormatting {
+    /// Displays a floating-point value in fprintf's `%f` format with specified precision.
+    ///
+    /// - Parameters:
+    ///  - precision: Number of digits to display after the radix point.
     case fixed(precision: Int = 0)
-    public static let fixed = Self.fixed(precision: 0)
     
+    /// Displays a floating-point value in fprintf's `%f` format with default precision.
+    public static let fixed = Self.fixed()
+    
+    /// Displays a floating-point value in hexadecimal format with the specified parameters.
+    ///
+    /// - Parameters:
+    ///   - includePrefix: Pass `true` to add a prefix 0x. The default is `false`.
+    ///   - uppercase: Pass `true` to use uppercase letters
+    ///    or `false` to use lowercase letters. The default is `false`.
     case hex(includePrefix: Bool = false, uppercase: Bool = false)
+    
+    /// Displays a floating-point value in hexadecimal format.
     public static let hex = Self.hex()
     
-    case exponential(precision: Int)
-    public static let exponential = Self.exponential(precision: 0)
+    /// Displays a floating-point value in fprintf's `%e` format with specified precision.
+    ///
+    /// - Parameters:
+    ///   - precision: Number of digits to display after the radix point.
+    case exponential(precision: Int = 0)
     
-    case hybrid(precision: Int)
-    public static let hybrid = Self.hybrid(precision: 0)
+    /// Displays a floating-point value in fprintf's `%e` format.
+    public static let exponential = Self.exponential()
     
-    /// Format number with style and locale.
+    /// Displays a floating-point value in fprintf's `%g` format with the
+    /// specified precision.
+    ///
+    /// - Parameters:
+    ///   - precision: Number of digits to display after the radix point.
+    case hybrid(precision: Int = 0)
+    
+    /// Displays a floating-point value in fprintf's `%g` format.
+    public static let hybrid = Self.hybrid()
+    
+    /// Displays a floating-point value in number format with the specified parameters.
+    ///
     /// - Parameters:
     ///   - style: Format style for number.
-    ///   - locale: The locale for the receiver.
+    ///   - locale: The locale for the receiver. The default is `nil`.
     case number(style: NumberFormatter.Style, locale: Locale? = nil)
     
     // Formatters
@@ -192,14 +245,14 @@ public enum LogDoubleFormatter {
 }
 
 /// The formatting options for Boolean values.
-public enum LogBoolFormatter {
-    /// Displays an interpolated boolean value as 1 or 0.
+public enum LogBoolFormatting {
+    /// Displays a boolean value as 1 or 0.
     case binary
     
-    /// Displays an interpolated boolean value as yes or no.
+    /// Displays a boolean value as yes or no.
     case answer
     
-    /// Displays an interpolated boolean value as on or off.
+    /// Displays a boolean value as on or off.
     case toggle
     
     func string(from value: Bool) -> String {
