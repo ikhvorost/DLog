@@ -600,7 +600,7 @@ final class FormatTests: XCTestCase {
         XCTAssert(logger.log("\(date, format: .date(timeStyle: .full))")?.match("3:42:11 PM Greenwich Mean Time") == true)
         
         // Both
-        XCTAssert(logger.log("\(date, format: .date())")?.match("22") == false)
+        XCTAssert(logger.log("\(date, format: .date())")?.match("\\s$") == false) // Empty
         XCTAssert(logger.log("\(date, format: .date(dateStyle: .medium, timeStyle: .short))")?.match("Feb 16, 2022 at 3:42 PM") == true)
 
         // Custom
