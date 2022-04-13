@@ -14,7 +14,7 @@ DLog is the development logger for Swift that supports emoji and colored text ou
 - [Getting started](#getting-started)
 - [Log levels](#log-levels): [log](#log), [info](#info), [trace](#trace), [debug](#debug), [warning](#warning), [error](#error), [assert](#assert), [fault](#fault)
 - [Privacy](#privacy): [public](#public), [private](#private)
-- [Format](#format): [date](#date), [number](#number), [byteCount](#bytecount)
+- [Formatters](#formatters): [Date](#date), [Integer](#integer), [Float](#float), [Bool](#bool)
 - [Scope](#scope)
 - [Interval](#interval)
 - [Category](#category)
@@ -375,15 +375,17 @@ Outputs:
 • 12:36:58.950 [DLOG] [LOG] <DLogTests.swift:508> +1*********0
 ```
 
-## Format
+## Formatters
 
 DLog formats values in log messages based on the default settings, but you can apply custom formatting to your variables to make them more readable.
 
-### date
+### Date
 
-#### `date(dateStyle:, timeStyle:, locale:)`
+The formatting options for date values.
 
-Format date with date/time styles and locale.
+#### `date(dateStyle: DateFormatter.Style, timeStyle: DateFormatter.Style, locale: Locale?)`
+
+The formatting options for Date values.
 
 ```swift
 let date = Date()
@@ -402,7 +404,7 @@ Outputs:
 • 18:12:52.606 [DLOG] [LOG] <DLogTests.swift:559> 30 Mar 2022 at 18:12
 ```
 
-#### `dateCustom(format:)`
+#### `dateCustom(format: String)`
 
 Format date with a custom format string.
 
@@ -417,15 +419,91 @@ Outputs:
 • 18:12:52.606 [DLOG] [LOG] <DLogTests.swift:558> 30-03-2022
 ```
 
-### number
+### Integer
 
-#### `number(style:, locale:)`
+The formatting options for integer (Int8, Int16, Int32, Int64, UInt8 etc.) values.
 
-Format number with style and locale.
+#### `binary`
+
+Displays an integer value in binary format.
+
+```swift
+let value = 12345
+logger.log("\(value, format: .binary)")
+```
+
+Outputs:
+
+```
+• 18:58:29.085 [DLOG] [LOG] <DLogTests.swift:621> 11000000111001
+```
+
+#### `octal(includePrefix: Bool)`
+
+Displays an integer value in octal format with the specified parameters.
+
+```swift
+let value = 12345
+logger.log("\(value, format: .octal)")
+logger.log("\(value, format: .octal(includePrefix: true))")
+```
+
+Outputs:
+
+```
+• 19:01:33.019 [DLOG] [LOG] <DLogTests.swift:624> 30071
+• 19:01:33.020 [DLOG] [LOG] <DLogTests.swift:625> 0o30071
+```
+
+#### `hex(includePrefix: Bool, uppercase: Bool)`
+
+Displays an integer value in hexadecimal format with the specified parameters.
+
+```swift
+let value = 1234567
+logger.log("\(value, format: .hex)")
+logger.log("\(value, format: .hex(includePrefix: true))")
+logger.log("\(value, format: .hex(uppercase: true))")
+logger.log("\(value, format: .hex(includePrefix: true, uppercase: true))")
+```
+
+Outputs:
+
+```
+• 19:06:30.463 [DLOG] [LOG] <DLogTests.swift:621> 12d687
+• 19:06:30.464 [DLOG] [LOG] <DLogTests.swift:622> 0x12d687
+• 19:06:30.464 [DLOG] [LOG] <DLogTests.swift:623> 12D687
+• 19:06:30.464 [DLOG] [LOG] <DLogTests.swift:624> 0x12D687
+```
+
+#### `byteCount(countStyle: ByteCountFormatter.CountStyle, allowedUnits: ByteCountFormatter.Units)`
+
+Format byte count with style and unit.
+
+```swift
+let value = 20_234_557
+logger.log("\(value, format: .byteCount)")
+logger.log("\(value, format: .byteCount(countStyle: .memory))")
+logger.log("\(value, format: .byteCount(allowedUnits: .useBytes))")
+logger.log("\(value, format: .byteCount(countStyle: .memory, allowedUnits: .useGB))")
+```
+
+Outputs:
+
+```
+• 19:36:49.454 [DLOG] [LOG] <DLogTests.swift:621> 20.2 MB
+• 19:36:49.458 [DLOG] [LOG] <DLogTests.swift:622> 19.3 MB
+• 19:36:49.458 [DLOG] [LOG] <DLogTests.swift:623> 20,234,557 bytes
+• 19:36:49.458 [DLOG] [LOG] <DLogTests.swift:624> 0.02 GB
+```
+
+#### `number(style: NumberFormatter.Style, locale: Locale?)`
+
+Displays an integer value in number format with the specified parameters.
 
 ```swift
 let number = 1_234
-logger.log("\(number, format: .number(style: .decimal))")
+logger.log("\(number, format: .number)")
 logger.log("\(number, format: .number(style: .currency))")
 logger.log("\(number, format: .number(style: .spellOut))")
 logger.log("\(number, format: .number(style: .currency, locale: Locale(identifier: "en_GB")))")
@@ -434,31 +512,195 @@ logger.log("\(number, format: .number(style: .currency, locale: Locale(identifie
 Outputs:
 
 ```
-• 18:26:58.437 [DLOG] [LOG] <DLogTests.swift:587> 1,234
-• 18:26:58.439 [DLOG] [LOG] <DLogTests.swift:588> $1,234.00
-• 18:26:58.439 [DLOG] [LOG] <DLogTests.swift:589> one thousand two hundred thirty-four
-• 18:26:58.441 [DLOG] [LOG] <DLogTests.swift:590> £1,234.00
+• 19:42:40.938 [DLOG] [LOG] <DLogTests.swift:621> 1,234
+• 19:42:40.939 [DLOG] [LOG] <DLogTests.swift:622> $1,234.00
+• 19:42:40.939 [DLOG] [LOG] <DLogTests.swift:623> one thousand two hundred thirty-four
+• 19:42:40.939 [DLOG] [LOG] <DLogTests.swift:624> £1,234.00
 ```
 
-### byteCount
+#### `httpStatusCode`
 
-#### `byteCount(countStyle:, allowedUnits:)`
-
-Format byte count with style and unit.
+Displays a localized string corresponding to a specified HTTP status code.
 
 ```swift
-let value: Int64 = 20_234_557
-logger.log("\(value, format: .byteCount(countStyle: .file))")
-logger.log("\(value, format: .byteCount(allowedUnits: .useBytes))")
-logger.log("\(value, format: .byteCount(countStyle: .memory, allowedUnits: .useGB))")
+logger.log("\(200, format: .httpStatusCode)")
+logger.log("\(404, format: .httpStatusCode)")
+logger.log("\(500, format: .httpStatusCode)")
 ```
 
 Outputs:
 
 ```
-• 18:40:42.817 [DLOG] [LOG] <DLogTests.swift:608> 20.2 MB
-• 18:40:42.821 [DLOG] [LOG] <DLogTests.swift:609> 20,234,557 bytes
-• 18:40:42.821 [DLOG] [LOG] <DLogTests.swift:610> 0.02 GB
+• 19:51:14.297 [DLOG] [LOG] <DLogTests.swift:620> HTTP 200 no error
+• 19:51:14.298 [DLOG] [LOG] <DLogTests.swift:621> HTTP 404 not found
+• 19:51:14.298 [DLOG] [LOG] <DLogTests.swift:622> HTTP 500 internal server error
+```
+
+#### `ipv4Address`
+
+Displays an integer value (Int32) as IPv4 address.
+
+```swift
+let ip4 = 0x0100007f
+logger.log("\(ip4, format: .ipv4Address)")
+```
+
+Outputs:
+
+```
+• 19:53:18.141 [DLOG] [LOG] <DLogTests.swift:621> 127.0.0.1
+```
+
+### Float
+
+The formatting options for double and floating-point numbers.
+
+#### `fixed(precision: Int)`
+
+Displays a floating-point value in fprintf's `%f` format with specified precision.
+
+```swift
+let value = 12.345
+logger.log("\(value, format: .fixed)")
+logger.log("\(value, format: .fixed(precision: 2))")
+```
+
+Outputs:
+
+```
+• 08:49:35.800 [DLOG] [LOG] <DLogTests.swift:696> 12.345000
+• 08:49:35.802 [DLOG] [LOG] <DLogTests.swift:697> 12.35
+```
+
+#### `hex(includePrefix: Bool, uppercase: Bool)`
+
+Displays a floating-point value in hexadecimal format with the specified parameters.
+
+```swift
+let value = 12.345
+logger.log("\(value, format: .hex)")
+logger.log("\(value, format: .hex(includePrefix: true))")
+logger.log("\(value, format: .hex(uppercase: true))")
+logger.log("\(value, format: .hex(includePrefix: true, uppercase: true))")
+```
+
+Outputs:
+
+```
+• 09:25:46.834 [DLOG] [LOG] <DLogTests.swift:697> 1.8b0a3d70a3d71p+3
+• 09:25:46.836 [DLOG] [LOG] <DLogTests.swift:698> 0x1.8b0a3d70a3d71p+3
+• 09:25:46.836 [DLOG] [LOG] <DLogTests.swift:699> 1.8B0A3D70A3D71P+3
+• 09:25:46.836 [DLOG] [LOG] <DLogTests.swift:700> 0x1.8B0A3D70A3D71P+3
+```
+
+#### `exponential(precision: Int)`
+
+Displays a floating-point value in fprintf's `%e` format with specified precision.
+
+```swift
+let value = 12.345
+logger.log("\(value, format: .exponential)")
+logger.log("\(value, format: .exponential(precision: 2))")
+```
+
+Outputs:
+
+```
+• 09:28:51.684 [DLOG] [LOG] <DLogTests.swift:696> 1.234500e+01
+• 09:28:51.686 [DLOG] [LOG] <DLogTests.swift:697> 1.23e+01
+```
+
+#### `hybrid(precision: Int)`
+
+Displays a floating-point value in fprintf's `%g` format with the specified precision.
+
+```swift
+let value = 12.345
+logger.log("\(value, format: .hybrid)")
+logger.log("\(value, format: .hybrid(precision: 1))")
+```
+
+Outputs:
+
+```
+• 09:31:02.301 [DLOG] [LOG] <DLogTests.swift:696> 12.345
+• 09:31:02.303 [DLOG] [LOG] <DLogTests.swift:697> 1e+01
+```
+
+#### `number(style: NumberFormatter.Style, locale: Locale?)`
+
+Displays a floating-point value in number format with the specified parameters.
+
+```swift
+let value = 12.345
+logger.log("\(value, format: .number)")
+logger.log("\(value, format: .number(style: .currency))")
+logger.log("\(value, format: .number(style: .spellOut))")
+logger.log("\(value, format: .number(style: .currency, locale: Locale(identifier: "en_GB")))")
+```
+
+Outputs:
+
+```
+• 09:35:00.740 [DLOG] [LOG] <DLogTests.swift:696> 12.345
+• 09:35:00.741 [DLOG] [LOG] <DLogTests.swift:697> $12.34
+• 09:35:00.741 [DLOG] [LOG] <DLogTests.swift:698> twelve point three four five
+• 09:35:00.744 [DLOG] [LOG] <DLogTests.swift:699> £12.34
+```
+
+### Bool
+
+The formatting options for Boolean values.
+
+#### `binary`
+
+Displays a boolean value as 1 or 0.
+
+```swift
+let value = true
+logger.log("\(value, format: .binary)")
+logger.log("\(!value, format: .binary)")
+```
+
+Outputs:
+
+```
+• 09:41:38.368 [DLOG] [LOG] <DLogTests.swift:746> 1
+• 09:41:38.370 [DLOG] [LOG] <DLogTests.swift:747> 0
+```
+
+#### `answer`
+
+Displays a boolean value as yes or no.
+
+```swift
+let value = true
+logger.log("\(value, format: .answer)")
+logger.log("\(!value, format: .answer)")
+```
+
+Outputs:
+
+```
+• 09:42:57.414 [DLOG] [LOG] <DLogTests.swift:746> yes
+• 09:42:57.415 [DLOG] [LOG] <DLogTests.swift:747> no
+```
+
+#### `toggle`
+
+Displays a boolean value as on or off.
+
+```swift
+let value = true
+logger.log("\(value, format: .toggle)")
+logger.log("\(!value, format: .toggle)")
+```
+
+Outputs:
+
+```
+• 09:43:46.202 [DLOG] [LOG] <DLogTests.swift:746> on
+• 09:43:46.203 [DLOG] [LOG] <DLogTests.swift:747> off
 ```
 
 ## Scope

@@ -659,6 +659,7 @@ final class FormatTests: XCTestCase {
         // Number
         let number = 1_234
         XCTAssert(logger.log("\(number)")?.match("\(number)") == true)
+        XCTAssert(logger.log("\(number, format: .number)")?.match("1,234") == true)
         XCTAssert(logger.log("\(number, format: .number(style: .none))")?.match("\(number)") == true)
         XCTAssert(logger.log("\(number, format: .number(style: .decimal))")?.match("1,234") == true)
         XCTAssert(logger.log("\(number, format: .number(style: .currency))")?.match("\\$1,234\\.00") == true)
@@ -675,10 +676,10 @@ final class FormatTests: XCTestCase {
         // Number
         
         // HTTP
-        XCTAssert(logger.log("\(200, format: .httpStatusCode)")?.match("no error") == true)
-        XCTAssert(logger.log("\(400, format: .httpStatusCode)")?.match("bad request") == true)
-        XCTAssert(logger.log("\(404, format: .httpStatusCode)")?.match("not found") == true)
-        XCTAssert(logger.log("\(500, format: .httpStatusCode)")?.match("internal server error") == true)
+        XCTAssert(logger.log("\(200, format: .httpStatusCode)")?.match("HTTP 200 no error") == true)
+        XCTAssert(logger.log("\(400, format: .httpStatusCode)")?.match("HTTP 400 bad request") == true)
+        XCTAssert(logger.log("\(404, format: .httpStatusCode)")?.match("HTTP 404 not found") == true)
+        XCTAssert(logger.log("\(500, format: .httpStatusCode)")?.match("HTTP 500 internal server error") == true)
         
         // IPv4
         let ip4 = 0x0100007f // 16777343

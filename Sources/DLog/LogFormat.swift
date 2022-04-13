@@ -107,6 +107,9 @@ public enum LogIntFormatting {
     ///   - locale: The locale for the receiver. The default is `nil`.
     case number(style: NumberFormatter.Style, locale: Locale? = nil)
     
+    /// Displays an integer value in number format.
+    public static let number = Self.number(style: .decimal)
+    
     /// Displays a localized string corresponding to a specified HTTP status code.
     case httpStatusCode
     
@@ -149,7 +152,7 @@ public enum LogIntFormatting {
             }
             
         case .httpStatusCode:
-            return "HTTP \(value): \(HTTPURLResponse.localizedString(forStatusCode: Int(value)))"
+            return "HTTP \(value) \(HTTPURLResponse.localizedString(forStatusCode: Int(value)))"
             
         case .ipv4Address:
             guard value >= 0 else { return "" }
@@ -206,6 +209,9 @@ public enum LogFloatFormatting {
     ///   - style: Format style for number.
     ///   - locale: The locale for the receiver. The default is `nil`.
     case number(style: NumberFormatter.Style, locale: Locale? = nil)
+    
+    /// Displays a floating-point value in number format.
+    public static let number = Self.number(style: .decimal)
     
     // Formatters
     private static let numberFormatter = NumberFormatter()
