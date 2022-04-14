@@ -1,24 +1,18 @@
 # DLog
 
-[![Language: Swift](https://img.shields.io/badge/language-swift-f48041.svg?style=flat)](https://developer.apple.com/swift)
-![Platform: iOS 8+/macOS10.11](https://img.shields.io/badge/platform-iOS%20|%20macOS%20|%20tvOS%20|%20watchOS%20-blue.svg?style=flat)
-[![SPM compatible](https://img.shields.io/badge/SPM-compatible-4BC51D.svg?style=flat)](https://swift.org/package-manager/)
-[![build & test](https://github.com/ikhvorost/DLog/actions/workflows/swift.yml/badge.svg?branch=master)](https://github.com/ikhvorost/DLog/actions/workflows/swift.yml)
+[![Swift: 5](https://img.shields.io/badge/Swift-5%2b-f48041.svg?style=flat)](https://developer.apple.com/swift)
+![Platforms: iOS, macOS, tvOS, watchOS](https://img.shields.io/badge/Platforms-iOS%20|%20macOS%20|%20tvOS%20|%20watchOS%20-blue.svg?style=flat)
+[![Swift Package Manager: compatible](https://img.shields.io/badge/Swift%20Package%20Manager-compatible-4BC51D.svg?style=flat)](https://swift.org/package-manager/)
+[![Build & Test](https://github.com/ikhvorost/DLog/actions/workflows/swift.yml/badge.svg?branch=master)](https://github.com/ikhvorost/DLog/actions/workflows/swift.yml)
 [![codecov](https://codecov.io/gh/ikhvorost/DLog/branch/master/graph/badge.svg?token=DJLKDA9W1Q)](https://codecov.io/gh/ikhvorost/DLog)
-[![swift doc coverage](https://img.shields.io/badge/swift%20doc-100%25-f39f37)](https://github.com/SwiftDocOrg/swift-doc)
-
-<!--
-<p align="center"><img src="Images/dlog.png" alt="DLog: Modern logger with pipelines for Swift"></p>
--->
+[![Swift Doc Coverage](https://img.shields.io/badge/Swift%20Doc%20Coverage-100%25-f39f37)](https://github.com/SwiftDocOrg/swift-doc)
 
 <p align="center">
-<picture>
-  <source media="(min-width: 600px)" srcset="Images/dlog-net-console.png">
-  <img src="Images/dlog.png" alt="DLog: Modern logger with pipelines for Swift">
-</picture>
+<img src="Images/dlog.png" alt="DLog: Modern logger with pipelines for Swift">
+<img src="Images/dlog-xcode-console.png" alt="DLog: Xcode Console">
 </p>
 
-DLog is the development logger for Swift that supports emoji and colored text output, oslog, pipelines, filtering, scopes, intervals, stack backtrace and more.
+DLog is the development logger for Swift that supports emoji and colored text output, format and privacy options, pipelines, filtering, scopes, intervals, stack backtrace and more.
 
 - [Getting started](#getting-started)
 - [Log levels](#log-levels): [log](#log), [info](#info), [trace](#trace), [debug](#debug), [warning](#warning), [error](#error), [assert](#assert), [fault](#fault)
@@ -65,6 +59,23 @@ Where:
 - `<DLog.swift:12>` - location (fileName:line), without file extension
 - `Hello DLog!` - message
 
+You can apply privacy and format options to your logged values:
+
+```swift
+let cardNumber = "1234 5678 9012 3456"
+logger.debug("\(cardNumber, privacy: .private(mask: .redact))")
+
+let salary = 10_123
+logger.debug("\(salary, format: .number(style: .currency))")
+```
+
+Outputs:
+
+```
+• 12:20:29.462 [DLOG] [DEBUG] <DLogTests.swift:539> 0000 0000 0000 0000
+• 12:20:29.464 [DLOG] [DEBUG] <DLogTests.swift:542> $10,123.00
+```
+
 `DLog` outputs text logs to `stdout` by default but you can use the other outputs such as: `stderr`, filter, file, OSLog, Net. For instance:
 
 ```swift
@@ -90,7 +101,7 @@ Outputs:
 • 00:03:07.181 [DLOG] 🅰️ [ASSERT] <DLog.swift:8> Assert message
 ```
 
-`=>` is pipeline operator and it can be used for creating a list of outputs:
+Where `=>` is pipeline operator and it can be used for creating a list of outputs:
 
 ```swift
 let logger = DLog(.textEmoji
@@ -735,13 +746,13 @@ Outputs:
 • 23:57:13.410 [DLOG] ┌ [Loading]
 • 23:57:13.427 [DLOG] | [INFO] <DLog.swift:14> File: path/data.json
 • 23:57:13.443 [DLOG] | [DEBUG] <DLog.swift:16> Loaded 121 bytes
-• 23:57:13.443 [DLOG] └ [Loading] (0.33)
+• 23:57:13.443 [DLOG] └ [Loading] (0.330s)
 
 ```
 
 Where:
  - `[Loading]` - a name of the scope
- - `(0.33)` - a time duration of the scope in secs
+ - `(0.330s)` - a time duration of the scope in secs
 
 You can get duration value of a finished scope programatically:
 
@@ -781,7 +792,7 @@ Outputs:
 • 00:01:24.158 [DLOG] ┌ [Request]
 • 00:01:24.829 [DLOG] | [DEBUG] <DLog.swift:25> https://www.apple.com/ - HTTP 200
 • 00:01:24.830 [DLOG] | [DEBUG] <DLog.swift:26> Loaded: 74454 bytes
-• 00:01:24.830 [DLOG] └ [Request] (0.671)
+• 00:01:24.830 [DLOG] └ [Request] (0.671s)
 ```
 
 Scopes can be nested one into one and that implements a global stack of scopes:
@@ -812,8 +823,8 @@ Outputs:
 • 00:03:13.555 [DLOG] | [DEBUG] <DLog.swift:23> Loaded 121 bytes
 • 00:03:13.555 [DLOG] | ┌ [Parsing]
 • 00:03:13.557 [DLOG] | | [DEBUG] <DLog.swift:27> Parsed 3 items
-• 00:03:13.557 [DLOG] | └ [Parsing] (0.2)
-• 00:03:13.609 [DLOG] └ [Loading] (0.56)
+• 00:03:13.557 [DLOG] | └ [Parsing] (0.200s)
+• 00:03:13.609 [DLOG] └ [Loading] (0.560s)
 ```
 
 ## Interval
@@ -832,16 +843,15 @@ for _ in 0..<10 {
 Outputs:
 
 ```
-• 00:05:09.932 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.270, average: 0.270 }
-• 00:05:10.162 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.216, average: 0.243 }
-• 00:05:10.380 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.215, average: 0.234 }
-• 00:05:10.608 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.225, average: 0.231 }
-• 00:05:10.829 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.217, average: 0.229 }
-• 00:05:11.057 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.225, average: 0.228 }
-• 00:05:11.275 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.214, average: 0.226 }
-• 00:05:11.497 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.219, average: 0.225 }
-• 00:05:11.712 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.212, average: 0.224 }
-• 00:05:11.925 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.209, average: 0.222 }
+• 00:05:09.932 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.270s, average: 0.270s }
+• 00:05:10.162 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.216s, average: 0.243s }
+• 00:05:10.380 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.215s, average: 0.234s }
+• 00:05:10.608 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.225s, average: 0.231s }
+• 00:05:10.829 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.217s, average: 0.229s }
+• 00:05:11.057 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.225s, average: 0.228s }
+• 00:05:11.275 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.214s, average: 0.226s }
+• 00:05:11.497 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.219s, average: 0.225s }
+• 00:05:11.712 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.212s, average: 0.224s }
 ```
 
 Where:
@@ -884,7 +894,7 @@ Outputs:
 
 ```
 • 00:10:17.982 [DLOG] [INFO] <DLog.swift:27> Duration: 5532776
-• 00:10:17.983 [DLOG] [INTERVAL] <DLog.swift:20> Video: { duration: 2.376, average: 2.376 }
+• 00:10:17.983 [DLOG] [INTERVAL] <DLog.swift:20> Video: { duration: 2.376s, average: 2.376s }
 ```
 
 ## Category
@@ -1365,7 +1375,7 @@ Outputs:
 • 00:19:59.573 [DLOG] ┌ [Load]
 • 00:19:59.573 [DLOG] | [DEBUG] <DLog.swift:27> debug
 • 00:19:59.586 [DLOG] | [ERROR] <DLog.swift:34> error
-• 00:19:59.586 [DLOG] └ [Load] (0.13)
+• 00:19:59.586 [DLOG] └ [Load] (0.130s)
 ```
 
 ## `.disabled`
@@ -1578,7 +1588,7 @@ logger.interval("signpost") {
 Outputs:
 
 ```
-• 23:26:40.978 [DLOG] [INTERVAL] <DLog.swift:13> signpost: { duration: 3.2, count: 1, total: 3.2, min: 3.2, max: 3.2, average: 3.2 }
+• 23:26:40.978 [DLOG] [INTERVAL] <DLog.swift:13> signpost: { duration: 3.200s, count: 1, total: 3.200s, min: 3.200s, max: 3.200s, average: 3.200s }
 ```
 
 ## Objective-C
