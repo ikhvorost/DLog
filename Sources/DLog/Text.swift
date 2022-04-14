@@ -169,12 +169,25 @@ public class Text : LogOutput {
 	private static let dateComponentsFormatter: DateComponentsFormatter = {
 		let formatter = DateComponentsFormatter()
 		formatter.allowedUnits = [.minute, .second]
+        formatter.unitsStyle = .abbreviated
 		return formatter
 	}()
 	
 	static func stringFromTime(interval: TimeInterval) -> String {
-		let ms = Int(interval.truncatingRemainder(dividingBy: 1) * 1000)
-		return dateComponentsFormatter.string(from: interval)! + ".\(ms)"
+        let time = dateComponentsFormatter.string(from: interval)!
+        
+        let fractation = String(format: "%.3f", interval).split(separator: ".")[1]
+        if fractation != "000" {
+            let ms = ".\(fractation)s"
+            if let index = time.firstIndex(of: "s") {
+                let range = index..<time.index(after: index)
+                return time.replacingCharacters(in: range, with: ms)
+            }
+            else {
+                return "\(time) 0\(ms)"
+            }
+        }
+        return time
 	}
 	
 	private func logPrefix(items: [(LogOptions, () -> String)], options: LogOptions) -> String {

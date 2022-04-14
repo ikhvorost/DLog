@@ -184,7 +184,7 @@ static void testAll(LogProtocol* logger, NSString *category) {
         testAll(scope, nil);
         [scope leave];
     });
-    XCTAssertTrue([text match:@"└ \\[Scope 2\\] \\(\\d\\.\\d\\)"]);
+    XCTAssertTrue([text match:@"└ \\[Scope 2\\] \\(0\\.\\d+s\\)"]);
 }
  
 - (void)test_Interval {

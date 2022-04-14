@@ -133,7 +133,7 @@ let FaultTag = #"\[FAULT\]"#
 let IntervalTag = #"\[INTERVAL\]"#
 
 let Location = "<DLogTests.swift:[0-9]+>"
-let SECS = #"[0-9]+\.[0-9]{3}"#
+let SECS = #"[0-9]+\.[0-9]{3}s"#
 let Interval = #"\{ duration: \#(SECS), average: \#(SECS) \}"#
 
 fileprivate func testAll(_ logger: LogProtocol, categoryTag: String = CategoryTag) {
@@ -158,7 +158,7 @@ fileprivate func testAll(_ logger: LogProtocol, categoryTag: String = CategoryTa
     
 	XCTAssert(logger.fault("fault")?.match(#"\#(categoryTag)\#(padding)\#(FaultTag) \#(Location) fault"#) == true)
 	
-	XCTAssert(read_stdout { logger.scope("scope") { _ in delay() } }?.match(#"\#(categoryTag)\#(padding)└ \[scope\] \(0\.[0-9]{3}\)"#) == true)
+	XCTAssert(read_stdout { logger.scope("scope") { _ in delay() } }?.match(#"\#(categoryTag)\#(padding)└ \[scope\] \(\#(SECS)\)"#) == true)
 	XCTAssert(read_stdout { logger.interval("signpost") { delay() } }?.match(#"\#(categoryTag)\#(padding)\[INTERVAL\] \#(Location) signpost: \#(Interval)"#) == true)
 }
 
