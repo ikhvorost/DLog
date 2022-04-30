@@ -7,6 +7,8 @@
 [![codecov](https://codecov.io/gh/ikhvorost/DLog/branch/master/graph/badge.svg?token=DJLKDA9W1Q)](https://codecov.io/gh/ikhvorost/DLog)
 [![Swift Doc Coverage](https://img.shields.io/badge/Swift%20Doc%20Coverage-100%25-f39f37)](https://github.com/SwiftDocOrg/swift-doc)
 
+[![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/donate/?hosted_button_id=TSPDD3ZAAH24C)
+
 <p align="center">
 <img src="Images/dlog.png" alt="DLog: Modern logger with pipelines for Swift">
 <img src="Images/dlog-xcode-console.png" alt="DLog: Xcode Console">
@@ -1703,7 +1705,7 @@ DLog* logger = DLog.disabled;
 
 ### XCode project
 
-1. Select `Xcode > File > Swift Packages > Add Package Dependency...`
+1. Select `Xcode > File > Add Packages...`
 2. Add package repository: `https://github.com/ikhvorost/DLog.git`
 3. Import the package in your source files: `import DLog`
 
@@ -1731,3 +1733,5 @@ let package = Package(
 ## License
 
 DLog is available under the MIT license. See the [LICENSE](LICENSE) file for more info.
+
+[![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/donate/?hosted_button_id=TSPDD3ZAAH24C)
