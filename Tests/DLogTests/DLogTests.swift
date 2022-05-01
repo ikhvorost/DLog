@@ -687,6 +687,21 @@ final class FormatTests: XCTestCase {
         XCTAssert(logger.log("\(ip4, format: .ipv4Address)")?.match("127.0.0.1") == true)
         XCTAssert(logger.log("\(-ip4, format: .ipv4Address)")?.match("127.0.0.1") == false)
         XCTAssert(logger.log("\(0x0101a8c0, format: .ipv4Address)")?.match("192.168.1.1") == true)
+        
+        // Time
+        let time = 60 * 60 + 23 * 60 + 15
+        XCTAssert(logger.log("\(time, format: .time)")?.match("1h 23m 15s") == true)
+        XCTAssert(logger.log("\(time, format: .time(unitsStyle: .positional))")?.match("1:23:15") == true)
+        XCTAssert(logger.log("\(time, format: .time(unitsStyle: .short))")?.match("1 hr, 23 min, 15 secs") == true)
+        XCTAssert(logger.log("\(time, format: .time(unitsStyle: .full))")?.match("1 hour, 23 minutes, 15 seconds") == true)
+        XCTAssert(logger.log("\(time, format: .time(unitsStyle: .spellOut))")?.match("one hour, twenty-three minutes, fifteen seconds") == true)
+        
+        // Date
+        let timeIntervalSince1970 = 1645026131 // 2022-02-16 15:42:11 +0000
+        XCTAssert(logger.log("\(timeIntervalSince1970, format: .date)")?.match("2/16/22, 3:42 PM$") == true)
+        XCTAssert(logger.log("\(timeIntervalSince1970, format: .date(dateStyle: .short))")?.match("2/16/22$") == true)
+        XCTAssert(logger.log("\(timeIntervalSince1970, format: .date(timeStyle: .medium))")?.match("3:42:11 PM$") == true)
+        XCTAssert(logger.log("\(timeIntervalSince1970, format: .date(dateStyle: .short, timeStyle: .short, locale: locale))")?.match("16/02/2022, 15:42$") == true)
     }
     
     func test_DoubleFormat() {
@@ -736,6 +751,22 @@ final class FormatTests: XCTestCase {
         let locale = Locale(identifier: "en_GB")
         XCTAssert(logger.log("\(number, format: .number(style: .currency, locale: locale))")?.match("\\£1,234\\.56") == true)
         // Number
+        
+        // Time
+        let time = 60 * 60 + 23 * 60 + 1.25
+        XCTAssert(logger.log("\(time, format: .time)")?.match("1h 23m 1.250s") == true)
+        XCTAssert(logger.log("\(time, format: .time(unitsStyle: .positional))")?.match("1:23:01.250") == true)
+        XCTAssert(logger.log("\(time, format: .time(unitsStyle: .short))")?.match("1 hr, 23 min, 1.250 sec") == true)
+        XCTAssert(logger.log("\(time, format: .time(unitsStyle: .full))")?.match("1 hour, 23 minutes, 1.250 second") == true)
+        XCTAssert(logger.log("\(time, format: .time(unitsStyle: .spellOut))")?.match("one hour, twenty-three minutes, one second, two hundred fifty milliseconds") == true)
+        XCTAssert(logger.log("\(time, format: .time(unitsStyle: .brief))")?.match("1hr 23min 1.250sec") == true)
+        
+        // Date
+        let timeIntervalSince1970 = 1645026131 // 2022-02-16 15:42:11 +0000
+        XCTAssert(logger.log("\(timeIntervalSince1970, format: .date)")?.match("2/16/22, 3:42 PM$") == true)
+        XCTAssert(logger.log("\(timeIntervalSince1970, format: .date(dateStyle: .short))")?.match("2/16/22$") == true)
+        XCTAssert(logger.log("\(timeIntervalSince1970, format: .date(timeStyle: .medium))")?.match("3:42:11 PM$") == true)
+        XCTAssert(logger.log("\(timeIntervalSince1970, format: .date(dateStyle: .short, timeStyle: .short, locale: locale))")?.match("16/02/2022, 15:42$") == true)
     }
     
     func test_BoolFormat() {

@@ -27,6 +27,69 @@
 import Foundation
 import Network
 
+
+// Formatters
+
+fileprivate let dateFormatter = DateFormatter()
+fileprivate let byteCountFormatter = ByteCountFormatter()
+fileprivate let numberFormatter = NumberFormatter()
+fileprivate let dateComponentsFormatter: DateComponentsFormatter = {
+    let formatter = DateComponentsFormatter()
+    formatter.allowedUnits = [.year, .month, .weekOfMonth, .day, .hour, .minute, .second]
+    return formatter
+}()
+
+fileprivate func insertMs(time: String, sec: String, ms: String) -> String  {
+    if let range = time.range(of: sec) {
+        var text = time
+        text.insert(contentsOf: ms, at: range.lowerBound)
+        return text
+    }
+    else {
+        return "\(time) 0\(ms)\(sec)"
+    }
+}
+
+func stringFromTimeInterval(_ ti: TimeInterval, unitsStyle: DateComponentsFormatter.UnitsStyle = .abbreviated) -> String {
+    let time: String = synchronized(dateComponentsFormatter) {
+        dateComponentsFormatter.unitsStyle = unitsStyle
+        return dateComponentsFormatter.string(from: ti) ?? ""
+    }
+    
+    guard let fraction = String(format: "%.3f", ti).split(separator: ".").last, fraction != "000" else {
+        return time
+    }
+    let ms = ".\(fraction)"
+    
+    switch unitsStyle {
+    case .positional:
+        return "\(time)\(ms)"
+
+    case .abbreviated:
+        return insertMs(time: time, sec: "s", ms: ms)
+
+    case .short:
+        return insertMs(time: time, sec: " sec", ms: ms)
+
+    case .full:
+        return insertMs(time: time, sec: " second", ms: ms)
+
+    case .spellOut:
+        let text: String = synchronized(numberFormatter) {
+            numberFormatter.numberStyle = .spellOut
+            let value = Double(fraction)!
+            return numberFormatter.string(from: NSNumber(value: value))!
+        }
+        return "\(time), \(text) milliseconds"
+        
+    case .brief:
+        return insertMs(time: time, sec: "sec", ms: ms)
+        
+    @unknown default:
+        return time
+    }
+}
+
 /// Format options for date.
 public enum LogDateFormatting {
     
@@ -44,21 +107,19 @@ public enum LogDateFormatting {
     ///    - format: Custom format string.
     case dateCustom(format: String)
     
-    private static let formatter = DateFormatter()
-    
     func string(from value: Date) -> String {
-        synchronized(Self.formatter) {
+        synchronized(dateFormatter) {
             switch self {
 
             case let .date(dateStyle, timeStyle, locale):
-                Self.formatter.locale = locale
-                Self.formatter.dateStyle = dateStyle
-                Self.formatter.timeStyle = timeStyle
-                return Self.formatter.string(from: value)
+                dateFormatter.dateStyle = dateStyle
+                dateFormatter.timeStyle = timeStyle
+                dateFormatter.locale = locale
+                return dateFormatter.string(from: value)
 
             case let .dateCustom(format):
-                Self.formatter.dateFormat = format
-                return Self.formatter.string(from: value)
+                dateFormatter.dateFormat = format
+                return dateFormatter.string(from: value)
             }
         }
     }
@@ -118,11 +179,18 @@ public enum LogIntFormatting {
     /// For instance, 0x0100007f would be displayed as 127.0.0.1
     case ipv4Address
     
-    // Formatters
-    private static let byteCountFormatter = ByteCountFormatter()
-    private static let numberFormatter = NumberFormatter()
+    // Time from seconds
+    case time(unitsStyle: DateComponentsFormatter.UnitsStyle)
+    
+    public static let time = Self.time(unitsStyle: .abbreviated)
+    
+    // Date from seconds since 1970
+    case date(dateStyle: DateFormatter.Style = .none, timeStyle: DateFormatter.Style = .none, locale: Locale? = nil)
+    
+    public static let date = Self.date(dateStyle: .short, timeStyle: .short)
     
     func string<T: BinaryInteger>(from value: T) -> String {
+        
         switch self {
         case .binary:
             return String(value, radix: 2)
@@ -138,17 +206,17 @@ public enum LogIntFormatting {
             return "\(prefix)\(hex)"
             
         case let .byteCount(countStyle, allowedUnits):
-            return synchronized(Self.byteCountFormatter) {
-                Self.byteCountFormatter.countStyle = countStyle
-                Self.byteCountFormatter.allowedUnits = allowedUnits
-                return Self.byteCountFormatter.string(fromByteCount: Int64(value))
+            return synchronized(byteCountFormatter) {
+                byteCountFormatter.countStyle = countStyle
+                byteCountFormatter.allowedUnits = allowedUnits
+                return byteCountFormatter.string(fromByteCount: Int64(value))
             }
         
         case let .number(style, locale):
-            return synchronized(Self.numberFormatter) {
-                Self.numberFormatter.locale = locale
-                Self.numberFormatter.numberStyle = style
-                return Self.numberFormatter.string(from: NSNumber(value: Double(value)))!
+            return synchronized(numberFormatter) {
+                numberFormatter.locale = locale
+                numberFormatter.numberStyle = style
+                return numberFormatter.string(from: NSNumber(value: Int64(value)))!
             }
             
         case .httpStatusCode:
@@ -158,6 +226,18 @@ public enum LogIntFormatting {
             guard value >= 0 else { return "" }
             let data = withUnsafeBytes(of: UInt32(value)) { Data($0) }
             return IPv4Address(data)!.debugDescription
+            
+        case let .time(unitsStyle):
+            return stringFromTimeInterval(Double(value), unitsStyle: unitsStyle)
+            
+        case let .date(dateStyle, timeStyle, locale):
+            let date = Date(timeIntervalSince1970: Double(value))
+            return synchronized(dateFormatter) {
+                dateFormatter.dateStyle = dateStyle
+                dateFormatter.timeStyle = timeStyle
+                dateFormatter.locale = locale
+                return dateFormatter.string(from: date)
+            }
         }
     }
 }
@@ -210,21 +290,27 @@ public enum LogFloatFormatting {
     ///   - locale: The locale for the receiver. The default is `nil`.
     case number(style: NumberFormatter.Style, locale: Locale? = nil)
     
+    case time(unitsStyle: DateComponentsFormatter.UnitsStyle)
+    public static let time = Self.time(unitsStyle: .abbreviated)
+    
+    // Date from seconds since 1970
+    case date(dateStyle: DateFormatter.Style = .none, timeStyle: DateFormatter.Style = .none, locale: Locale? = nil)
+    public static let date = Self.date(dateStyle: .short, timeStyle: .short)
+    
     /// Displays a floating-point value in number format.
     public static let number = Self.number(style: .decimal)
     
-    // Formatters
-    private static let numberFormatter = NumberFormatter()
-    
     func string<T: BinaryFloatingPoint>(from value: T) -> String {
+        let doubleValue = Double(value)
+        
         switch self {
         case let .fixed(precision):
             return precision > 0
-                ? String(format: "%.\(precision)f", Double(value))
-                : String(format: "%f", Double(value))
+                ? String(format: "%.\(precision)f", doubleValue)
+                : String(format: "%f", doubleValue)
             
         case let .hex(includePrefix, uppercase):
-            var text = String(format: "%a", Double(value)).replacingOccurrences(of: "0x", with: "")
+            var text = String(format: "%a", doubleValue).replacingOccurrences(of: "0x", with: "")
             if uppercase {
                 text = text.uppercased()
             }
@@ -232,19 +318,31 @@ public enum LogFloatFormatting {
             
         case let .exponential(precision):
             return precision > 0
-                ? String(format: "%.\(precision)e", Double(value))
-                : String(format: "%e", Double(value))
+                ? String(format: "%.\(precision)e", doubleValue)
+                : String(format: "%e", doubleValue)
             
         case let .hybrid(precision):
             return precision > 0
-                ? String(format: "%.\(precision)g", Double(value))
-                : String(format: "%g", Double(value))
+                ? String(format: "%.\(precision)g", doubleValue)
+                : String(format: "%g", doubleValue)
             
         case let .number(style, locale):
-            return synchronized(Self.numberFormatter) {
-                Self.numberFormatter.locale = locale
-                Self.numberFormatter.numberStyle = style
-                return Self.numberFormatter.string(from: NSNumber(value: Double(value)))!
+            return synchronized(numberFormatter) {
+                numberFormatter.locale = locale
+                numberFormatter.numberStyle = style
+                return numberFormatter.string(from: NSNumber(value: doubleValue))!
+            }
+            
+        case let .time(unitsStyle):
+            return stringFromTimeInterval(doubleValue, unitsStyle: unitsStyle)
+            
+        case let .date(dateStyle, timeStyle, locale):
+            let date = Date(timeIntervalSince1970: doubleValue)
+            return synchronized(dateFormatter) {
+                dateFormatter.dateStyle = dateStyle
+                dateFormatter.timeStyle = timeStyle
+                dateFormatter.locale = locale
+                return dateFormatter.string(from: date)
             }
         }
     }

@@ -166,30 +166,6 @@ public class Text : LogOutput {
 		return dateFormatter
 	}()
 	
-	private static let dateComponentsFormatter: DateComponentsFormatter = {
-		let formatter = DateComponentsFormatter()
-		formatter.allowedUnits = [.minute, .second]
-        formatter.unitsStyle = .abbreviated
-		return formatter
-	}()
-	
-	static func stringFromTime(interval: TimeInterval) -> String {
-        let time = dateComponentsFormatter.string(from: interval)!
-        
-        let fractation = String(format: "%.3f", interval).split(separator: ".")[1]
-        if fractation != "000" {
-            let ms = ".\(fractation)s"
-            if let index = time.firstIndex(of: "s") {
-                let range = index..<time.index(after: index)
-                return time.replacingCharacters(in: range, with: ms)
-            }
-            else {
-                return "\(time) 0\(ms)"
-            }
-        }
-        return time
-	}
-	
 	private func logPrefix(items: [(LogOptions, () -> String)], options: LogOptions) -> String {
 		items
 			.compactMap {
@@ -259,7 +235,7 @@ public class Text : LogOutput {
 		
 		var sign = { "\(scope.config.sign)" }
 		var time = start ? Self.dateFormatter.string(from: scope.time) : Self.dateFormatter.string(from: scope.time.addingTimeInterval(scope.duration))
-		let ms = !start ? "(\(Self.stringFromTime(interval: scope.duration)))" : nil
+		let ms = !start ? "(\(stringFromTimeInterval(scope.duration)))" : nil
 		var category = { "[\(scope.category)]" }
 		var level = { String(format: "[%02d]", scope.level) }
 		let padding: () -> String = {

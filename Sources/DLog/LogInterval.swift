@@ -100,12 +100,12 @@ public class LogInterval : LogItem {
 		
 		message = {
 			let items: [(IntervalOptions, String, () -> String)] = [
-				(.duration, "duration", { "\(Text.stringFromTime(interval: self.duration))" }),
+				(.duration, "duration", { "\(stringFromTimeInterval(self.duration))" }),
 				(.count, "count", { "\(self.count)" }),
-				(.total, "total", { "\(Text.stringFromTime(interval: self.total))" }),
-				(.min, "min", { "\(Text.stringFromTime(interval: self.min))" }),
-				(.max, "max", { "\(Text.stringFromTime(interval: self.max))" }),
-				(.average, "average", { "\(Text.stringFromTime(interval: self.avg))" })
+				(.total, "total", { "\(stringFromTimeInterval(self.total))" }),
+				(.min, "min", { "\(stringFromTimeInterval(self.min))" }),
+				(.max, "max", { "\(stringFromTimeInterval(self.max))" }),
+				(.average, "average", { "\(stringFromTimeInterval(self.avg))" })
 			]
 			let json = jsonDescription(title: self.name, items: items, options: config.intervalConfig.options)
             return LogMessage(stringLiteral: json)
