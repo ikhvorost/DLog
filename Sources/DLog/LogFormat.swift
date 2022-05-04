@@ -372,3 +372,50 @@ public enum LogBoolFormatting {
         }
     }
 }
+
+
+public enum LogDataFormatting {
+
+    // Pretty prints an `in6_addr` pointer.
+    case ipv6Address
+    
+    case text
+    
+    // Pretty prints an `uuid_t` pointer.
+    case uuid
+    
+    // Displays the raw bytes.
+    case raw
+    
+    func string(from data: Data) -> String {
+        switch self {
+        case .ipv6Address:
+            guard data.count == 16, let ipv6 = IPv6Address(data) else {
+                return ""
+            }
+            return ipv6.debugDescription
+            
+        case .text:
+            return String(data: data, encoding: .utf8) ?? ""
+            
+        case .uuid:
+            guard data.count == 16 else {
+                return ""
+            }
+            return data.withUnsafeBytes { bytes in
+                let positions = [4, 6, 8, 10]
+                let chars: [String] = (0..<bytes.count).map {
+                    let hyphen = positions.contains($0) ? "-" : ""
+                    let byte = String(format: "%02x", bytes[$0]).uppercased()
+                    return "\(hyphen)\(byte)"
+                }
+                return chars.joined()
+            }
+        
+        case .raw:
+            return data.withUnsafeBytes { bytes in
+                bytes.map { String(format: "%02x", $0).uppercased() } .joined()
+            }
+        }
+    }
+}

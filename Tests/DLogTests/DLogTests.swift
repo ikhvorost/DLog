@@ -1,6 +1,7 @@
 import Foundation
 import XCTest
 import DLog
+import Network
 //@testable import DLog
 
 // MARK: - Extensions
@@ -135,6 +136,8 @@ let IntervalTag = #"\[INTERVAL\]"#
 let Location = "<DLogTests.swift:[0-9]+>"
 let SECS = #"[0-9]+\.[0-9]{3}s"#
 let Interval = #"\{ duration: \#(SECS), average: \#(SECS) \}"#
+
+let Empty = ">\\s$"
 
 fileprivate func testAll(_ logger: LogProtocol, categoryTag: String = CategoryTag) {
 	let padding = #"[\|\s]+"#
@@ -770,6 +773,7 @@ final class FormatTests: XCTestCase {
     }
     
     func test_BoolFormat() {
+        
         let logger = DLog()
         
         let value = true
@@ -788,6 +792,34 @@ final class FormatTests: XCTestCase {
         // Toggle
         XCTAssert(logger.log("\(value, format: .toggle)")?.match("on") == true)
         XCTAssert(logger.log("\(!value, format: .toggle)")?.match("off") == true)
+    }
+    
+    func test_DataFormat() {
+        let logger = DLog()
+        
+        // IPv6
+        let ipString = "2001:0b28:f23f:f005:0000:0000:0000:000a"
+        let ipv6 = IPv6Address(ipString)!
+        XCTAssert(logger.log("\(ipv6.rawValue, format: .ipv6Address)")?.match("2001:b28:f23f:f005::a$") == true)
+        
+        var data = Data([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        XCTAssert(logger.log("\(data, format: .ipv6Address)")?.match(Empty) == true)
+        
+        // Text
+        let text = "Hello DLog!"
+        data = text.data(using: .utf8)!
+        XCTAssert(logger.log("\(data, format: .text)")?.match(text) == true)
+        XCTAssert(logger.log("\(Data([255, 2, 3, 4, 5, 6, 7, 8, 9]), format: .text)")?.match(Empty) == true)
+        
+        // UUID
+        let uuid = UUID()
+        var tuple = uuid.uuid
+        data = withUnsafeBytes(of: &tuple) { Data($0) }
+        XCTAssert(logger.log("\(data, format: .uuid)")?.match(uuid.uuidString) == true)
+        
+        // Raw
+        data = Data([0xab, 0xcd, 0xef])
+        XCTAssert(logger.log("\(data, format: .raw)")?.match("ABCDEF") == true)
     }
     
     func test_FormatConcurent() {

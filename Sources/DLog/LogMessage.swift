@@ -78,6 +78,13 @@ public class LogStringInterpolation: StringInterpolationProtocol {
         let masked = privacy.mask(text)
         output.append(masked)
     }
+    
+    /// Defines interpolation for expressions of Data.
+    public func appendInterpolation(_ value: @autoclosure @escaping () -> Data, format: LogDataFormatting, privacy: LogPrivacy = .public) {
+        let text = format.string(from: value())
+        let masked = privacy.mask(text)
+        output.append(masked)
+    }
 }
 
 /// An object that represents a log message.
