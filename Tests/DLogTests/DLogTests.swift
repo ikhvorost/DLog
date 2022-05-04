@@ -695,7 +695,7 @@ final class FormatTests: XCTestCase {
         let time = 60 * 60 + 23 * 60 + 15
         XCTAssert(logger.log("\(time, format: .time)")?.match("1h 23m 15s") == true)
         XCTAssert(logger.log("\(time, format: .time(unitsStyle: .positional))")?.match("1:23:15") == true)
-        XCTAssert(logger.log("\(time, format: .time(unitsStyle: .short))")?.match("1 hr, 23 min, 15 secs") == true)
+        XCTAssert(logger.log("\(time, format: .time(unitsStyle: .short))")?.match("1 hr, 23 min, 15 sec") == true)
         XCTAssert(logger.log("\(time, format: .time(unitsStyle: .full))")?.match("1 hour, 23 minutes, 15 seconds") == true)
         XCTAssert(logger.log("\(time, format: .time(unitsStyle: .spellOut))")?.match("one hour, twenty-three minutes, fifteen seconds") == true)
         

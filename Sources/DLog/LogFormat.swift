@@ -179,18 +179,27 @@ public enum LogIntFormatting {
     /// For instance, 0x0100007f would be displayed as 127.0.0.1
     case ipv4Address
     
-    // Time from seconds
+    /// Displays a time duration from seconds.
+    ///
+    /// - Parameters:
+    ///   - unitsStyle: Constants for specifying how to represent quantities of time.
     case time(unitsStyle: DateComponentsFormatter.UnitsStyle)
     
+    /// Displays a time duration from seconds.
     public static let time = Self.time(unitsStyle: .abbreviated)
     
-    // Date from seconds since 1970
+    /// Displays date from seconds since 1970.
+    ///
+    /// - Parameters:
+    ///    - dateStyle: Format style for date. The default is `none`.
+    ///    - timeStyle: Format style for time. The default is `none`.
+    ///    - locale: The locale for the receiver. The default is `nil`.
     case date(dateStyle: DateFormatter.Style = .none, timeStyle: DateFormatter.Style = .none, locale: Locale? = nil)
     
+    /// Displays date from seconds since 1970.
     public static let date = Self.date(dateStyle: .short, timeStyle: .short)
     
     func string<T: BinaryInteger>(from value: T) -> String {
-        
         switch self {
         case .binary:
             return String(value, radix: 2)
@@ -290,11 +299,24 @@ public enum LogFloatFormatting {
     ///   - locale: The locale for the receiver. The default is `nil`.
     case number(style: NumberFormatter.Style, locale: Locale? = nil)
     
+    /// Displays a time duration from seconds.
+    ///
+    /// - Parameters:
+    ///   - unitsStyle: Constants for specifying how to represent quantities of time.
     case time(unitsStyle: DateComponentsFormatter.UnitsStyle)
+    
+    /// Displays a time duration from seconds.
     public static let time = Self.time(unitsStyle: .abbreviated)
     
-    // Date from seconds since 1970
+    /// Displays date from seconds since 1970.
+    ///
+    /// - Parameters:
+    ///    - dateStyle: Format style for date. The default is `none`.
+    ///    - timeStyle: Format style for time. The default is `none`.
+    ///    - locale: The locale for the receiver. The default is `nil`.
     case date(dateStyle: DateFormatter.Style = .none, timeStyle: DateFormatter.Style = .none, locale: Locale? = nil)
+    
+    /// Displays date from seconds since 1970.
     public static let date = Self.date(dateStyle: .short, timeStyle: .short)
     
     /// Displays a floating-point value in number format.
@@ -373,18 +395,19 @@ public enum LogBoolFormatting {
     }
 }
 
-
+/// The formatting options for Data.
 public enum LogDataFormatting {
 
-    // Pretty prints an `in6_addr` pointer.
+    /// Pretty prints an IPv6 address from data.
     case ipv6Address
     
+    /// Pretty prints text from data.
     case text
     
-    // Pretty prints an `uuid_t` pointer.
+    /// Pretty prints uuid from data.
     case uuid
     
-    // Displays the raw bytes.
+    /// Pretty prints raw bytes from data.
     case raw
     
     func string(from data: Data) -> String {

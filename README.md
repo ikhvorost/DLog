@@ -3,8 +3,8 @@
 [![Swift: 5](https://img.shields.io/badge/Swift-5%2b-f48041.svg?style=flat)](https://developer.apple.com/swift)
 ![Platforms: iOS, macOS, tvOS, watchOS](https://img.shields.io/badge/Platforms-iOS%20|%20macOS%20|%20tvOS%20|%20watchOS%20-blue.svg?style=flat)
 [![Swift Package Manager: compatible](https://img.shields.io/badge/Swift%20Package%20Manager-compatible-4BC51D.svg?style=flat)](https://swift.org/package-manager/)
-[![Build & Test](https://github.com/ikhvorost/DLog/actions/workflows/swift.yml/badge.svg?branch=master)](https://github.com/ikhvorost/DLog/actions/workflows/swift.yml)
-[![codecov](https://codecov.io/gh/ikhvorost/DLog/branch/master/graph/badge.svg?token=DJLKDA9W1Q)](https://codecov.io/gh/ikhvorost/DLog)
+[![Build](https://github.com/ikhvorost/DLog/actions/workflows/swift.yml/badge.svg?branch=master)](https://github.com/ikhvorost/DLog/actions/workflows/swift.yml)
+[![Codecov](https://codecov.io/gh/ikhvorost/DLog/branch/master/graph/badge.svg?token=DJLKDA9W1Q)](https://codecov.io/gh/ikhvorost/DLog)
 [![Swift Doc Coverage](https://img.shields.io/badge/Swift%20Doc%20Coverage-100%25-f39f37)](https://github.com/SwiftDocOrg/swift-doc)
 
 [![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/donate/?hosted_button_id=TSPDD3ZAAH24C)
