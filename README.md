@@ -803,7 +803,67 @@ Outputs:
 
 ### Data
 
+The formatting options for Data.
 
+#### ipv6Address
+
+Pretty prints an IPv6 address from data.
+
+```swift
+let data = Data([0x20, 0x01, 0x0b, 0x28, 0xf2, 0x3f, 0xf0, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0a])
+logger.log("\(data, format: .ipv6Address)")
+```
+
+Outputs:
+
+```
+• 13:24:50.534 [DLOG] [LOG] <DLogTests.swift:813> 2001:b28:f23f:f005::a
+```
+
+#### text
+
+Pretty prints text from data.
+
+```swift
+let data = Data([0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x44, 0x4c, 0x6f, 0x67, 0x21])
+logger.log("\(data, format: .text)")
+```
+
+Outputs:
+
+```
+• 13:31:37.596 [DLOG] [LOG] <DLogTests.swift:813> Hello DLog!
+```
+
+#### uuid
+
+Pretty prints uuid from data.
+
+```swift
+let data = Data([0xca, 0xcd, 0x1b, 0x9d, 0x56, 0xaa, 0x41, 0xf0, 0xbd, 0xe3, 0x45, 0x7d, 0xda, 0x30, 0xa8, 0xd4])
+logger.log("\(data, format: .uuid)")
+```
+
+Outputs:
+
+```
+• 14:41:26.818 [DLOG] [LOG] <DLogTests.swift:815> CACD1B9D-56AA-41F0-BDE3-457DDA30A8D4
+```
+
+#### raw
+
+Pretty prints raw bytes from data.
+
+```swift
+let data = Data([0xab, 0xcd, 0xef])
+logger.log("\(data, format: .raw)")
+```
+
+Outputs:
+
+```
+• 14:42:52.795 [DLOG] [LOG] <DLogTests.swift:815> ABCDEF
+```
 
 ## Scope
 
