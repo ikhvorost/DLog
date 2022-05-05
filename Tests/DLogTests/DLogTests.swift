@@ -756,20 +756,25 @@ final class FormatTests: XCTestCase {
         // Number
         
         // Time
-        let time = 60 * 60 + 23 * 60 + 1.25
-        XCTAssert(logger.log("\(time, format: .time)")?.match("1h 23m 1.250s") == true)
-        XCTAssert(logger.log("\(time, format: .time(unitsStyle: .positional))")?.match("1:23:01.250") == true)
-        XCTAssert(logger.log("\(time, format: .time(unitsStyle: .short))")?.match("1 hr, 23 min, 1.250 sec") == true)
-        XCTAssert(logger.log("\(time, format: .time(unitsStyle: .full))")?.match("1 hour, 23 minutes, 1.250 second") == true)
-        XCTAssert(logger.log("\(time, format: .time(unitsStyle: .spellOut))")?.match("one hour, twenty-three minutes, one second, two hundred fifty milliseconds") == true)
-        XCTAssert(logger.log("\(time, format: .time(unitsStyle: .brief))")?.match("1hr 23min 1.250sec") == true)
+        let durationWithSecs = 60 * 60 + 23 * 60 + 1.25
+        XCTAssert(logger.log("\(durationWithSecs, format: .time)")?.match("1h 23m 1.250s$") == true)
+        XCTAssert(logger.log("\(durationWithSecs, format: .time(unitsStyle: .positional))")?.match("1:23:01.250$") == true)
+        XCTAssert(logger.log("\(durationWithSecs, format: .time(unitsStyle: .short))")?.match("1 hr, 23 min, 1.250 sec$") == true)
+        XCTAssert(logger.log("\(durationWithSecs, format: .time(unitsStyle: .full))")?.match("1 hour, 23 minutes, 1.250 second$") == true)
+        XCTAssert(logger.log("\(durationWithSecs, format: .time(unitsStyle: .spellOut))")?.match("one hour, twenty-three minutes, one second, two hundred fifty milliseconds$") == true)
+        XCTAssert(logger.log("\(durationWithSecs, format: .time(unitsStyle: .brief))")?.match("1hr 23min 1.250sec$") == true)
+        
+        let durationNoSecs = 60 * 60 + 23 * 60
+        let durationWithMs = 60 * 60 + 23 * 60 + 0.45
+        XCTAssert(logger.log("\(durationNoSecs, format: .time)")?.match("1h 23m$") == true)
+        XCTAssert(logger.log("\(durationWithMs, format: .time)")?.match("1h 23m 0.450s$") == true)
         
         // Date
-        let timeIntervalSince1970 = 1645026131 // 2022-02-16 15:42:11 +0000
-        XCTAssert(logger.log("\(timeIntervalSince1970, format: .date)")?.match("2/16/22, 3:42 PM$") == true)
-        XCTAssert(logger.log("\(timeIntervalSince1970, format: .date(dateStyle: .short))")?.match("2/16/22$") == true)
-        XCTAssert(logger.log("\(timeIntervalSince1970, format: .date(timeStyle: .medium))")?.match("3:42:11 PM$") == true)
-        XCTAssert(logger.log("\(timeIntervalSince1970, format: .date(dateStyle: .short, timeStyle: .short, locale: locale))")?.match("16/02/2022, 15:42$") == true)
+        let dateWithMin = 1645026131.45 // 2022-02-16 15:42:11 +0000
+        XCTAssert(logger.log("\(dateWithMin, format: .date)")?.match("2/16/22, 3:42 PM$") == true)
+        XCTAssert(logger.log("\(dateWithMin, format: .date(dateStyle: .short))")?.match("2/16/22$") == true)
+        XCTAssert(logger.log("\(dateWithMin, format: .date(timeStyle: .medium))")?.match("3:42:11 PM$") == true)
+        XCTAssert(logger.log("\(dateWithMin, format: .date(dateStyle: .short, timeStyle: .short, locale: locale))")?.match("16/02/2022, 15:42$") == true)
     }
     
     func test_BoolFormat() {
@@ -801,13 +806,11 @@ final class FormatTests: XCTestCase {
         let ipString = "2001:0b28:f23f:f005:0000:0000:0000:000a"
         let ipv6 = IPv6Address(ipString)!
         XCTAssert(logger.log("\(ipv6.rawValue, format: .ipv6Address)")?.match("2001:b28:f23f:f005::a$") == true)
-        
-        var data = Data([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-        XCTAssert(logger.log("\(data, format: .ipv6Address)")?.match(Empty) == true)
+        XCTAssert(logger.log("\(Data([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]), format: .ipv6Address)")?.match(Empty) == true)
         
         // Text
         let text = "Hello DLog!"
-        data = text.data(using: .utf8)!
+        var data = text.data(using: .utf8)!
         XCTAssert(logger.log("\(data, format: .text)")?.match(text) == true)
         XCTAssert(logger.log("\(Data([255, 2, 3, 4, 5, 6, 7, 8, 9]), format: .text)")?.match(Empty) == true)
         
@@ -816,6 +819,7 @@ final class FormatTests: XCTestCase {
         var tuple = uuid.uuid
         data = withUnsafeBytes(of: &tuple) { Data($0) }
         XCTAssert(logger.log("\(data, format: .uuid)")?.match(uuid.uuidString) == true)
+        XCTAssert(logger.log("\(Data([0, 1, 2, 3]), format: .uuid)")?.match(Empty) == true)
         
         // Raw
         data = Data([0xab, 0xcd, 0xef])

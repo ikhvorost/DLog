@@ -39,14 +39,14 @@ class Dynamic {
     static let dso = UnsafeMutableRawPointer(mutating: #dsohandle)
     private static let RTLD_DEFAULT = UnsafeMutableRawPointer(bitPattern: -2)
     
-    private static func dynamic<T>(symbol: String) -> T {
+    private static func dynamic<T>(symbol: String) -> T? {
         guard let sym = dlsym(RTLD_DEFAULT, symbol) else {
-            fatalError("\(symbol) is NOT found!")
+            return nil
         }
         return unsafeBitCast(sym, to: T.self)
     }
    
     // Functions
-    static let OS_ACTIVITY_CURRENT: os_activity_t = dynamic(symbol: "_os_activity_current")
-    static let swift_demangle: Swift_Demangle = dynamic(symbol: "swift_demangle")
+    static let OS_ACTIVITY_CURRENT: os_activity_t? = dynamic(symbol: "_os_activity_current")
+    static let swift_demangle: Swift_Demangle? = dynamic(symbol: "swift_demangle")
 }

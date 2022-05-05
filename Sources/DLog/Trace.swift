@@ -79,7 +79,7 @@ fileprivate extension Thread {
 fileprivate func demangle(_ mangled: String) -> String? {
 	guard mangled.hasPrefix("$s") else { return nil }
 	
-    if let cString = Dynamic.swift_demangle(mangled, mangled.count, nil, nil, 0) {
+    if let cString = Dynamic.swift_demangle?(mangled, mangled.count, nil, nil, 0) {
 		defer { cString.deallocate() }
 		return String(cString: cString)
 	}

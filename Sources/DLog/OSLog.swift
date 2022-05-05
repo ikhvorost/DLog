@@ -98,15 +98,17 @@ public class OSLog : LogOutput {
 	}
 	
 	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
-        let activity = _os_activity_create(Dynamic.dso, strdup(scope.text), Dynamic.OS_ACTIVITY_CURRENT, OS_ACTIVITY_FLAG_DEFAULT)
-		os_activity_scope_enter(activity, &scope.os_state)
-		
+        if let os_activity_current = Dynamic.OS_ACTIVITY_CURRENT {
+            let activity = _os_activity_create(Dynamic.dso, strdup(scope.text), os_activity_current, OS_ACTIVITY_FLAG_DEFAULT)
+            os_activity_scope_enter(activity, &scope.os_state)
+        }
 		return super.scopeEnter(scope: scope, scopes: scopes)
 	}
 	
 	override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
-		os_activity_scope_leave(&scope.os_state);
-		
+        if Dynamic.OS_ACTIVITY_CURRENT != nil {
+            os_activity_scope_leave(&scope.os_state);
+        }
 		return super.scopeLeave(scope: scope, scopes: scopes)
 	}
 	

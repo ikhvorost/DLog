@@ -40,23 +40,22 @@ fileprivate let dateComponentsFormatter: DateComponentsFormatter = {
 }()
 
 fileprivate func insertMs(time: String, sec: String, ms: String) -> String  {
-    if let range = time.range(of: sec) {
-        var text = time
-        text.insert(contentsOf: ms, at: range.lowerBound)
-        return text
-    }
-    else {
+    guard let range = time.range(of: sec) else {
         return "\(time) 0\(ms)\(sec)"
     }
+        
+    var text = time
+    text.insert(contentsOf: ms, at: range.lowerBound)
+    return text
 }
 
-func stringFromTimeInterval(_ ti: TimeInterval, unitsStyle: DateComponentsFormatter.UnitsStyle = .abbreviated) -> String {
+func stringFromTimeInterval(_ timeInterval: TimeInterval, unitsStyle: DateComponentsFormatter.UnitsStyle = .abbreviated) -> String {
     let time: String = synchronized(dateComponentsFormatter) {
         dateComponentsFormatter.unitsStyle = unitsStyle
-        return dateComponentsFormatter.string(from: ti) ?? ""
+        return dateComponentsFormatter.string(from: timeInterval) ?? ""
     }
     
-    guard let fraction = String(format: "%.3f", ti).split(separator: ".").last, fraction != "000" else {
+    guard let fraction = String(format: "%.3f", timeInterval).split(separator: ".").last, fraction != "000" else {
         return time
     }
     let ms = ".\(fraction)"
