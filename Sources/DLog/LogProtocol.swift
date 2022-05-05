@@ -57,7 +57,7 @@ public class LogProtocol: NSObject {
     ///		logger.log("message")
     ///
     /// - Parameters:
-    /// 	- text: The message to be logged that can be used with any string interpolation literal.
+    /// 	- message: The message to be logged that can be used with any string interpolation literal.
     /// 	- file: The file this log message originates from (defaults to `#file`).
     /// 	- function: The function this log message originates from (defaults to `#function`).
     /// 	- line: The line this log message originates (defaults to `#line`).
@@ -78,7 +78,7 @@ public class LogProtocol: NSObject {
     ///		logger.trace("message")
     ///
     /// - Parameters:
-    /// 	- text: The message to be logged that can be used with any string interpolation literal.
+    /// 	- message: The message to be logged that can be used with any string interpolation literal.
     /// 	- file: The file this log message originates from (defaults to `#file`).
     /// 	- function: The function this log message originates from (defaults to `#function`).
     /// 	- line: The line this log message originates (defaults to `#line`).
@@ -111,7 +111,7 @@ public class LogProtocol: NSObject {
     ///		logger.debug("message")
     ///
     /// - Parameters:
-    /// 	- text: The message to be logged that can be used with any string interpolation literal.
+    /// 	- message: The message to be logged that can be used with any string interpolation literal.
     /// 	- file: The file this log message originates from (defaults to `#file`).
     /// 	- function: The function this log message originates from (defaults to `#function`).
     /// 	- line: The line this log message originates (defaults to `#line`).
@@ -132,7 +132,7 @@ public class LogProtocol: NSObject {
     ///		logger.info("message")
     ///
     /// - Parameters:
-    /// 	- text: The message to be logged that can be used with any string interpolation literal.
+    /// 	- message: The message to be logged that can be used with any string interpolation literal.
     /// 	- file: The file this log message originates from (defaults to `#file`).
     /// 	- function: The function this log message originates from (defaults to `#function`).
     /// 	- line: The line this log message originates (defaults to `#line`).
@@ -153,7 +153,7 @@ public class LogProtocol: NSObject {
     ///		logger.warning("message")
     ///
     /// - Parameters:
-    /// 	- text: The message to be logged that can be used with any string interpolation literal.
+    /// 	- message: The message to be logged that can be used with any string interpolation literal.
     /// 	- file: The file this log message originates from (defaults to `#file`).
     /// 	- function: The function this log message originates from (defaults to `#function`).
     /// 	- line: The line this log message originates (defaults to `#line`).
@@ -174,7 +174,7 @@ public class LogProtocol: NSObject {
     ///		logger.error("message")
     ///
     /// - Parameters:
-    /// 	- text: The message to be logged that can be used with any string interpolation literal.
+    /// 	- message: The message to be logged that can be used with any string interpolation literal.
     /// 	- file: The file this log message originates from (defaults to `#file`).
     /// 	- function: The function this log message originates from (defaults to `#function`).
     /// 	- line: The line this log message originates (defaults to `#line`).
@@ -196,7 +196,7 @@ public class LogProtocol: NSObject {
     ///
     /// - Parameters:
     /// 	- condition: The condition to test.
-    /// 	- text: A string to print if `condition` is evaluated to `false`. The default is an empty string.
+    /// 	- message: A string to print if `condition` is evaluated to `false`. The default is an empty string.
     /// 	- file: The file this log message originates from (defaults to `#file`).
     /// 	- function: The function this log message originates from (defaults to `#function`).
     /// 	- line: The line this log message originates (defaults to `#line`).
@@ -218,7 +218,7 @@ public class LogProtocol: NSObject {
     ///		logger.fault("message")
     ///
     /// - Parameters:
-    /// 	- text: The message to be logged that can be used with any string interpolation literal.
+    /// 	- message: The message to be logged that can be used with any string interpolation literal.
     /// 	- file: The file this log message originates from (defaults to `#file`).
     /// 	- function: The function this log message originates from (defaults to `#function`).
     /// 	- line: The line this log message originates (defaults to `#line`).
