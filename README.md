@@ -19,7 +19,7 @@ DLog is the development logger for Swift that supports emoji and colored text ou
 - [Getting started](#getting-started)
 - [Log levels](#log-levels): [log](#log), [info](#info), [trace](#trace), [debug](#debug), [warning](#warning), [error](#error), [assert](#assert), [fault](#fault)
 - [Privacy](#privacy): [public](#public), [private](#private)
-- [Formatters](#formatters): [Date](#date), [Integer](#integer), [Float](#float), [Bool](#bool)
+- [Formatters](#formatters): [Date](#date), [Integer](#integer), [Float](#float), [Bool](#bool), [Data](#data)
 - [Scope](#scope)
 - [Interval](#interval)
 - [Category](#category)
@@ -573,6 +573,44 @@ Outputs:
 • 19:53:18.141 [DLOG] [LOG] <DLogTests.swift:621> 127.0.0.1
 ```
 
+#### time(unitsStyle: DateComponentsFormatter.UnitsStyle)
+
+Displays a time duration from seconds.
+
+```swift
+let time = 60 * 60 + 23 * 60 + 15 // 1h 23m 15s
+logger.log("\(time, format: .time)")
+logger.log("\(time, format: .time(unitsStyle: .positional))")
+logger.log("\(time, format: .time(unitsStyle: .short))")
+```
+
+Outputs:
+
+```
+• 12:56:39.655 [DLOG] [LOG] <DLogTests.swift:624> 1h 23m 15s
+• 12:56:39.657 [DLOG] [LOG] <DLogTests.swift:625> 1:23:15
+• 12:56:39.657 [DLOG] [LOG] <DLogTests.swift:626> 1 hr, 23 min, 15 secs
+```
+
+#### date(dateStyle: DateFormatter.Style, timeStyle: DateFormatter.Style, locale: Locale?)
+
+Displays date from seconds since 1970.
+
+```swift
+let timeIntervalSince1970 = 1645026131 // 2022-02-16 15:42:11 +0000
+logger.log("\(timeIntervalSince1970, format: .date)")
+logger.log("\(timeIntervalSince1970, format: .date(dateStyle: .short))")
+logger.log("\(timeIntervalSince1970, format: .date(timeStyle: .medium))")
+```
+
+Outputs:
+
+```
+• 13:00:33.964 [DLOG] [LOG] <DLogTests.swift:624> 2/16/22, 3:42 PM
+• 13:00:33.965 [DLOG] [LOG] <DLogTests.swift:625> 2/16/22
+• 13:00:33.966 [DLOG] [LOG] <DLogTests.swift:626> 3:42:11 PM
+```
+
 ### Float
 
 The formatting options for double and floating-point numbers.
@@ -670,6 +708,44 @@ Outputs:
 • 09:35:00.744 [DLOG] [LOG] <DLogTests.swift:699> £12.34
 ```
 
+#### time(unitsStyle: DateComponentsFormatter.UnitsStyle)
+
+Displays a time duration from seconds.
+
+```swift
+let time = 60 * 60 + 23 * 60 + 1.25 // 1m 23m 1.25s
+logger.log("\(time, format: .time)")
+logger.log("\(time, format: .time(unitsStyle: .positional))")
+logger.log("\(time, format: .time(unitsStyle: .short))")
+```
+
+Outputs:
+
+```
+• 13:06:29.874 [DLOG] [LOG] <DLogTests.swift:714> 1h 23m 1.250s
+• 13:06:29.877 [DLOG] [LOG] <DLogTests.swift:715> 1:23:01.250
+• 13:06:29.878 [DLOG] [LOG] <DLogTests.swift:716> 1 hr, 23 min, 1.250 sec
+```
+
+#### date(dateStyle: DateFormatter.Style, timeStyle: DateFormatter.Style, locale: Locale?)
+
+Displays date from seconds since 1970.
+
+```swift
+let timeIntervalSince1970 = 1645026131.45 // 2022-02-16 15:42:11 +0000
+logger.log("\(timeIntervalSince1970, format: .date)")
+logger.log("\(timeIntervalSince1970, format: .date(dateStyle: .short))")
+logger.log("\(timeIntervalSince1970, format: .date(timeStyle: .medium))")
+```
+
+Outputs:
+
+```
+• 13:09:51.299 [DLOG] [LOG] <DLogTests.swift:714> 2/16/22, 3:42 PM
+• 13:09:51.300 [DLOG] [LOG] <DLogTests.swift:715> 2/16/22
+• 13:09:51.301 [DLOG] [LOG] <DLogTests.swift:716> 3:42:11 PM
+```
+
 ### Bool
 
 The formatting options for Boolean values.
@@ -724,6 +800,10 @@ Outputs:
 • 09:43:46.202 [DLOG] [LOG] <DLogTests.swift:746> on
 • 09:43:46.203 [DLOG] [LOG] <DLogTests.swift:747> off
 ```
+
+### Data
+
+
 
 ## Scope
 
