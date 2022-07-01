@@ -95,16 +95,44 @@ public class LogStringInterpolation: StringInterpolationProtocol {
 /// - Warning: Do not explicitly refer to this type. It will be implicitly created by the compiler
 /// when you pass a string interpolation to the logger.
 ///
-public class LogMessage: NSObject, ExpressibleByStringLiteral, ExpressibleByStringInterpolation {
-    
-    var text: String
+public class LogMessage: NSObject, ExpressibleByStringLiteral,
+                            ExpressibleByIntegerLiteral,
+                            ExpressibleByFloatLiteral,
+                            ExpressibleByBooleanLiteral,
+                            ExpressibleByArrayLiteral,
+                            ExpressibleByDictionaryLiteral,
+                            ExpressibleByStringInterpolation {
+    let text: String
     
     /// Creates an instance initialized to the given string value.
     @objc
     public required init(stringLiteral value: String) {
         text = value
     }
+    
+    @objc
+    public required init(integerLiteral value: Int) {
+        text = "\(value)"
+    }
 
+    @objc
+    public required init(floatLiteral value: Float) {
+        text = "\(value)"
+    }
+                                
+    @objc
+    public required init(booleanLiteral value: Bool) {
+        text = "\(value)"
+    }
+    
+    public required init(arrayLiteral elements: Any...) {
+        text = "\(elements)"
+    }
+    
+    public required init(dictionaryLiteral elements: (Any, Any)...) {
+        text = "\(elements)"
+    }
+    
     /// Creates an instance of a log message from a string interpolation.
     public required init(stringInterpolation: LogStringInterpolation) {
         text = stringInterpolation.output

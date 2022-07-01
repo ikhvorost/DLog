@@ -503,7 +503,18 @@ final class DLogTests: XCTestCase {
 }
 
 final class FormatTests: XCTestCase {
+    
+    func test_literals() {
+        let logger = DLog()
         
+        XCTAssert(logger.log(1)?.match("1$") == true) // int
+        XCTAssert(logger.log(2.0)?.match("2.0$") == true) // float
+        XCTAssert(logger.log(true)?.match("true$") == true) // bool
+        XCTAssert(logger.log("text")?.match("text$") == true) // string
+        XCTAssert(logger.log([1, "2", 3.0])?.match("\\[1, \"2\", 3.0\\]$") == true) // array
+        XCTAssert(logger.log([1 : 1, "2" : "2", 3 : 3.0])?.match("\\[\\(1, 1\\), \\(\"2\", \"2\"\\), \\(3, 3.0\\)\\]$") == true) // dictionary
+    }
+
     func test_logMessage() {
         let logger = DLog()
         
