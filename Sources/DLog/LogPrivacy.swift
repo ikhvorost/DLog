@@ -73,7 +73,8 @@ public enum LogPrivacy {
     ///
     /// - Parameters:
     ///   - mask: Mask to use with the privacy option.
-    case `private`(mask: Mask)
+    ///   - auto: If `true` the mask is not applied while debugging. If `false` the mask is applied both in Debug and Release. Defaults to `true`.
+    case `private`(mask: Mask, auto: Bool = true)
     
     /// Sets the privacy level of a log message to private.
     ///
@@ -215,9 +216,9 @@ public enum LogPrivacy {
         case .public:
             return text
             
-        case .private(let mask):
-            // XCTest or Debugger
-            guard Self.isDebugger == false || Self.isXCTest else {
+        case let .private(mask, auto):
+            // Skip for debugging and testing
+            guard !auto || !Self.isDebugger || Self.isXCTest else {
                 return text
             }
             
@@ -238,7 +239,7 @@ public enum LogPrivacy {
             case .reduce(let length):
                 return Self.reduce(text, length: length)
                 
-            case .partial(let first, let last):
+            case let .partial(first, last):
                 return Self.partial(text, first: first, last: last)
                 
             case .custom(let value):

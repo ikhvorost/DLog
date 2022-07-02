@@ -560,6 +560,7 @@ final class FormatTests: XCTestCase {
         XCTAssert(logger.log("Private: \(cardNumber, privacy: .private)")?.match("<private>") == true)
         
         XCTAssert(logger.log("Private hash: \(cardNumber, privacy: .private(mask: .hash))")?.match("[0-9a-fA-F]{8}") == true)
+        XCTAssert(logger.log("Private hash: \(cardNumber, privacy: .private(mask: .hash, auto: false))")?.match("[0-9a-fA-F]{8}") == true)
         
         XCTAssert(logger.log("Private random: \(empty, privacy: .private(mask: .random))")?.match(": $") == true)
         XCTAssert(logger.log("Private random: \(cardNumber, privacy: .private(mask: .random))")?.match(cardNumber) == false)
@@ -588,7 +589,6 @@ final class FormatTests: XCTestCase {
         XCTAssert(logger.log("Private reduce: \(cardNumber, privacy: .private(mask: .reduce(length: 7)))")?.match("123...3456") == true)
         XCTAssert(logger.log("Private reduce: \(cardNumber, privacy: .private(mask: .reduce(length: 100)))")?.match(cardNumber) == true)
         XCTAssert(logger.log("Private reduce: \(greeting, privacy: .private(mask: .reduce(length: 6)))")?.match("Hel...ld!") == true)
-        
         
         XCTAssert(logger.log("Private reduce: \(number, privacy: .private(mask: .reduce(length: 6)))")?.match("123...890") == true)
     }
