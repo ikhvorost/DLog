@@ -239,11 +239,14 @@ public struct LogOptions: OptionSet {
     /// Location
     public static let location = Self(6)
     
+    /// Metadata
+    public static let metadata = Self(7)
+    
     /// Compact: `.sign` and `.time`
     public static let compact: Self = [.sign, .time]
     
-    /// Regular: `.sign`, `.time`, `.category`, `.padding`, `.type` and `.location`
-    public static let regular: Self = [.sign, .time, .category, .padding, .type, .location]
+    /// Regular: `.sign`, `.time`, `.category`, `.padding`, `.type`, `.location` and `.metadata`
+    public static let regular: Self = [.sign, .time, .category, .padding, .type, .location, .metadata]
 }
 
 /// Contains configuration values regarding to the logger

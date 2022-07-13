@@ -179,7 +179,7 @@ public class Text : LogOutput {
 	private func textMessage(item: LogItem, scopes: [LogScope]) -> String {
         precondition(item.type != .scope)
 		
-		var sign = { "\(item.config.sign)" }
+        var sign = { "\(item.params.config.sign)" }
 		var time = { Self.dateFormatter.string(from: item.time) }
 		var level = { String(format: "[%02d]", item.scope?.level ?? 0) }
 		var category = { "[\(item.category)]" }
@@ -195,6 +195,7 @@ public class Text : LogOutput {
 		}
 		var type = { "[\(item.type.title)]" }
 		var location = { "<\(item.fileName):\(item.line)>" }
+        var metadata = { "\(item.params.metadata)" }
         var text = item.text
 		
 		switch style {
@@ -205,12 +206,13 @@ public class Text : LogOutput {
 				assert(Self.tags[item.type] != nil)
 				let tag = Self.tags[item.type]!
 				
-				sign = { "\(item.config.sign)".color(.dim) }
+                sign = { "\(item.params.config.sign)".color(.dim) }
 				time = { Self.dateFormatter.string(from: item.time).color(.dim) }
 				level = { String(format: "[%02d]", item.scope?.level ?? 0).color(.dim) }
 				category = { "\(item.category.color(.textBlue))" }
 				type = { " \(item.type.title) ".color(tag.colors) }
 				location = { "<\(item.fileName):\(item.line)>".color([.dim, tag.textColor]) }
+                metadata = { "\(item.params.metadata)".color(.dim) }
 				text = text.color(tag.textColor)
 				
 			case .emoji:
@@ -224,16 +226,17 @@ public class Text : LogOutput {
 			(.category, category),
 			(.padding, padding),
 			(.type, type),
-			(.location, location)
+			(.location, location),
+            (.metadata, metadata)
 		]
-		let prefix = logPrefix(items: items, options: item.config.options)
+        let prefix = logPrefix(items: items, options: item.params.config.options)
 		return prefix.isEmpty ? text : "\(prefix) \(text)"
 	}
 
 	private func textScope(scope: LogScope, scopes: [LogScope]) -> String {
         let start = scope.duration == 0
 		
-		var sign = { "\(scope.config.sign)" }
+        var sign = { "\(scope.params.config.sign)" }
 		var time = start ? Self.dateFormatter.string(from: scope.time) : Self.dateFormatter.string(from: scope.time.addingTimeInterval(scope.duration))
 		let ms = !start ? "(\(stringFromTimeInterval(scope.duration)))" : nil
 		var category = { "[\(scope.category)]" }
@@ -254,7 +257,7 @@ public class Text : LogOutput {
             break
             
         case .colored:
-            sign = { "\(scope.config.sign)".color(.dim) }
+            sign = { "\(scope.params.config.sign)".color(.dim) }
             time = time.color(.dim)
             level = { String(format: "[%02d]", scope.level).color(.dim) }
             category = { scope.category.color(.textBlue) }
@@ -268,7 +271,7 @@ public class Text : LogOutput {
 			(.category, category),
 			(.padding, padding),
 		]
-		let prefix = logPrefix(items: items, options: scope.config.options)
+        let prefix = logPrefix(items: items, options: scope.params.config.options)
 		return prefix.isEmpty ? text : "\(prefix) \(text)"
 	}
 	

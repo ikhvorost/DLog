@@ -27,18 +27,12 @@ import Foundation
 
 /// LogProtocol parameters
 ///
-class LogParams {
-	let logger: DLog
+struct LogParams {
+	var logger: DLog
 	let category: String
-	let scope: LogScope?
-    let config: LogConfig?
-	
-	init(logger: DLog, category: String, scope: LogScope?, config: LogConfig?) {
-		self.logger = logger
-		self.category = category
-		self.scope = scope
-        self.config = config
-	}
+	let config: LogConfig
+    var scope: LogScope?
+    lazy var metadata = LogMetadata()
 }
 
 /// Base logger class
@@ -47,7 +41,7 @@ class LogParams {
 public class LogProtocol: NSObject {
     
     /// LogProtocol parameters
-    lazy var params: LogParams = LogParams(logger: .disabled, category: "", scope: nil, config: nil)
+    lazy var params = LogParams(logger: .disabled, category: "", config: LogConfig())
     
     /// Logs a message that is essential to troubleshoot problems later.
     ///
@@ -91,13 +85,10 @@ public class LogProtocol: NSObject {
                       file: String = #file, function: String = #function, line: UInt = #line,
                       addresses: [NSNumber] = Thread.callStackReturnAddresses) -> String? {
         let msg: () -> LogMessage = {
-            precondition(self.params.logger.params.config != nil)
-            
-            let traceConfig = self.params.config?.traceConfig ?? self.params.logger.params.config!.traceConfig
             let info = traceInfo(title: message()?.text,
                                  function: function,
                                  addresses: addresses.dropFirst(),
-                                 traceConfig: traceConfig)
+                                 traceConfig: self.params.config.traceConfig)
             return LogMessage(stringLiteral: info)
         }
         return params.logger.log(message: msg, type: .trace, params: params, file: file, function: function, line: line)

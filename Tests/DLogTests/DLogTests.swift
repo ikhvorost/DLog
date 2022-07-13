@@ -139,30 +139,30 @@ let Interval = #"\{ duration: \#(SECS), average: \#(SECS) \}"#
 
 let Empty = ">\\s$"
 
-fileprivate func testAll(_ logger: LogProtocol, categoryTag: String = CategoryTag) {
+fileprivate func testAll(_ logger: LogProtocol, categoryTag: String = CategoryTag, metadata: String = "") {
 	let padding = #"[\|\s]+"#
 	
-	XCTAssert(logger.log("log")?.match(#"\#(categoryTag)\#(padding)\#(LogTag) \#(Location) log"#) == true)
+    XCTAssert(logger.log("log")?.match(#"\#(categoryTag)\#(padding)\#(LogTag) \#(Location)\#(metadata) log"#) == true)
 	
-	XCTAssert(logger.trace()?.match(#"\#(categoryTag)\#(padding)\#(TraceTag) \#(Location) func: testAll\(_:categoryTag:\), thread: \{ number: 1, name: main \}"#) == true)
-	XCTAssert(logger.trace("start")?.match(#"\#(categoryTag)\#(padding)\#(TraceTag) \#(Location) start: \{ func: testAll\(_:categoryTag:\), thread: \{ number: 1, name: main \} \}"#) == true)
+	XCTAssert(logger.trace()?.match(#"\#(categoryTag)\#(padding)\#(TraceTag) \#(Location)\#(metadata) func: testAll\(_:categoryTag:metadata:\), thread: \{ number: 1, name: main \}"#) == true)
+	XCTAssert(logger.trace("start")?.match(#"\#(categoryTag)\#(padding)\#(TraceTag) \#(Location)\#(metadata) start: \{ func: testAll\(_:categoryTag:metadata:\), thread: \{ number: 1, name: main \} \}"#) == true)
 	
-	XCTAssert(logger.debug("debug")?.match(#"\#(categoryTag)\#(padding)\#(DebugTag) \#(Location) debug"#) == true)
+	XCTAssert(logger.debug("debug")?.match(#"\#(categoryTag)\#(padding)\#(DebugTag) \#(Location)\#(metadata) debug"#) == true)
 	
-	XCTAssert(logger.info("info")?.match(#"\#(categoryTag)\#(padding)\#(InfoTag) \#(Location) info"#) == true)
+	XCTAssert(logger.info("info")?.match(#"\#(categoryTag)\#(padding)\#(InfoTag) \#(Location)\#(metadata) info"#) == true)
 	
-	XCTAssert(logger.warning("warning")?.match(#"\#(categoryTag)\#(padding)\#(WarningTag) \#(Location) warning"#) == true)
-	XCTAssert(logger.error("error")?.match(#"\#(categoryTag)\#(padding)\#(ErrorTag) \#(Location) error"#) == true)
+	XCTAssert(logger.warning("warning")?.match(#"\#(categoryTag)\#(padding)\#(WarningTag) \#(Location)\#(metadata) warning"#) == true)
+	XCTAssert(logger.error("error")?.match(#"\#(categoryTag)\#(padding)\#(ErrorTag) \#(Location)\#(metadata) error"#) == true)
 	
     XCTAssertNil(logger.assert(true))
 	XCTAssertNil(logger.assert(true, "assert"))
-	XCTAssert(logger.assert(false)?.match(#"\#(categoryTag)\#(padding)\#(AssertTag) \#(Location)"#) == true)
-	XCTAssert(logger.assert(false, "assert")?.match(#"\#(categoryTag)\#(padding)\#(AssertTag) \#(Location) assert"#) == true)
+	XCTAssert(logger.assert(false)?.match(#"\#(categoryTag)\#(padding)\#(AssertTag) \#(Location)\#(metadata)"#) == true)
+	XCTAssert(logger.assert(false, "assert")?.match(#"\#(categoryTag)\#(padding)\#(AssertTag) \#(Location)\#(metadata) assert"#) == true)
     
-	XCTAssert(logger.fault("fault")?.match(#"\#(categoryTag)\#(padding)\#(FaultTag) \#(Location) fault"#) == true)
+	XCTAssert(logger.fault("fault")?.match(#"\#(categoryTag)\#(padding)\#(FaultTag) \#(Location)\#(metadata) fault"#) == true)
 	
 	XCTAssert(read_stdout { logger.scope("scope") { _ in delay() } }?.match(#"\#(categoryTag)\#(padding)└ \[scope\] \(\#(SECS)\)"#) == true)
-	XCTAssert(read_stdout { logger.interval("signpost") { delay() } }?.match(#"\#(categoryTag)\#(padding)\[INTERVAL\] \#(Location) signpost: \#(Interval)"#) == true)
+	XCTAssert(read_stdout { logger.interval("signpost") { delay() } }?.match(#"\#(categoryTag)\#(padding)\[INTERVAL\] \#(Location)\#(metadata) signpost: \#(Interval)"#) == true)
 }
 
 final class DLogTests: XCTestCase {
@@ -237,7 +237,7 @@ final class DLogTests: XCTestCase {
 	
 	func test_File() {
 		let filePath = "dlog.txt"
-		let logger = DLog(.textPlain => .file(filePath, append: true))
+		let logger = DLog(.textPlain => .file(filePath, append: false))
 		logger.trace()
 		
 		delay(0.1)
@@ -372,6 +372,8 @@ final class DLogTests: XCTestCase {
         } => .stdout)
         
         logger.log("log")
+        logger.scope("scope").log("scope log")
+        logger.interval("interval").log("interval log")
     }
 	
 	// MARK: - Disabled
@@ -499,6 +501,35 @@ final class DLogTests: XCTestCase {
         XCTAssert(read_stdout { logger.interval("signpost") { delay() }}?.match(#"\#(Sign) \#(Time) \#(CategoryTag) \#(IntervalTag) \#(Location) signpost: \#(Interval)"#) == true)
         XCTAssert(read_stdout { viewLogger.interval("signpost") { delay() }}?.match(#"\#(Sign) \#(Time) \[VIEW\] \#(IntervalTag) \#(Location) signpost: \#(Interval)"#) == true)
         XCTAssert(read_stdout { netLogger.interval("signpost") { delay() }}?.match(#"> \#(Time) \#(Level) \[NET\] \#(IntervalTag) signpost: \{ total: \#(SECS) \}"#) == true)
+    }
+}
+
+final class MetadataTests: XCTestCase {
+    
+    func test_metadata() {
+        let logger = DLog()
+        
+        logger.metadata["id"] = 12345
+        testAll(logger, metadata: #" \{"id":12345\}"#)
+        
+        logger.metadata["id"] = nil
+        testAll(logger)
+        
+        logger.metadata["id"] = 12345
+        logger.metadata["name"] = "hello"
+        testAll(logger, metadata: #" \{"id":12345,"name":"hello"\}"#)
+        
+        logger.metadata.clear()
+        testAll(logger)
+    }
+    
+    func test_metadata_scope() {
+        let logger = DLog()
+        
+        logger.metadata["id"] = 12345
+        logger.scope("scope") { scope in
+            testAll(scope, metadata: #" \{"id":12345\}"#)
+        }
     }
 }
 

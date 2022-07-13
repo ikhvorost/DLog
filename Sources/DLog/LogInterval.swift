@@ -53,7 +53,6 @@ public class LogInterval : LogItem {
 	}
 	
 	private let id : Int
-	private let logger: DLog
 	@Atomic private var begun = false
 	
 	let name: String
@@ -90,15 +89,14 @@ public class LogInterval : LogItem {
     @objc
 	internal(set) public var avg: TimeInterval = 0
     
-    init(logger: DLog, category: String, scope: LogScope?, name: String, staticName: StaticString?, file: String, funcName: String, line: UInt, config: LogConfig) {
+    init(params: LogParams, name: String, staticName: StaticString?, file: String, funcName: String, line: UInt) {
 		self.id = "\(file):\(funcName):\(line)".hash
-		self.logger = logger
-        self.name = name
+		self.name = name
 		self.staticName = staticName
 		
-		super.init(category: category, scope: scope, type: .interval, file: file, funcName: funcName, line: line, message: nil, config: config)
-		
-		message = {
+		super.init(params: params, type: .interval, file: file, funcName: funcName, line: line, message: nil)
+        
+        message = {
 			let items: [(IntervalOptions, String, () -> String)] = [
 				(.duration, "duration", { "\(stringFromTimeInterval(self.duration))" }),
 				(.count, "count", { "\(self.count)" }),
@@ -107,7 +105,7 @@ public class LogInterval : LogItem {
 				(.max, "max", { "\(stringFromTimeInterval(self.max))" }),
 				(.average, "average", { "\(stringFromTimeInterval(self.avg))" })
 			]
-			let json = jsonDescription(title: self.name, items: items, options: config.intervalConfig.options)
+            let json = jsonDescription(title: self.name, items: items, options: params.config.intervalConfig.options)
             return LogMessage(stringLiteral: json)
 		}
 	}
@@ -129,7 +127,7 @@ public class LogInterval : LogItem {
 	
 		time = Date()
 		
-		logger.begin(interval: self)
+        params.logger.begin(interval: self)
 	}
 	
 	/// Finish a time interval.
@@ -170,6 +168,6 @@ public class LogInterval : LogItem {
 			avg = data.avg
 		}
 		
-		logger.end(interval: self)
+        params.logger.end(interval: self)
 	}
 }

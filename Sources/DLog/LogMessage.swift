@@ -110,17 +110,14 @@ public class LogMessage: NSObject, ExpressibleByStringLiteral,
         text = value
     }
     
-    @objc
     public required init(integerLiteral value: Int) {
         text = "\(value)"
     }
 
-    @objc
     public required init(floatLiteral value: Float) {
         text = "\(value)"
     }
                                 
-    @objc
     public required init(booleanLiteral value: Bool) {
         text = "\(value)"
     }

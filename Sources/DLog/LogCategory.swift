@@ -36,8 +36,11 @@ import Foundation
 /// 	let netLogger.log("Hello Net!")
 ///
 public class LogCategory: LogProtocol {
+    
+    public var metadata: LogMetadata { params.metadata }
+    
     init(logger: DLog, category: String, config: LogConfig? = nil) {
         super.init()
-		params = LogParams(logger: logger, category: category, scope: nil, config: config)
+        params = LogParams(logger: logger, category: category, config: config ?? logger.params.config)
 	}
 }

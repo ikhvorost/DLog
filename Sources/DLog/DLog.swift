@@ -42,8 +42,10 @@ public class DLog: LogProtocol {
 	///
 	@objc
 	public static let disabled = DLog(nil)
-	
-	/// Creates a logger object that assigns log messages to a specified category.
+    
+    public var metadata: LogMetadata { params.metadata }
+    
+    /// Creates a logger object that assigns log messages to a specified category.
 	///
 	/// You can define category name to differentiate unique areas and parts of your app and DLog uses this value
 	/// to categorize and filter related log messages.
@@ -91,7 +93,7 @@ public class DLog: LogProtocol {
 	public init(_ output: LogOutput? = .stdout, config: LogConfig = LogConfig()) {
 		self.output = output
 		super.init()
-        params = LogParams(logger: self, category: "DLOG", scope: nil, config: config)
+        params = LogParams(logger: self, category: "DLOG", config: config)
 	}
     
     /// Creates the logger instance with a list of linked outputs for both swift and objective-c code.
@@ -171,31 +173,25 @@ public class DLog: LogProtocol {
 
     func log(message: @escaping () -> LogMessage, type: LogType, params: LogParams, file: String, function: String, line: UInt) -> String? {
         guard let out = output else { return nil }
-
-        precondition(self.params.config != nil)
         
-		let item = LogItem(
-            category: params.category,
-            scope: params.scope,
+        let item = LogItem(
+            params: params,
 			type: type,
 			file: file,
 			funcName: function,
 			line: line,
-            message: message,
-            config: params.config ?? self.params.config!)
+            message: message)
+        item.params.logger = .disabled
+        
 		return out.log(item: item, scopes: scopes)
 	}
 
 	func scope(name: @escaping () -> LogMessage, params: LogParams, file: String, function: String, line: UInt, closure: ((LogScope) -> Void)?) -> LogScope {
-        precondition(self.params.config != nil)
-        
-        let scope = LogScope(logger: self,
-                             category: params.category,
+        let scope = LogScope(params: params,
 							 file: file,
 							 funcName: function,
 							 line: line,
-							 name: name,
-                             config: params.config ?? self.params.config!)
+							 name: name)
 
 		if let block = closure {
 			scope.enter()
@@ -207,17 +203,12 @@ public class DLog: LogProtocol {
 	}
 
 	func interval(name: String, staticName: StaticString?, params: LogParams, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
-        precondition(self.params.config != nil)
-        
-        let interval = LogInterval(logger: self,
-                                   category: params.category,
-                                   scope: params.scope,
+        let interval = LogInterval(params: params,
                                    name: name,
                                    staticName: staticName,
                                    file: file,
                                    funcName: function,
-                                   line: line,
-                                   config: params.config ?? self.params.config!)
+                                   line: line)
 		
 		if let block = closure {
 			interval.begin()

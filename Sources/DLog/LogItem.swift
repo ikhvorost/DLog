@@ -72,10 +72,10 @@ public class LogItem: LogProtocol {
     @objc internal(set) public var time = Date()
 	
 	/// The category of this log message.
-    @objc public let category: String
+    @objc public var category: String { params.category }
 	
 	/// The scope of this log message.
-    @objc public let scope: LogScope?
+    @objc public var scope: LogScope? { params.scope }
 	
 	/// The log level of this log message.
     @objc public let type: LogType
@@ -97,16 +97,15 @@ public class LogItem: LogProtocol {
         return message().text
     }
 	
-	let config: LogConfig
-    
-    init(category: String, scope: LogScope?, type: LogType, file: String, funcName: String, line: UInt, message: (() -> LogMessage)?, config: LogConfig) {
-		self.category = category
-		self.scope = scope
-		self.type = type
+    init(params: LogParams, type: LogType, file: String, funcName: String, line: UInt, message: (() -> LogMessage)?) {
+        self.type = type
 		self.fileName = (file as NSString).lastPathComponent
 		self.funcName = funcName
 		self.line = line
 		self.message = message
-		self.config = config
+        
+        super.init()
+        
+        self.params = params
 	}
 }
