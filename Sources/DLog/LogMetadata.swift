@@ -24,19 +24,30 @@
 import Foundation
 
 extension Dictionary {
-    var json: String {
-        if self.isEmpty == false,
-           let data = try? JSONSerialization.data(withJSONObject: self, options: [.sortedKeys]),
-           let json = String(data: data, encoding: .utf8)
-        {
-            return json
+    func json(parenthesis: Bool = false, quotes: Bool = false) -> String {
+        guard self.isEmpty == false,
+              let data = try? JSONSerialization.data(withJSONObject: self, options: [.sortedKeys]),
+              let json = String(data: data, encoding: .utf8) else {
+                  return ""
+              }
+        var result = json
+        if parenthesis {
+            let start = json.index(after: json.startIndex)
+            let end = json.index(before: json.endIndex)
+            result = "(\(json[start..<end]))"
         }
-        return ""
+        return quotes ? result : result.replacingOccurrences(of: "\"", with: "")
     }
 }
 
 public class LogMetadata {
     private var dict = [String : Any]()
+    
+    var json: String {
+        synchronized(self) {
+            dict.json(parenthesis: true)
+        }
+    }
     
     public subscript(name: String) -> Any? {
         get {
@@ -50,14 +61,6 @@ public class LogMetadata {
     public func clear() {
         synchronized(self) {
             dict.removeAll()
-        }
-    }
-}
-
-extension LogMetadata: CustomStringConvertible {
-    public var description: String {
-        synchronized(self) {
-            dict.json
         }
     }
 }

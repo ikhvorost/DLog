@@ -196,18 +196,13 @@ static void testAll(LogProtocol* logger, NSString *category) {
 	});
     
     XCTAssertTrue(interval.duration >= 0.25);
-    XCTAssertTrue(interval.count == 1);
-    XCTAssertTrue(interval.total > 0.25);
-    XCTAssertTrue(interval.min >= 0.25);
-    XCTAssertTrue(interval.max >= 0.25);
-    XCTAssertTrue(interval.avg >= 0.25);
     
     let text = read_stdout(^{
         [interval begin];
         [NSThread sleep];
         [interval end];
     });
-    XCTAssertTrue([text match:@"interval:"]);
+    XCTAssertTrue([text match:@"\\{average:[0-9]+\\.[0-9]{3}s,duration:[0-9]+\\.[0-9]{3}s\\} interval$"]);
 }
 
 - (void)test_AllOutputs {

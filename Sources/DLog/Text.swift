@@ -167,13 +167,14 @@ public class Text : LogOutput {
 	}()
 	
 	private func logPrefix(items: [(LogOptions, () -> String)], options: LogOptions) -> String {
-		items
-			.compactMap {
-				guard options.contains($0.0) else { return nil }
-				let text = $0.1()
-				return !text.isEmpty ? text.trimTrailingWhitespace() : nil
-			}
-			.joined(separator: " ")
+        items.compactMap {
+            guard options.contains($0.0) else {
+                return nil
+            }
+            let text = $0.1()
+            return text.trimTrailingWhitespace()
+        }
+        .joinedCompact()
 	}
 	
 	private func textMessage(item: LogItem, scopes: [LogScope]) -> String {
@@ -195,7 +196,7 @@ public class Text : LogOutput {
 		}
 		var type = { "[\(item.type.title)]" }
 		var location = { "<\(item.fileName):\(item.line)>" }
-        var metadata = { "\(item.params.metadata)" }
+        var metadata = { item.params.metadata.json }
         var text = item.text
 		
 		switch style {
@@ -209,10 +210,10 @@ public class Text : LogOutput {
                 sign = { "\(item.params.config.sign)".color(.dim) }
 				time = { Self.dateFormatter.string(from: item.time).color(.dim) }
 				level = { String(format: "[%02d]", item.scope?.level ?? 0).color(.dim) }
-				category = { "\(item.category.color(.textBlue))" }
+				category = { item.category.color(.textBlue) }
 				type = { " \(item.type.title) ".color(tag.colors) }
 				location = { "<\(item.fileName):\(item.line)>".color([.dim, tag.textColor]) }
-                metadata = { "\(item.params.metadata)".color(.dim) }
+                metadata = { item.params.metadata.json.color(.dim) }
 				text = text.color(tag.textColor)
 				
 			case .emoji:
@@ -230,7 +231,7 @@ public class Text : LogOutput {
             (.metadata, metadata)
 		]
         let prefix = logPrefix(items: items, options: item.params.config.options)
-		return prefix.isEmpty ? text : "\(prefix) \(text)"
+        return [prefix, text].joinedCompact()
 	}
 
 	private func textScope(scope: LogScope, scopes: [LogScope]) -> String {

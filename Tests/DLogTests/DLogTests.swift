@@ -135,9 +135,9 @@ let IntervalTag = #"\[INTERVAL\]"#
 
 let Location = "<DLogTests.swift:[0-9]+>"
 let SECS = #"[0-9]+\.[0-9]{3}s"#
-let Interval = #"\{ duration: \#(SECS), average: \#(SECS) \}"#
+let Interval = #"\{average:\#(SECS),duration:\#(SECS)\}"#
 
-let Empty = ">\\s$"
+let Empty = ">$"
 
 fileprivate func testAll(_ logger: LogProtocol, categoryTag: String = CategoryTag, metadata: String = "") {
 	let padding = #"[\|\s]+"#
@@ -162,7 +162,7 @@ fileprivate func testAll(_ logger: LogProtocol, categoryTag: String = CategoryTa
 	XCTAssert(logger.fault("fault")?.match(#"\#(categoryTag)\#(padding)\#(FaultTag) \#(Location)\#(metadata) fault"#) == true)
 	
 	XCTAssert(read_stdout { logger.scope("scope") { _ in delay() } }?.match(#"\#(categoryTag)\#(padding)└ \[scope\] \(\#(SECS)\)"#) == true)
-	XCTAssert(read_stdout { logger.interval("signpost") { delay() } }?.match(#"\#(categoryTag)\#(padding)\[INTERVAL\] \#(Location)\#(metadata) signpost: \#(Interval)"#) == true)
+	XCTAssert(read_stdout { logger.interval("signpost") { delay() } }?.match(#"\#(categoryTag)\#(padding)\[INTERVAL\] \#(Location)\#(metadata) \#(Interval) signpost$"#) == true)
 }
 
 final class DLogTests: XCTestCase {
@@ -498,9 +498,9 @@ final class DLogTests: XCTestCase {
         XCTAssert(netLogger.trace()?.match(#"> \#(Time) \#(Level) \[NET\] \#(TraceTag) queue: com\.apple\.main-thread"#) == true)
         
         // Interval
-        XCTAssert(read_stdout { logger.interval("signpost") { delay() }}?.match(#"\#(Sign) \#(Time) \#(CategoryTag) \#(IntervalTag) \#(Location) signpost: \#(Interval)"#) == true)
-        XCTAssert(read_stdout { viewLogger.interval("signpost") { delay() }}?.match(#"\#(Sign) \#(Time) \[VIEW\] \#(IntervalTag) \#(Location) signpost: \#(Interval)"#) == true)
-        XCTAssert(read_stdout { netLogger.interval("signpost") { delay() }}?.match(#"> \#(Time) \#(Level) \[NET\] \#(IntervalTag) signpost: \{ total: \#(SECS) \}"#) == true)
+        XCTAssert(read_stdout { logger.interval("signpost") { delay() }}?.match(#"\#(Sign) \#(Time) \#(CategoryTag) \#(IntervalTag) \#(Location) \#(Interval) signpost$"#) == true)
+        XCTAssert(read_stdout { viewLogger.interval("signpost") { delay() }}?.match(#"\#(Sign) \#(Time) \[VIEW\] \#(IntervalTag) \#(Location) \#(Interval) signpost$"#) == true)
+        XCTAssert(read_stdout { netLogger.interval("signpost") { delay() }}?.match(#"> \#(Time) \#(Level) \[NET\] \#(IntervalTag) \{total:\#(SECS)\} signpost$"#) == true)
     }
 }
 
@@ -510,15 +510,15 @@ final class MetadataTests: XCTestCase {
         let logger = DLog()
         
         logger.metadata["id"] = 12345
-        testAll(logger, metadata: #" \{"id":12345\}"#)
+        testAll(logger, metadata: #" \(id:12345\)"#)
         
         logger.metadata["id"] = nil
         testAll(logger)
-        
+
         logger.metadata["id"] = 12345
         logger.metadata["name"] = "hello"
-        testAll(logger, metadata: #" \{"id":12345,"name":"hello"\}"#)
-        
+        testAll(logger, metadata: #" \(id:12345,name:hello\)"#)
+
         logger.metadata.clear()
         testAll(logger)
     }
@@ -528,8 +528,17 @@ final class MetadataTests: XCTestCase {
         
         logger.metadata["id"] = 12345
         logger.scope("scope") { scope in
-            testAll(scope, metadata: #" \{"id":12345\}"#)
+            testAll(scope, metadata: #" \(id:12345\)"#)
         }
+    }
+    
+    func test_metadata_config() {
+        var config = LogConfig()
+        config.options = [.compact]
+        let logger = DLog(config: config)
+        
+        logger.metadata["id"] = 12345
+        XCTAssert(logger.log("log")?.match(#"\#(Sign) \#(Time) log$"#) == true)
     }
 }
 
@@ -645,7 +654,7 @@ final class FormatTests: XCTestCase {
         XCTAssert(logger.log("\(date, format: .date(timeStyle: .full))")?.match("3:42:11 PM Greenwich Mean Time") == true)
         
         // Both
-        XCTAssert(logger.log("\(date, format: .date())")?.match(">$") == false) // Empty
+        XCTAssert(logger.log("\(date, format: .date())")?.match(Empty) == true) // Empty
         XCTAssert(logger.log("\(date, format: .date(dateStyle: .medium, timeStyle: .short))")?.match("Feb 16, 2022 at 3:42 PM") == true)
 
         // Custom
@@ -895,7 +904,7 @@ final class IntervalTests: XCTestCase {
 			logger.interval("signpost") {
 				delay()
 			}
-		}?.match(#"signpost: \#(Interval)"#) == true)
+		}?.match(#"\#(Interval) signpost$"#) == true)
 	}
 	
 	func test_IntervalBeginEnd() {
@@ -906,7 +915,7 @@ final class IntervalTests: XCTestCase {
 			interval.begin()
 			delay()
 			interval.end()
-		}?.match(#"signpost: \#(Interval)"#) == true)
+		}?.match(#"\#(Interval) signpost$"#) == true)
 		
 		// Double begin/end
 		XCTAssert(read_stdout {
@@ -916,7 +925,7 @@ final class IntervalTests: XCTestCase {
 			delay()
 			interval.end()
 			interval.end()
-		}?.match(#"signpost: \#(Interval)"#) == true)
+		}?.match(#"\#(Interval) signpost$"#) == true)
 	}
 	
 	func test_IntervalStatistics() {
@@ -925,22 +934,24 @@ final class IntervalTests: XCTestCase {
 		let interval = logger.interval("Signpost") {
 			delay()
 		}
-		XCTAssert(interval.count == 1)
+        let statistics1 = interval.statistics
+        XCTAssert(statistics1.count == 1)
 		XCTAssert(0.25 <= interval.duration)
-		XCTAssert(0.25 <= interval.total)
-		XCTAssert(0.25 <= interval.min)
-		XCTAssert(0.25 <= interval.max)
-		XCTAssert(0.25 <= interval.avg)
+		XCTAssert(0.25 <= statistics1.total)
+		XCTAssert(0.25 <= statistics1.min)
+		XCTAssert(0.25 <= statistics1.max)
+		XCTAssert(0.25 <= statistics1.avg)
 		
 		interval.begin()
 		delay()
 		interval.end()
-		XCTAssert(interval.count == 2)
+        let statistics2 = interval.statistics
+		XCTAssert(statistics2.count == 2)
 		XCTAssert(0.25 <= interval.duration)
-		XCTAssert(0.5 <= interval.total)
-		XCTAssert(0.25 <= interval.min)
-		XCTAssert(0.25 <= interval.max)
-		XCTAssert(0.25 <= interval.avg)
+		XCTAssert(0.5 <= statistics2.total)
+		XCTAssert(0.25 <= statistics2.min)
+		XCTAssert(0.25 <= statistics2.max)
+		XCTAssert(0.25 <= statistics2.avg)
 	}
 	
 	func test_IntervalConcurrent() {
@@ -948,13 +959,17 @@ final class IntervalTests: XCTestCase {
 		config.intervalConfig.options = .all
 		let logger = DLog(config: config)
 		
-		for i in 0..<10 {
-			DispatchQueue.global().async {
-				logger.interval("Signpost") { delay(); logger.debug("\(i)") }
-			}
-		}
-		
-		delay(1)
+        wait(count: 10) { expectations in
+            for i in 0..<10 {
+                DispatchQueue.global().async {
+                    let interval = logger.interval("signpost") {
+                        delay();
+                    }
+                    XCTAssert(interval.duration >= 0.25)
+                    expectations[i].fulfill()
+                }
+            }
+        }
 	}
 	
 	func test_IntervalNameEmpty() {
@@ -964,7 +979,7 @@ final class IntervalTests: XCTestCase {
 			logger.interval("") {
 				delay()
 			}
-		}?.match(#"> duration: \#(SECS), average: \#(SECS)$"#) == true)
+		}?.match(#"\#(Interval)$"#) == true)
 	}
 	
 	func test_IntervalConfigEmpty() {
@@ -977,7 +992,7 @@ final class IntervalTests: XCTestCase {
 			logger.interval("signpost") {
 				delay()
 			}
-		}?.match(#"signpost$"#) == true)
+		}?.match(#"> signpost$"#) == true)
 	}
 	
 	func test_IntervalConfigAll() {
@@ -990,7 +1005,7 @@ final class IntervalTests: XCTestCase {
 			logger.interval("signpost") {
 				delay()
 			}
-		}?.match(#"signpost: \{ duration: \#(SECS), count: [0-9]+, total: \#(SECS), min: \#(SECS), max: \#(SECS), average: \#(SECS) \}"#) == true)
+		}?.match(#"\{average:\#(SECS),count:[0-9]+,duration:\#(SECS),max:\#(SECS),min:\#(SECS),total:\#(SECS)\} signpost$"#) == true)
 	}
 }
 
@@ -1210,7 +1225,7 @@ final class TraceTests: XCTestCase {
 		
 		let logger = DLog(config: config)
 		
-		XCTAssert(logger.trace()?.match(#"> $"#) == true)
+		XCTAssert(logger.trace()?.match(Empty) == true)
 	}
 	
 	func test_TraceStack() {
@@ -1252,7 +1267,7 @@ final class TraceTests: XCTestCase {
 		
 		let logger = DLog(config: config)
 		
-		XCTAssert(logger.trace()?.match(#"\#(Location) $"#) == true)
+		XCTAssert(logger.trace()?.match(#"\#(Location)$"#) == true)
 	}
 	
 	func test_TraceConfigAll() {

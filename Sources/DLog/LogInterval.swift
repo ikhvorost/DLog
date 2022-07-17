@@ -27,12 +27,37 @@ import Foundation
 import os.log
 
 
-fileprivate class IntervalData {
-	var count = 0
-	var total: TimeInterval = 0
-	var min: TimeInterval = 0
-	var max: TimeInterval = 0
-	var avg: TimeInterval = 0
+public struct IntervalStatistics {
+    public var count = 0
+    public var total: TimeInterval = 0
+    public var min: TimeInterval = 0
+    public var max: TimeInterval = 0
+    public var avg: TimeInterval = 0
+}
+
+fileprivate class StatisticsStore {
+    static let shared = StatisticsStore()
+    
+    private var intervals = [Int : IntervalStatistics]()
+    
+    subscript(id: Int) -> IntervalStatistics {
+        get {
+            synchronized(self) {
+                if let data = intervals[id] {
+                    return data
+                }
+                let data = IntervalStatistics()
+                intervals[id] = data
+                return data
+            }
+        }
+        
+        set {
+            synchronized(self) {
+                intervals[id] = newValue
+            }
+        }
+    }
 }
 
 /// An object that represents a time interval triggered by the user.
@@ -40,73 +65,51 @@ fileprivate class IntervalData {
 /// Interval logs a point of interest in your code as running time statistics for debugging performance.
 ///
 public class LogInterval : LogItem {
-    @Atomic static private var intervals = [Int : IntervalData]()
-	
-	private static func intervalData(id: Int) -> IntervalData {
-		if let data = Self.intervals[id] {
-			return data
-		}
-		
-		let data = IntervalData()
-		Self.intervals[id] = data
-		return data
-	}
-	
 	private let id : Int
-	@Atomic private var begun = false
+	@Atomic
+    private var begun = false
 	
 	let name: String
 	let staticName: StaticString?
-	
-	// SignpostID
-	private var _signpostID: Any? = nil
+    
+    // SignpostID
+	@Atomic
+    private var _signpostID: Any? = nil
 	var signpostID: OSSignpostID? {
 		set { _signpostID = newValue }
 		get { _signpostID as? OSSignpostID }
 	}
-	
-	/// A time duration
-    @objc
-	private(set) public var duration: TimeInterval = 0
-	
-	/// A number of total calls
-    @objc
-	internal(set) public var count = 0
-	
-	/// A total time duration of all calls
-    @objc
-	internal(set) public var total: TimeInterval = 0
-	
-	/// A minimum time duration
-    @objc
-	internal(set) public var min: TimeInterval = 0
-	
-	/// A maximum time duration
-    @objc
-	internal(set) public var max: TimeInterval = 0
-	
-	/// An average time duration
-    @objc
-	internal(set) public var avg: TimeInterval = 0
     
-    init(params: LogParams, name: String, staticName: StaticString?, file: String, funcName: String, line: UInt) {
+    // Duration
+    @Atomic
+    private var _duration: TimeInterval = 0
+    @objc
+    public var duration: TimeInterval { _duration }
+    
+    public var statistics: IntervalStatistics { StatisticsStore.shared[id] }
+	
+	init(params: LogParams, name: String, staticName: StaticString?, file: String, funcName: String, line: UInt) {
 		self.id = "\(file):\(funcName):\(line)".hash
 		self.name = name
 		self.staticName = staticName
 		
 		super.init(params: params, type: .interval, file: file, funcName: funcName, line: line, message: nil)
         
-        message = {
-			let items: [(IntervalOptions, String, () -> String)] = [
-				(.duration, "duration", { "\(stringFromTimeInterval(self.duration))" }),
-				(.count, "count", { "\(self.count)" }),
-				(.total, "total", { "\(stringFromTimeInterval(self.total))" }),
-				(.min, "min", { "\(stringFromTimeInterval(self.min))" }),
-				(.max, "max", { "\(stringFromTimeInterval(self.max))" }),
-				(.average, "average", { "\(stringFromTimeInterval(self.avg))" })
+        message = { [weak self] in
+            guard let duration = self?.duration, let statistics = self?.statistics else {
+                return ""
+            }
+			let items: [(IntervalOptions, String, () -> Any)] = [
+				(.duration, "duration", { stringFromTimeInterval(duration) }),
+                (.count, "count", { statistics.count }),
+				(.total, "total", { stringFromTimeInterval(statistics.total) }),
+				(.min, "min", { stringFromTimeInterval(statistics.min) }),
+				(.max, "max", { stringFromTimeInterval(statistics.max) }),
+                (.average, "average", { stringFromTimeInterval(statistics.avg) })
 			]
-            let json = jsonDescription(title: self.name, items: items, options: params.config.intervalConfig.options)
-            return LogMessage(stringLiteral: json)
+            let dict = dictionary(from: items, options: params.config.intervalConfig.options)
+            let text = [dict.json(), name].joinedCompact()
+            return LogMessage(stringLiteral: text)
 		}
 	}
 	
@@ -126,6 +129,7 @@ public class LogInterval : LogItem {
 		begun.toggle()
 	
 		time = Date()
+        _duration = 0
 		
         params.logger.begin(interval: self)
 	}
@@ -144,29 +148,22 @@ public class LogInterval : LogItem {
 	public func end() {
 		guard begun else { return }
 		begun.toggle()
+        
+        _duration = -time.timeIntervalSinceNow
+        time = Date()
 		
-		duration = -time.timeIntervalSinceNow
-		time = Date()
-		
-		synchronized(Self.self as AnyObject) {
-			let data = Self.intervalData(id: id)
-			
-			data.count += 1
-			data.total += duration
-			if data.min == 0 || data.min > duration {
-				data.min = duration
-			}
-			if data.max == 0 || data.max < duration {
-				data.max = duration
-			}
-			data.avg = data.total / Double(data.count)
-			
-			count = data.count
-			total = data.total
-			min = data.min
-			max = data.max
-			avg = data.avg
-		}
+		var record = self.statistics
+        record.count += 1
+        record.total += _duration
+        if record.min == 0 || record.min > _duration {
+            record.min = _duration
+        }
+        if record.max == 0 || record.max < _duration {
+            record.max = _duration
+        }
+        record.avg = record.total / Double(record.count)
+        
+        StatisticsStore.shared[id] = record
 		
         params.logger.end(interval: self)
 	}

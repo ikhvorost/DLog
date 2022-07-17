@@ -160,11 +160,30 @@ func jsonDescription<Option: OptionSet>(title: String, items: [(Option, String, 
 	guard !title.isEmpty || !text.isEmpty else { return "" }
 	
 	if title.isEmpty && !text.isEmpty {
-		return braces ? "{ \(text) }" : text
+        return braces ? "{ \(text) }" : text
 	}
 	else if !title.isEmpty && text.isEmpty {
 		return title
 	}
 	
 	return "\(title): { \(text) }"
+}
+
+extension Array where Element == String {
+    func joinedCompact() -> String {
+        compactMap { $0.isEmpty ? nil : $0 }.joined(separator: " ")
+    }
+}
+
+func dictionary<Option: OptionSet>(from items: [(Option, String, () -> Any)], options: Option) -> [String : Any] {
+    let keyValues: [(String, Any)] = items
+        .compactMap {
+            if options.contains($0.0 as! Option.Element) {
+                let key = $0.1
+                let value = $0.2()
+                return (key, value)
+            }
+            return nil
+        }
+    return Dictionary(uniqueKeysWithValues: keyValues)
 }
