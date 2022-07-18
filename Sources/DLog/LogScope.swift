@@ -31,19 +31,28 @@ import os.log
 ///
 /// Scope provides a mechanism for grouping log messages.
 ///
-public class LogScope : LogItem {
+public class LogScope: LogProtocol {
+    var time = Date()
     let uid = UUID()
     var os_state = os_activity_scope_state_s()
-    @Atomic var entered = false
+    
+    @Atomic
+    var entered = false
     
     /// A global level of a scope
-    internal(set) public var level: Int = 0
+    @objc
+    public internal(set) var level: Int = 0
     
     /// A time duration of a scope
-    private(set) public var duration: TimeInterval = 0
-        
-    init(params: LogParams, file: String, funcName: String, line: UInt, name: @escaping () -> LogMessage) {
-        super.init(params: params, type: .scope, file: file, funcName: funcName, line: line, message: name)
+    public private(set) var duration: TimeInterval = 0
+    
+    @objc
+    public let name: String
+    
+    init(name: String, params: LogParams, file: String, funcName: String, line: UInt) {
+        self.name = name
+        super.init()
+        self.params = params
         self.params.scope = self
     }
     

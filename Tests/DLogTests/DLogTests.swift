@@ -296,7 +296,7 @@ final class DLogTests: XCTestCase {
 	
 	func test_Filter() {
 		// Time
-        let timeLogger = DLog(.textPlain => .filter { $0.time < Date() } => .stdout)
+        let timeLogger = DLog(.textPlain => .filter(item: { $0.time < Date() }) => .stdout)
 		XCTAssertNotNil(timeLogger.info("info"))
 		
 		// Category
@@ -310,7 +310,6 @@ final class DLogTests: XCTestCase {
 		XCTAssertNil(typeLogger.trace())
 		XCTAssertNil(typeLogger.info("info"))
 		XCTAssertNotNil(typeLogger.debug("debug"))
-		XCTAssertNil(read_stdout { typeLogger.scope("scope") { _ in } })
 		
 		// File name
 		let fileLogger = DLog(.textPlain => .filter { $0.fileName == "DLogTests.swift" } => .stdout)
@@ -331,51 +330,32 @@ final class DLogTests: XCTestCase {
 		XCTAssertNil(textLogger.info("info"))
 		XCTAssertNil(read_stdout { textLogger.interval("interval") { delay(0.3) } })
 		XCTAssertNotNil(read_stdout { textLogger.interval("hello interval") { Thread.sleep(forTimeInterval: 0.3) } })
-		XCTAssertNil(read_stdout { textLogger.scope("scope") { _ in } })
-		XCTAssertNotNil(read_stdout { textLogger.scope("scope hello") { _ in } })
+        
+        // Scope
+        let scopeLogger = DLog(.textPlain => .filter { $0.name == "scope" } => .stdout)
+        XCTAssertNil(read_stdout { scopeLogger.scope("load") { _ in } })
+        XCTAssertNotNil(read_stdout { scopeLogger.scope("load") { $0.log("load") } })
+		XCTAssertNotNil(read_stdout { scopeLogger.scope("scope") { $0.log("scope") } })
 		
-		// Scope
-        let scopeLogger = DLog(.textPlain => .filter { ($0 as? LogScope)?.text == "Load" || $0.scope?.text == "Load" } => .stdout)
-		//let scopeLog = DLog(.textPlain => .filter { $0.scope?.level == 1 } => .stdout)
-		XCTAssertNil(scopeLogger.info("info"))
+		// Item & Scope
+        let filter = Filter(isItem: { $0.scope?.name == "Load" }, isScope: { $0.name == "Load" })
+        let itemScopeLogger = DLog(.textPlain => filter => .stdout)
+		XCTAssertNil(itemScopeLogger.info("info"))
 		XCTAssertNotNil(read_stdout {
-			scopeLogger.scope("Load") { scope in
+            itemScopeLogger.scope("Load") { scope in
 				XCTAssertNotNil(scope.debug("load"))
 				XCTAssertNotNil(scope.error("load"))
 				XCTAssertNil(read_stdout {
-					scopeLogger.scope("Parse") { scope in
+                    scope.scope("Parse") { scope in
 						XCTAssertNil(scope.debug("parse"))
 						XCTAssertNil(scope.error("parse"))
 					}
 				})
 			}
 		})
-		XCTAssertNil(scopeLogger.fault("fault"))
+		XCTAssertNil(itemScopeLogger.fault("fault"))
 	}
     
-    func test_FilterItem() {
-        let logger = DLog(.textPlain =>
-        .filter { item in
-            XCTAssertNil(item.log("log"))
-            XCTAssertNil(item.trace())
-            XCTAssertNil(item.debug("debug"))
-            XCTAssertNil(item.info("info"))
-            XCTAssertNil(item.warning("warning"))
-            XCTAssertNil(item.error("error"))
-            XCTAssertNil(item.assert(false))
-            XCTAssertNil(item.fault("fault"))
-            XCTAssertNil(read_stdout { item.interval("interval") { delay() } })
-            item.scope("scope") { scope in
-                XCTAssertNil(scope.log("log"))
-            }
-            return true
-        } => .stdout)
-        
-        logger.log("log")
-        logger.scope("scope").log("scope log")
-        logger.interval("interval").log("interval log")
-    }
-	
 	// MARK: - Disabled
 	
 	func test_Disabled() {
@@ -1163,7 +1143,7 @@ final class TraceTests: XCTestCase {
         config.traceConfig.threadConfig.options = .qos
 		let logger = DLog(config: config)
 		
-		XCTAssert(logger.trace()?.match(#"\{queue:com.apple.main-thread,thread:\{qos:userInteractive\}\}$"#) == true)
+		XCTAssert(logger.trace()?.match(#"\{queue:com.apple.main-thread"#) == true)
 		
         let queues: [(String, String, DispatchQueue)] = [
 			("com.apple.root.background-qos", "background", DispatchQueue.global(qos: .background)),

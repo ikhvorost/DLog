@@ -161,61 +161,37 @@ public class DLog: LogProtocol {
 	
 	func begin(interval: LogInterval) {
 		guard let out = output else { return }
-
 		out.intervalBegin(interval: interval)
 	}
 
 	func end(interval: LogInterval) {
 		guard let out = output else { return }
-
 		out.intervalEnd(interval: interval, scopes: scopes)
 	}
 
     func log(message: @escaping () -> LogMessage, type: LogType, params: LogParams, file: String, function: String, line: UInt) -> String? {
         guard let out = output else { return nil }
-        
-        let item = LogItem(
-            params: params,
-			type: type,
-			file: file,
-			funcName: function,
-			line: line,
-            message: message)
-        item.params.logger = .disabled
-        
+        let item = LogItem(params: params, type: type, file: file, funcName: function, line: line, message: message)
 		return out.log(item: item, scopes: scopes)
 	}
 
-	func scope(name: @escaping () -> LogMessage, params: LogParams, file: String, function: String, line: UInt, closure: ((LogScope) -> Void)?) -> LogScope {
-        let scope = LogScope(params: params,
-							 file: file,
-							 funcName: function,
-							 line: line,
-							 name: name)
-
+	func scope(name: String, params: LogParams, file: String, function: String, line: UInt, closure: ((LogScope) -> Void)?) -> LogScope {
+        let scope = LogScope(name: name, params: params, file: file, funcName: function, line: line)
 		if let block = closure {
 			scope.enter()
 			block(scope)
 			scope.leave()
 		}
-
-		return scope
+        return scope
 	}
 
 	func interval(name: String, staticName: StaticString?, params: LogParams, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
-        let interval = LogInterval(params: params,
-                                   name: name,
-                                   staticName: staticName,
-                                   file: file,
-                                   funcName: function,
-                                   line: line)
-		
+        let interval = LogInterval(params: params, name: name, staticName: staticName, file: file, funcName: function, line: line)
 		if let block = closure {
 			interval.begin()
 			block()
 			interval.end()
 		}
-
 		return interval
 	}
 }

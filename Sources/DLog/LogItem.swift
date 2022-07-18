@@ -58,54 +58,50 @@ public enum LogType : Int {
 	
 	/// The interval log level.
 	case interval
-	
-	/// The scope log level.
-	case scope
 }
 
 /// A base log message class that the logger adds to the logs.
 ///
 /// It contains all available properties of the log message.
 ///
-public class LogItem: LogProtocol {
+@objcMembers
+public class LogItem: NSObject {
+    let params: LogParams
+    
 	/// The timestamp of this log message.
-    @objc internal(set) public var time = Date()
+    public internal(set) var time = Date()
 	
 	/// The category of this log message.
-    @objc public var category: String { params.category }
+    public var category: String { params.category }
 	
 	/// The scope of this log message.
-    @objc public var scope: LogScope? { params.scope }
+    public var scope: LogScope? { params.scope }
 	
 	/// The log level of this log message.
-    @objc public let type: LogType
+    public let type: LogType
 	
 	/// The file name this log message originates from.
-    @objc  public let fileName: String
+    public let fileName: String
 	
 	/// The function name this log message originates from.
-    @objc  public let funcName: String
+    public let funcName: String
 	
 	/// The line number of code this log message originates from.
-    @objc public let line: UInt
+    public let line: UInt
 		
-	@objc var message: (() -> LogMessage)!
+	var message: (() -> LogMessage)?
     
     /// The text of this log message.
-    @objc public var text: String {
-        precondition(message != nil)
-        return message().text
+    public var text: String {
+        return message?().text ?? ""
     }
 	
     init(params: LogParams, type: LogType, file: String, funcName: String, line: UInt, message: (() -> LogMessage)?) {
+        self.params = params
         self.type = type
 		self.fileName = (file as NSString).lastPathComponent
 		self.funcName = funcName
 		self.line = line
 		self.message = message
-        
-        super.init()
-        
-        self.params = params
 	}
 }

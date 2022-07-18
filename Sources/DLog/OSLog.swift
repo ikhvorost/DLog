@@ -99,7 +99,7 @@ public class OSLog : LogOutput {
 	
 	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
         if let os_activity_current = Dynamic.OS_ACTIVITY_CURRENT {
-            let activity = _os_activity_create(Dynamic.dso, strdup(scope.text), os_activity_current, OS_ACTIVITY_FLAG_DEFAULT)
+            let activity = _os_activity_create(Dynamic.dso, strdup(scope.name), os_activity_current, OS_ACTIVITY_FLAG_DEFAULT)
             os_activity_scope_enter(activity, &scope.os_state)
         }
 		return super.scopeEnter(scope: scope, scopes: scopes)

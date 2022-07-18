@@ -214,7 +214,7 @@ static void testAll(LogProtocol* logger, NSString *category) {
         LogOutput.stdErr,
         LogOutput.oslog,
         [LogOutput oslog:@"com.dlog.objc"],
-        [LogOutput filter:^BOOL(LogItem* logItem) {
+        [LogOutput filterWithItem:^BOOL(LogItem* logItem) {
             return logItem.type == LogTypeDebug;
         }],
         [LogOutput file:@"dlog.txt" append:NO],
@@ -233,24 +233,25 @@ static void testAll(LogProtocol* logger, NSString *category) {
 }
 
 - (void)test_Filter {
-    let filter = [LogOutput filter:^BOOL(LogItem* logItem) {
-        if ([logItem isKindOfClass:LogScope.class]) {
-            return [logItem.text isEqualToString:@"Scope"];
-        }
-        
+    let filterItem = [LogOutput filterWithItem:^BOOL(LogItem* logItem) {
         return
             [logItem.time compare:NSDate.now] == NSOrderedAscending &&
             [logItem.category isEqualToString:@"DLOG"] &&
-            [logItem.scope.text isEqualToString:@"Scope"] &&
+            [logItem.scope.name isEqualToString:@"Scope"] &&
             logItem.type == LogTypeDebug &&
             [logItem.fileName isEqualToString:@"DLogTestsObjC.m"] &&
             [logItem.funcName isEqualToString:@"-[DLogTestsObjC test_Filter]"] &&
             (logItem.line > __LINE__) &&
             [logItem.text isEqualToString:@"debug"];
     }];
-    XCTAssertNotNil(filter);
     
-    let logger = [[DLog alloc] initWithOutputs:@[LogOutput.textPlain, filter, LogOutput.stdOut]];
+    let filterScope = [LogOutput filterWithScope:^BOOL(LogScope* scope) {
+        return [scope.name isEqualToString:@"Scope"];
+    }];
+        
+    XCTAssertNotNil(filterItem);
+    
+    let logger = [[DLog alloc] initWithOutputs:@[LogOutput.textPlain, filterItem, filterScope, LogOutput.stdOut]];
     XCTAssertNotNil(logger);
     
     let scope = logger.scope(@"Scope");

@@ -81,9 +81,7 @@ private extension LogType {
 		.error : "⚠️",
 		.assert : "🅰️",
 		.fault : "🆘",
-		
 		.interval : "🕒",
-		.scope : "",
 	]
 	
 	var icon: String {
@@ -99,9 +97,7 @@ private extension LogType {
 		.error : "ERROR",
 		.assert : "ASSERT",
 		.fault : "FAULT",
-		
 		.interval : "INTERVAL",
-		.scope: ""
 	]
 	
 	var title: String {
@@ -178,8 +174,8 @@ public class Text : LogOutput {
 	}
 	
 	private func textMessage(item: LogItem, scopes: [LogScope]) -> String {
-        precondition(item.type != .scope)
-		
+        var params = item.params
+        
         var sign = { "\(item.params.config.sign)" }
 		var time = { Self.dateFormatter.string(from: item.time) }
 		var level = { String(format: "[%02d]", item.scope?.level ?? 0) }
@@ -196,7 +192,7 @@ public class Text : LogOutput {
 		}
 		var type = { "[\(item.type.title)]" }
 		var location = { "<\(item.fileName):\(item.line)>" }
-        var metadata = { item.params.metadata.json }
+        var metadata = { params.metadata.json }
         var text = item.text
 		
 		switch style {
@@ -213,7 +209,7 @@ public class Text : LogOutput {
 				category = { item.category.color(.textBlue) }
 				type = { " \(item.type.title) ".color(tag.colors) }
 				location = { "<\(item.fileName):\(item.line)>".color([.dim, tag.textColor]) }
-                metadata = { item.params.metadata.json.color(.dim) }
+                metadata = { params.metadata.json.color(.dim) }
 				text = text.color(tag.textColor)
 				
 			case .emoji:
@@ -240,7 +236,7 @@ public class Text : LogOutput {
         var sign = { "\(scope.params.config.sign)" }
 		var time = start ? Self.dateFormatter.string(from: scope.time) : Self.dateFormatter.string(from: scope.time.addingTimeInterval(scope.duration))
 		let ms = !start ? "(\(stringFromTimeInterval(scope.duration)))" : nil
-		var category = { "[\(scope.category)]" }
+        var category = { "[\(scope.params.category)]" }
 		var level = { String(format: "[%02d]", scope.level) }
 		let padding: () -> String = {
 			var text = ""
@@ -251,7 +247,7 @@ public class Text : LogOutput {
 			text += start ? "┌" : "└"
 			return text
 		}
-        var text = "[\(scope.text)] \(ms ?? "")"
+        var text = "[\(scope.name)] \(ms ?? "")"
 		
         switch style {
         case .emoji, .plain:
@@ -261,8 +257,8 @@ public class Text : LogOutput {
             sign = { "\(scope.params.config.sign)".color(.dim) }
             time = time.color(.dim)
             level = { String(format: "[%02d]", scope.level).color(.dim) }
-            category = { scope.category.color(.textBlue) }
-            text = "[\(scope.text.color(.textMagenta))] \((ms ?? "").color(.dim))"
+            category = { scope.params.category.color(.textBlue) }
+            text = "[\(scope.name.color(.textMagenta))] \((ms ?? "").color(.dim))"
         }
 	
 		let items: [(LogOptions, () -> String)] = [

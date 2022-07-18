@@ -64,12 +64,12 @@ fileprivate class StatisticsStore {
 ///
 /// Interval logs a point of interest in your code as running time statistics for debugging performance.
 ///
-public class LogInterval : LogItem {
+public class LogInterval: LogItem {
 	private let id : Int
-	@Atomic
+	
+    @Atomic
     private var begun = false
 	
-	let name: String
 	let staticName: StaticString?
     
     // SignpostID
@@ -90,7 +90,6 @@ public class LogInterval : LogItem {
 	
 	init(params: LogParams, name: String, staticName: StaticString?, file: String, funcName: String, line: UInt) {
 		self.id = "\(file):\(funcName):\(line)".hash
-		self.name = name
 		self.staticName = staticName
 		
 		super.init(params: params, type: .interval, file: file, funcName: funcName, line: line, message: nil)

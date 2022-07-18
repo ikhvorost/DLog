@@ -37,7 +37,7 @@ struct LogParams {
 
 /// Base logger class
 ///
-@objc
+@objcMembers
 public class LogProtocol: NSObject {
     
     /// LogProtocol parameters
@@ -58,7 +58,6 @@ public class LogProtocol: NSObject {
     ///
     /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
     ///
-    @objc
     @discardableResult
     public func log(_ message: @escaping @autoclosure () -> LogMessage, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
         return params.logger.log(message: message, type: .log, params: params, file: file, function: function, line: line)
@@ -79,7 +78,6 @@ public class LogProtocol: NSObject {
     ///
     /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
     ///
-    @objc
     @discardableResult
     public func trace(_ message: @escaping @autoclosure () -> LogMessage? = nil,
                       file: String = #file, function: String = #function, line: UInt = #line,
@@ -109,7 +107,6 @@ public class LogProtocol: NSObject {
     ///
     /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
     ///
-    @objc
     @discardableResult
     public func debug(_ message: @escaping @autoclosure () -> LogMessage, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
         return params.logger.log(message: message, type: .debug, params: params, file: file, function: function, line: line)
@@ -130,7 +127,6 @@ public class LogProtocol: NSObject {
     ///
     /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
     ///
-    @objc
     @discardableResult
     public func info(_ message: @escaping @autoclosure () -> LogMessage, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
         return params.logger.log(message: message, type: .info, params: params, file: file, function: function, line: line)
@@ -151,7 +147,6 @@ public class LogProtocol: NSObject {
     ///
     /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
     ///
-    @objc
     @discardableResult
     public func warning(_ message: @escaping @autoclosure () -> LogMessage, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
         return params.logger.log(message: message, type: .warning, params: params, file: file, function: function, line: line)
@@ -172,7 +167,6 @@ public class LogProtocol: NSObject {
     ///
     /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
     ///
-    @objc
     @discardableResult
     public func error(_ message: @escaping @autoclosure () -> LogMessage, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
         return params.logger.log(message: message, type: .error, params: params, file: file, function: function, line: line)
@@ -194,7 +188,6 @@ public class LogProtocol: NSObject {
     ///
     /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
     ///
-    @objc
     @discardableResult
     public func assert(_ condition: @autoclosure () -> Bool, _ message: @escaping @autoclosure () -> LogMessage = "", file: String = #file, function: String = #function, line: UInt = #line) -> String? {
         guard params.logger != .disabled && !condition()  else { return nil }
@@ -216,7 +209,6 @@ public class LogProtocol: NSObject {
     ///
     /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
     ///
-    @objc
     @discardableResult
     public func fault(_ message: @escaping @autoclosure () -> LogMessage, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
         return params.logger.log(message: message, type: .fault, params: params, file: file, function: function, line: line)
@@ -240,9 +232,8 @@ public class LogProtocol: NSObject {
     ///
     /// - Returns: An `LogScope` object for the new scope.
     ///
-    @objc
     @discardableResult
-    public func scope(_ name: @escaping @autoclosure () -> LogMessage, file: String = #file, function: String = #function, line: UInt = #line, closure: ((LogScope) -> Void)? = nil) -> LogScope {
+    public func scope(_ name: String, file: String = #file, function: String = #function, line: UInt = #line, closure: ((LogScope) -> Void)? = nil) -> LogScope {
         return params.logger.scope(name: name, params: params, file: file, function: function, line: line, closure: closure)
     }
     
@@ -270,7 +261,6 @@ public class LogProtocol: NSObject {
     }
     
     /// Creates an interval object for Objective-C code.
-    @objc
     @discardableResult
     public func interval(name: String, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
         return params.logger.interval(name: name, staticName: nil, params: params, file: file, function: function, line: line, closure: closure)

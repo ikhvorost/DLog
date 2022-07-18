@@ -27,8 +27,9 @@ import Foundation
 
 /// Middleware output for filtering
 ///
-public class Filter : LogOutput {
-	private let predicate: (LogItem) -> Bool
+public class Filter: LogOutput {
+	private let isItem: ((LogItem) -> Bool)?
+    private let isScope: ((LogScope) -> Bool)?
 	
 	/// Initializes a filter output that evaluates using a specified block object.
 	///
@@ -40,30 +41,35 @@ public class Filter : LogOutput {
 	/// - Parameters:
 	/// 	- block: The block is applied to the object to be evaluated.
 	///
-	public init(block: @escaping (LogItem) -> Bool) {
-		predicate = block
+    public init(isItem: ((LogItem) -> Bool)?, isScope: ((LogScope) -> Bool)?) {
+        self.isItem = isItem
+        self.isScope = isScope
 		super.init(source: nil)
 	}
 	
 	// MARK: - LogOutput
 	
 	override func log(item: LogItem, scopes: [LogScope]) -> String? {
-		let text = super.log(item: item, scopes: scopes)
-		return predicate(item) ? text : nil
+        let text = super.log(item: item, scopes: scopes)
+        let included = isItem == nil || isItem?(item) == true
+		return included ? text : nil
 	}
 	
 	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
 		let text = super.scopeEnter(scope: scope, scopes: scopes)
-		return predicate(scope) ? text : nil
+        let included = isScope == nil || isScope?(scope) == true
+		return included == true ? text : nil
 	}
 	
 	override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
 		let text = super.scopeLeave(scope: scope, scopes: scopes)
-		return predicate(scope) ? text : nil
+        let included = isScope == nil || isScope?(scope) == true
+		return included ? text : nil
 	}
 	
 	override func intervalEnd(interval: LogInterval, scopes: [LogScope]) -> String? {
 		let text = super.intervalEnd(interval: interval, scopes: scopes)
-		return predicate(interval) ? text : nil
+        let included = isItem == nil || isItem?(interval) == true
+		return included ? text : nil
 	}
 }
