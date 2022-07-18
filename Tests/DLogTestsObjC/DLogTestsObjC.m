@@ -92,28 +92,28 @@ static NSString* read_stderr(VoidBlock block) {
 static void testAll(LogProtocol* logger, NSString *category) {
 	XCTAssertNotNil(logger);
     
-    XCTAssertTrue([logger.log(@"log") match:matchString(category, @"log")]);
-    XCTAssertTrue([logger.log(@"log %d", 123) match:matchString(category, @"log 123")]);
-    XCTAssertTrue([logger.log(@"%@ %@", @"hello", @"world") match:matchString(category, @"hello world")]);
+    XCTAssertTrue([logger.log(@"log") match:matchString(category, @"log$")]);
+    XCTAssertTrue([logger.log(@"log %d", 123) match:matchString(category, @"log 123$")]);
+    XCTAssertTrue([logger.log(@"%@ %@", @"hello", @"world") match:matchString(category, @"hello world$")]);
     
-    XCTAssertTrue([logger.trace() match:matchString(category, @"func: testAll")]);
-    XCTAssertTrue([logger.trace(@"trace") match:matchString(category, @"trace:")]);
-    XCTAssertTrue([logger.trace(@"trace %d", 1) match:matchString(category, @"trace 1:")]);
+    XCTAssertTrue([logger.trace() match:matchString(category, @"\\{func:testAll,thread:\\{name:main,number:1\\}\\}$")]);
+    XCTAssertTrue([logger.trace(@"trace") match:matchString(category, @"\\{func:testAll,thread:\\{name:main,number:1\\}\\} trace$")]);
+    XCTAssertTrue([logger.trace(@"trace%d", 1) match:matchString(category, @"\\{func:testAll,thread:\\{name:main,number:1\\}\\} trace1$")]);
     
-	XCTAssertTrue([logger.debug(@"debug") match:matchString(category, @"debug")]);
-	XCTAssertTrue([logger.info(@"info") match:matchString(category, @"info")]);
-	XCTAssertTrue([logger.warning(@"warning") match:matchString(category, @"warning")]);
-	XCTAssertTrue([logger.error(@"error") match:matchString(category, @"error")]);
+	XCTAssertTrue([logger.debug(@"debug") match:matchString(category, @"debug$")]);
+	XCTAssertTrue([logger.info(@"info") match:matchString(category, @"info$")]);
+	XCTAssertTrue([logger.warning(@"warning") match:matchString(category, @"warning$")]);
+	XCTAssertTrue([logger.error(@"error") match:matchString(category, @"error$")]);
     
     XCTAssertNil(logger.assertion(YES));
-    XCTAssertNil(logger.assertion(YES, @"assert"));
+    XCTAssertNil(logger.assertion(YES, @"assert$"));
     XCTAssertNil(logger.assertion(YES, @"assert %d", 1));
     XCTAssertNotNil(logger.assertion(NO));
-    XCTAssertTrue([logger.assertion(NO, @"assert") match:matchString(category, @"assert")]);
-    XCTAssertTrue([logger.assertion(NO, @"assert %d", 1) match:matchString(category, @"assert 1")]);
+    XCTAssertTrue([logger.assertion(NO, @"assert") match:matchString(category, @"assert$")]);
+    XCTAssertTrue([logger.assertion(NO, @"assert%d", 1) match:matchString(category, @"assert1$")]);
     
-	XCTAssertTrue([logger.fault(@"fault") match:matchString(category, @"fault")]);
-    XCTAssertTrue([logger.fault(@"fault %d", 1) match:matchString(category, @"fault 1")]);
+	XCTAssertTrue([logger.fault(@"fault") match:matchString(category, @"fault$")]);
+    XCTAssertTrue([logger.fault(@"fault%d", 1) match:matchString(category, @"fault1$")]);
 }
 
 @interface DLogTestsObjC : XCTestCase

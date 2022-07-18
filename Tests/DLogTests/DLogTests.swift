@@ -144,8 +144,8 @@ fileprivate func testAll(_ logger: LogProtocol, categoryTag: String = CategoryTa
 	
     XCTAssert(logger.log("log")?.match(#"\#(categoryTag)\#(padding)\#(LogTag) \#(Location)\#(metadata) log"#) == true)
 	
-	XCTAssert(logger.trace()?.match(#"\#(categoryTag)\#(padding)\#(TraceTag) \#(Location)\#(metadata) func: testAll\(_:categoryTag:metadata:\), thread: \{ number: 1, name: main \}"#) == true)
-	XCTAssert(logger.trace("start")?.match(#"\#(categoryTag)\#(padding)\#(TraceTag) \#(Location)\#(metadata) start: \{ func: testAll\(_:categoryTag:metadata:\), thread: \{ number: 1, name: main \} \}"#) == true)
+	XCTAssert(logger.trace()?.match(#"\#(categoryTag)\#(padding)\#(TraceTag) \#(Location)\#(metadata) \{func:testAll\(_:categoryTag:metadata:\),thread:\{name:main,number:1\}"#) == true)
+	XCTAssert(logger.trace("start")?.match(#"\#(categoryTag)\#(padding)\#(TraceTag) \#(Location)\#(metadata) \{func:testAll\(_:categoryTag:metadata:\),thread:\{name:main,number:1\}\} start"#) == true)
 	
 	XCTAssert(logger.debug("debug")?.match(#"\#(categoryTag)\#(padding)\#(DebugTag) \#(Location)\#(metadata) debug"#) == true)
 	
@@ -190,7 +190,7 @@ final class DLogTests: XCTestCase {
 		
 		XCTAssert(logger.log("log")?.match(#"\#(CategoryTag) 💬 \#(LogTag) \#(Location) log"#) == true)
 		
-		XCTAssert(logger.trace()?.match(#"\#(CategoryTag) #️⃣ \#(TraceTag) \#(Location) func: \#(#function)"#) == true)
+		XCTAssert(logger.trace()?.match(#"\#(CategoryTag) #️⃣ \#(TraceTag) \#(Location) \{func:\#(#function)"#) == true)
 		XCTAssert(logger.debug("debug")?.match(#"\#(CategoryTag) ▶️ \#(DebugTag) \#(Location) debug"#) == true)
 		
 		XCTAssert(logger.info("info")?.match(#"\#(CategoryTag) ✅ \#(InfoTag) \#(Location) info"#) == true)
@@ -225,12 +225,12 @@ final class DLogTests: XCTestCase {
 	
 	// MARK: - Standard
 	
-	func test_stdOutErr() {
+	func test_stdout_err() {
 		let logOut = DLog(.stdout)
-		XCTAssert(read_stdout { logOut.trace() }?.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) func: \#(#function)"#) == true)
+		XCTAssert(read_stdout { logOut.trace() }?.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) \{func:\#(#function)"#) == true)
 		
 		let logErr = DLog(.stderr)
-		XCTAssert(read_stderr { logErr.trace() }?.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) func: \#(#function)"#) == true)
+		XCTAssert(read_stderr { logErr.trace() }?.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) \{func:\#(#function)"#) == true)
 	}
 	
 	// MARK: - File
@@ -245,7 +245,7 @@ final class DLogTests: XCTestCase {
 		do {
 			let text = try String(contentsOfFile: filePath)
 			print(text)
-			XCTAssert(text.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) func: \#(#function)"#))
+			XCTAssert(text.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) \{func:\#(#function)"#))
 		}
 		catch {
 			XCTFail(error.localizedDescription)
@@ -467,7 +467,7 @@ final class DLogTests: XCTestCase {
 		
 		let logger = DLog(config: config)
 		
-		XCTAssert(logger.trace()?.match(#"^func: test_ConfigEmpty\(\), thread: \{ number: 1, name: main \}$"#) == true)
+		XCTAssert(logger.trace()?.match(#"\{func:test_ConfigEmpty\(\),thread:\{name:main,number:1\}\}$"#) == true)
 	}
 	
 	func test_ConfigAll() {
@@ -476,7 +476,7 @@ final class DLogTests: XCTestCase {
 		
 		let logger = DLog(config: config)
 		
-		XCTAssert(logger.trace()?.match(#"\#(Sign) \#(Time) \#(Level) \#(CategoryTag) \#(TraceTag) \#(Location) func: test_ConfigAll\(\), thread: \{ number: 1, name: main \}"#) == true)
+		XCTAssert(logger.trace()?.match(#"\#(Sign) \#(Time) \#(Level) \#(CategoryTag) \#(TraceTag) \#(Location) \{func:test_ConfigAll\(\),thread:\{name:main,number:1\}\}$"#) == true)
 	}
     
     func test_ConfigCategory() {
@@ -493,9 +493,9 @@ final class DLogTests: XCTestCase {
         let netLogger = logger.category(name: "NET", config: config)
         
         // Trace
-        XCTAssert(logger.trace()?.match(#"\#(Sign) \#(Time) \#(CategoryTag) \#(TraceTag) \#(Location) func: test_ConfigCategory\(\), thread: \{ number: 1, name: main \}"#) == true)
-        XCTAssert(viewLogger.trace()?.match(#"\#(Sign) \#(Time) \[VIEW\] \#(TraceTag) \#(Location) func: test_ConfigCategory\(\), thread: \{ number: 1, name: main \}"#) == true)
-        XCTAssert(netLogger.trace()?.match(#"> \#(Time) \#(Level) \[NET\] \#(TraceTag) queue: com\.apple\.main-thread"#) == true)
+        XCTAssert(logger.trace()?.match(#"\#(Sign) \#(Time) \#(CategoryTag) \#(TraceTag) \#(Location) \{func:test_ConfigCategory\(\),thread:\{name:main,number:1\}\}$"#) == true)
+        XCTAssert(viewLogger.trace()?.match(#"\#(Sign) \#(Time) \[VIEW\] \#(TraceTag) \#(Location) \{func:test_ConfigCategory\(\),thread:\{name:main,number:1\}\}$"#) == true)
+        XCTAssert(netLogger.trace()?.match(#"> \#(Time) \#(Level) \[NET\] \#(TraceTag) \{queue:com.apple.main-thread\}$"#) == true)
         
         // Interval
         XCTAssert(read_stdout { logger.interval("signpost") { delay() }}?.match(#"\#(Sign) \#(Time) \#(CategoryTag) \#(IntervalTag) \#(Location) \#(Interval) signpost$"#) == true)
@@ -599,8 +599,8 @@ final class FormatTests: XCTestCase {
         
         XCTAssert(logger.log("Private: \(cardNumber, privacy: .private)")?.match("<private>") == true)
         
-        XCTAssert(logger.log("Private hash: \(cardNumber, privacy: .private(mask: .hash))")?.match("[0-9a-fA-F]{8}") == true)
-        XCTAssert(logger.log("Private hash: \(cardNumber, privacy: .private(mask: .hash, auto: false))")?.match("[0-9a-fA-F]{8}") == true)
+        XCTAssert(logger.log("Private hash: \(cardNumber, privacy: .private(mask: .hash))")?.match("[0-9a-fA-F]+") == true)
+        XCTAssert(logger.log("Private hash: \(cardNumber, privacy: .private(mask: .hash, auto: false))")?.match("[0-9a-fA-F]+") == true)
         
         XCTAssert(logger.log("Private random: \(empty, privacy: .private(mask: .random))")?.match(": $") == true)
         XCTAssert(logger.log("Private random: \(cardNumber, privacy: .private(mask: .random))")?.match(cardNumber) == false)
@@ -1019,13 +1019,13 @@ final class ScopeTests: XCTestCase {
 		}
 	}
 	
-	func test_ScopeConfigEmpty() {
+	func test_scope_config_empty() {
 		var config = LogConfig()
 		config.options = []
 		let logger = DLog(config: config)
 		
 		logger.scope("scope") {
-			XCTAssert($0.trace()?.match(#"^func: test_ScopeConfigEmpty\(\), thread: \{ number: 1, name: main \}"#) == true)
+			XCTAssert($0.trace()?.match(#"\{func:test_scope_config_empty\(\),thread:\{name:main,number:1\}\}$"#) == true)
 		}
 	}
 	
@@ -1050,16 +1050,16 @@ final class ScopeTests: XCTestCase {
 				XCTAssert(scope2.fault("scope2")?.match(#"\[02\] \#(CategoryTag) \| \| \#(FaultTag) \#(Location) scope2"#) == true)
 			}
 			
-			XCTAssert(scope1.trace("scope1 end")?.match(#"\[01\] \#(CategoryTag) \| \#(TraceTag) \#(Location) scope1 end"#) == true)
+			XCTAssert(scope1.trace("scope1 end")?.match(#"\[01\] \#(CategoryTag) \| \#(TraceTag) \#(Location) \{func:test_ScopeStack\(\),thread:\{name:main,number:1\}\} scope1 end$"#) == true)
 		}
 		
-		XCTAssert(logger.trace("no scope")?.match(#"\[00\] \#(CategoryTag) \#(TraceTag) \#(Location) no scope"#) == true)
+		XCTAssert(logger.trace("no scope")?.match(#"\[00\] \#(CategoryTag) \#(TraceTag) \#(Location) \{func:test_ScopeStack\(\),thread:\{name:main,number:1\}\} no scope$"#) == true)
 	}
 	
-	func test_ScopeNotEntered() {
+	func test_scope_not_entered() {
 		let logger = DLog()
 		let scope1 = logger.scope("scope 1")
-		XCTAssert(scope1.trace()?.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) func: \#(#function)"#) == true)
+		XCTAssert(scope1.trace()?.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) \{func:\#(#function)"#) == true)
 	}
 	
 	func test_ScopeEnterLeave() {
@@ -1090,7 +1090,7 @@ final class ScopeTests: XCTestCase {
 		XCTAssert(logger.fault("no scope")?.match(#"\#(CategoryTag) \#(FaultTag) \#(Location) no scope"#) == true)
 	}
 	
-	func test_ScopeDoubleEnter() {
+	func test_scope_doubleE_enter() {
 		let logger = DLog()
 		
 		let scope1 = logger.scope("My Scope")
@@ -1098,16 +1098,16 @@ final class ScopeTests: XCTestCase {
 		scope1.enter()
 		scope1.enter()
 		
-		XCTAssert(scope1.trace()?.match(#"\#(CategoryTag) \| \#(TraceTag) \#(Location) func: \#(#function)"#) == true)
+		XCTAssert(scope1.trace()?.match(#"\#(CategoryTag) \| \#(TraceTag) \#(Location) \{func:\#(#function)"#) == true)
 		
 		scope1.leave()
 		scope1.leave()
 		
 		scope1.enter()
-		XCTAssert(scope1.trace()?.match(#"\#(CategoryTag) \| \#(TraceTag) \#(Location) func: \#(#function)"#) == true)
+		XCTAssert(scope1.trace()?.match(#"\#(CategoryTag) \| \#(TraceTag) \#(Location) \{func:\#(#function)"#) == true)
 		scope1.leave()
 
-		XCTAssert(logger.trace()?.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) func: \#(#function)"#) == true)
+		XCTAssert(logger.trace()?.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) \{func:\#(#function)"#) == true)
 	}
 	
 	func test_ScopeConcurrent() {
@@ -1140,141 +1140,116 @@ final class ScopeTests: XCTestCase {
 
 final class TraceTests: XCTestCase {
 	
-	func test_Trace() {
+	func test_trace() {
 		let logger = DLog()
-		
-		XCTAssert(logger.trace()?.match(#"func: test_Trace\(\), thread: \{ number: 1, name: main \}$"#) == true)
+		XCTAssert(logger.trace()?.match(#"\{func:test_trace\(\),thread:\{name:main,number:1\}\}$"#) == true)
 	}
-		
-	func test_TraceText() {
+
+	func test_trace_text() {
 		let logger = DLog()
-		
-		XCTAssert(logger.trace("trace")?.match(#"trace: \{ func: test_TraceText\(\), thread: \{ number: 1, name: main \} \}$"#) == true)
+		XCTAssert(logger.trace("trace")?.match(#"\{func:test_trace_text\(\),thread:\{name:main,number:1\}\} trace$"#) == true)
 	}
 	
-	func test_TraceFunction() {
+	func test_trace_function() {
 		var config = LogConfig()
 		config.traceConfig.options = .function
-		
 		let logger = DLog(config: config)
-		
-		XCTAssert(logger.trace()?.match(#"func: test_TraceFunction"#) == true)
+		XCTAssert(logger.trace()?.match(#"\{func:test_trace_function\(\)\}"#) == true)
 	}
 	
-	func test_TraceQoS() {
+	func test_trace_queue_qos() {
 		var config = LogConfig()
-		config.traceConfig.options = [.thread, .queue]
-		config.traceConfig.threadConfig.options = .all
-		
+		config.traceConfig.options = [.queue, .thread]
+        config.traceConfig.threadConfig.options = .qos
 		let logger = DLog(config: config)
 		
-		XCTAssert(logger.trace()?.match(#"com.apple.main-thread"#) == true)
+		XCTAssert(logger.trace()?.match(#"\{queue:com.apple.main-thread,thread:\{qos:userInteractive\}\}$"#) == true)
 		
-		let queues = [
-			#"com.apple.root.background-qos"# : DispatchQueue.global(qos: .background),
-			#"com.apple.root.utility-qos"# : DispatchQueue.global(qos: .utility),
-			#"com.apple.root.default-qos"# : DispatchQueue.global(qos: .default),
-			#"com.apple.root.user-initiated-qos"# : DispatchQueue.global(qos: .userInitiated),
-			#"com.apple.root.user-interactive-qos"# : DispatchQueue.global(qos: .userInteractive),
-			#"serial"# : DispatchQueue(label: "serial"),
-			#"concurrent"# : DispatchQueue(label: "concurrent", attributes: .concurrent)
+        let queues: [(String, String, DispatchQueue)] = [
+			("com.apple.root.background-qos", "background", DispatchQueue.global(qos: .background)),
+			("com.apple.root.utility-qos", "utility", DispatchQueue.global(qos: .utility)),
+            ("com.apple.root.default-qos", "userInitiated", DispatchQueue.global(qos: .default)),
+            ("com.apple.root.user-initiated-qos", "userInitiated", DispatchQueue.global(qos: .userInitiated)),
+            ("com.apple.root.user-interactive-qos", "userInteractive", DispatchQueue.global(qos: .userInteractive)),
+            ("serial", "userInitiated", DispatchQueue(label: "serial")),
+            ("concurrent", "userInitiated", DispatchQueue(label: "concurrent", attributes: .concurrent))
 		]
-		for (label, queue) in queues {
+		for (label, qos, queue) in queues {
 			queue.async {
-				XCTAssert(logger.trace()?.match(label) == true)
+                XCTAssert(logger.trace()?.match(#"\{queue:\#(label),thread:\{qos:\#(qos)\}\}$"#) == true)
 			}
 		}
+        delay()
 	}
 	
-	func test_TraceThreadMain() {
+	func test_trace_thread_detach() {
 		var config = LogConfig()
 		config.traceConfig.options = .thread
-		
 		let logger = DLog(config: config)
 		
-		XCTAssert(logger.trace()?.match(#"thread: \{ number: 1, name: main \}$"#) == true)
+        wait { expectation in
+            Thread.detachNewThread {
+                XCTAssert(logger.trace()?.match(#"\{thread:\{number:\d+\}\}$"#) == true)
+                expectation.fulfill()
+            }
+        }
 	}
 	
-	func test_TraceThreadDetach() {
-		var config = LogConfig()
-		config.traceConfig.options = .thread
-		
-		let logger = DLog(config: config)
-		
-		Thread.detachNewThread {
-			XCTAssert(logger.trace()?.match(#"thread: \{ number: \d+ \}$"#) == true)
-		}
-		
-		delay()
-	}
-	
-	func test_TraceThreadAll() {
+	func test_trace_thread_all() {
 		var config = LogConfig()
 		config.traceConfig.options = .thread
 		config.traceConfig.threadConfig.options = .all
-		
 		let logger = DLog(config: config)
-		
-		XCTAssert(logger.trace()?.match(#"thread: \{ number: \d+, name: \S+, priority: \S+, qos: [^,]+, stackSize: \d+ KB \}$"#) == true)
+		XCTAssert(logger.trace()?.match(#"\{thread:\{name:main,number:1,priority:0\.5,qos:userInteractive,stackSize:512 KB\}\}$"#) == true)
 	}
 	
-	func test_TraceThreadOptionsEmpty() {
+	func test_trace_thread_options_empty() {
 		var config = LogConfig()
 		config.traceConfig.options = .thread
 		config.traceConfig.threadConfig.options = []
-		
 		let logger = DLog(config: config)
-		
 		XCTAssert(logger.trace()?.match(Empty) == true)
 	}
 	
-	func test_TraceStack() {
+	func test_trace_stack() {
 		var config = LogConfig()
 		config.traceConfig.options = .stack
-
 		let logger = DLog(config: config)
-		
-		XCTAssert(logger.trace()?.match(#"stack: \[ 0: \{ symbols:"#) == true)
+        let text = logger.trace()
+		XCTAssert(text?.match(#"\{stack:\[0:\{symbols:DLogTests\.TraceTests\.test_trace_stack"#) == true)
 	}
 	
-	func test_TraceStackAll() {
+	func test_trace_stack_depth_all() {
 		var config = LogConfig()
 		config.traceConfig.options = .stack
 		config.traceConfig.stackConfig.options = .all
 		config.traceConfig.stackConfig.depth = 1
-
 		let logger = DLog(config: config)
-		
-		XCTAssert(logger.trace()?.match(#"stack: \[ 0: \{ module: \S+, address: 0x[0-9a-f]{16}, symbols: implicit closure #1 \(\) throws -> Swift.Bool in DLogTests.TraceTests.test_TraceStackAll\(\) -> \(\), offset: \d+ \} \]$"#) == true)
-		
-		return
+        let text = logger.trace()
+		XCTAssert(text?.match(#"\{stack:\[0:\{address:0x[0-9a-f]{16},module:DLogTests,offset:\d+,symbols:DLogTests\.TraceTests\.test_trace_stack_depth_all\(\) -> \(\)\}\]\}$"#) == true)
 	}
 	
-	func test_TraceStackStyleColumn() {
+	func test_trace_stack_column() {
 		var config = LogConfig()
 		config.traceConfig.options = .stack
 		config.traceConfig.stackConfig.style = .column
-		
 		let logger = DLog(config: config)
-		
-		XCTAssert(logger.trace()?.match(#"stack: \[\n0: \{ symbols: implicit closure #1 \(\) throws -> Swift.Bool in DLogTests.TraceTests.test_TraceStackStyleColumn\(\) -> \(\) \}"#) == true)
+		let text = logger.trace()
+		XCTAssert(text?.match(#"\{stack:\[\\n0:\{symbols:DLogTests\.TraceTests\.test_trace_stack_column"#) == true)
 	}
-	
-	
-	func test_TraceConfigEmpty() {
+
+	func test_trace_config_empty() {
 		var config = LogConfig()
 		config.traceConfig.options = []
-		
 		let logger = DLog(config: config)
-		
-		XCTAssert(logger.trace()?.match(#"\#(Location)$"#) == true)
+		XCTAssert(logger.trace()?.match(Empty) == true)
 	}
 	
-	func test_TraceConfigAll() {
+	func test_trace_config_all() {
 		var config = LogConfig()
 		config.traceConfig.options = .all
-
 		let logger = DLog(config: config)
-		XCTAssert(logger.trace()?.match(#"\#(Location) func: test_TraceConfigAll\(\), queue: com.apple.main-thread, thread: \{ number: 1, name: main \}, stack: \[ 0: \{ symbols:"#) == true)
+        let text = logger.trace()
+		XCTAssert(text?.match(#"\#(Location) \{func:test_trace_config_all\(\),queue:com\.apple\.main-thread,stack:\[0:\{symbols:"#) == true)
 	}
 }

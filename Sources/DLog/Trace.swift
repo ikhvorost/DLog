@@ -38,7 +38,7 @@ fileprivate extension QualityOfService {
 		.default :  "default",
 	]
 	
-	var description : String {
+	var description: String {
         precondition(Self.names[self] != nil)
         return Self.names[self]!
 	}
@@ -49,7 +49,7 @@ fileprivate extension Thread {
 	// <NSThread: 0x100d04870>{number = 1, name = main}
 	static let regexThread = try! NSRegularExpression(pattern: "number = ([0-9]+), name = ([^}]+)")
 	
-	func description(config: ThreadConfig) -> String {
+	func json(config: ThreadConfig) -> String {
 		var number = ""
 		var name = ""
 		let nsString = description as NSString
@@ -62,15 +62,16 @@ fileprivate extension Thread {
 			}
 		}
 		
-		let items: [(ThreadOptions, String, () -> String)] = [
+		let items: [(ThreadOptions, String, () -> Any)] = [
 			(.number, "number", { number }),
 			(.name, "name", { name }),
-			(.priority, "priority", { "\(self.threadPriority)" }),
+			(.priority, "priority", { self.threadPriority }),
 			(.qos, "qos", { "\(self.qualityOfService.description)" }),
 			(.stackSize, "stackSize", { "\(ByteCountFormatter.string(fromByteCount: Int64(self.stackSize), countStyle: .memory))" }),
 		]
 		
-		return jsonDescription(title: "", items: items, options: config.options, braces: true)
+        let dict = dictionary(from: items, options: config.options)
+        return dict.json()
 	}
 }
 
@@ -89,9 +90,9 @@ fileprivate func demangle(_ mangled: String) -> String? {
 fileprivate func stack(_ addresses: ArraySlice<NSNumber>, config: StackConfig) -> String {
 	var info = dl_info()
 	
-	var separator = "\n"
+	var separator = ",\n"
 	if case .flat = config.style {
-		separator = ", "
+		separator = ","
 	}
 	
 	let text = addresses
@@ -114,76 +115,53 @@ fileprivate func stack(_ addresses: ArraySlice<NSNumber>, config: StackConfig) -
 		.prefix(config.depth > 0 ? config.depth : addresses.count)
 		.enumerated()
 		.map { item in
-			let items: [(StackOptions, String, () -> String)] = [
+			let items: [(StackOptions, String, () -> Any)] = [
 				(.module, "module", { "\(item.element.0)" }),
 				(.address, "address", { String(format:"0x%016llx", item.element.1) }),
 				(.symbols, "symbols", { "\(item.element.2)" }),
 				(.offset, "offset", { "\(item.element.3)" }),
 			]
-			return jsonDescription(title: "\(item.offset)", items: items, options: config.options)
+            let dict = dictionary(from: items, options: config.options)
+            return "\(item.offset):\(dict.json())"
 		}
 		.joined(separator: separator)
 	
 	if case .flat = config.style {
-		return "[ \(text) ]"
+		return "[\(text)]"
 	}
-	
-	return "[\n\(text) ]"
+	return "[\n\(text)\n]"
 }
 
 func traceInfo(title: String?, function: String, addresses: ArraySlice<NSNumber>, traceConfig: TraceConfig) -> String {
-	
-	let items: [(TraceOptions, String, () -> String)] = [
+	let items: [(TraceOptions, String, () -> Any)] = [
 		(.function, "func", { function }),
 		(.queue, "queue", { "\(String(cString: __dispatch_queue_get_label(nil)))" }),
-		(.thread, "thread", { "\(Thread.current.description(config: traceConfig.threadConfig))" }),
-		(.stack, "stack", { "\(stack(addresses, config: traceConfig.stackConfig))" }),
+		(.thread, "thread", { Thread.current.json(config: traceConfig.threadConfig) }),
+		(.stack, "stack", { stack(addresses, config: traceConfig.stackConfig) }),
 	]
-	
-	return jsonDescription(title: title ?? "", items: items, options: traceConfig.options)
-}
-
-func jsonDescription<Option: OptionSet>(title: String, items: [(Option, String, () -> String)], options: Option, braces: Bool = false) -> String {
-	let text = items
-		.compactMap {
-			if options.contains($0.0 as! Option.Element) {
-				let name = $0.1
-				let text = $0.2()
-				if !text.isEmpty {
-					return "\(name): \(text)"
-				}
-			}
-			return nil
-		}
-		.joined(separator: ", ")
-	
-	guard !title.isEmpty || !text.isEmpty else { return "" }
-	
-	if title.isEmpty && !text.isEmpty {
-        return braces ? "{ \(text) }" : text
-	}
-	else if !title.isEmpty && text.isEmpty {
-		return title
-	}
-	
-	return "\(title): { \(text) }"
+    let dict = dictionary(from: items, options: traceConfig.options)
+    return [dict.json(), title ?? ""].joinedCompact()
 }
 
 extension Array where Element == String {
     func joinedCompact() -> String {
-        compactMap { $0.isEmpty ? nil : $0 }.joined(separator: " ")
+        compactMap { $0.isEmpty ? nil : $0 }
+        .joined(separator: " ")
     }
 }
 
 func dictionary<Option: OptionSet>(from items: [(Option, String, () -> Any)], options: Option) -> [String : Any] {
     let keyValues: [(String, Any)] = items
         .compactMap {
-            if options.contains($0.0 as! Option.Element) {
-                let key = $0.1
-                let value = $0.2()
-                return (key, value)
+            guard options.contains($0.0 as! Option.Element) else {
+                return nil
             }
-            return nil
+            let key = $0.1
+            let value = $0.2()
+            if let text = value as? String, text.isEmpty {
+                return nil
+            }
+            return (key, value)
         }
     return Dictionary(uniqueKeysWithValues: keyValues)
 }
