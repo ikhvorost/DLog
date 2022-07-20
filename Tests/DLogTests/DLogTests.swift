@@ -43,7 +43,7 @@ extension DispatchSemaphore {
 
 extension XCTestCase {
 
-	func wait(count: UInt, timeout: TimeInterval = 1, repeat r: UInt = 1, name: String = #function, closure: ([XCTestExpectation]) -> Void) {
+	func wait(count: Int, timeout: TimeInterval = 1, repeat r: Int = 1, name: String = #function, closure: ([XCTestExpectation]) -> Void) {
 		guard count > 0, r > 0 else { return }
 
 		let exps = (0..<r * count).map { _ in expectation(description: name) }
@@ -1157,12 +1157,14 @@ final class TraceTests: XCTestCase {
             ("serial", "userInitiated", DispatchQueue(label: "serial")),
             ("concurrent", "userInitiated", DispatchQueue(label: "concurrent", attributes: .concurrent))
 		]
-		for (label, qos, queue) in queues {
-			queue.async {
-                XCTAssert(logger.trace()?.match(#"\{queue:\#(label),thread:\{qos:\#(qos)\}\}$"#) == true)
-			}
-		}
-        delay()
+        wait(count: queues.count) { expectations in
+            for (i , (label, qos, queue)) in queues.enumerated() {
+                queue.async {
+                    XCTAssert(logger.trace()?.match(#"\{queue:\#(label),thread:\{qos:\#(qos)\}\}$"#) == true)
+                    expectations[i].fulfill()
+                }
+            }
+        }
 	}
 	
 	func test_trace_thread_detach() {

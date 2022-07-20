@@ -31,23 +31,29 @@ import Foundation
 private class LogBuffer {
 	private static let linesCount = 1000
 	
-	@Atomic private var stack = [String]()
+	private var stack = [String]()
 	
 	var text: String? {
-		stack.reduce(nil) { text, line in
-			"\(text ?? "")\(line)\n"
-		}
+        synchronized(self) {
+            stack.reduce(nil) { text, line in
+                "\(text ?? "")\(line)\n"
+            }
+        }
 	}
 	
 	func append(text: String) {
-		stack.append(text)
-		if stack.count > Self.linesCount {
-			_ = stack.removeFirst()
-		}
+        synchronized(self) {
+            stack.append(text)
+            if stack.count > Self.linesCount {
+                _ = stack.removeFirst()
+            }
+        }
 	}
 	
 	func clear() {
-		stack.removeAll()
+        synchronized(self) {
+            stack.removeAll()
+        }
 	}
 }
 

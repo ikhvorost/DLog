@@ -52,7 +52,7 @@ public class OSLog : LogOutput {
 	]
 	
 	private var subsystem: String
-	@Atomic private var logs = [String : os.OSLog]()
+	private var logs = [String : os.OSLog]()
 	
 	/// Creates`OSlog` output object.
 	///
