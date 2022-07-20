@@ -32,8 +32,6 @@ public class DLog: LogProtocol {
 	
 	private let output: LogOutput?
 
-	@Atomic private var scopes = [LogScope]()
-	
 	/// The shared disabled logger.
 	///
 	/// Using this constant prevents from logging messages.
@@ -135,26 +133,18 @@ public class DLog: LogProtocol {
 
 	func enter(scope: LogScope) {
 		guard let out = output else { return }
-
-		synchronized(self) {
-			let level = scopes.last?.level ?? 0
-			scope.level = level + 1
-			scopes.append(scope)
-
-			out.scopeEnter(scope: scope, scopes: scopes)
-		}
+        
+        ScopeStack.shared.append(scope) {
+            out.scopeEnter(scope: scope)
+        }
 	}
 
 	func leave(scope: LogScope) {
 		guard let out = output else { return }
-
-		synchronized(self) {
-			if scopes.contains(where: { $0.uid == scope.uid }) {
-				out.scopeLeave(scope: scope, scopes: scopes)
-
-				scopes.removeAll { $0.uid == scope.uid }
-			}
-		}
+        
+        ScopeStack.shared.remove(scope) {
+            out.scopeLeave(scope: scope)
+        }
 	}
 
 	// Interval
@@ -166,13 +156,13 @@ public class DLog: LogProtocol {
 
 	func end(interval: LogInterval) {
 		guard let out = output else { return }
-		out.intervalEnd(interval: interval, scopes: scopes)
+		out.intervalEnd(interval: interval)
 	}
 
     func log(message: @escaping () -> LogMessage, type: LogType, params: LogParams, file: String, function: String, line: UInt) -> String? {
         guard let out = output else { return nil }
         let item = LogItem(params: params, type: type, file: file, funcName: function, line: line, message: message)
-		return out.log(item: item, scopes: scopes)
+		return out.log(item: item)
 	}
 
 	func scope(name: String, params: LogParams, file: String, function: String, line: UInt, closure: ((LogScope) -> Void)?) -> LogScope {

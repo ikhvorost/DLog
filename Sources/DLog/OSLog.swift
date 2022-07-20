@@ -85,7 +85,7 @@ public class OSLog : LogOutput {
 	
 	// MARK: - LogOutput
 	
-	override func log(item: LogItem, scopes: [LogScope]) -> String? {
+	override func log(item: LogItem) -> String? {
         let log = oslog(category: item.category)
 		
 		let location = "<\(item.fileName):\(item.line)>"
@@ -94,22 +94,22 @@ public class OSLog : LogOutput {
 		let type = Self.types[item.type]!
         os_log("%{public}@ %{public}@", dso: Dynamic.dso, log: log, type: type, location, item.text)
 	
-		return super.log(item: item, scopes: scopes)
+		return super.log(item: item)
 	}
 	
-	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
+	override func scopeEnter(scope: LogScope) -> String? {
         if let os_activity_current = Dynamic.OS_ACTIVITY_CURRENT {
             let activity = _os_activity_create(Dynamic.dso, strdup(scope.name), os_activity_current, OS_ACTIVITY_FLAG_DEFAULT)
             os_activity_scope_enter(activity, &scope.os_state)
         }
-		return super.scopeEnter(scope: scope, scopes: scopes)
+		return super.scopeEnter(scope: scope)
 	}
 	
-	override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
+	override func scopeLeave(scope: LogScope) -> String? {
         if Dynamic.OS_ACTIVITY_CURRENT != nil {
             os_activity_scope_leave(&scope.os_state);
         }
-		return super.scopeLeave(scope: scope, scopes: scopes)
+		return super.scopeLeave(scope: scope)
 	}
 	
 	override func intervalBegin(interval: LogInterval) {
@@ -125,12 +125,12 @@ public class OSLog : LogOutput {
 		}
 	}
 	
-	override func intervalEnd(interval: LogInterval, scopes: [LogScope]) -> String? {
+	override func intervalEnd(interval: LogInterval) -> String? {
 		let log = oslog(category: interval.category)
 		
 		if let name = interval.staticName {
 			os_signpost(.end, log: log, name: name, signpostID: interval.signpostID!)
 		}
-		return super.intervalEnd(interval: interval, scopes: scopes)
+		return super.intervalEnd(interval: interval)
 	}
 }

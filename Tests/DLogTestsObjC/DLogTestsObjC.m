@@ -32,7 +32,7 @@
 //#define Sign @"•"
 //#define Time @"\\d{2}:\\d{2}:\\d{2}\\.\\d{3}"
 #define CategoryTag @"\\[DLOG\\]"
-#define Padding @"[\\|\\s]+"
+#define Padding @"[\\|\\├\\s]+"
 #define LevelTag @"\\[\\S+\\] "
 #define Location @"<DLogTestsObjC.m:\\d+> "
 
@@ -167,7 +167,7 @@ static void testAll(LogProtocol* logger, NSString *category) {
     XCTAssert([read_stderr(^{ logErr.trace(); }) match: @"test_stdOutErr"]);
 }
 
-- (void)test_Scope {
+- (void)test_scope {
 	let logger = [DLog new];
 	XCTAssertNotNil(logger);
 	
@@ -232,7 +232,7 @@ static void testAll(LogProtocol* logger, NSString *category) {
     [NSThread sleep];
 }
 
-- (void)test_Filter {
+- (void)test_filter {
     let filterItem = [LogOutput filterWithItem:^BOOL(LogItem* logItem) {
         return
             [logItem.time compare:NSDate.now] == NSOrderedAscending &&
@@ -240,7 +240,7 @@ static void testAll(LogProtocol* logger, NSString *category) {
             [logItem.scope.name isEqualToString:@"Scope"] &&
             logItem.type == LogTypeDebug &&
             [logItem.fileName isEqualToString:@"DLogTestsObjC.m"] &&
-            [logItem.funcName isEqualToString:@"-[DLogTestsObjC test_Filter]"] &&
+            [logItem.funcName isEqualToString:@"-[DLogTestsObjC test_filter]"] &&
             (logItem.line > __LINE__) &&
             [logItem.text isEqualToString:@"debug"];
     }];

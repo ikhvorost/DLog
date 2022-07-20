@@ -173,7 +173,7 @@ public class Text : LogOutput {
         .joinedCompact()
 	}
 	
-	private func textMessage(item: LogItem, scopes: [LogScope]) -> String {
+	private func textMessage(item: LogItem) -> String {
         var params = item.params
         
         var sign = { "\(item.params.config.sign)" }
@@ -181,14 +181,14 @@ public class Text : LogOutput {
 		var level = { String(format: "[%02d]", item.scope?.level ?? 0) }
 		var category = { "[\(item.category)]" }
 		let padding: () -> String = {
-			var text = ""
-			if let scope = item.scope, scope.entered {
-				for level in 1...scope.level {
-					let scope = scopes.first(where: { $0.level == level })
-					text += scope != nil ? "| " : "  "
-				}
-			}
-			return text
+            guard let scope = item.scope, scope.entered else { return "" }
+            return (1...scope.level)
+                .map {
+                    ScopeStack.shared[$0] != nil
+                        ? ($0 == scope.level) ? "├ " : "│ "
+                        : "  "
+                }
+                .joined()
 		}
 		var type = { "[\(item.type.title)]" }
 		var location = { "<\(item.fileName):\(item.line)>" }
@@ -230,7 +230,7 @@ public class Text : LogOutput {
         return [prefix, text].joinedCompact()
 	}
 
-	private func textScope(scope: LogScope, scopes: [LogScope]) -> String {
+	private func textScope(scope: LogScope) -> String {
         let start = scope.duration == 0
 		
         var sign = { "\(scope.params.config.sign)" }
@@ -239,13 +239,10 @@ public class Text : LogOutput {
         var category = { "[\(scope.params.category)]" }
 		var level = { String(format: "[%02d]", scope.level) }
 		let padding: () -> String = {
-			var text = ""
-			for level in 1..<scope.level {
-				let scope = scopes.first(where: { $0.level == level })
-				text += scope != nil ? "| " : "  "
-			}
-			text += start ? "┌" : "└"
-			return text
+            let text = (1..<scope.level)
+                .map { ScopeStack.shared[$0] != nil ? "| " : "  " }
+                .joined()
+            return "\(text)\(start ? "┌" : "└")"
 		}
         var text = "[\(scope.name)] \(ms ?? "")"
 		
@@ -274,30 +271,30 @@ public class Text : LogOutput {
 	
 	// MARK: - LogOutput
 	
-	override func log(item: LogItem, scopes: [LogScope]) -> String? {
-		super.log(item: item, scopes: scopes)
-		return textMessage(item: item, scopes: scopes)
+	override func log(item: LogItem) -> String? {
+		super.log(item: item)
+		return textMessage(item: item)
 	}
 	
-	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
-		super.scopeEnter(scope: scope, scopes: scopes)
+	override func scopeEnter(scope: LogScope) -> String? {
+		super.scopeEnter(scope: scope)
 
-		return textScope(scope: scope, scopes: scopes)
+		return textScope(scope: scope)
 	}
 	
-	override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
-		super.scopeLeave(scope: scope, scopes: scopes)
+	override func scopeLeave(scope: LogScope) -> String? {
+		super.scopeLeave(scope: scope)
 		
-		return textScope(scope: scope, scopes: scopes)
+		return textScope(scope: scope)
 	}
 	
 	override func intervalBegin(interval: LogInterval) {
 		super.intervalBegin(interval: interval)
 	}
 	
-	override func intervalEnd(interval: LogInterval, scopes: [LogScope]) -> String? {
-		super.intervalEnd(interval: interval, scopes: scopes)
+	override func intervalEnd(interval: LogInterval) -> String? {
+		super.intervalEnd(interval: interval)
 		
-		return textMessage(item: interval, scopes: scopes)
+		return textMessage(item: interval)
 	}
 }

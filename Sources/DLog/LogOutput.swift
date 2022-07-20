@@ -79,23 +79,23 @@ public class LogOutput : NSObject {
 	}
 	
 	@discardableResult
-	func log(item: LogItem, scopes: [LogScope]) -> String? {
+	func log(item: LogItem) -> String? {
 		return source != nil
-			? source.log(item: item, scopes: scopes)
+			? source.log(item: item)
 			: nil
 	}
 	
 	@discardableResult
-	func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
+	func scopeEnter(scope: LogScope) -> String? {
 		return source != nil
-			? source.scopeEnter(scope: scope, scopes: scopes)
+			? source.scopeEnter(scope: scope)
 			: nil
 	}
 	
 	@discardableResult
-	func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
+	func scopeLeave(scope: LogScope) -> String? {
 		return source != nil
-			? source.scopeLeave(scope: scope, scopes: scopes)
+			? source.scopeLeave(scope: scope)
 			: nil
 	}
 	
@@ -106,9 +106,9 @@ public class LogOutput : NSObject {
 	}
 	
 	@discardableResult
-	func intervalEnd(interval: LogInterval, scopes: [LogScope]) -> String? {
+	func intervalEnd(interval: LogInterval) -> String? {
 		return source != nil
-			? source.intervalEnd(interval: interval, scopes: scopes)
+			? source.intervalEnd(interval: interval)
 			: nil
 	}
 }

@@ -49,26 +49,26 @@ public class Filter: LogOutput {
 	
 	// MARK: - LogOutput
 	
-	override func log(item: LogItem, scopes: [LogScope]) -> String? {
-        let text = super.log(item: item, scopes: scopes)
+	override func log(item: LogItem) -> String? {
+        let text = super.log(item: item)
         let included = isItem == nil || isItem?(item) == true
 		return included ? text : nil
 	}
 	
-	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
-		let text = super.scopeEnter(scope: scope, scopes: scopes)
+	override func scopeEnter(scope: LogScope) -> String? {
+		let text = super.scopeEnter(scope: scope)
         let included = isScope == nil || isScope?(scope) == true
 		return included == true ? text : nil
 	}
 	
-	override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
-		let text = super.scopeLeave(scope: scope, scopes: scopes)
+	override func scopeLeave(scope: LogScope) -> String? {
+		let text = super.scopeLeave(scope: scope)
         let included = isScope == nil || isScope?(scope) == true
 		return included ? text : nil
 	}
 	
-	override func intervalEnd(interval: LogInterval, scopes: [LogScope]) -> String? {
-		let text = super.intervalEnd(interval: interval, scopes: scopes)
+	override func intervalEnd(interval: LogInterval) -> String? {
+		let text = super.intervalEnd(interval: interval)
         let included = isItem == nil || isItem?(interval) == true
 		return included ? text : nil
 	}

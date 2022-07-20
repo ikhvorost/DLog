@@ -26,6 +26,36 @@
 import Foundation
 import os.log
 
+class ScopeStack {
+    static let shared = ScopeStack()
+    
+    private var scopes = [Int : LogScope]()
+    
+    subscript(level: Int) -> LogScope? {
+        synchronized(self) {
+            scopes[level]
+        }
+    }
+    
+    func append(_ scope: LogScope, closure: () -> Void) {
+        synchronized(self) {
+            let maxLevel = scopes.map{$0.key}.max() ?? 0
+            scope.level = maxLevel + 1
+            scopes[scope.level] = scope
+            closure()
+        }
+    }
+    
+    func remove(_ scope: LogScope, closure: () -> Void) {
+        synchronized(self) {
+            guard scopes[scope.level] != nil else {
+                return
+            }
+            scopes[scope.level] = nil
+            closure()
+        }
+    }
+}
 
 /// An object that represents a scope triggered by the user.
 ///
@@ -33,7 +63,6 @@ import os.log
 ///
 public class LogScope: LogProtocol {
     var time = Date()
-    let uid = UUID()
     var os_state = os_activity_scope_state_s()
     
     @Atomic

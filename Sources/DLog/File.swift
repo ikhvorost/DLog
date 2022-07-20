@@ -80,19 +80,19 @@ public class File : LogOutput {
 	
 	// MARK: - LogOutput
 	
-	override func log(item: LogItem, scopes: [LogScope]) -> String? {
-		write(super.log(item: item, scopes: scopes))
+	override func log(item: LogItem) -> String? {
+		write(super.log(item: item))
 	}
 	
-	override func scopeEnter(scope: LogScope, scopes: [LogScope]) -> String? {
-		write(super.scopeEnter(scope: scope, scopes: scopes))
+	override func scopeEnter(scope: LogScope) -> String? {
+		write(super.scopeEnter(scope: scope))
 	}
 	
-	override func scopeLeave(scope: LogScope, scopes: [LogScope]) -> String? {
-		write(super.scopeLeave(scope: scope, scopes: scopes))
+	override func scopeLeave(scope: LogScope) -> String? {
+		write(super.scopeLeave(scope: scope))
 	}
 	
-	override func intervalEnd(interval: LogInterval, scopes: [LogScope]) -> String? {
-		write(super.intervalEnd(interval: interval, scopes: scopes))
+	override func intervalEnd(interval: LogInterval) -> String? {
+		write(super.intervalEnd(interval: interval))
 	}
 }

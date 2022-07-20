@@ -140,7 +140,7 @@ let Interval = #"\{average:\#(SECS),duration:\#(SECS)\}"#
 let Empty = ">$"
 
 fileprivate func testAll(_ logger: LogProtocol, categoryTag: String = CategoryTag, metadata: String = "") {
-	let padding = #"[\|\s]+"#
+	let padding = #"[\|\├\s]+"#
 	
     XCTAssert(logger.log("log")?.match(#"\#(categoryTag)\#(padding)\#(LogTag) \#(Location)\#(metadata) log"#) == true)
 	
@@ -991,7 +991,7 @@ final class IntervalTests: XCTestCase {
 
 final class ScopeTests: XCTestCase {
 	
-	func test_Scope() {
+	func test_scope() {
 		let logger = DLog()
 		
 		logger.scope("scope") {
@@ -1009,7 +1009,7 @@ final class ScopeTests: XCTestCase {
 		}
 	}
 	
-	func test_ScopeStack() {
+	func test_scope_stack() {
 		var config = LogConfig()
 		config.options = .all
 		
@@ -1018,22 +1018,22 @@ final class ScopeTests: XCTestCase {
 		XCTAssert(logger.debug("no scope")?.match(#"\[00\] \#(CategoryTag) \#(DebugTag) \#(Location) no scope"#) == true)
 		
 		logger.scope("scope1") { scope1 in
-			XCTAssert(scope1.info("scope1 start")?.match(#"\[01\] \#(CategoryTag) \| \#(InfoTag) \#(Location) scope1 start"#) == true)
+			XCTAssert(scope1.info("scope1 start")?.match(#"\[01\] \#(CategoryTag) ├ \#(InfoTag) \#(Location) scope1 start"#) == true)
 			
 			logger.scope("scope2") { scope2 in
-				XCTAssert(scope2.debug("scope2 start")?.match(#"\[02\] \#(CategoryTag) \| | \#(DebugTag) \#(Location) scope2 start"#) == true)
+				XCTAssert(scope2.debug("scope2 start")?.match(#"\[02\] \#(CategoryTag) │ ├ \#(DebugTag) \#(Location) scope2 start"#) == true)
 				
 				logger.scope("scope3") { scope3 in
-					XCTAssert(scope3.error("scope3")?.match(#"\[03\] \#(CategoryTag) \| \| \| \#(ErrorTag) \#(Location) scope3"#) == true)
+					XCTAssert(scope3.error("scope3")?.match(#"\[03\] \#(CategoryTag) │ │ ├ \#(ErrorTag) \#(Location) scope3"#) == true)
 				}
 				
-				XCTAssert(scope2.fault("scope2")?.match(#"\[02\] \#(CategoryTag) \| \| \#(FaultTag) \#(Location) scope2"#) == true)
+				XCTAssert(scope2.fault("scope2")?.match(#"\[02\] \#(CategoryTag) │ ├ \#(FaultTag) \#(Location) scope2"#) == true)
 			}
 			
-			XCTAssert(scope1.trace("scope1 end")?.match(#"\[01\] \#(CategoryTag) \| \#(TraceTag) \#(Location) \{func:test_ScopeStack\(\),thread:\{name:main,number:1\}\} scope1 end$"#) == true)
+			XCTAssert(scope1.trace("scope1 end")?.match(#"\[01\] \#(CategoryTag) ├ \#(TraceTag) \#(Location) \{func:test_scope_stack\(\),thread:\{name:main,number:1\}\} scope1 end$"#) == true)
 		}
 		
-		XCTAssert(logger.trace("no scope")?.match(#"\[00\] \#(CategoryTag) \#(TraceTag) \#(Location) \{func:test_ScopeStack\(\),thread:\{name:main,number:1\}\} no scope$"#) == true)
+		XCTAssert(logger.trace("no scope")?.match(#"\[00\] \#(CategoryTag) \#(TraceTag) \#(Location) \{func:test_scope_stack\(\),thread:\{name:main,number:1\}\} no scope$"#) == true)
 	}
 	
 	func test_scope_not_entered() {
@@ -1042,7 +1042,7 @@ final class ScopeTests: XCTestCase {
 		XCTAssert(scope1.trace()?.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) \{func:\#(#function)"#) == true)
 	}
 	
-	func test_ScopeEnterLeave() {
+    func test_scope_enter_leave() {
 		let logger = DLog()
 			
 		let scope1 = logger.scope("scope 1")
@@ -1052,25 +1052,25 @@ final class ScopeTests: XCTestCase {
 		logger.trace("no scope")
 		
 		scope1.enter()
-		XCTAssert(scope1.info("1")?.match(#"\#(CategoryTag) \| \#(InfoTag) \#(Location) 1"#) == true)
+		XCTAssert(scope1.info("1")?.match(#"\#(CategoryTag) ├ \#(InfoTag) \#(Location) 1"#) == true)
 		
 		scope2.enter()
-		XCTAssert(scope2.info("2")?.match(#"\#(CategoryTag) \| \| \#(InfoTag) \#(Location) 2"#) == true)
+		XCTAssert(scope2.info("2")?.match(#"\#(CategoryTag) │ ├ \#(InfoTag) \#(Location) 2"#) == true)
 		
 		scope3.enter()
-		XCTAssert(scope3.info("3")?.match(#"\#(CategoryTag) \| \| \| \#(InfoTag) \#(Location) 3"#) == true)
+		XCTAssert(scope3.info("3")?.match(#"\#(CategoryTag) │ │ ├ \#(InfoTag) \#(Location) 3"#) == true)
 		
 		scope1.leave()
-		XCTAssert(scope3.debug("3")?.match(#"\#(CategoryTag)   \| \| \#(DebugTag) \#(Location) 3"#) == true)
+		XCTAssert(scope3.debug("3")?.match(#"\#(CategoryTag)   │ ├ \#(DebugTag) \#(Location) 3"#) == true)
 		
 		scope2.leave()
-		XCTAssert(scope3.error("3")?.match(#"\#(CategoryTag)     \| \#(ErrorTag) \#(Location) 3"#) == true)
+		XCTAssert(scope3.error("3")?.match(#"\#(CategoryTag)     ├ \#(ErrorTag) \#(Location) 3"#) == true)
 		
 		scope3.leave()
 		XCTAssert(logger.fault("no scope")?.match(#"\#(CategoryTag) \#(FaultTag) \#(Location) no scope"#) == true)
 	}
 	
-	func test_scope_doubleE_enter() {
+	func test_scope_double_enter() {
 		let logger = DLog()
 		
 		let scope1 = logger.scope("My Scope")
@@ -1078,31 +1078,34 @@ final class ScopeTests: XCTestCase {
 		scope1.enter()
 		scope1.enter()
 		
-		XCTAssert(scope1.trace()?.match(#"\#(CategoryTag) \| \#(TraceTag) \#(Location) \{func:\#(#function)"#) == true)
+		XCTAssert(scope1.trace()?.match(#"\#(CategoryTag) ├ \#(TraceTag) \#(Location) \{func:\#(#function)"#) == true)
 		
 		scope1.leave()
 		scope1.leave()
 		
 		scope1.enter()
-		XCTAssert(scope1.trace()?.match(#"\#(CategoryTag) \| \#(TraceTag) \#(Location) \{func:\#(#function)"#) == true)
+		XCTAssert(scope1.trace()?.match(#"\#(CategoryTag) ├ \#(TraceTag) \#(Location) \{func:\#(#function)"#) == true)
 		scope1.leave()
 
 		XCTAssert(logger.trace()?.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) \{func:\#(#function)"#) == true)
 	}
 	
-	func test_ScopeConcurrent() {
+	func test_scope_concurrent() {
 		let logger = DLog()
 		
-		for i in 1...10 {
-			DispatchQueue.global().async {
-				logger.scope("Scope \(i)") { $0.debug("scope \(i)") }
-			}
-		}
-		
-		delay(1)
+        wait(count: 10) { expectations in
+            for i in 1...10 {
+                DispatchQueue.global().async {
+                    logger.scope("Scope \(i)") {
+                        $0.debug("scope \(i)")
+                        expectations[i-1].fulfill()
+                    }
+                }
+            }
+        }
 	}
 	
-	func test_ScopeDuration() {
+	func test_scope_duration() {
 		let logger = DLog()
 		
 		var scope = logger.scope("scope1") { _ in
