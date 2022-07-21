@@ -285,4 +285,35 @@ static void testAll(LogProtocol* logger, NSString *category) {
     XCTAssertNil(text);
 }
 
+- (void)test_metadata {
+    let logger = [DLog new];
+    XCTAssertNotNil(logger);
+    
+    logger.metadata[@"id"] = @12345;
+    XCTAssert([logger.debug(@"debug") match:@"\\(id:12345\\)"]);
+    
+    logger.metadata[@"id"] = nil;
+    logger.metadata[@"name"] = @"Bob";
+    XCTAssert([logger.debug(@"debug") match:@"\\(name:Bob\\)"]);
+    
+    // Category
+    let net = logger[@"NET"];
+    XCTAssert([net.debug(@"debug") match:@"\\(name:Bob\\)"]);
+    [net.metadata clear];
+    XCTAssert([net.debug(@"debug") match:@"\\(name:Bob\\)"] == NO);
+    
+    XCTAssert([logger.debug(@"debug") match:@"\\(name:Bob\\)"]);
+    
+    // Scope
+    var scope = logger.scope(@"Scope", ^(LogScope* scope) {
+        XCTAssert([scope.debug(@"debug") match:@"\\(name:Bob\\)"]);
+        scope.metadata[@"name"] = nil;
+        XCTAssert([scope.debug(@"debug") match:@"\\(name:Bob\\)"] == NO);
+        scope.metadata[@"id"] = @12345;
+        XCTAssert([scope.debug(@"debug") match:@"\\(id:12345\\)"]);
+    });
+    
+    XCTAssert([logger.debug(@"debug") match:@"\\(name:Bob\\)"]);
+}
+
 @end

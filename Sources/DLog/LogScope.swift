@@ -29,30 +29,34 @@ import os.log
 class ScopeStack {
     static let shared = ScopeStack()
     
-    private var scopes = [Int : LogScope]()
+    private var scopes = [LogScope]()
     
-    subscript(level: Int) -> LogScope? {
+    func exists(level: Int) -> Bool {
         synchronized(self) {
-            scopes[level]
+            scopes.first { $0.level == level } != nil
         }
     }
     
     func append(_ scope: LogScope, closure: () -> Void) {
         synchronized(self) {
-            let maxLevel = scopes.map{$0.key}.max() ?? 0
+            guard scopes.contains(scope) == false else {
+                return
+            }
+            let maxLevel = scopes.map{$0.level}.max() ?? 0
             scope.level = maxLevel + 1
-            scopes[scope.level] = scope
+            scopes.append(scope)
             closure()
         }
     }
     
     func remove(_ scope: LogScope, closure: () -> Void) {
         synchronized(self) {
-            guard scopes[scope.level] != nil else {
+            guard let index = scopes.firstIndex(of: scope) else {
                 return
             }
-            scopes[scope.level] = nil
             closure()
+            scopes.remove(at: index)
+            scope.level = 0
         }
     }
 }
@@ -65,9 +69,6 @@ public class LogScope: LogProtocol {
     var time = Date()
     var os_state = os_activity_scope_state_s()
     
-    @Atomic
-    var entered = false
-    
     /// A global level of a scope
     @objc
     public internal(set) var level: Int = 0
@@ -78,11 +79,10 @@ public class LogScope: LogProtocol {
     @objc
     public let name: String
     
-    init(name: String, params: LogParams, file: String, funcName: String, line: UInt) {
+    init(name: String, logger: DLog, category: String, config: LogConfig, metadata: Metadata) {
         self.name = name
-        super.init()
-        self.params = params
-        self.params.scope = self
+        super.init(logger: logger, category: category, config: config, metadata: metadata)
+        self.scope = self
     }
     
     /// Start a scope.
@@ -100,12 +100,11 @@ public class LogScope: LogProtocol {
     ///
     @objc
     public func enter() {
-        guard !entered else { return }
-        entered.toggle()
-        
-        time = Date()
-        duration = 0
-        params.logger.enter(scope: self)
+        ScopeStack.shared.append(self) {
+            time = Date()
+            duration = 0
+            logger.enter(scope: self)
+        }
     }
     
     /// Finish a scope.
@@ -123,11 +122,9 @@ public class LogScope: LogProtocol {
     ///
     @objc
     public func leave() {
-        guard entered else { return }
-        entered.toggle()
-        
-        duration = -time.timeIntervalSinceNow
-        
-        params.logger.leave(scope: self)
+        ScopeStack.shared.remove(self) {
+            duration = -time.timeIntervalSinceNow
+            logger.leave(scope: self)
+        }
     }
 }

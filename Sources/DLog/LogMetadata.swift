@@ -23,7 +23,9 @@
 
 import Foundation
 
-extension Dictionary {
+public typealias Metadata = [String : Any]
+
+extension Metadata {
     func json(parenthesis: Bool = false, quotes: Bool = false) -> String {
         guard self.isEmpty == false,
               let data = try? JSONSerialization.data(withJSONObject: self, options: [.sortedKeys]),
@@ -40,27 +42,26 @@ extension Dictionary {
     }
 }
 
-public class LogMetadata {
-    private var dict = [String : Any]()
+@objcMembers
+public class LogMetadata: NSObject {
+    var data = Metadata()
     
-    var json: String {
-        synchronized(self) {
-            dict.json(parenthesis: true)
-        }
+    init(data: Metadata = Metadata()) {
+        self.data = data
     }
     
     public subscript(name: String) -> Any? {
         get {
-            synchronized(self) { dict[name] }
+            synchronized(self) { data[name] }
         }
         set {
-            synchronized(self) { dict[name] = newValue}
+            synchronized(self) { data[name] = newValue}
         }
     }
     
     public func clear() {
         synchronized(self) {
-            dict.removeAll()
+            data.removeAll()
         }
     }
 }

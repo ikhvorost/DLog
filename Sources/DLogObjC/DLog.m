@@ -52,7 +52,7 @@
 
 - (ScopeBlock)scope {
     return ^(NSString* name, NSString* file, NSString* func, NSUInteger line, void (^block)(LogScope*)){
-        return [self scope:name file:file function:func line:line closure:block];
+        return [self scope:name metadata:nil file:file function:func line:line closure:block];
     };
 }
 

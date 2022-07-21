@@ -66,16 +66,14 @@ public enum LogType : Int {
 ///
 @objcMembers
 public class LogItem: NSObject {
-    let params: LogParams
-    
-	/// The timestamp of this log message.
+    /// The timestamp of this log message.
     public internal(set) var time = Date()
 	
 	/// The category of this log message.
-    public var category: String { params.category }
+    public let category: String
 	
 	/// The scope of this log message.
-    public var scope: LogScope? { params.scope }
+    public let scope: LogScope?
 	
 	/// The log level of this log message.
     public let type: LogType
@@ -95,10 +93,16 @@ public class LogItem: NSObject {
     public var text: String {
         return message?().text ?? ""
     }
+    
+    let config: LogConfig
+    let metadata: Metadata
 	
-    init(params: LogParams, type: LogType, file: String, funcName: String, line: UInt, message: (() -> LogMessage)?) {
-        self.params = params
+    init(type: LogType, category: String, config: LogConfig, scope: LogScope?, metadata: Metadata, file: String, funcName: String, line: UInt, message: (() -> LogMessage)?) {
         self.type = type
+        self.category = category
+        self.config = config
+        self.scope = scope
+        self.metadata = metadata
 		self.fileName = (file as NSString).lastPathComponent
 		self.funcName = funcName
 		self.line = line

@@ -41,8 +41,6 @@ public class DLog: LogProtocol {
 	@objc
 	public static let disabled = DLog(nil)
     
-    public var metadata: LogMetadata { params.metadata }
-    
     /// Creates a logger object that assigns log messages to a specified category.
 	///
 	/// You can define category name to differentiate unique areas and parts of your app and DLog uses this value
@@ -55,8 +53,8 @@ public class DLog: LogProtocol {
     /// - Parameters:
     ///     - name: Name of category.
 	@objc
-	public subscript(name: String) -> LogCategory {
-		LogCategory(logger: self, category: name)
+	public subscript(name: String) -> LogProtocol {
+        category(name: name)
 	}
     
     /// Creates a logger object with a configuration that assigns log messages to a specified category.
@@ -73,8 +71,8 @@ public class DLog: LogProtocol {
     /// - Parameters:
     ///     - name: Name of category.
     ///     - config: Configuration of category.
-    public func category(name: String, config: LogConfig? = nil) -> LogCategory {
-        LogCategory(logger: self, category: name, config: config)
+    public func category(name: String, config: LogConfig? = nil, metadata: Metadata? = nil) -> LogProtocol {
+        LogProtocol(logger: self, category: name, config: config ?? self.config, metadata: metadata ?? self.metadata.data)
     }
 
 	/// Creates the logger instance with a target output object.
@@ -88,10 +86,10 @@ public class DLog: LogProtocol {
 	/// - Parameters:
 	/// 	- output: A target output object. If it is omitted the logger uses `stdout` by default.
 	///
-	public init(_ output: LogOutput? = .stdout, config: LogConfig = LogConfig()) {
+    public init(_ output: LogOutput? = .stdout, config: LogConfig = LogConfig(), metadata: Metadata = Metadata()) {
 		self.output = output
-		super.init()
-        params = LogParams(logger: self, category: "DLOG", config: config)
+        super.init(logger: nil, category: "DLOG", config: config, metadata: metadata)
+        self.logger = self
 	}
     
     /// Creates the logger instance with a list of linked outputs for both swift and objective-c code.
@@ -125,26 +123,20 @@ public class DLog: LogProtocol {
     
     /// Creates the default logger.
     @objc
-    public override convenience init() {
-        self.init(_:config:)()
+    public convenience init() {
+        self.init(_:config:metadata:)()
 	}
 
 	// Scope
 
 	func enter(scope: LogScope) {
 		guard let out = output else { return }
-        
-        ScopeStack.shared.append(scope) {
-            out.scopeEnter(scope: scope)
-        }
+        out.scopeEnter(scope: scope)
 	}
 
 	func leave(scope: LogScope) {
 		guard let out = output else { return }
-        
-        ScopeStack.shared.remove(scope) {
-            out.scopeLeave(scope: scope)
-        }
+        out.scopeLeave(scope: scope)
 	}
 
 	// Interval
@@ -159,29 +151,9 @@ public class DLog: LogProtocol {
 		out.intervalEnd(interval: interval)
 	}
 
-    func log(message: @escaping () -> LogMessage, type: LogType, params: LogParams, file: String, function: String, line: UInt) -> String? {
+    func log(message: @escaping () -> LogMessage, type: LogType, category: String, config: LogConfig, scope: LogScope?, metadata: Metadata, file: String, function: String, line: UInt) -> String? {
         guard let out = output else { return nil }
-        let item = LogItem(params: params, type: type, file: file, funcName: function, line: line, message: message)
+        let item = LogItem(type: type, category: category, config: config, scope: scope, metadata: metadata, file: file, funcName: function, line: line, message: message)
 		return out.log(item: item)
-	}
-
-	func scope(name: String, params: LogParams, file: String, function: String, line: UInt, closure: ((LogScope) -> Void)?) -> LogScope {
-        let scope = LogScope(name: name, params: params, file: file, funcName: function, line: line)
-		if let block = closure {
-			scope.enter()
-			block(scope)
-			scope.leave()
-		}
-        return scope
-	}
-
-	func interval(name: String, staticName: StaticString?, params: LogParams, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
-        let interval = LogInterval(params: params, name: name, staticName: staticName, file: file, funcName: function, line: line)
-		if let block = closure {
-			interval.begin()
-			block()
-			interval.end()
-		}
-		return interval
 	}
 }

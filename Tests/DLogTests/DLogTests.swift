@@ -486,30 +486,73 @@ final class DLogTests: XCTestCase {
 
 final class MetadataTests: XCTestCase {
     
+    let idText = #"\(id:12345\)"#
+    let nameText = #"\(name:Bob\)"#
+    let idNameText = #"\(id:12345,name:Bob\)"#
+    
     func test_metadata() {
         let logger = DLog()
-        
         logger.metadata["id"] = 12345
-        testAll(logger, metadata: #" \(id:12345\)"#)
+        testAll(logger, metadata: #" \#(idText)"#)
         
         logger.metadata["id"] = nil
         testAll(logger)
 
         logger.metadata["id"] = 12345
-        logger.metadata["name"] = "hello"
-        testAll(logger, metadata: #" \(id:12345,name:hello\)"#)
+        logger.metadata["name"] = "Bob"
+        testAll(logger, metadata: #" \#(idNameText)"#)
 
         logger.metadata.clear()
         testAll(logger)
     }
     
+    func test_metadata_category() {
+        let logger = DLog(metadata: ["id" : 12345])
+        XCTAssert(logger.log("log")?.match(idText) == true)
+        
+        // Category with inherited metadata
+        let net = logger["NET"]
+        XCTAssert(net.log("log")?.match(idText) == true)
+        net.metadata["name"] = "Bob"
+        XCTAssert(net.log("log")?.match(idNameText) == true)
+        net.metadata.clear()
+        XCTAssert(net.log("log")?.match(idNameText) == false)
+        
+        XCTAssert(logger.log("log")?.match(idText) == true)
+        
+        // Category with own metadata
+        let ui = logger.category(name: "UI", metadata: ["name" : "Bob"])
+        XCTAssert(ui.log("log")?.match(nameText) == true)
+        ui.metadata.clear()
+        XCTAssert(ui.log("log")?.match(idText) == false)
+        
+        XCTAssert(logger.log("log")?.match(idText) == true)
+    }
+    
     func test_metadata_scope() {
         let logger = DLog()
-        
         logger.metadata["id"] = 12345
+        XCTAssert(logger.log("log")?.match(idText) == true)
+        
+        // Scope with inherited metadata
         logger.scope("scope") { scope in
-            testAll(scope, metadata: #" \(id:12345\)"#)
+            XCTAssert(scope.log("log")?.match(self.idText) == true)
+            scope.metadata["name"] = "Bob"
+            XCTAssert(scope.log("log")?.match(self.idNameText) == true)
+            scope.metadata.clear()
+            XCTAssert(scope.log("log")?.match(self.idNameText) == false)
         }
+        
+        XCTAssert(logger.log("log")?.match(idText) == true)
+        
+        // Scope with own metadata
+        logger.scope("scope", metadata: ["name" : "Bob"]) { scope in
+            XCTAssert(scope.log("log")?.match(self.nameText) == true)
+            scope.metadata.clear()
+            XCTAssert(scope.log("log")?.match(self.nameText) == false)
+        }
+        
+        XCTAssert(logger.log("log")?.match(idText) == true)
     }
     
     func test_metadata_config() {
@@ -518,7 +561,7 @@ final class MetadataTests: XCTestCase {
         let logger = DLog(config: config)
         
         logger.metadata["id"] = 12345
-        XCTAssert(logger.log("log")?.match(#"\#(Sign) \#(Time) log$"#) == true)
+        XCTAssert(logger.log("log")?.match(idText) == false)
     }
 }
 

@@ -174,17 +174,15 @@ public class Text : LogOutput {
 	}
 	
 	private func textMessage(item: LogItem) -> String {
-        var params = item.params
-        
-        var sign = { "\(item.params.config.sign)" }
+        var sign = { "\(item.config.sign)" }
 		var time = { Self.dateFormatter.string(from: item.time) }
 		var level = { String(format: "[%02d]", item.scope?.level ?? 0) }
 		var category = { "[\(item.category)]" }
 		let padding: () -> String = {
-            guard let scope = item.scope, scope.entered else { return "" }
+            guard let scope = item.scope, scope.level > 0 else { return "" }
             return (1...scope.level)
                 .map {
-                    ScopeStack.shared[$0] != nil
+                    ScopeStack.shared.exists(level: $0)
                         ? ($0 == scope.level) ? "├ " : "│ "
                         : "  "
                 }
@@ -192,7 +190,7 @@ public class Text : LogOutput {
 		}
 		var type = { "[\(item.type.title)]" }
 		var location = { "<\(item.fileName):\(item.line)>" }
-        var metadata = { params.metadata.json }
+        var metadata = { item.metadata.json(parenthesis: true) }
         var text = item.text
 		
 		switch style {
@@ -203,13 +201,13 @@ public class Text : LogOutput {
 				assert(Self.tags[item.type] != nil)
 				let tag = Self.tags[item.type]!
 				
-                sign = { "\(item.params.config.sign)".color(.dim) }
+                sign = { "\(item.config.sign)".color(.dim) }
 				time = { Self.dateFormatter.string(from: item.time).color(.dim) }
 				level = { String(format: "[%02d]", item.scope?.level ?? 0).color(.dim) }
 				category = { item.category.color(.textBlue) }
 				type = { " \(item.type.title) ".color(tag.colors) }
 				location = { "<\(item.fileName):\(item.line)>".color([.dim, tag.textColor]) }
-                metadata = { params.metadata.json.color(.dim) }
+                metadata = { item.metadata.json(parenthesis: true).color(.dim) }
 				text = text.color(tag.textColor)
 				
 			case .emoji:
@@ -226,21 +224,23 @@ public class Text : LogOutput {
 			(.location, location),
             (.metadata, metadata)
 		]
-        let prefix = logPrefix(items: items, options: item.params.config.options)
+        let prefix = logPrefix(items: items, options: item.config.options)
         return [prefix, text].joinedCompact()
 	}
 
 	private func textScope(scope: LogScope) -> String {
         let start = scope.duration == 0
 		
-        var sign = { "\(scope.params.config.sign)" }
-		var time = start ? Self.dateFormatter.string(from: scope.time) : Self.dateFormatter.string(from: scope.time.addingTimeInterval(scope.duration))
+        var sign = { "\(scope.config.sign)" }
+		var time = start
+            ? Self.dateFormatter.string(from: scope.time)
+            : Self.dateFormatter.string(from: scope.time.addingTimeInterval(scope.duration))
 		let ms = !start ? "(\(stringFromTimeInterval(scope.duration)))" : nil
-        var category = { "[\(scope.params.category)]" }
+        var category = { "[\(scope.category)]" }
 		var level = { String(format: "[%02d]", scope.level) }
 		let padding: () -> String = {
             let text = (1..<scope.level)
-                .map { ScopeStack.shared[$0] != nil ? "| " : "  " }
+                .map { ScopeStack.shared.exists(level: $0) ? "| " : "  " }
                 .joined()
             return "\(text)\(start ? "┌" : "└")"
 		}
@@ -251,10 +251,10 @@ public class Text : LogOutput {
             break
             
         case .colored:
-            sign = { "\(scope.params.config.sign)".color(.dim) }
+            sign = { "\(scope.config.sign)".color(.dim) }
             time = time.color(.dim)
             level = { String(format: "[%02d]", scope.level).color(.dim) }
-            category = { scope.params.category.color(.textBlue) }
+            category = { scope.category.color(.textBlue) }
             text = "[\(scope.name.color(.textMagenta))] \((ms ?? "").color(.dim))"
         }
 	
@@ -265,7 +265,7 @@ public class Text : LogOutput {
 			(.category, category),
 			(.padding, padding),
 		]
-        let prefix = logPrefix(items: items, options: scope.params.config.options)
+        let prefix = logPrefix(items: items, options: scope.config.options)
 		return prefix.isEmpty ? text : "\(prefix) \(text)"
 	}
 	

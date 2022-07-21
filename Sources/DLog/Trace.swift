@@ -132,7 +132,7 @@ fileprivate func stack(_ addresses: ArraySlice<NSNumber>, config: StackConfig) -
 	return "[\n\(text)\n]"
 }
 
-func traceInfo(title: String?, function: String, addresses: ArraySlice<NSNumber>, traceConfig: TraceConfig) -> String {
+func traceInfo(text: String?, function: String, addresses: ArraySlice<NSNumber>, traceConfig: TraceConfig) -> String {
 	let items: [(TraceOptions, String, () -> Any)] = [
 		(.function, "func", { function }),
 		(.queue, "queue", { "\(String(cString: __dispatch_queue_get_label(nil)))" }),
@@ -140,7 +140,7 @@ func traceInfo(title: String?, function: String, addresses: ArraySlice<NSNumber>
 		(.stack, "stack", { stack(addresses, config: traceConfig.stackConfig) }),
 	]
     let dict = dictionary(from: items, options: traceConfig.options)
-    return [dict.json(), title ?? ""].joinedCompact()
+    return [dict.json(), text ?? ""].joinedCompact()
 }
 
 extension Array where Element == String {

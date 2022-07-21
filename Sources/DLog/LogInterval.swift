@@ -65,6 +65,7 @@ fileprivate class StatisticsStore {
 /// Interval logs a point of interest in your code as running time statistics for debugging performance.
 ///
 public class LogInterval: LogItem {
+    let logger: DLog
 	private let id : Int
 	
     @Atomic
@@ -88,11 +89,12 @@ public class LogInterval: LogItem {
     
     public var statistics: IntervalStatistics { StatisticsStore.shared[id] }
 	
-	init(params: LogParams, name: String, staticName: StaticString?, file: String, funcName: String, line: UInt) {
+    init(logger: DLog, name: String, staticName: StaticString?, category: String, config: LogConfig, scope: LogScope?, metadata: Metadata, file: String, funcName: String, line: UInt) {
+        self.logger = logger
 		self.id = "\(file):\(funcName):\(line)".hash
 		self.staticName = staticName
 		
-		super.init(params: params, type: .interval, file: file, funcName: funcName, line: line, message: nil)
+        super.init(type: .interval, category: category, config: config, scope: scope, metadata: metadata, file: file, funcName: funcName, line: line, message: nil)
         
         message = { [weak self] in
             guard let duration = self?.duration, let statistics = self?.statistics else {
@@ -106,7 +108,7 @@ public class LogInterval: LogItem {
 				(.max, "max", { stringFromTimeInterval(statistics.max) }),
                 (.average, "average", { stringFromTimeInterval(statistics.avg) })
 			]
-            let dict = dictionary(from: items, options: params.config.intervalConfig.options)
+            let dict = dictionary(from: items, options: config.intervalConfig.options)
             let text = [dict.json(), name].joinedCompact()
             return LogMessage(stringLiteral: text)
 		}
@@ -130,7 +132,7 @@ public class LogInterval: LogItem {
 		time = Date()
         _duration = 0
 		
-        params.logger.begin(interval: self)
+        logger.begin(interval: self)
 	}
 	
 	/// Finish a time interval.
@@ -164,6 +166,6 @@ public class LogInterval: LogItem {
         
         StatisticsStore.shared[id] = record
 		
-        params.logger.end(interval: self)
+        logger.end(interval: self)
 	}
 }
