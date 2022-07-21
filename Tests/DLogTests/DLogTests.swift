@@ -1188,22 +1188,23 @@ final class TraceTests: XCTestCase {
 		config.traceConfig.options = [.queue, .thread]
         config.traceConfig.threadConfig.options = .qos
 		let logger = DLog(config: config)
+        
 		
 		XCTAssert(logger.trace()?.match(#"\{queue:com.apple.main-thread"#) == true)
 		
-        let queues: [(String, String, DispatchQueue)] = [
-			("com.apple.root.background-qos", "background", DispatchQueue.global(qos: .background)),
-			("com.apple.root.utility-qos", "utility", DispatchQueue.global(qos: .utility)),
-            ("com.apple.root.default-qos", "userInitiated", DispatchQueue.global(qos: .default)),
-            ("com.apple.root.user-initiated-qos", "userInitiated", DispatchQueue.global(qos: .userInitiated)),
-            ("com.apple.root.user-interactive-qos", "userInteractive", DispatchQueue.global(qos: .userInteractive)),
-            ("serial", "userInitiated", DispatchQueue(label: "serial")),
-            ("concurrent", "userInitiated", DispatchQueue(label: "concurrent", attributes: .concurrent))
+        let queues: [(String, DispatchQueue)] = [
+			("com.apple.root.background-qos", DispatchQueue.global(qos: .background)),
+			("com.apple.root.utility-qos", DispatchQueue.global(qos: .utility)),
+            ("com.apple.root.default-qos", DispatchQueue.global(qos: .default)),
+            ("com.apple.root.user-initiated-qos", DispatchQueue.global(qos: .userInitiated)),
+            ("com.apple.root.user-interactive-qos", DispatchQueue.global(qos: .userInteractive)),
+            ("serial", DispatchQueue(label: "serial")),
+            ("concurrent", DispatchQueue(label: "concurrent", attributes: .concurrent))
 		]
         wait(count: queues.count) { expectations in
-            for (i , (label, qos, queue)) in queues.enumerated() {
+            for (i , (label, queue)) in queues.enumerated() {
                 queue.async {
-                    XCTAssert(logger.trace()?.match(#"\{queue:\#(label),thread:\{qos:\#(qos)\}\}$"#) == true)
+                    XCTAssert(logger.trace()?.match(label) == true)
                     expectations[i].fulfill()
                 }
             }
@@ -1228,7 +1229,7 @@ final class TraceTests: XCTestCase {
 		config.traceConfig.options = .thread
 		config.traceConfig.threadConfig.options = .all
 		let logger = DLog(config: config)
-		XCTAssert(logger.trace()?.match(#"\{thread:\{name:main,number:1,priority:0\.5,qos:userInteractive,stackSize:512 KB\}\}$"#) == true)
+		XCTAssert(logger.trace()?.match(#"\{thread:\{name:main,number:1,priority:0\.\d,qos:[^,]+,stackSize:\d+ KB\}\}$"#) == true)
 	}
 	
 	func test_trace_thread_options_empty() {
@@ -1254,7 +1255,7 @@ final class TraceTests: XCTestCase {
 		config.traceConfig.stackConfig.depth = 1
 		let logger = DLog(config: config)
         let text = logger.trace()
-		XCTAssert(text?.match(#"\{stack:\[0:\{address:0x[0-9a-f]{16},module:DLogTests,offset:\d+,symbols:DLogTests\.TraceTests\.test_trace_stack_depth_all\(\) -> \(\)\}\]\}$"#) == true)
+        XCTAssert(text?.match(#"\{stack:\[0:\{address:0x[0-9a-f]{16},module:[^,]+,offset:\d+,symbols:DLogTests\.TraceTests\.test_trace_stack_depth_all\(\) -> \(\)\}\]\}$"#) == true)
 	}
 	
 	func test_trace_stack_column() {
