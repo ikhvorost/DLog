@@ -65,14 +65,14 @@ fileprivate class StatisticsStore {
 /// Interval logs a point of interest in your code as running time statistics for debugging performance.
 ///
 public class LogInterval: LogItem {
-    let logger: DLog
-	private let id : Int
-	
+    private let logger: DLog
+	private let id: Int
+    private let name: String
     @Atomic
     private var begun = false
-	
-	let staticName: StaticString?
     
+    let staticName: StaticString?
+	
     // SignpostID
 	@Atomic
     private var _signpostID: Any? = nil
@@ -81,39 +81,34 @@ public class LogInterval: LogItem {
 		get { _signpostID as? OSSignpostID }
 	}
     
-    // Duration
-    @Atomic
-    private var _duration: TimeInterval = 0
     @objc
-    public var duration: TimeInterval { _duration }
+    public private(set) var duration: TimeInterval = 0
     
     public var statistics: IntervalStatistics { StatisticsStore.shared[id] }
+    
+    public override var text: String {
+        let statistics = self.statistics
+        let items: [(IntervalOptions, String, () -> Any)] = [
+            (.duration, "duration", { stringFromTimeInterval(self.duration) }),
+            (.count, "count", { statistics.count }),
+            (.total, "total", { stringFromTimeInterval(statistics.total) }),
+            (.min, "min", { stringFromTimeInterval(statistics.min) }),
+            (.max, "max", { stringFromTimeInterval(statistics.max) }),
+            (.average, "average", { stringFromTimeInterval(statistics.avg) })
+        ]
+        let dict = dictionary(from: items, options: config.intervalConfig.options)
+        let text = [dict.json(), name].joinedCompact()
+        return text
+    }
 	
     init(logger: DLog, name: String, staticName: StaticString?, category: String, config: LogConfig, scope: LogScope?, metadata: Metadata, file: String, funcName: String, line: UInt) {
         self.logger = logger
+        self.name = name
 		self.id = "\(file):\(funcName):\(line)".hash
 		self.staticName = staticName
-		
         super.init(type: .interval, category: category, config: config, scope: scope, metadata: metadata, file: file, funcName: funcName, line: line, message: nil)
-        
-        message = { [weak self] in
-            guard let duration = self?.duration, let statistics = self?.statistics else {
-                return ""
-            }
-			let items: [(IntervalOptions, String, () -> Any)] = [
-				(.duration, "duration", { stringFromTimeInterval(duration) }),
-                (.count, "count", { statistics.count }),
-				(.total, "total", { stringFromTimeInterval(statistics.total) }),
-				(.min, "min", { stringFromTimeInterval(statistics.min) }),
-				(.max, "max", { stringFromTimeInterval(statistics.max) }),
-                (.average, "average", { stringFromTimeInterval(statistics.avg) })
-			]
-            let dict = dictionary(from: items, options: config.intervalConfig.options)
-            let text = [dict.json(), name].joinedCompact()
-            return LogMessage(stringLiteral: text)
-		}
 	}
-	
+
 	/// Start a time interval.
 	///
 	/// A time interval can be created and then used for logging running time statistics.
@@ -130,7 +125,7 @@ public class LogInterval: LogItem {
 		begun.toggle()
 	
 		time = Date()
-        _duration = 0
+        duration = 0
 		
         logger.begin(interval: self)
 	}
@@ -150,17 +145,18 @@ public class LogInterval: LogItem {
 		guard begun else { return }
 		begun.toggle()
         
-        _duration = -time.timeIntervalSinceNow
+        duration = -time.timeIntervalSinceNow
         time = Date()
-		
+        
+        // Statistics
 		var record = self.statistics
         record.count += 1
-        record.total += _duration
-        if record.min == 0 || record.min > _duration {
-            record.min = _duration
+        record.total += duration
+        if record.min == 0 || record.min > duration {
+            record.min = duration
         }
-        if record.max == 0 || record.max < _duration {
-            record.max = _duration
+        if record.max == 0 || record.max < duration {
+            record.max = duration
         }
         record.avg = record.total / Double(record.count)
         

@@ -87,7 +87,7 @@ public class LogItem: NSObject {
 	/// The line number of code this log message originates from.
     public let line: UInt
 		
-	var message: (() -> LogMessage)?
+	private var message: (() -> LogMessage)?
     
     /// The text of this log message.
     public var text: String {

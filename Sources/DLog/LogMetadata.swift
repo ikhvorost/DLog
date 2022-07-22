@@ -26,7 +26,7 @@ import Foundation
 public typealias Metadata = [String : Any]
 
 extension Metadata {
-    func json(parenthesis: Bool = false, quotes: Bool = false) -> String {
+    func json(parenthesis: Bool = false) -> String {
         guard self.isEmpty == false,
               let data = try? JSONSerialization.data(withJSONObject: self, options: [.sortedKeys]),
               let json = String(data: data, encoding: .utf8) else {
@@ -38,7 +38,7 @@ extension Metadata {
             let end = json.index(before: json.endIndex)
             result = "(\(json[start..<end]))"
         }
-        return quotes ? result : result.replacingOccurrences(of: "\"", with: "")
+        return result.replacingOccurrences(of: "\"", with: "") // Remove quotes
     }
 }
 
@@ -55,7 +55,7 @@ public class LogMetadata: NSObject {
             synchronized(self) { data[name] }
         }
         set {
-            synchronized(self) { data[name] = newValue}
+            synchronized(self) { data[name] = newValue }
         }
     }
     

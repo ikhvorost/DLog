@@ -234,21 +234,28 @@ final class DLogTests: XCTestCase {
 	}
 	
 	// MARK: - File
-	
-	func test_File() {
+    
+    func test_File() {
 		let filePath = "dlog.txt"
-		let logger = DLog(.textPlain => .file(filePath, append: false))
-		logger.trace()
-		
-		delay(0.1)
 		
 		do {
-			let text = try String(contentsOfFile: filePath)
-			print(text)
+            // Recreate file
+            let logger = DLog(.textPlain => .file(filePath, append: false))
+            logger.trace()
+            delay(0.1)
+			var text = try String(contentsOfFile: filePath)
 			XCTAssert(text.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) \{func:\#(#function)"#))
+            
+            // Append
+            let logger2 = DLog(.textPlain => .file(filePath, append: true))
+            logger2.debug("debug")
+            delay(0.1)
+            text = try String(contentsOfFile: filePath)
+            XCTAssert(text.match(#"\#(CategoryTag) \#(TraceTag) \#(Location) \{func:\#(#function)"#))
+            XCTAssert(text.match(#"\#(CategoryTag) \#(DebugTag) \#(Location) debug$"#))
 		}
 		catch {
-			XCTFail(error.localizedDescription)
+            XCTFail(error.localizedDescription)
 		}
 	}
 	
@@ -508,6 +515,7 @@ final class MetadataTests: XCTestCase {
     
     func test_metadata_category() {
         let logger = DLog(metadata: ["id" : 12345])
+        XCTAssert(logger.metadata["id"] as? Int == 12345)
         XCTAssert(logger.log("log")?.match(idText) == true)
         
         // Category with inherited metadata
