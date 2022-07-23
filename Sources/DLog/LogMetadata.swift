@@ -23,6 +23,7 @@
 
 import Foundation
 
+/// Metadata dictionary type
 public typealias Metadata = [String : Any]
 
 extension Metadata {
@@ -42,6 +43,7 @@ extension Metadata {
     }
 }
 
+/// Contextual metadata
 @objcMembers
 public class LogMetadata: NSObject {
     var data = Metadata()
@@ -50,6 +52,7 @@ public class LogMetadata: NSObject {
         self.data = data
     }
     
+    /// Gets and sets a value by a string key to metadata.
     public subscript(name: String) -> Any? {
         get {
             synchronized(self) { data[name] }
@@ -59,6 +62,7 @@ public class LogMetadata: NSObject {
         }
     }
     
+    /// Clears metadata
     public func clear() {
         synchronized(self) {
             data.removeAll()

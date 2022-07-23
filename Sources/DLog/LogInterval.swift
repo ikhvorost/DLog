@@ -26,13 +26,22 @@
 import Foundation
 import os.log
 
-
+/// Accumulated interval statistics
 public struct IntervalStatistics {
+    /// A number of total calls
     public var count = 0
+    
+    /// A total time duration of all calls
     public var total: TimeInterval = 0
+    
+    /// A minimum time duration
     public var min: TimeInterval = 0
+    
+    /// A maximum time duration
     public var max: TimeInterval = 0
-    public var avg: TimeInterval = 0
+    
+    /// An average time duration
+    public var average: TimeInterval = 0
 }
 
 fileprivate class StatisticsStore {
@@ -81,11 +90,14 @@ public class LogInterval: LogItem {
 		get { _signpostID as? OSSignpostID }
 	}
     
+    /// A time duration
     @objc
     public private(set) var duration: TimeInterval = 0
     
+    /// Accumulated interval statistics
     public var statistics: IntervalStatistics { StatisticsStore.shared[id] }
     
+    /// Text of this log message.
     public override var text: String {
         let statistics = self.statistics
         let items: [(IntervalOptions, String, () -> Any)] = [
@@ -94,7 +106,7 @@ public class LogInterval: LogItem {
             (.total, "total", { stringFromTimeInterval(statistics.total) }),
             (.min, "min", { stringFromTimeInterval(statistics.min) }),
             (.max, "max", { stringFromTimeInterval(statistics.max) }),
-            (.average, "average", { stringFromTimeInterval(statistics.avg) })
+            (.average, "average", { stringFromTimeInterval(statistics.average) })
         ]
         let dict = dictionary(from: items, options: config.intervalConfig.options)
         let text = [dict.json(), name].joinedCompact()
@@ -158,7 +170,7 @@ public class LogInterval: LogItem {
         if record.max == 0 || record.max < duration {
             record.max = duration
         }
-        record.avg = record.total / Double(record.count)
+        record.average = record.total / Double(record.count)
         
         StatisticsStore.shared[id] = record
 		

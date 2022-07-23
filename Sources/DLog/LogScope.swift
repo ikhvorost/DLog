@@ -69,20 +69,21 @@ public class LogScope: LogProtocol {
     var time = Date()
     var os_state = os_activity_scope_state_s()
     
-    /// A global level of a scope
+    /// A global level in the stack.
     @objc
     public internal(set) var level: Int = 0
     
-    /// A time duration of a scope
+    /// A time duration.
     public private(set) var duration: TimeInterval = 0
     
+    /// Scope name.
     @objc
     public let name: String
     
     init(name: String, logger: DLog, category: String, config: LogConfig, metadata: Metadata) {
         self.name = name
         super.init(logger: logger, category: category, config: config, metadata: metadata)
-        self.scope = self
+        self._scope = self
     }
     
     /// Start a scope.

@@ -110,22 +110,27 @@ public class LogMessage: NSObject, ExpressibleByStringLiteral,
         text = value
     }
     
+    /// Creates an instance initialized to the given integer value.
     public required init(integerLiteral value: Int) {
         text = "\(value)"
     }
 
+    /// Creates an instance initialized to the given float value.
     public required init(floatLiteral value: Float) {
         text = "\(value)"
     }
                                 
+    /// Creates an instance initialized to the given bool value.
     public required init(booleanLiteral value: Bool) {
         text = "\(value)"
     }
     
+    /// Creates an instance initialized to the given array.
     public required init(arrayLiteral elements: Any...) {
         text = "\(elements)"
     }
     
+    /// Creates an instance initialized to the given dictionary.
     public required init(dictionaryLiteral elements: (Any, Any)...) {
         text = "\(elements)"
     }

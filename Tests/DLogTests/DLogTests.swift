@@ -971,7 +971,7 @@ final class IntervalTests: XCTestCase {
 		XCTAssert(0.25 <= statistics1.total)
 		XCTAssert(0.25 <= statistics1.min)
 		XCTAssert(0.25 <= statistics1.max)
-		XCTAssert(0.25 <= statistics1.avg)
+		XCTAssert(0.25 <= statistics1.average)
 		
 		interval.begin()
 		delay()
@@ -982,7 +982,7 @@ final class IntervalTests: XCTestCase {
 		XCTAssert(0.5 <= statistics2.total)
 		XCTAssert(0.25 <= statistics2.min)
 		XCTAssert(0.25 <= statistics2.max)
-		XCTAssert(0.25 <= statistics2.avg)
+		XCTAssert(0.25 <= statistics2.average)
 	}
 	
 	func test_IntervalConcurrent() {

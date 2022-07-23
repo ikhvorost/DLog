@@ -89,7 +89,7 @@ public class LogItem: NSObject {
 		
 	private var message: (() -> LogMessage)?
     
-    /// The text of this log message.
+    /// Text of this log message.
     public var text: String {
         return message?().text ?? ""
     }

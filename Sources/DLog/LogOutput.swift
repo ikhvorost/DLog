@@ -51,11 +51,12 @@ public class LogOutput : NSObject {
 	/// Creates `OSLog` output with a subsystem name.
     public static func oslog(_ subsystem: String) -> OSLog { OSLog(subsystem: subsystem) }
 	
-	/// Creates `Filter` output with a block that is applied to the log message to be evaluated.
+	/// Creates `Filter` output for log items.
     public static func filter(item: @escaping (LogItem) -> Bool) -> Filter {
         Filter(isItem: item, isScope: nil)
     }
     
+    /// Creates `Filter` output for log scopes.
     public static func filter(scope: @escaping (LogScope) -> Bool) -> Filter {
         Filter(isItem: nil, isScope: scope)
     }
