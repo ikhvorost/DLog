@@ -361,6 +361,17 @@ final class DLogTests: XCTestCase {
 			}
 		})
 		XCTAssertNil(itemScopeLogger.fault("fault"))
+        
+        // Metadata
+        let metadataLogger = DLog(.textPlain
+                                  => .filter { (item: LogItem) in item.metadata["id"] as? Int == 12345 }
+                                  => .stdout)
+        metadataLogger.metadata["id"] = 12
+        XCTAssertNil(metadataLogger.log("load"))
+        metadataLogger.metadata["id"] = 12345
+        XCTAssertNotNil(metadataLogger.log("load"))
+        metadataLogger.metadata.clear()
+        XCTAssertNil(metadataLogger.log("load"))
 	}
     
 	// MARK: - Disabled

@@ -95,7 +95,9 @@ public class LogItem: NSObject {
     }
     
     let config: LogConfig
-    let metadata: Metadata
+    
+    /// Metadata of log message
+    public let metadata: Metadata
 	
     init(type: LogType, category: String, config: LogConfig, scope: LogScope?, metadata: Metadata, file: String, funcName: String, line: UInt, message: (() -> LogMessage)?) {
         self.type = type
