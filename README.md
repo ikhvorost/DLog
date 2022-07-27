@@ -298,7 +298,7 @@ Outputs:
 • 12:04:29.758 [DLOG] [LOG] <DLogTests.swift:508> <private>
 ```
 
-> NOTE: DLog logs the data with `private` option as `public` when the XCode debugger is attached.
+> NOTE: Messages with `private` option are interpreted as `public` in debugging (XCode debugger is attached). If you want to disable this feature in debugging you should set `auto` parameter to `false`, e.g.: `logger.log("\(phoneNumber, privacy: .private(mask: .custom(value: "<private>"), auto: false))")`
 
 #### `private(mask: .hash)`
 
