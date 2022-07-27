@@ -23,6 +23,7 @@ DLog is the development logger for Swift that supports emoji and colored text ou
 - [Scope](#scope)
 - [Interval](#interval)
 - [Category](#category)
+- [Metadata](#metadata)
 - [Outputs](#outputs): [Text](#text), [Standard](#standard), [File](#file), [OSLog](#oslog), [Net](#net)
 - [Pipeline](#pipeline)
 - [Filter](#filter)
@@ -58,7 +59,7 @@ Where:
 - `23:59:11.710` - timestamp (HH:mm:ss.SSS)
 - `[DLOG]` - category tag ('DLOG' by default)
 - `[LOG]` - log type tag
-- `<DLog.swift:12>` - location (fileName:line), without file extension
+- `<DLog.swift:12>` - location (fileName:line)
 - `Hello DLog!` - message
 
 You can apply privacy and format options to your logged values:
@@ -1085,6 +1086,62 @@ Outputs:
 ```
 • 13:31:43.773 [DLOG] [TRACE] <DLogTests.swift:487> default: { func: test_Config(), thread: { number: 1, name: main } }
 > 13:31:43.775 [NET] [TRACE] net: { queue: com.apple.main-thread }
+```
+
+## Metadata
+
+In its most basic usage, metadata is useful for grouping log messages about the same subject together. For example, you can set the request ID of an HTTP request as metadata, and all the log lines about that HTTP request would show that request ID. 
+
+Logger metadata is a keyword list stored in the dictionary and it can be applied to the logger on creation or changed with its instance later, e.g.:
+```swift
+let logger = DLog(metadata: ["id" : 12345])
+logger.log("start")
+
+logger.metadata["process"] = "main"
+logger.log("attach")
+
+logger.metadata.clear() // Clear metadata
+logger.log("finish")
+```
+
+Outputs:
+```
+• 19:38:56.401 [DLOG] [LOG] <DLogTests.swift:514> (id:12345) start
+• 19:38:56.402 [DLOG] [LOG] <DLogTests.swift:516> (id:12345,process:main) attach
+• 19:38:56.402 [DLOG] [LOG] <DLogTests.swift:518> finish
+```
+
+The same works with category and scope which copies its parent metadata, but this copy can be changed later:
+
+```swift
+let logger = DLog(metadata: ["id" : 12345])
+logger.log("start")
+        
+logger.scope("scope") { scope in
+    scope.log("start")
+    scope.metadata["id"] = nil // Remove "id" kev-value pair
+    scope.log("finish")
+}
+
+let category = logger["NET"]
+category.metadata["method"] = "POST"
+category.log("post data")
+category.log("receive response")
+
+category.metadata.clear()
+category.log("close")
+```
+
+Outputs:
+```
+• 20:08:04.574 [DLOG] [LOG] <DLogTests.swift:514> (id:12345) start
+• 20:08:04.575 [DLOG] ┌ [scope] 
+• 20:08:04.575 [DLOG] ├ [LOG] <DLogTests.swift:517> (id:12345) start
+• 20:08:04.575 [DLOG] ├ [LOG] <DLogTests.swift:519> finish
+• 20:08:04.575 [DLOG] └ [scope] (0s)
+• 20:08:04.576 [NET] [LOG] <DLogTests.swift:524> (id:12345,method:POST) post data
+• 20:08:04.576 [NET] [LOG] <DLogTests.swift:525> (id:12345,method:POST) receive response
+• 20:08:04.576 [NET] [LOG] <DLogTests.swift:528> close
 ```
 
 ## Outputs
