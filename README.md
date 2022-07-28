@@ -986,15 +986,16 @@ for _ in 0..<10 {
 Outputs:
 
 ```
-• 00:05:09.932 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.270s, average: 0.270s }
-• 00:05:10.162 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.216s, average: 0.243s }
-• 00:05:10.380 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.215s, average: 0.234s }
-• 00:05:10.608 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.225s, average: 0.231s }
-• 00:05:10.829 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.217s, average: 0.229s }
-• 00:05:11.057 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.225s, average: 0.228s }
-• 00:05:11.275 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.214s, average: 0.226s }
-• 00:05:11.497 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.219s, average: 0.225s }
-• 00:05:11.712 [DLOG] [INTERVAL] <DLog.swift:19> Sort: { duration: 0.212s, average: 0.224s }
+• 20:00:01.439 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.022s,duration:0.022s} Sort
+• 20:00:01.462 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.022s,duration:0.022s} Sort
+• 20:00:01.484 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.022s,duration:0.022s} Sort
+• 20:00:01.507 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.022s,duration:0.022s} Sort
+• 20:00:01.528 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.022s,duration:0.022s} Sort
+• 20:00:01.550 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.022s,duration:0.021s} Sort
+• 20:00:01.570 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.021s,duration:0.020s} Sort
+• 20:00:01.591 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.021s,duration:0.020s} Sort
+• 20:00:01.611 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.021s,duration:0.020s} Sort
+• 20:00:01.632 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.021s,duration:0.020s} Sort
 ```
 
 Where:
@@ -1002,32 +1003,36 @@ Where:
  - `duration` - the current time duration
  - `average` - an average time duration
 
-You can get all metrics values of the interval programatically:
+You can also get the current interval's duration and all its statistics programatically:
 
 ```swift
 let interval = logger.interval("signpost") {
     ...
 }
 
-print(interval.count)
 print(interval.duration)
-print(interval.total)
-print(interval.min)
-print(interval.max)
-print(interval.avg)
+
+print(interval.statistics.count)
+print(interval.statistics.total)
+print(interval.statistics.min)
+print(interval.statistics.max)
+print(interval.statistics.average)
 ```
 
 To measure asynchronous tasks you can use `begin` and `end` methods:
 
 ```swift
-let interval = logger.interval("Video")
+let logger = DLog()
+
+let interval = logger.interval("load")
 interval.begin()
 
+let url = URL(string: "https://bitmovin-a.akamaihd.net/content/MI201109210084_1/m3u8s/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.m3u8")!
 let asset = AVURLAsset(url: url)
 asset.loadValuesAsynchronously(forKeys: ["duration"]) {
     let status = asset.statusOfValue(forKey: "duration", error: nil)
     if status == .loaded {
-        logger.info("Duration: \(asset.duration.value)")
+        logger.debug("duration: \(asset.duration.seconds)")
     }
     interval.end()
 }
@@ -1036,8 +1041,8 @@ asset.loadValuesAsynchronously(forKeys: ["duration"]) {
 Outputs:
 
 ```
-• 00:10:17.982 [DLOG] [INFO] <DLog.swift:27> Duration: 5532776
-• 00:10:17.983 [DLOG] [INTERVAL] <DLog.swift:20> Video: { duration: 2.376s, average: 2.376s }
+• 18:56:38.134 [DLOG] [DEBUG] <DLogTests.swift:528> duration: 210.0
+• 18:56:38.135 [DLOG] [INTERVAL] <DLogTests.swift:520> {average:7.979s,duration:7.979s} load
 ```
 
 ## Category
