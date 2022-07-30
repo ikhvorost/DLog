@@ -49,7 +49,7 @@ fileprivate extension Thread {
 	// <NSThread: 0x100d04870>{number = 1, name = main}
 	static let regexThread = try! NSRegularExpression(pattern: "number = ([0-9]+), name = ([^}]+)")
 	
-	func json(config: ThreadConfig) -> String {
+    func dict(config: ThreadConfig) -> [String : Any] {
 		var number = ""
 		var name = ""
 		let nsString = description as NSString
@@ -71,7 +71,7 @@ fileprivate extension Thread {
 		]
 		
         let dict = dictionary(from: items, options: config.options)
-        return dict.json()
+        return dict
 	}
 }
 
@@ -87,60 +87,51 @@ fileprivate func demangle(_ mangled: String) -> String? {
 	return nil
 }
 
-fileprivate func stack(_ addresses: ArraySlice<NSNumber>, config: StackConfig) -> String {
-	var info = dl_info()
-	
-	var separator = ",\n"
-	if case .flat = config.style {
-		separator = ","
-	}
-	
-	let text = addresses
-		.compactMap { address -> (String, UInt, String, UInt)? in
-			let pointer = UnsafeRawPointer(bitPattern: address.uintValue)
-			guard dladdr(pointer, &info) != 0 else {
-				return nil
-			}
-			
-			let fname = String(validatingUTF8: info.dli_fname)!
-			let module = (fname as NSString).lastPathComponent
-			
-			let sname = String(validatingUTF8: info.dli_sname)!
-			let name = demangle(sname) ?? sname
-			
-			let offset = address.uintValue - UInt(bitPattern: info.dli_saddr)
-			
-			return (module, address.uintValue, name, offset)
-		}
-		.prefix(config.depth > 0 ? config.depth : addresses.count)
-		.enumerated()
-		.map { item in
-			let items: [(StackOptions, String, () -> Any)] = [
-				(.module, "module", { "\(item.element.0)" }),
-				(.address, "address", { String(format:"0x%016llx", item.element.1) }),
-				(.symbols, "symbols", { "\(item.element.2)" }),
-				(.offset, "offset", { "\(item.element.3)" }),
-			]
+fileprivate func stack(_ addresses: ArraySlice<NSNumber>, config: StackConfig) -> [[String : Any]] {
+    var info = dl_info()
+    
+    return addresses
+        .compactMap { address -> (String, UInt, String, UInt)? in
+            let pointer = UnsafeRawPointer(bitPattern: address.uintValue)
+            guard dladdr(pointer, &info) != 0 else {
+                return nil
+            }
+            
+            let fname = String(validatingUTF8: info.dli_fname)!
+            let module = (fname as NSString).lastPathComponent
+            
+            let sname = String(validatingUTF8: info.dli_sname)!
+            let name = demangle(sname) ?? sname
+            
+            let offset = address.uintValue - UInt(bitPattern: info.dli_saddr)
+            
+            return (module, address.uintValue, name, offset)
+        }
+        .prefix(config.depth > 0 ? config.depth : addresses.count)
+        .enumerated()
+        .map { item in
+            let items: [(StackOptions, String, () -> Any)] = [
+                (.module, "module", { "\(item.element.0)" }),
+                (.address, "address", { String(format:"0x%016llx", item.element.1) }),
+                (.symbols, "symbols", { "\(item.element.2)" }),
+                (.offset, "offset", { "\(item.element.3)" }),
+                (.frame, "frame", { "\(item.offset)" }),
+            ]
             let dict = dictionary(from: items, options: config.options)
-            return "\(item.offset):\(dict.json())"
-		}
-		.joined(separator: separator)
-	
-	if case .flat = config.style {
-		return "[\(text)]"
-	}
-	return "[\n\(text)\n]"
+            return dict
+        }
 }
 
 func traceInfo(text: String?, function: String, addresses: ArraySlice<NSNumber>, traceConfig: TraceConfig) -> String {
 	let items: [(TraceOptions, String, () -> Any)] = [
 		(.function, "func", { function }),
 		(.queue, "queue", { "\(String(cString: __dispatch_queue_get_label(nil)))" }),
-		(.thread, "thread", { Thread.current.json(config: traceConfig.threadConfig) }),
+		(.thread, "thread", { Thread.current.dict(config: traceConfig.threadConfig) }),
 		(.stack, "stack", { stack(addresses, config: traceConfig.stackConfig) }),
 	]
     let dict = dictionary(from: items, options: traceConfig.options)
-    return [dict.json(), text ?? ""].joinedCompact()
+    let pretty = traceConfig.style == .pretty
+    return [dict.json(pretty: pretty), text ?? ""].joinedCompact()
 }
 
 extension Array where Element == String {
@@ -158,9 +149,14 @@ func dictionary<Option: OptionSet>(from items: [(Option, String, () -> Any)], op
             }
             let key = $0.1
             let value = $0.2()
+            
             if let text = value as? String, text.isEmpty {
                 return nil
             }
+            else if let dict = value as? [String : Any], dict.isEmpty {
+                return nil
+            }
+            
             return (key, value)
         }
     return Dictionary(uniqueKeysWithValues: keyValues)

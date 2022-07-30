@@ -27,9 +27,10 @@ import Foundation
 public typealias Metadata = [String : Any]
 
 extension Metadata {
-    func json(parenthesis: Bool = false) -> String {
+    func json(parenthesis: Bool = false, pretty: Bool = false) -> String {
+        let options: JSONSerialization.WritingOptions = pretty ? [.sortedKeys, .prettyPrinted] : [.sortedKeys]
         guard self.isEmpty == false,
-              let data = try? JSONSerialization.data(withJSONObject: self, options: [.sortedKeys]),
+              let data = try? JSONSerialization.data(withJSONObject: self, options: options),
               let json = String(data: data, encoding: .utf8) else {
                   return ""
               }

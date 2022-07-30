@@ -66,7 +66,7 @@ extension XCTestCase {
 
 // MARK: - Utils
 
-func delay(_ sec: Double = 0.25) {
+func delay(_ sec: TimeInterval = 0.25) {
 	Thread.sleep(forTimeInterval: sec)
 }
 
@@ -1262,30 +1262,37 @@ final class TraceTests: XCTestCase {
 	func test_trace_stack() {
 		var config = LogConfig()
 		config.traceConfig.options = .stack
-		let logger = DLog(config: config)
+        let logger = DLog(config: config)
         let text = logger.trace()
-		XCTAssert(text?.match(#"\{stack:\[0:\{symbols:DLogTests\.TraceTests\.test_trace_stack"#) == true)
+		XCTAssert(text?.match(#"\{stack:\[\{symbols:DLogTests\.TraceTests\.test_trace_stack\(\) -> \(\)\},"#) == true)
 	}
 	
-	func test_trace_stack_depth_all() {
-		var config = LogConfig()
+	func test_trace_stack_depth_all_pretty() {
+        var config = LogConfig()
 		config.traceConfig.options = .stack
 		config.traceConfig.stackConfig.options = .all
 		config.traceConfig.stackConfig.depth = 1
-		let logger = DLog(config: config)
+        config.traceConfig.style = .pretty
+		
+        let logger = DLog(config: config)
         let text = logger.trace()
-        XCTAssert(text?.match(#"\{stack:\[0:\{address:0x[0-9a-f]{16},module:[^,]+,offset:\d+,symbols:DLogTests\.TraceTests\.test_trace_stack_depth_all\(\) -> \(\)\}\]\}$"#) == true)
+        
+        let format = #"""
+        \{
+          stack : \[
+            \{
+              address : 0x[0-9a-f]+,
+              frame : 0,
+              module : DLogTests,
+              offset : \d+,
+              symbols : DLogTests\.TraceTests\.test_trace_stack_depth_all_pretty\(\) -> \(\)
+            \}
+          \]
+        \}
+        """#
+        XCTAssert(text?.match(format) == true)
 	}
 	
-	func test_trace_stack_column() {
-		var config = LogConfig()
-		config.traceConfig.options = .stack
-		config.traceConfig.stackConfig.style = .column
-		let logger = DLog(config: config)
-		let text = logger.trace()
-		XCTAssert(text?.match(#"\{stack:\[\\n0:\{symbols:DLogTests\.TraceTests\.test_trace_stack_column"#) == true)
-	}
-
 	func test_trace_config_empty() {
 		var config = LogConfig()
 		config.traceConfig.options = []
@@ -1298,6 +1305,6 @@ final class TraceTests: XCTestCase {
 		config.traceConfig.options = .all
 		let logger = DLog(config: config)
         let text = logger.trace()
-		XCTAssert(text?.match(#"\#(Location) \{func:test_trace_config_all\(\),queue:com\.apple\.main-thread,stack:\[0:\{symbols:"#) == true)
+		XCTAssert(text?.match(#"\#(Location) \{func:test_trace_config_all\(\),queue:com\.apple\.main-thread,stack:\[\{symbols:DLogTests\.TraceTests\.test_trace_config_all\(\) -> \(\)\}"#) == true)
 	}
 }

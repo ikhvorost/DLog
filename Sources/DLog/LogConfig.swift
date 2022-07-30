@@ -98,15 +98,9 @@ public struct StackOptions: OptionSet {
     
     /// Offset
     public static let offset = Self(3)
-}
-
-/// View style of stack info
-public enum StackViewStyle {
-    /// Flat view
-    case flat
     
-    /// Column view
-    case column
+    /// Frame
+    public static let frame = Self(4)
 }
 
 /// Contains configuration values regarding to stack info
@@ -116,9 +110,6 @@ public struct StackConfig {
     
     /// Depth of stack
     public var depth = 0
-    
-    /// View style of stack
-    public var style: StackViewStyle = .flat
 }
 
 /// Indicates which info from the `trace` method should be used.
@@ -150,8 +141,20 @@ public struct TraceOptions: OptionSet {
     public static let regular: Self = [.thread, .queue, .function]
 }
 
+/// Trace view style
+public enum TraceViewStyle {
+    /// Flat view
+    case flat
+    
+    /// Pretty view
+    case pretty
+}
+
 /// Contains configuration values regarding to the `trace` method.
 public struct TraceConfig {
+    /// View style
+    public var style: TraceViewStyle = .flat
+    
     /// Set which info from the `trace` method should be used. Default value is `TraceOptions.compact`.
     public var options: TraceOptions = .compact
     
