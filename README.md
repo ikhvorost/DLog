@@ -58,7 +58,7 @@ Where:
 - `•` - start sign (useful for filtering)
 - `23:59:11.710` - timestamp (HH:mm:ss.SSS)
 - `[DLOG]` - category tag ('DLOG' by default)
-- `[LOG]` - log type tag
+- `[LOG]` - log type tag ('LOG', 'TRACE', 'DEBUG' etc.)
 - `<DLog.swift:12>` - location (fileName:line)
 - `Hello DLog!` - message
 
@@ -151,19 +151,20 @@ Outputs:
 Log the current function name and a message (if it is provided) to help in debugging problems during the development:
 
 ```swift
-func startup() {
-    logger.trace("Start")
-    logger.trace()
-}
+let logger = DLog()
 
+func startup() {
+    logger.trace()
+    logger.trace("start")
+}
 startup()
 ```
 
 Outputs:
 
 ```
-• 23:45:31.198 [DLOG] [TRACE] <DLog.swift:13> Start: { func: startup(), thread: { number: 1, name: main } }
-• 23:45:31.216 [DLOG] [TRACE] <DLog.swift:14> func: startup(), thread: { number: 1, name: main }
+• 19:11:23.278 [DLOG] [TRACE] <DLogTests.swift:521> {func:startup(),thread:{name:main,number:1}}
+• 19:11:23.279 [DLOG] [TRACE] <DLogTests.swift:522> {func:startup(),thread:{name:main,number:1}} start
 ```
 
 ### `debug`
@@ -212,7 +213,7 @@ do {
     try FileManager.default.moveItem(at: fromURL, to: toURL)
 }
 catch {
-    logger.error(error.localizedDescription)
+    logger.error("\(error.localizedDescription)")
 }
 ```
 
@@ -881,21 +882,20 @@ logger.scope("Loading") { scope in
 }
 ```
 
-> NOTE: To pin your messages to a needed scope you should use the provided parameter of the closure that is scope logger.
+> NOTE: To pin your messages to a scope you should use the provided scope instance to call `log`, `trace`, etc.
 
 Outputs:
 
 ```
 • 23:57:13.410 [DLOG] ┌ [Loading]
-• 23:57:13.427 [DLOG] | [INFO] <DLog.swift:14> File: path/data.json
-• 23:57:13.443 [DLOG] | [DEBUG] <DLog.swift:16> Loaded 121 bytes
+• 23:57:13.427 [DLOG] ├ [INFO] <DLog.swift:14> File: path/data.json
+• 23:57:13.443 [DLOG] ├ [DEBUG] <DLog.swift:16> Loaded 121 bytes
 • 23:57:13.443 [DLOG] └ [Loading] (0.330s)
-
 ```
 
 Where:
- - `[Loading]` - a name of the scope
- - `(0.330s)` - a time duration of the scope in secs
+ - `[Loading]` - Name of the scope.
+ - `(0.330s)` - Time duration of the scope in secs.
 
 You can get duration value of a finished scope programatically:
 
@@ -904,7 +904,7 @@ var scope = logger.scope("scope") { _ in
     ...
 }
 
-print(scope.duration)
+print(scope.duration) // Time duration
 ```
 
 It's possible to `enter` and `leave` a scope asynchronously:
@@ -933,8 +933,8 @@ Outputs:
 
 ```
 • 00:01:24.158 [DLOG] ┌ [Request]
-• 00:01:24.829 [DLOG] | [DEBUG] <DLog.swift:25> https://www.apple.com/ - HTTP 200
-• 00:01:24.830 [DLOG] | [DEBUG] <DLog.swift:26> Loaded: 74454 bytes
+• 00:01:24.829 [DLOG] ├ [DEBUG] <DLog.swift:25> https://www.apple.com/ - HTTP 200
+• 00:01:24.830 [DLOG] ├ [DEBUG] <DLog.swift:26> Loaded: 74454 bytes
 • 00:01:24.830 [DLOG] └ [Request] (0.671s)
 ```
 
@@ -962,10 +962,10 @@ Outputs:
 
 ```
 • 00:03:13.552 [DLOG] ┌ [Loading]
-• 00:03:13.554 [DLOG] | [INFO] <DLog.swift:20> File: file:///path/data.json
-• 00:03:13.555 [DLOG] | [DEBUG] <DLog.swift:23> Loaded 121 bytes
+• 00:03:13.554 [DLOG] ├ [INFO] <DLog.swift:20> File: file:///path/data.json
+• 00:03:13.555 [DLOG] ├ [DEBUG] <DLog.swift:23> Loaded 121 bytes
 • 00:03:13.555 [DLOG] | ┌ [Parsing]
-• 00:03:13.557 [DLOG] | | [DEBUG] <DLog.swift:27> Parsed 3 items
+• 00:03:13.557 [DLOG] | ├ [DEBUG] <DLog.swift:27> Parsed 3 items
 • 00:03:13.557 [DLOG] | └ [Parsing] (0.200s)
 • 00:03:13.609 [DLOG] └ [Loading] (0.560s)
 ```
@@ -976,7 +976,7 @@ Outputs:
 
 ```swift
 for _ in 0..<10 {
-    logger.interval("Sort") {
+    logger.interval("sorting") {
         var arr = (1...10000).map {_ in arc4random()}
         arr.sort()
     }
@@ -986,22 +986,22 @@ for _ in 0..<10 {
 Outputs:
 
 ```
-• 20:00:01.439 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.022s,duration:0.022s} Sort
-• 20:00:01.462 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.022s,duration:0.022s} Sort
-• 20:00:01.484 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.022s,duration:0.022s} Sort
-• 20:00:01.507 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.022s,duration:0.022s} Sort
-• 20:00:01.528 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.022s,duration:0.022s} Sort
-• 20:00:01.550 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.022s,duration:0.021s} Sort
-• 20:00:01.570 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.021s,duration:0.020s} Sort
-• 20:00:01.591 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.021s,duration:0.020s} Sort
-• 20:00:01.611 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.021s,duration:0.020s} Sort
-• 20:00:01.632 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.021s,duration:0.020s} Sort
+• 20:00:01.439 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.022s,duration:0.022s} sorting
+• 20:00:01.462 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.022s,duration:0.022s} sorting
+• 20:00:01.484 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.022s,duration:0.022s} sorting
+• 20:00:01.507 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.022s,duration:0.022s} sorting
+• 20:00:01.528 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.022s,duration:0.022s} sorting
+• 20:00:01.550 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.022s,duration:0.021s} sorting
+• 20:00:01.570 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.021s,duration:0.020s} sorting
+• 20:00:01.591 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.021s,duration:0.020s} sorting
+• 20:00:01.611 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.021s,duration:0.020s} sorting
+• 20:00:01.632 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.021s,duration:0.020s} sorting
 ```
 
 Where:
- - `Sort` - a name of the interval
- - `duration` - the current time duration
- - `average` - an average time duration
+- `average` - Average time duration of all intervals.
+- `duration` - The current time duration of the current interval.
+- `sorting` - Name of the interval.
 
 You can also get the current interval's duration and all its statistics programatically:
 
@@ -1010,13 +1010,13 @@ let interval = logger.interval("signpost") {
     ...
 }
 
-print(interval.duration)
+print(interval.duration) // The current duration
 
-print(interval.statistics.count)
-print(interval.statistics.total)
-print(interval.statistics.min)
-print(interval.statistics.max)
-print(interval.statistics.average)
+print(interval.statistics.count) // Total count of calls
+print(interval.statistics.total) // Total time of all durations
+print(interval.statistics.min) // Min duration
+print(interval.statistics.max) // Max duration
+print(interval.statistics.average) // Average duraton
 ```
 
 To measure asynchronous tasks you can use `begin` and `end` methods:
@@ -1089,8 +1089,8 @@ netLogger.trace("net")
 
 Outputs:
 ```
-• 13:31:43.773 [DLOG] [TRACE] <DLogTests.swift:487> default: { func: test_Config(), thread: { number: 1, name: main } }
-> 13:31:43.775 [NET] [TRACE] net: { queue: com.apple.main-thread }
+• 19:53:11.990 [DLOG] [TRACE] <DLogTests.swift:527> {func:test_review(),thread:{name:main,number:1}} default
+> 19:53:11.991 [NET] [TRACE] {queue:com.apple.main-thread} net
 ```
 
 ## Metadata
@@ -1116,18 +1116,22 @@ Outputs:
 • 19:38:56.402 [DLOG] [LOG] <DLogTests.swift:518> finish
 ```
 
-The same works with category and scope which copies its parent metadata, but this copy can be changed later:
+Where: `(id:12345,process:main)` - key-value pairs of the current metadata.
+
+The same works with category and scope which copy its parent metadata on creation, but this copy can be changed later:
 
 ```swift
 let logger = DLog(metadata: ["id" : 12345])
 logger.log("start")
         
+// Scope
 logger.scope("scope") { scope in
     scope.log("start")
     scope.metadata["id"] = nil // Remove "id" kev-value pair
     scope.log("finish")
 }
 
+// Category
 let category = logger["NET"]
 category.metadata["method"] = "POST"
 category.log("post data")
@@ -1550,11 +1554,9 @@ Outputs:
 
 ```swift
 let filter = Filter { item in
-    let name = "Load"
-    if let scope = item as? LogScope {
-        return scope.text() == name
-    }
-    return item.scope?.text() == name
+    return item.scope?.name == "Load"
+} isScope: { scope in
+    return scope.name == "Load"
 }
 
 let logger = DLog(.textPlain => filter => .stdout)
@@ -1574,12 +1576,11 @@ logger.fault("fault")
 ```
 
 Outputs:
-
 ```
-• 00:19:59.573 [DLOG] ┌ [Load]
-• 00:19:59.573 [DLOG] | [DEBUG] <DLog.swift:27> debug
-• 00:19:59.586 [DLOG] | [ERROR] <DLog.swift:34> error
-• 00:19:59.586 [DLOG] └ [Load] (0.130s)
+• 16:28:50.443 [DLOG] ┌ [Load] 
+• 16:28:50.443 [DLOG] ├ [DEBUG] <DLogTests.swift:528> debug
+• 16:28:50.443 [DLOG] ├ [ERROR] <DLogTests.swift:535> error
+• 16:28:50.443 [DLOG] └ [Load] (0.001s)
 ```
 
 ## `.disabled`
@@ -1683,14 +1684,15 @@ doTest()
 Outputs:
 
 ```
-• 12:20:47.137 [DLOG] [TRACE] <DLog.swift:13> func: doTest(), thread: { number: 1, name: main }
+• 16:42:56.065 [DLOG] [TRACE] <DLogTests.swift:521> {func:doTest(),thread:{name:main,number:1}}
 ```
 
-But you can change it to show a function and queue names:
+But you can change it to show a function and queue names with pretty style:
 
 ```swift
 var config = LogConfig()
 config.traceConfig.options = [.function, .queue]
+config.traceConfig.style = .pretty
 
 let logger = DLog(config: config)
 
@@ -1704,7 +1706,10 @@ doTest()
 Outputs:
 
 ```
-• 12:37:24.101 [DLOG] [TRACE] <DLog.swift:11> func: doTest(), queue: com.apple.main-thread
+• 19:34:31.637 [DLOG] [TRACE] <DLogTests.swift:178> {
+  func : doTest(),
+  queue : com.apple.main-thread
+}
 ```
 
 #### `ThreadConfig`
@@ -1731,8 +1736,8 @@ DispatchQueue.global().async {
 Outputs:
 
 ```
-• 13:01:32.859 [DLOG] [TRACE] <DLog.swift:9> func: doTest(), thread: { number: 1, qos: userInteractive }
-• 13:01:32.910 [DLOG] [TRACE] <DLog.swift:9> func: doTest(), thread: { number: 3, qos: userInitiated }
+• 16:44:54.548 [DLOG] [TRACE] <DLogTests.swift:524> {func:doTest(),thread:{number:1,qos:userInteractive}}
+• 16:44:54.549 [DLOG] [TRACE] <DLogTests.swift:524> {func:doTest(),thread:{number:2,qos:userInitiated}}
 ```
 
 #### `StackConfig`
@@ -1740,13 +1745,14 @@ Outputs:
 The `trace` method can output the call stack backtrace of the current thread at the moment this method was called. To enable this feature you should configure stack view options, style and depth with `stackConfig` property:
 
 ```swift
-var config = LogConfig()
-config.traceConfig.options = [.stack]
-config.traceConfig.stackConfig.options = [.symbols]
-config.traceConfig.stackConfig.style = .column
-config.traceConfig.stackConfig.depth = 3
-
-let logger = DLog(config: config)
+let logger: DLog = {
+    var config = LogConfig()
+    config.traceConfig.options = [.stack]
+    config.traceConfig.stackConfig.options = [.symbols, .frame]
+    config.traceConfig.stackConfig.depth = 3
+    config.traceConfig.style = .pretty
+    return DLog(config: config)
+}()
 
 func third() {
     logger.trace()
@@ -1766,10 +1772,22 @@ first()
 Outputs:
 
 ```
-• 23:06:24.092 [DLOG] [TRACE] <AppDelegate:45> stack: [
-0: { symbols: Test.third() -> () }
-1: { symbols: Test.second() -> () }
-2: { symbols: Test.first() -> () } ]
+• 18:57:05.195 [DLOG] [TRACE] <DLogTests.swift:178> {
+  stack : [
+    {
+      frame : 0,
+      symbols : DLogTests.third() -> ()
+    },
+    {
+      frame : 1,
+      symbols : DLogTests.second() -> ()
+    },
+    {
+      frame : 2,
+      symbols : DLogTests.first() -> ()
+    }
+  ]
+}
 ```
 
 > NOTE: A full call stack backtrace is available in Debug mode only.
@@ -1792,7 +1810,7 @@ logger.interval("signpost") {
 Outputs:
 
 ```
-• 23:26:40.978 [DLOG] [INTERVAL] <DLog.swift:13> signpost: { duration: 3.200s, count: 1, total: 3.200s, min: 3.200s, max: 3.200s, average: 3.200s }
+• 18:59:49.314 [DLOG] [INTERVAL] <DLogTests.swift:177> {average:3.005s,count:1,duration:3.005s,max:3.005s,min:3.005s,total:3.005s} signpost
 ```
 
 ## Objective-C
@@ -1881,7 +1899,7 @@ Outputs:
 
 ``` objective-c
 // Debug messages only
-LogOutput* filter = [LogOutput filter:^BOOL(LogItem* logItem) {
+LogOutput* filter = [LogOutput filterWithItem:^BOOL(LogItem* logItem) {
     return logItem.type == LogTypeDebug;
 }];
 
