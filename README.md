@@ -59,7 +59,7 @@ Where:
 - `23:59:11.710` - timestamp (HH:mm:ss.SSS)
 - `[DLOG]` - category tag ('DLOG' by default)
 - `[LOG]` - log type tag ('LOG', 'TRACE', 'DEBUG' etc.)
-- `<DLog.swift:12>` - location (fileName:line)
+- `<DLog.swift:12>` - location (file:line)
 - `Hello DLog!` - message
 
 You can apply privacy and format options to your logged values:
