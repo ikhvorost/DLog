@@ -1283,7 +1283,7 @@ final class TraceTests: XCTestCase {
             \{
               address : 0x[0-9a-f]+,
               frame : 0,
-              module : DLogTests,
+              module : DLog[^,]+,
               offset : \d+,
               symbols : DLogTests\.TraceTests\.test_trace_stack_depth_all_pretty\(\) -> \(\)
             \}
