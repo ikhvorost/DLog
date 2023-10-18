@@ -32,59 +32,59 @@ import Foundation
 /// a value of generic type in the string interpolations passed to the logger.
 ///
 public class LogStringInterpolation: StringInterpolationProtocol {
-    fileprivate var output = ""
-
-    /// Creates an empty instance ready to be filled with string literal content.
-    public required init(literalCapacity: Int, interpolationCount: Int) {
-        output.reserveCapacity(literalCapacity * 2)
-    }
-
-    /// Appends a literal segment to the interpolation.
-    public func appendLiteral(_ literal: String) {
-        output.append(literal)
-    }
-    
-    /// Defines interpolation for expressions of Any type.
-    public func appendInterpolation(_ value: @autoclosure @escaping () -> Any, privacy: LogPrivacy = .public) {
-        let text = String(describing: value())
-        let masked = privacy.mask(text)
-        output.append(masked)
-    }
-    
-    /// Defines interpolation for expressions of date type.
-    public func appendInterpolation(_ value: @autoclosure @escaping () -> Date, format: LogDateFormatting, privacy: LogPrivacy = .public) {
-        let text = format.string(from: value())
-        let masked = privacy.mask(text)
-        output.append(masked)
-    }
-    
-    /// Defines interpolation for expressions of integer values.
-    public func appendInterpolation<T: BinaryInteger>(_ value: @autoclosure @escaping () -> T, format: LogIntFormatting, privacy: LogPrivacy = .public) {
-        let text = format.string(from: value())
-        let masked = privacy.mask(text)
-        output.append(masked)
-    }
-    
-    /// Defines interpolation for expressions of floating-point values.
-    public func appendInterpolation<T: BinaryFloatingPoint>(_ value: @autoclosure @escaping () -> T, format: LogFloatFormatting, privacy: LogPrivacy = .public) {
-        let text = format.string(from: value())
-        let masked = privacy.mask(text)
-        output.append(masked)
-    }
-    
-    /// Defines interpolation for expressions of boolean values.
-    public func appendInterpolation(_ value: @autoclosure @escaping () -> Bool, format: LogBoolFormatting, privacy: LogPrivacy = .public) {
-        let text = format.string(from: value())
-        let masked = privacy.mask(text)
-        output.append(masked)
-    }
-    
-    /// Defines interpolation for expressions of Data.
-    public func appendInterpolation(_ value: @autoclosure @escaping () -> Data, format: LogDataFormatting, privacy: LogPrivacy = .public) {
-        let text = format.string(from: value())
-        let masked = privacy.mask(text)
-        output.append(masked)
-    }
+  fileprivate var output = ""
+  
+  /// Creates an empty instance ready to be filled with string literal content.
+  public required init(literalCapacity: Int, interpolationCount: Int) {
+    output.reserveCapacity(literalCapacity * 2)
+  }
+  
+  /// Appends a literal segment to the interpolation.
+  public func appendLiteral(_ literal: String) {
+    output.append(literal)
+  }
+  
+  /// Defines interpolation for expressions of Any type.
+  public func appendInterpolation(_ value: @autoclosure @escaping () -> Any, privacy: LogPrivacy = .public) {
+    let text = String(describing: value())
+    let masked = privacy.mask(text)
+    output.append(masked)
+  }
+  
+  /// Defines interpolation for expressions of date type.
+  public func appendInterpolation(_ value: @autoclosure @escaping () -> Date, format: LogDateFormatting, privacy: LogPrivacy = .public) {
+    let text = format.string(from: value())
+    let masked = privacy.mask(text)
+    output.append(masked)
+  }
+  
+  /// Defines interpolation for expressions of integer values.
+  public func appendInterpolation<T: BinaryInteger>(_ value: @autoclosure @escaping () -> T, format: LogIntFormatting, privacy: LogPrivacy = .public) {
+    let text = format.string(from: value())
+    let masked = privacy.mask(text)
+    output.append(masked)
+  }
+  
+  /// Defines interpolation for expressions of floating-point values.
+  public func appendInterpolation<T: BinaryFloatingPoint>(_ value: @autoclosure @escaping () -> T, format: LogFloatFormatting, privacy: LogPrivacy = .public) {
+    let text = format.string(from: value())
+    let masked = privacy.mask(text)
+    output.append(masked)
+  }
+  
+  /// Defines interpolation for expressions of boolean values.
+  public func appendInterpolation(_ value: @autoclosure @escaping () -> Bool, format: LogBoolFormatting, privacy: LogPrivacy = .public) {
+    let text = format.string(from: value())
+    let masked = privacy.mask(text)
+    output.append(masked)
+  }
+  
+  /// Defines interpolation for expressions of Data.
+  public func appendInterpolation(_ value: @autoclosure @escaping () -> Data, format: LogDataFormatting, privacy: LogPrivacy = .public) {
+    let text = format.string(from: value())
+    let masked = privacy.mask(text)
+    output.append(masked)
+  }
 }
 
 /// An object that represents a log message.
@@ -96,47 +96,47 @@ public class LogStringInterpolation: StringInterpolationProtocol {
 /// when you pass a string interpolation to the logger.
 ///
 public class LogMessage: NSObject, ExpressibleByStringLiteral,
-                            ExpressibleByIntegerLiteral,
-                            ExpressibleByFloatLiteral,
-                            ExpressibleByBooleanLiteral,
-                            ExpressibleByArrayLiteral,
-                            ExpressibleByDictionaryLiteral,
-                            ExpressibleByStringInterpolation {
-    let text: String
-    
-    /// Creates an instance initialized to the given string value.
-    @objc
-    public required init(stringLiteral value: String) {
-        text = value
-    }
-    
-    /// Creates an instance initialized to the given integer value.
-    public required init(integerLiteral value: Int) {
-        text = "\(value)"
-    }
-
-    /// Creates an instance initialized to the given float value.
-    public required init(floatLiteral value: Float) {
-        text = "\(value)"
-    }
-                                
-    /// Creates an instance initialized to the given bool value.
-    public required init(booleanLiteral value: Bool) {
-        text = "\(value)"
-    }
-    
-    /// Creates an instance initialized to the given array.
-    public required init(arrayLiteral elements: Any...) {
-        text = "\(elements)"
-    }
-    
-    /// Creates an instance initialized to the given dictionary.
-    public required init(dictionaryLiteral elements: (Any, Any)...) {
-        text = "\(elements)"
-    }
-    
-    /// Creates an instance of a log message from a string interpolation.
-    public required init(stringInterpolation: LogStringInterpolation) {
-        text = stringInterpolation.output
-    }
+                         ExpressibleByIntegerLiteral,
+                         ExpressibleByFloatLiteral,
+                         ExpressibleByBooleanLiteral,
+                         ExpressibleByArrayLiteral,
+                         ExpressibleByDictionaryLiteral,
+                         ExpressibleByStringInterpolation {
+  let text: String
+  
+  /// Creates an instance initialized to the given string value.
+  @objc
+  public required init(stringLiteral value: String) {
+    text = value
+  }
+  
+  /// Creates an instance initialized to the given integer value.
+  public required init(integerLiteral value: Int) {
+    text = "\(value)"
+  }
+  
+  /// Creates an instance initialized to the given float value.
+  public required init(floatLiteral value: Float) {
+    text = "\(value)"
+  }
+  
+  /// Creates an instance initialized to the given bool value.
+  public required init(booleanLiteral value: Bool) {
+    text = "\(value)"
+  }
+  
+  /// Creates an instance initialized to the given array.
+  public required init(arrayLiteral elements: Any...) {
+    text = "\(elements)"
+  }
+  
+  /// Creates an instance initialized to the given dictionary.
+  public required init(dictionaryLiteral elements: (Any, Any)...) {
+    text = "\(elements)"
+  }
+  
+  /// Creates an instance of a log message from a string interpolation.
+  public required init(stringInterpolation: LogStringInterpolation) {
+    text = stringInterpolation.output
+  }
 }

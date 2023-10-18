@@ -28,25 +28,25 @@ import os
 
 
 typealias Swift_Demangle = @convention(c) (_ mangledName: UnsafePointer<UInt8>?,
-                                                       _ mangledNameLength: Int,
-                                                       _ outputBuffer: UnsafeMutablePointer<UInt8>?,
-                                                       _ outputBufferSize: UnsafeMutablePointer<Int>?,
-                                                       _ flags: UInt32) -> UnsafeMutablePointer<Int8>?
+                                           _ mangledNameLength: Int,
+                                           _ outputBuffer: UnsafeMutablePointer<UInt8>?,
+                                           _ outputBufferSize: UnsafeMutablePointer<Int>?,
+                                           _ flags: UInt32) -> UnsafeMutablePointer<Int8>?
 /// Dynamic shared object
 class Dynamic {
-    
-    // Constants
-    static let dso = UnsafeMutableRawPointer(mutating: #dsohandle)
-    private static let RTLD_DEFAULT = UnsafeMutableRawPointer(bitPattern: -2)
-    
-    private static func dynamic<T>(symbol: String) -> T? {
-        guard let sym = dlsym(RTLD_DEFAULT, symbol) else {
-            return nil
-        }
-        return unsafeBitCast(sym, to: T.self)
+  
+  // Constants
+  static let dso = UnsafeMutableRawPointer(mutating: #dsohandle)
+  private static let RTLD_DEFAULT = UnsafeMutableRawPointer(bitPattern: -2)
+  
+  private static func dynamic<T>(symbol: String) -> T? {
+    guard let sym = dlsym(RTLD_DEFAULT, symbol) else {
+      return nil
     }
-   
-    // Functions
-    static let OS_ACTIVITY_CURRENT: os_activity_t? = dynamic(symbol: "_os_activity_current")
-    static let swift_demangle: Swift_Demangle? = dynamic(symbol: "swift_demangle")
+    return unsafeBitCast(sym, to: T.self)
+  }
+  
+  // Functions
+  static let OS_ACTIVITY_CURRENT: os_activity_t? = dynamic(symbol: "_os_activity_current")
+  static let swift_demangle: Swift_Demangle? = dynamic(symbol: "swift_demangle")
 }

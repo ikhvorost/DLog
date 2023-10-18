@@ -29,135 +29,135 @@ import Foundation
 // MARK: - Thread
 
 fileprivate extension QualityOfService {
-	
-	static let names: [QualityOfService : String] = [
-		.userInteractive : "userInteractive",
-		.userInitiated: "userInitiated",
-		.utility: "utility",
-		.background: "background",
-		.default :  "default",
-	]
-	
-	var description: String {
-        precondition(Self.names[self] != nil)
-        return Self.names[self]!
-	}
+  
+  static let names: [QualityOfService : String] = [
+    .userInteractive : "userInteractive",
+    .userInitiated: "userInitiated",
+    .utility: "utility",
+    .background: "background",
+    .default :  "default",
+  ]
+  
+  var description: String {
+    precondition(Self.names[self] != nil)
+    return Self.names[self]!
+  }
 }
 
 fileprivate extension Thread {
-	
-	// <NSThread: 0x100d04870>{number = 1, name = main}
-	static let regexThread = try! NSRegularExpression(pattern: "number = ([0-9]+), name = ([^}]+)")
-	
-    func dict(config: ThreadConfig) -> [String : Any] {
-		var number = ""
-		var name = ""
-		let nsString = description as NSString
-		if let match = Self.regexThread.matches(in: description, options: [], range: NSMakeRange(0, nsString.length)).first,
-		   match.numberOfRanges == 3 {
-			number = nsString.substring(with: match.range(at: 1))
-			name = nsString.substring(with: match.range(at: 2))
-			if name == "(null)" {
-				name = ""
-			}
-		}
-		
-		let items: [(ThreadOptions, String, () -> Any)] = [
-			(.number, "number", { number }),
-			(.name, "name", { name }),
-			(.priority, "priority", { self.threadPriority }),
-			(.qos, "qos", { "\(self.qualityOfService.description)" }),
-			(.stackSize, "stackSize", { "\(ByteCountFormatter.string(fromByteCount: Int64(self.stackSize), countStyle: .memory))" }),
-		]
-		
-        let dict = dictionary(from: items, options: config.options)
-        return dict
-	}
+  
+  // <NSThread: 0x100d04870>{number = 1, name = main}
+  static let regexThread = try! NSRegularExpression(pattern: "number = ([0-9]+), name = ([^}]+)")
+  
+  func dict(config: ThreadConfig) -> [String : Any] {
+    var number = ""
+    var name = ""
+    let nsString = description as NSString
+    if let match = Self.regexThread.matches(in: description, options: [], range: NSMakeRange(0, nsString.length)).first,
+       match.numberOfRanges == 3 {
+      number = nsString.substring(with: match.range(at: 1))
+      name = nsString.substring(with: match.range(at: 2))
+      if name == "(null)" {
+        name = ""
+      }
+    }
+    
+    let items: [(ThreadOptions, String, () -> Any)] = [
+      (.number, "number", { number }),
+      (.name, "name", { name }),
+      (.priority, "priority", { self.threadPriority }),
+      (.qos, "qos", { "\(self.qualityOfService.description)" }),
+      (.stackSize, "stackSize", { "\(ByteCountFormatter.string(fromByteCount: Int64(self.stackSize), countStyle: .memory))" }),
+    ]
+    
+    let dict = dictionary(from: items, options: config.options)
+    return dict
+  }
 }
 
 // MARK: - Stack
 
 fileprivate func demangle(_ mangled: String) -> String? {
-	guard mangled.hasPrefix("$s") else { return nil }
-	
-    if let cString = Dynamic.swift_demangle?(mangled, mangled.count, nil, nil, 0) {
-		defer { cString.deallocate() }
-		return String(cString: cString)
-	}
-	return nil
+  guard mangled.hasPrefix("$s") else { return nil }
+  
+  if let cString = Dynamic.swift_demangle?(mangled, mangled.count, nil, nil, 0) {
+    defer { cString.deallocate() }
+    return String(cString: cString)
+  }
+  return nil
 }
 
 fileprivate func stack(_ addresses: ArraySlice<NSNumber>, config: StackConfig) -> [[String : Any]] {
-    var info = dl_info()
-    
-    return addresses
-        .compactMap { address -> (String, UInt, String, UInt)? in
-            let pointer = UnsafeRawPointer(bitPattern: address.uintValue)
-            guard dladdr(pointer, &info) != 0 else {
-                return nil
-            }
-            
-            let fname = String(validatingUTF8: info.dli_fname)!
-            let module = (fname as NSString).lastPathComponent
-            
-            let sname = String(validatingUTF8: info.dli_sname)!
-            let name = demangle(sname) ?? sname
-            
-            let offset = address.uintValue - UInt(bitPattern: info.dli_saddr)
-            
-            return (module, address.uintValue, name, offset)
-        }
-        .prefix(config.depth > 0 ? config.depth : addresses.count)
-        .enumerated()
-        .map { item in
-            let items: [(StackOptions, String, () -> Any)] = [
-                (.module, "module", { "\(item.element.0)" }),
-                (.address, "address", { String(format:"0x%016llx", item.element.1) }),
-                (.symbols, "symbols", { "\(item.element.2)" }),
-                (.offset, "offset", { "\(item.element.3)" }),
-                (.frame, "frame", { "\(item.offset)" }),
-            ]
-            let dict = dictionary(from: items, options: config.options)
-            return dict
-        }
-}
-
-func traceInfo(text: String?, function: String, addresses: ArraySlice<NSNumber>, traceConfig: TraceConfig) -> String {
-	let items: [(TraceOptions, String, () -> Any)] = [
-		(.function, "func", { function }),
-		(.queue, "queue", { "\(String(cString: __dispatch_queue_get_label(nil)))" }),
-		(.thread, "thread", { Thread.current.dict(config: traceConfig.threadConfig) }),
-		(.stack, "stack", { stack(addresses, config: traceConfig.stackConfig) }),
-	]
-    let dict = dictionary(from: items, options: traceConfig.options)
-    let pretty = traceConfig.style == .pretty
-    return [dict.json(pretty: pretty), text ?? ""].joinedCompact()
-}
-
-extension Array where Element == String {
-    func joinedCompact() -> String {
-        compactMap { $0.isEmpty ? nil : $0 }
-        .joined(separator: " ")
+  var info = dl_info()
+  
+  return addresses
+    .compactMap { address -> (String, UInt, String, UInt)? in
+      let pointer = UnsafeRawPointer(bitPattern: address.uintValue)
+      guard dladdr(pointer, &info) != 0 else {
+        return nil
+      }
+      
+      let fname = String(validatingUTF8: info.dli_fname)!
+      let module = (fname as NSString).lastPathComponent
+      
+      let sname = String(validatingUTF8: info.dli_sname)!
+      let name = demangle(sname) ?? sname
+      
+      let offset = address.uintValue - UInt(bitPattern: info.dli_saddr)
+      
+      return (module, address.uintValue, name, offset)
+    }
+    .prefix(config.depth > 0 ? config.depth : addresses.count)
+    .enumerated()
+    .map { item in
+      let items: [(StackOptions, String, () -> Any)] = [
+        (.module, "module", { "\(item.element.0)" }),
+        (.address, "address", { String(format:"0x%016llx", item.element.1) }),
+        (.symbols, "symbols", { "\(item.element.2)" }),
+        (.offset, "offset", { "\(item.element.3)" }),
+        (.frame, "frame", { "\(item.offset)" }),
+      ]
+      let dict = dictionary(from: items, options: config.options)
+      return dict
     }
 }
 
+func traceInfo(text: String?, function: String, addresses: ArraySlice<NSNumber>, traceConfig: TraceConfig) -> String {
+  let items: [(TraceOptions, String, () -> Any)] = [
+    (.function, "func", { function }),
+    (.queue, "queue", { "\(String(cString: __dispatch_queue_get_label(nil)))" }),
+    (.thread, "thread", { Thread.current.dict(config: traceConfig.threadConfig) }),
+    (.stack, "stack", { stack(addresses, config: traceConfig.stackConfig) }),
+  ]
+  let dict = dictionary(from: items, options: traceConfig.options)
+  let pretty = traceConfig.style == .pretty
+  return [dict.json(pretty: pretty), text ?? ""].joinedCompact()
+}
+
+extension Array where Element == String {
+  func joinedCompact() -> String {
+    compactMap { $0.isEmpty ? nil : $0 }
+      .joined(separator: " ")
+  }
+}
+
 func dictionary<Option: OptionSet>(from items: [(Option, String, () -> Any)], options: Option) -> [String : Any] {
-    let keyValues: [(String, Any)] = items
-        .compactMap {
-            guard options.contains($0.0 as! Option.Element) else {
-                return nil
-            }
-            let key = $0.1
-            let value = $0.2()
-            
-            if let text = value as? String, text.isEmpty {
-                return nil
-            }
-            else if let dict = value as? [String : Any], dict.isEmpty {
-                return nil
-            }
-            
-            return (key, value)
-        }
-    return Dictionary(uniqueKeysWithValues: keyValues)
+  let keyValues: [(String, Any)] = items
+    .compactMap {
+      guard options.contains($0.0 as! Option.Element) else {
+        return nil
+      }
+      let key = $0.1
+      let value = $0.2()
+      
+      if let text = value as? String, text.isEmpty {
+        return nil
+      }
+      else if let dict = value as? [String : Any], dict.isEmpty {
+        return nil
+      }
+      
+      return (key, value)
+    }
+  return Dictionary(uniqueKeysWithValues: keyValues)
 }

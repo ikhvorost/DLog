@@ -29,46 +29,46 @@ import Foundation
 /// A target output that can output text messages to POSIX streams.
 ///
 public class Standard : LogOutput {
-	
-	let stream: UnsafeMutablePointer<FILE>
-	
-	/// Creates `Standard` output object.
-	///
-	/// 	let logger = DLog(Standard())
-	/// 	logger.info("It's standard output")
-	///
-	/// - Parameters:
-	///		- stream: POSIX stream: `Darwin.stdout`, `Darwin.stderr`.
-	///		- source: A source output (defaults to `.textPlain`).
-	///
-	public init(stream: UnsafeMutablePointer<FILE> = Darwin.stdout, source: LogOutput = .textPlain) {
-		self.stream = stream
-		
-		super.init(source: source)
-	}
-	
-	private func echo(_ text: String?) -> String? {
-		if let str = text, !str.isEmpty {
-			fputs(str + "\n", stream)
-		}
-		return text
-	}
-	
-	// MARK: - LogOutput
-	
-	override func log(item: LogItem) -> String? {
-		echo(super.log(item: item))
-	}
-	
-	override func scopeEnter(scope: LogScope) -> String? {
-		echo(super.scopeEnter(scope: scope))
-	}
-	
-	override func scopeLeave(scope: LogScope)  -> String? {
-		echo(super.scopeLeave(scope: scope))
-	}
-	
-	override func intervalEnd(interval: LogInterval) -> String? {
-		echo(super.intervalEnd(interval: interval))
-	}
+  
+  let stream: UnsafeMutablePointer<FILE>
+  
+  /// Creates `Standard` output object.
+  ///
+  /// 	let logger = DLog(Standard())
+  /// 	logger.info("It's standard output")
+  ///
+  /// - Parameters:
+  ///		- stream: POSIX stream: `Darwin.stdout`, `Darwin.stderr`.
+  ///		- source: A source output (defaults to `.textPlain`).
+  ///
+  public init(stream: UnsafeMutablePointer<FILE> = Darwin.stdout, source: LogOutput = .textPlain) {
+    self.stream = stream
+    
+    super.init(source: source)
+  }
+  
+  private func echo(_ text: String?) -> String? {
+    if let str = text, !str.isEmpty {
+      fputs(str + "\n", stream)
+    }
+    return text
+  }
+  
+  // MARK: - LogOutput
+  
+  override func log(item: LogItem) -> String? {
+    echo(super.log(item: item))
+  }
+  
+  override func scopeEnter(scope: LogScope) -> String? {
+    echo(super.scopeEnter(scope: scope))
+  }
+  
+  override func scopeLeave(scope: LogScope)  -> String? {
+    echo(super.scopeLeave(scope: scope))
+  }
+  
+  override func intervalEnd(interval: LogInterval) -> String? {
+    echo(super.intervalEnd(interval: interval))
+  }
 }

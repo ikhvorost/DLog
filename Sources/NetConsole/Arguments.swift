@@ -28,48 +28,48 @@
 import Foundation
 
 class Arguments {
-	private var arguments = [String : String]()
-	
-	init() {
-		var key: String?
-		for param in CommandLine.arguments {
-			if param.hasPrefix("-") {
-				if key != nil {
-					arguments[key!] = ""
-				}
-				
-				key = param
-				
-				// Last
-				if param == CommandLine.arguments.last {
-					arguments[key!] = ""
-				}
-			}
-			else {
-				if key != nil {
-					arguments[key!] = param
-					key = nil
-				}
-			}
-		}
-	}
-	
-	func stringValue(forKeys keys: [String], defaultValue: String) -> String {
-		for key in keys {
-			if let value = arguments[key], !value.isEmpty {
-				return value
-			}
-		}
-		return defaultValue
-	}
-	
-	func boolValue(forKeys keys: [String], defaultValue: Bool = false) -> Bool {
-		for key in keys {
-			if arguments[key] != nil {
-				return true
-			}
-		}
-		return false
-	}
-	
+  private var arguments = [String : String]()
+  
+  init() {
+    var key: String?
+    for param in CommandLine.arguments {
+      if param.hasPrefix("-") {
+        if key != nil {
+          arguments[key!] = ""
+        }
+        
+        key = param
+        
+        // Last
+        if param == CommandLine.arguments.last {
+          arguments[key!] = ""
+        }
+      }
+      else {
+        if key != nil {
+          arguments[key!] = param
+          key = nil
+        }
+      }
+    }
+  }
+  
+  func stringValue(forKeys keys: [String], defaultValue: String) -> String {
+    for key in keys {
+      if let value = arguments[key], !value.isEmpty {
+        return value
+      }
+    }
+    return defaultValue
+  }
+  
+  func boolValue(forKeys keys: [String], defaultValue: Bool = false) -> Bool {
+    for key in keys {
+      if arguments[key] != nil {
+        return true
+      }
+    }
+    return false
+  }
+  
 }

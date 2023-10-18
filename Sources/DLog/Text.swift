@@ -28,81 +28,81 @@ import Foundation
 
 
 private enum ANSIEscapeCode: String {
-	case reset = "\u{001b}[0m"
-	case clear = "\u{001b}c"
-	
-	case bold = "\u{001b}[1m"
-	case dim = "\u{001b}[2m"
-	case underline = "\u{001b}[4m"
-	case blink = "\u{001b}[5m"
-	case reversed = "\u{001b}[7m"
-	
-	// 8 colors
-	case textBlack = "\u{001B}[30m"
-	case textRed = "\u{001B}[31m"
-	case textGreen = "\u{001B}[32m"
-	case textYellow = "\u{001B}[33m"
-	case textBlue = "\u{001B}[34m"
-	case textMagenta = "\u{001B}[35m"
-	case textCyan = "\u{001B}[36m"
-	case textWhite = "\u{001B}[37m"
-	
-	case backgroundBlack = "\u{001b}[40m"
-	case backgroundRed = "\u{001b}[41m"
-	case backgroundGreen = "\u{001b}[42m"
-	case backgroundYellow = "\u{001b}[43m"
-	case backgroundBlue = "\u{001b}[44m"
-	case backgroundMagenta = "\u{001b}[45m"
-	case backgroundCyan = "\u{001b}[46m"
-	case backgroundWhite = "\u{001b}[47m"
+  case reset = "\u{001b}[0m"
+  case clear = "\u{001b}c"
+  
+  case bold = "\u{001b}[1m"
+  case dim = "\u{001b}[2m"
+  case underline = "\u{001b}[4m"
+  case blink = "\u{001b}[5m"
+  case reversed = "\u{001b}[7m"
+  
+  // 8 colors
+  case textBlack = "\u{001B}[30m"
+  case textRed = "\u{001B}[31m"
+  case textGreen = "\u{001B}[32m"
+  case textYellow = "\u{001B}[33m"
+  case textBlue = "\u{001B}[34m"
+  case textMagenta = "\u{001B}[35m"
+  case textCyan = "\u{001B}[36m"
+  case textWhite = "\u{001B}[37m"
+  
+  case backgroundBlack = "\u{001b}[40m"
+  case backgroundRed = "\u{001b}[41m"
+  case backgroundGreen = "\u{001b}[42m"
+  case backgroundYellow = "\u{001b}[43m"
+  case backgroundBlue = "\u{001b}[44m"
+  case backgroundMagenta = "\u{001b}[45m"
+  case backgroundCyan = "\u{001b}[46m"
+  case backgroundWhite = "\u{001b}[47m"
 }
 
 fileprivate extension String {
-	func color(_ codes: [ANSIEscapeCode]) -> String {
-		return codes.map { $0.rawValue }.joined() + self + ANSIEscapeCode.reset.rawValue
-	}
-	
-	func color(_ code: ANSIEscapeCode) -> String {
-		return color([code])
-	}
-	
-	func trimTrailingWhitespace() -> String {
-		replacingOccurrences(of: "\\s+$", with: "", options: .regularExpression)
-	}
+  func color(_ codes: [ANSIEscapeCode]) -> String {
+    return codes.map { $0.rawValue }.joined() + self + ANSIEscapeCode.reset.rawValue
+  }
+  
+  func color(_ code: ANSIEscapeCode) -> String {
+    return color([code])
+  }
+  
+  func trimTrailingWhitespace() -> String {
+    replacingOccurrences(of: "\\s+$", with: "", options: .regularExpression)
+  }
 }
 
 private extension LogType {
-	static let icons: [LogType : String] = [
-		.log : "💬",
-		.trace : "#️⃣",
-		.debug : "▶️",
-		.info : "✅",
-		.warning: "⚠️",
-		.error : "⚠️",
-		.assert : "🅰️",
-		.fault : "🆘",
-		.interval : "🕒",
-	]
-	
-	var icon: String {
-		Self.icons[self]!
-	}
-	
-	static let titles: [LogType : String] = [
-		.log : "LOG",
-		.trace : "TRACE",
-		.debug : "DEBUG",
-		.info : "INFO",
-		.warning : "WARNING",
-		.error : "ERROR",
-		.assert : "ASSERT",
-		.fault : "FAULT",
-		.interval : "INTERVAL",
-	]
-	
-	var title: String {
-		Self.titles[self]!
-	}
+  static let icons: [LogType : String] = [
+    .log : "💬",
+    .trace : "#️⃣",
+    .debug : "▶️",
+    .info : "✅",
+    .warning: "⚠️",
+    .error : "⚠️",
+    .assert : "🅰️",
+    .fault : "🆘",
+    .interval : "🕒",
+  ]
+  
+  var icon: String {
+    Self.icons[self]!
+  }
+  
+  static let titles: [LogType : String] = [
+    .log : "LOG",
+    .trace : "TRACE",
+    .debug : "DEBUG",
+    .info : "INFO",
+    .warning : "WARNING",
+    .error : "ERROR",
+    .assert : "ASSERT",
+    .fault : "FAULT",
+    .interval : "INTERVAL",
+  ]
+  
+  var title: String {
+    Self.titles[self]!
+  }
 }
 
 /// A source output that generates text representation of log messages.
@@ -110,191 +110,191 @@ private extension LogType {
 /// It doesn’t deliver text to any target outputs (stdout, file etc.) and usually other outputs use it.
 ///
 public class Text : LogOutput {
-	
-	private struct Tag {
-		let textColor: ANSIEscapeCode
-		let colors: [ANSIEscapeCode]
-	}
-	
-	private static let tags: [LogType : Tag] = [
-		.log : Tag(textColor: .textWhite, colors: [.backgroundWhite, .textBlack]),
-		.info : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textWhite]),
-		.trace : Tag(textColor: .textCyan, colors: [.backgroundCyan, .textBlack]),
-		.debug : Tag(textColor: .textCyan, colors: [.backgroundCyan, .textBlack]),
-		.warning : Tag(textColor: .textYellow, colors: [.backgroundYellow, .textBlack]),
-		.error : Tag(textColor: .textYellow, colors: [.backgroundYellow, .textBlack]),
-		.fault : Tag(textColor: .textRed, colors: [.backgroundRed, .textWhite, .blink]),
-		.assert : Tag(textColor: .textRed, colors: [.backgroundRed, .textWhite]),
-		.interval : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textBlack]),
-	]
-	
-	/// Style of text to output.
-	public enum Style {
-		/// Universal plain text.
-		case plain
-		
-		/// Text with type icons for info, debug etc. (useful for XCode console).
-		case emoji
-		
-		/// Colored text with ANSI escape codes (useful for Terminal and files).
-		case colored
-	}
-	
-	private let style: Style
-	
-	/// Creates `Text` source output object.
-	///
-	/// 	let logger = DLog(Text(style: .emoji))
-	/// 	logger.info("It's emoji text")
-	///
-	/// - Parameters:
-	///		- style: Style of text to output (defaults to `.plain`).
-	///
-	public init(style: Style = .plain) {
-		self.style = style
-		
-		super.init(source: nil)
-	}
-	
-	private static let dateFormatter: DateFormatter = {
-		let dateFormatter = DateFormatter()
-		dateFormatter.dateFormat = "HH:mm:ss.SSS"
-		return dateFormatter
-	}()
-	
-	private func logPrefix(items: [(LogOptions, () -> String)], options: LogOptions) -> String {
-        items.compactMap {
-            guard options.contains($0.0) else {
-                return nil
-            }
-            let text = $0.1()
-            return text.trimTrailingWhitespace()
+  
+  private struct Tag {
+    let textColor: ANSIEscapeCode
+    let colors: [ANSIEscapeCode]
+  }
+  
+  private static let tags: [LogType : Tag] = [
+    .log : Tag(textColor: .textWhite, colors: [.backgroundWhite, .textBlack]),
+    .info : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textWhite]),
+    .trace : Tag(textColor: .textCyan, colors: [.backgroundCyan, .textBlack]),
+    .debug : Tag(textColor: .textCyan, colors: [.backgroundCyan, .textBlack]),
+    .warning : Tag(textColor: .textYellow, colors: [.backgroundYellow, .textBlack]),
+    .error : Tag(textColor: .textYellow, colors: [.backgroundYellow, .textBlack]),
+    .fault : Tag(textColor: .textRed, colors: [.backgroundRed, .textWhite, .blink]),
+    .assert : Tag(textColor: .textRed, colors: [.backgroundRed, .textWhite]),
+    .interval : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textBlack]),
+  ]
+  
+  /// Style of text to output.
+  public enum Style {
+    /// Universal plain text.
+    case plain
+    
+    /// Text with type icons for info, debug etc. (useful for XCode console).
+    case emoji
+    
+    /// Colored text with ANSI escape codes (useful for Terminal and files).
+    case colored
+  }
+  
+  private let style: Style
+  
+  /// Creates `Text` source output object.
+  ///
+  /// 	let logger = DLog(Text(style: .emoji))
+  /// 	logger.info("It's emoji text")
+  ///
+  /// - Parameters:
+  ///		- style: Style of text to output (defaults to `.plain`).
+  ///
+  public init(style: Style = .plain) {
+    self.style = style
+    
+    super.init(source: nil)
+  }
+  
+  private static let dateFormatter: DateFormatter = {
+    let dateFormatter = DateFormatter()
+    dateFormatter.dateFormat = "HH:mm:ss.SSS"
+    return dateFormatter
+  }()
+  
+  private func logPrefix(items: [(LogOptions, () -> String)], options: LogOptions) -> String {
+    items.compactMap {
+      guard options.contains($0.0) else {
+        return nil
+      }
+      let text = $0.1()
+      return text.trimTrailingWhitespace()
+    }
+    .joinedCompact()
+  }
+  
+  private func textMessage(item: LogItem) -> String {
+    var sign = { "\(item.config.sign)" }
+    var time = { Self.dateFormatter.string(from: item.time) }
+    var level = { String(format: "[%02d]", item.scope?.level ?? 0) }
+    var category = { "[\(item.category)]" }
+    let padding: () -> String = {
+      guard let scope = item.scope, scope.level > 0 else { return "" }
+      return (1...scope.level)
+        .map {
+          ScopeStack.shared.exists(level: $0)
+          ? ($0 == scope.level) ? "├ " : "│ "
+          : "  "
         }
-        .joinedCompact()
-	}
-	
-	private func textMessage(item: LogItem) -> String {
-        var sign = { "\(item.config.sign)" }
-		var time = { Self.dateFormatter.string(from: item.time) }
-		var level = { String(format: "[%02d]", item.scope?.level ?? 0) }
-		var category = { "[\(item.category)]" }
-		let padding: () -> String = {
-            guard let scope = item.scope, scope.level > 0 else { return "" }
-            return (1...scope.level)
-                .map {
-                    ScopeStack.shared.exists(level: $0)
-                        ? ($0 == scope.level) ? "├ " : "│ "
-                        : "  "
-                }
-                .joined()
-		}
-		var type = { "[\(item.type.title)]" }
-		var location = { "<\(item.fileName):\(item.line)>" }
-        var metadata = { item.metadata.json(parenthesis: true) }
-        var text = item.text
-		
-		switch style {
-			case .plain:
-				break
-				
-			case .colored:
-				assert(Self.tags[item.type] != nil)
-				let tag = Self.tags[item.type]!
-				
-                sign = { "\(item.config.sign)".color(.dim) }
-				time = { Self.dateFormatter.string(from: item.time).color(.dim) }
-				level = { String(format: "[%02d]", item.scope?.level ?? 0).color(.dim) }
-				category = { item.category.color(.textBlue) }
-				type = { " \(item.type.title) ".color(tag.colors) }
-				location = { "<\(item.fileName):\(item.line)>".color([.dim, tag.textColor]) }
-                metadata = { item.metadata.json(parenthesis: true).color(.dim) }
-				text = text.color(tag.textColor)
-				
-			case .emoji:
-				type = { "\(item.type.icon) [\(item.type.title)]" }
-		}
-		
-		let items: [(LogOptions, () -> String)] = [
-			(.sign, sign),
-			(.time, time),
-			(.level, level),
-			(.category, category),
-			(.padding, padding),
-			(.type, type),
-			(.location, location),
-            (.metadata, metadata)
-		]
-        let prefix = logPrefix(items: items, options: item.config.options)
-        return [prefix, text].joinedCompact()
-	}
-
-	private func textScope(scope: LogScope) -> String {
-        let start = scope.duration == 0
-		
-        var sign = { "\(scope.config.sign)" }
-		var time = start
-            ? Self.dateFormatter.string(from: scope.time)
-            : Self.dateFormatter.string(from: scope.time.addingTimeInterval(scope.duration))
-		let ms = !start ? "(\(stringFromTimeInterval(scope.duration)))" : nil
-        var category = { "[\(scope.category)]" }
-		var level = { String(format: "[%02d]", scope.level) }
-		let padding: () -> String = {
-            let text = (1..<scope.level)
-                .map { ScopeStack.shared.exists(level: $0) ? "| " : "  " }
-                .joined()
-            return "\(text)\(start ? "┌" : "└")"
-		}
-        var text = "[\(scope.name)] \(ms ?? "")"
-		
-        switch style {
-        case .emoji, .plain:
-            break
-            
-        case .colored:
-            sign = { "\(scope.config.sign)".color(.dim) }
-            time = time.color(.dim)
-            level = { String(format: "[%02d]", scope.level).color(.dim) }
-            category = { scope.category.color(.textBlue) }
-            text = "[\(scope.name.color(.textMagenta))] \((ms ?? "").color(.dim))"
-        }
-	
-		let items: [(LogOptions, () -> String)] = [
-			(.sign, sign),
-			(.time, { time }),
-			(.level, level),
-			(.category, category),
-			(.padding, padding),
-		]
-        let prefix = logPrefix(items: items, options: scope.config.options)
-		return prefix.isEmpty ? text : "\(prefix) \(text)"
-	}
-	
-	// MARK: - LogOutput
-	
-	override func log(item: LogItem) -> String? {
-		super.log(item: item)
-		return textMessage(item: item)
-	}
-	
-	override func scopeEnter(scope: LogScope) -> String? {
-		super.scopeEnter(scope: scope)
-
-		return textScope(scope: scope)
-	}
-	
-	override func scopeLeave(scope: LogScope) -> String? {
-		super.scopeLeave(scope: scope)
-		
-		return textScope(scope: scope)
-	}
-	
-	override func intervalBegin(interval: LogInterval) {
-		super.intervalBegin(interval: interval)
-	}
-	
-	override func intervalEnd(interval: LogInterval) -> String? {
-		super.intervalEnd(interval: interval)
-		
-		return textMessage(item: interval)
-	}
+        .joined()
+    }
+    var type = { "[\(item.type.title)]" }
+    var location = { "<\(item.fileName):\(item.line)>" }
+    var metadata = { item.metadata.json(parenthesis: true) }
+    var text = item.text
+    
+    switch style {
+      case .plain:
+        break
+        
+      case .colored:
+        assert(Self.tags[item.type] != nil)
+        let tag = Self.tags[item.type]!
+        
+        sign = { "\(item.config.sign)".color(.dim) }
+        time = { Self.dateFormatter.string(from: item.time).color(.dim) }
+        level = { String(format: "[%02d]", item.scope?.level ?? 0).color(.dim) }
+        category = { item.category.color(.textBlue) }
+        type = { " \(item.type.title) ".color(tag.colors) }
+        location = { "<\(item.fileName):\(item.line)>".color([.dim, tag.textColor]) }
+        metadata = { item.metadata.json(parenthesis: true).color(.dim) }
+        text = text.color(tag.textColor)
+        
+      case .emoji:
+        type = { "\(item.type.icon) [\(item.type.title)]" }
+    }
+    
+    let items: [(LogOptions, () -> String)] = [
+      (.sign, sign),
+      (.time, time),
+      (.level, level),
+      (.category, category),
+      (.padding, padding),
+      (.type, type),
+      (.location, location),
+      (.metadata, metadata)
+    ]
+    let prefix = logPrefix(items: items, options: item.config.options)
+    return [prefix, text].joinedCompact()
+  }
+  
+  private func textScope(scope: LogScope) -> String {
+    let start = scope.duration == 0
+    
+    var sign = { "\(scope.config.sign)" }
+    var time = start
+    ? Self.dateFormatter.string(from: scope.time)
+    : Self.dateFormatter.string(from: scope.time.addingTimeInterval(scope.duration))
+    let ms = !start ? "(\(stringFromTimeInterval(scope.duration)))" : nil
+    var category = { "[\(scope.category)]" }
+    var level = { String(format: "[%02d]", scope.level) }
+    let padding: () -> String = {
+      let text = (1..<scope.level)
+        .map { ScopeStack.shared.exists(level: $0) ? "| " : "  " }
+        .joined()
+      return "\(text)\(start ? "┌" : "└")"
+    }
+    var text = "[\(scope.name)] \(ms ?? "")"
+    
+    switch style {
+      case .emoji, .plain:
+        break
+        
+      case .colored:
+        sign = { "\(scope.config.sign)".color(.dim) }
+        time = time.color(.dim)
+        level = { String(format: "[%02d]", scope.level).color(.dim) }
+        category = { scope.category.color(.textBlue) }
+        text = "[\(scope.name.color(.textMagenta))] \((ms ?? "").color(.dim))"
+    }
+    
+    let items: [(LogOptions, () -> String)] = [
+      (.sign, sign),
+      (.time, { time }),
+      (.level, level),
+      (.category, category),
+      (.padding, padding),
+    ]
+    let prefix = logPrefix(items: items, options: scope.config.options)
+    return prefix.isEmpty ? text : "\(prefix) \(text)"
+  }
+  
+  // MARK: - LogOutput
+  
+  override func log(item: LogItem) -> String? {
+    super.log(item: item)
+    return textMessage(item: item)
+  }
+  
+  override func scopeEnter(scope: LogScope) -> String? {
+    super.scopeEnter(scope: scope)
+    
+    return textScope(scope: scope)
+  }
+  
+  override func scopeLeave(scope: LogScope) -> String? {
+    super.scopeLeave(scope: scope)
+    
+    return textScope(scope: scope)
+  }
+  
+  override func intervalBegin(interval: LogInterval) {
+    super.intervalBegin(interval: interval)
+  }
+  
+  override func intervalEnd(interval: LogInterval) -> String? {
+    super.intervalEnd(interval: interval)
+    
+    return textMessage(item: interval)
+  }
 }

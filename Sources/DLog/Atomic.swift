@@ -27,27 +27,27 @@ import Foundation
 
 @discardableResult
 func synchronized<T : AnyObject, U>(_ obj: T, closure: () -> U) -> U {
-	objc_sync_enter(obj)
-	defer {
-		objc_sync_exit(obj)
-	}
-	return closure()
+  objc_sync_enter(obj)
+  defer {
+    objc_sync_exit(obj)
+  }
+  return closure()
 }
 
 @propertyWrapper
 public class Atomic<T> {
-	private var value: T
-
-	public init(wrappedValue value: T) {
-		self.value = value
-	}
-
-	public var wrappedValue: T {
-		get {
-			synchronized(self) { value }
-		}
-		set {
-			synchronized(self) { value = newValue }
-		}
-	}
+  private var value: T
+  
+  public init(wrappedValue value: T) {
+    self.value = value
+  }
+  
+  public var wrappedValue: T {
+    get {
+      synchronized(self) { value }
+    }
+    set {
+      synchronized(self) { value = newValue }
+    }
+  }
 }

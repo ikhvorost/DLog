@@ -28,48 +28,48 @@ import Foundation
 /// Middleware output for filtering
 ///
 public class Filter: LogOutput {
-	private let isItem: ((LogItem) -> Bool)?
-    private let isScope: ((LogScope) -> Bool)?
-	
-	/// Initializes a filter output that evaluates using a specified block object.
-	///
-	/// Represents a pipe middleware output that can filter log messages by available fields of an evaluated object.
-	///
-	///		// Logs debug messages only
-	///		let logger = DLog(.textPlain => .filter { $0.type == .debug } => .stdout)
-	///
-	/// - Parameters:
-	/// 	- block: The block is applied to the object to be evaluated.
-	///
-    public init(isItem: ((LogItem) -> Bool)?, isScope: ((LogScope) -> Bool)?) {
-        self.isItem = isItem
-        self.isScope = isScope
-		super.init(source: nil)
-	}
-	
-	// MARK: - LogOutput
-	
-	override func log(item: LogItem) -> String? {
-        let text = super.log(item: item)
-        let included = isItem == nil || isItem?(item) == true
-		return included ? text : nil
-	}
-	
-	override func scopeEnter(scope: LogScope) -> String? {
-		let text = super.scopeEnter(scope: scope)
-        let included = isScope == nil || isScope?(scope) == true
-		return included == true ? text : nil
-	}
-	
-	override func scopeLeave(scope: LogScope) -> String? {
-		let text = super.scopeLeave(scope: scope)
-        let included = isScope == nil || isScope?(scope) == true
-		return included ? text : nil
-	}
-	
-	override func intervalEnd(interval: LogInterval) -> String? {
-		let text = super.intervalEnd(interval: interval)
-        let included = isItem == nil || isItem?(interval) == true
-		return included ? text : nil
-	}
+  private let isItem: ((LogItem) -> Bool)?
+  private let isScope: ((LogScope) -> Bool)?
+  
+  /// Initializes a filter output that evaluates using a specified block object.
+  ///
+  /// Represents a pipe middleware output that can filter log messages by available fields of an evaluated object.
+  ///
+  ///		// Logs debug messages only
+  ///		let logger = DLog(.textPlain => .filter { $0.type == .debug } => .stdout)
+  ///
+  /// - Parameters:
+  /// 	- block: The block is applied to the object to be evaluated.
+  ///
+  public init(isItem: ((LogItem) -> Bool)?, isScope: ((LogScope) -> Bool)?) {
+    self.isItem = isItem
+    self.isScope = isScope
+    super.init(source: nil)
+  }
+  
+  // MARK: - LogOutput
+  
+  override func log(item: LogItem) -> String? {
+    let text = super.log(item: item)
+    let included = isItem == nil || isItem?(item) == true
+    return included ? text : nil
+  }
+  
+  override func scopeEnter(scope: LogScope) -> String? {
+    let text = super.scopeEnter(scope: scope)
+    let included = isScope == nil || isScope?(scope) == true
+    return included == true ? text : nil
+  }
+  
+  override func scopeLeave(scope: LogScope) -> String? {
+    let text = super.scopeLeave(scope: scope)
+    let included = isScope == nil || isScope?(scope) == true
+    return included ? text : nil
+  }
+  
+  override func intervalEnd(interval: LogInterval) -> String? {
+    let text = super.intervalEnd(interval: interval)
+    let included = isItem == nil || isItem?(interval) == true
+    return included ? text : nil
+  }
 }

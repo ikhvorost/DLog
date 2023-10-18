@@ -32,32 +32,32 @@ import Foundation
 ///
 @objc
 public enum LogType : Int {
-	/// The default log level to capture non critical information.
-	case log
-	
-	/// The informational log level to capture information messages and helpful data.
-	case info
-	
-	/// The trace log level to capture the current function name to help in debugging problems during the development.
-	case trace
-	
-	/// The debug log level to capture information that may be useful during development or while troubleshooting a specific problem.
-	case debug
-	
-	/// The warning log level to capture information about things that might result in an error.
-	case warning
-	
-	/// The error log level to report errors.
-	case error
-	
-	/// The assert log level for sanity checks.
-	case assert
-	
-	/// The fault log level to capture system-level or multi-process information when reporting system errors.
-	case fault
-	
-	/// The interval log level.
-	case interval
+  /// The default log level to capture non critical information.
+  case log
+  
+  /// The informational log level to capture information messages and helpful data.
+  case info
+  
+  /// The trace log level to capture the current function name to help in debugging problems during the development.
+  case trace
+  
+  /// The debug log level to capture information that may be useful during development or while troubleshooting a specific problem.
+  case debug
+  
+  /// The warning log level to capture information about things that might result in an error.
+  case warning
+  
+  /// The error log level to report errors.
+  case error
+  
+  /// The assert log level for sanity checks.
+  case assert
+  
+  /// The fault log level to capture system-level or multi-process information when reporting system errors.
+  case fault
+  
+  /// The interval log level.
+  case interval
 }
 
 /// A base log message class that the logger adds to the logs.
@@ -66,48 +66,48 @@ public enum LogType : Int {
 ///
 @objcMembers
 public class LogItem: NSObject {
-    /// The timestamp of this log message.
-    public internal(set) var time = Date()
-	
-	/// The category of this log message.
-    public let category: String
-	
-	/// The scope of this log message.
-    public let scope: LogScope?
-	
-	/// The log level of this log message.
-    public let type: LogType
-	
-	/// The file name this log message originates from.
-    public let fileName: String
-	
-	/// The function name this log message originates from.
-    public let funcName: String
-	
-	/// The line number of code this log message originates from.
-    public let line: UInt
-		
-	private var message: (() -> LogMessage)?
-    
-    /// Text of this log message.
-    public var text: String {
-        return message?().text ?? ""
-    }
-    
-    let config: LogConfig
-    
-    /// Metadata of log message
-    public let metadata: Metadata
-	
-    init(type: LogType, category: String, config: LogConfig, scope: LogScope?, metadata: Metadata, file: String, funcName: String, line: UInt, message: (() -> LogMessage)?) {
-        self.type = type
-        self.category = category
-        self.config = config
-        self.scope = scope
-        self.metadata = metadata
-		self.fileName = (file as NSString).lastPathComponent
-		self.funcName = funcName
-		self.line = line
-		self.message = message
-	}
+  /// The timestamp of this log message.
+  public internal(set) var time = Date()
+  
+  /// The category of this log message.
+  public let category: String
+  
+  /// The scope of this log message.
+  public let scope: LogScope?
+  
+  /// The log level of this log message.
+  public let type: LogType
+  
+  /// The file name this log message originates from.
+  public let fileName: String
+  
+  /// The function name this log message originates from.
+  public let funcName: String
+  
+  /// The line number of code this log message originates from.
+  public let line: UInt
+  
+  private var message: (() -> LogMessage)?
+  
+  /// Text of this log message.
+  public var text: String {
+    return message?().text ?? ""
+  }
+  
+  let config: LogConfig
+  
+  /// Metadata of log message
+  public let metadata: Metadata
+  
+  init(type: LogType, category: String, config: LogConfig, scope: LogScope?, metadata: Metadata, file: String, funcName: String, line: UInt, message: (() -> LogMessage)?) {
+    self.type = type
+    self.category = category
+    self.config = config
+    self.scope = scope
+    self.metadata = metadata
+    self.fileName = (file as NSString).lastPathComponent
+    self.funcName = funcName
+    self.line = line
+    self.message = message
+  }
 }

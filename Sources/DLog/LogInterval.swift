@@ -28,45 +28,45 @@ import os.log
 
 /// Accumulated interval statistics
 public struct IntervalStatistics {
-    /// A number of total calls
-    public var count = 0
-    
-    /// A total time duration of all calls
-    public var total: TimeInterval = 0
-    
-    /// A minimum time duration
-    public var min: TimeInterval = 0
-    
-    /// A maximum time duration
-    public var max: TimeInterval = 0
-    
-    /// An average time duration
-    public var average: TimeInterval = 0
+  /// A number of total calls
+  public var count = 0
+  
+  /// A total time duration of all calls
+  public var total: TimeInterval = 0
+  
+  /// A minimum time duration
+  public var min: TimeInterval = 0
+  
+  /// A maximum time duration
+  public var max: TimeInterval = 0
+  
+  /// An average time duration
+  public var average: TimeInterval = 0
 }
 
 fileprivate class StatisticsStore {
-    static let shared = StatisticsStore()
-    
-    private var intervals = [Int : IntervalStatistics]()
-    
-    subscript(id: Int) -> IntervalStatistics {
-        get {
-            synchronized(self) {
-                if let data = intervals[id] {
-                    return data
-                }
-                let data = IntervalStatistics()
-                intervals[id] = data
-                return data
-            }
+  static let shared = StatisticsStore()
+  
+  private var intervals = [Int : IntervalStatistics]()
+  
+  subscript(id: Int) -> IntervalStatistics {
+    get {
+      synchronized(self) {
+        if let data = intervals[id] {
+          return data
         }
-        
-        set {
-            synchronized(self) {
-                intervals[id] = newValue
-            }
-        }
+        let data = IntervalStatistics()
+        intervals[id] = data
+        return data
+      }
     }
+    
+    set {
+      synchronized(self) {
+        intervals[id] = newValue
+      }
+    }
+  }
 }
 
 /// An object that represents a time interval triggered by the user.
@@ -74,106 +74,106 @@ fileprivate class StatisticsStore {
 /// Interval logs a point of interest in your code as running time statistics for debugging performance.
 ///
 public class LogInterval: LogItem {
-    private let logger: DLog
-	private let id: Int
-    private let name: String
-    @Atomic
-    private var begun = false
+  private let logger: DLog
+  private let id: Int
+  private let name: String
+  @Atomic
+  private var begun = false
+  
+  let staticName: StaticString?
+  
+  // SignpostID
+  @Atomic
+  private var _signpostID: Any? = nil
+  var signpostID: OSSignpostID? {
+    set { _signpostID = newValue }
+    get { _signpostID as? OSSignpostID }
+  }
+  
+  /// A time duration
+  @objc
+  public private(set) var duration: TimeInterval = 0
+  
+  /// Accumulated interval statistics
+  public var statistics: IntervalStatistics { StatisticsStore.shared[id] }
+  
+  /// Text of this log message.
+  public override var text: String {
+    let statistics = self.statistics
+    let items: [(IntervalOptions, String, () -> Any)] = [
+      (.duration, "duration", { stringFromTimeInterval(self.duration) }),
+      (.count, "count", { statistics.count }),
+      (.total, "total", { stringFromTimeInterval(statistics.total) }),
+      (.min, "min", { stringFromTimeInterval(statistics.min) }),
+      (.max, "max", { stringFromTimeInterval(statistics.max) }),
+      (.average, "average", { stringFromTimeInterval(statistics.average) })
+    ]
+    let dict = dictionary(from: items, options: config.intervalConfig.options)
+    let text = [dict.json(), name].joinedCompact()
+    return text
+  }
+  
+  init(logger: DLog, name: String, staticName: StaticString?, category: String, config: LogConfig, scope: LogScope?, metadata: Metadata, file: String, funcName: String, line: UInt) {
+    self.logger = logger
+    self.name = name
+    self.id = "\(file):\(funcName):\(line)".hash
+    self.staticName = staticName
+    super.init(type: .interval, category: category, config: config, scope: scope, metadata: metadata, file: file, funcName: funcName, line: line, message: nil)
+  }
+  
+  /// Start a time interval.
+  ///
+  /// A time interval can be created and then used for logging running time statistics.
+  ///
+  /// 	let logger = DLog()
+  /// 	let interval = logger.interval("Sort")
+  /// 	interval.begin()
+  /// 	...
+  /// 	interval.end()
+  ///
+  @objc
+  public func begin() {
+    guard !begun else { return }
+    begun.toggle()
     
-    let staticName: StaticString?
-	
-    // SignpostID
-	@Atomic
-    private var _signpostID: Any? = nil
-	var signpostID: OSSignpostID? {
-		set { _signpostID = newValue }
-		get { _signpostID as? OSSignpostID }
-	}
+    time = Date()
+    duration = 0
     
-    /// A time duration
-    @objc
-    public private(set) var duration: TimeInterval = 0
+    logger.begin(interval: self)
+  }
+  
+  /// Finish a time interval.
+  ///
+  /// A time interval can be created and then used for logging running time statistics.
+  ///
+  /// 	let logger = DLog()
+  /// 	let interval = logger.interval("Sort")
+  /// 	interval.begin()
+  /// 	...
+  /// 	interval.end()
+  ///
+  @objc
+  public func end() {
+    guard begun else { return }
+    begun.toggle()
     
-    /// Accumulated interval statistics
-    public var statistics: IntervalStatistics { StatisticsStore.shared[id] }
+    duration = -time.timeIntervalSinceNow
+    time = Date()
     
-    /// Text of this log message.
-    public override var text: String {
-        let statistics = self.statistics
-        let items: [(IntervalOptions, String, () -> Any)] = [
-            (.duration, "duration", { stringFromTimeInterval(self.duration) }),
-            (.count, "count", { statistics.count }),
-            (.total, "total", { stringFromTimeInterval(statistics.total) }),
-            (.min, "min", { stringFromTimeInterval(statistics.min) }),
-            (.max, "max", { stringFromTimeInterval(statistics.max) }),
-            (.average, "average", { stringFromTimeInterval(statistics.average) })
-        ]
-        let dict = dictionary(from: items, options: config.intervalConfig.options)
-        let text = [dict.json(), name].joinedCompact()
-        return text
+    // Statistics
+    var record = self.statistics
+    record.count += 1
+    record.total += duration
+    if record.min == 0 || record.min > duration {
+      record.min = duration
     }
-	
-    init(logger: DLog, name: String, staticName: StaticString?, category: String, config: LogConfig, scope: LogScope?, metadata: Metadata, file: String, funcName: String, line: UInt) {
-        self.logger = logger
-        self.name = name
-		self.id = "\(file):\(funcName):\(line)".hash
-		self.staticName = staticName
-        super.init(type: .interval, category: category, config: config, scope: scope, metadata: metadata, file: file, funcName: funcName, line: line, message: nil)
-	}
-
-	/// Start a time interval.
-	///
-	/// A time interval can be created and then used for logging running time statistics.
-	///
-	/// 	let logger = DLog()
-	/// 	let interval = logger.interval("Sort")
-	/// 	interval.begin()
-	/// 	...
-	/// 	interval.end()
-	///
-    @objc
-	public func begin() {
-		guard !begun else { return }
-		begun.toggle()
-	
-		time = Date()
-        duration = 0
-		
-        logger.begin(interval: self)
-	}
-	
-	/// Finish a time interval.
-	///
-	/// A time interval can be created and then used for logging running time statistics.
-	///
-	/// 	let logger = DLog()
-	/// 	let interval = logger.interval("Sort")
-	/// 	interval.begin()
-	/// 	...
-	/// 	interval.end()
-	///
-    @objc
-	public func end() {
-		guard begun else { return }
-		begun.toggle()
-        
-        duration = -time.timeIntervalSinceNow
-        time = Date()
-        
-        // Statistics
-		var record = self.statistics
-        record.count += 1
-        record.total += duration
-        if record.min == 0 || record.min > duration {
-            record.min = duration
-        }
-        if record.max == 0 || record.max < duration {
-            record.max = duration
-        }
-        record.average = record.total / Double(record.count)
-        
-        StatisticsStore.shared[id] = record
-		
-        logger.end(interval: self)
-	}
+    if record.max == 0 || record.max < duration {
+      record.max = duration
+    }
+    record.average = record.total / Double(record.count)
+    
+    StatisticsStore.shared[id] = record
+    
+    logger.end(interval: self)
+  }
 }
