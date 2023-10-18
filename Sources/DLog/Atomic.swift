@@ -35,14 +35,14 @@ func synchronized<T : AnyObject, U>(_ obj: T, closure: () -> U) -> U {
 }
 
 @propertyWrapper
-class Atomic<T> {
+public class Atomic<T> {
 	private var value: T
 
-	init(wrappedValue value: T) {
+	public init(wrappedValue value: T) {
 		self.value = value
 	}
 
-	var wrappedValue: T {
+	public var wrappedValue: T {
 		get {
 			synchronized(self) { value }
 		}

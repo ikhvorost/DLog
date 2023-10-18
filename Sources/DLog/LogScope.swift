@@ -66,7 +66,8 @@ class ScopeStack {
 /// Scope provides a mechanism for grouping log messages.
 ///
 public class LogScope: LogProtocol {
-    var time = Date()
+    @Atomic var time = Date()
+  
     var os_state = os_activity_scope_state_s()
     
     /// A global level in the stack.
@@ -74,7 +75,7 @@ public class LogScope: LogProtocol {
     public internal(set) var level: Int = 0
     
     /// A time duration.
-    public private(set) var duration: TimeInterval = 0
+    @Atomic public private(set) var duration: TimeInterval = 0
     
     /// Scope name.
     @objc
@@ -101,11 +102,9 @@ public class LogScope: LogProtocol {
     ///
     @objc
     public func enter() {
-        ScopeStack.shared.append(self) {
-            time = Date()
-            duration = 0
-            logger.enter(scope: self)
-        }
+      time = Date()
+      duration = 0
+      logger.enter(scope: self)
     }
     
     /// Finish a scope.
@@ -123,9 +122,7 @@ public class LogScope: LogProtocol {
     ///
     @objc
     public func leave() {
-        ScopeStack.shared.remove(self) {
-            duration = -time.timeIntervalSinceNow
-            logger.leave(scope: self)
-        }
+      duration = -time.timeIntervalSinceNow
+      logger.leave(scope: self)
     }
 }

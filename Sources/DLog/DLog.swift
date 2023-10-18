@@ -131,12 +131,16 @@ public class DLog: LogProtocol {
 
 	func enter(scope: LogScope) {
 		guard let out = output else { return }
-        out.scopeEnter(scope: scope)
+    ScopeStack.shared.append(scope) {
+      out.scopeEnter(scope: scope)
+    }
 	}
 
 	func leave(scope: LogScope) {
 		guard let out = output else { return }
-        out.scopeLeave(scope: scope)
+    ScopeStack.shared.remove(scope) {
+      out.scopeLeave(scope: scope)
+    }
 	}
 
 	// Interval

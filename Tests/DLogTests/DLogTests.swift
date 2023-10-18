@@ -1181,6 +1181,19 @@ final class ScopeTests: XCTestCase {
 		scope.leave()
 		XCTAssert(0.25 <= scope.duration)
 	}
+  
+  func test_disabled_category() {
+    let logger = DLog()
+    let category = DLog.disabled
+    
+    category.scope("scope1") { scope1 in
+      scope1.scope("scope2") { scope2 in
+        logger.scope("scope3") { scope3 in
+          XCTAssert(scope3.debug("log")?.match(#"\#(CategoryTag) ├ \#(DebugTag) \#(Location) log"#) == true)
+        }
+      }
+    }
+  }
 }
 
 final class TraceTests: XCTestCase {
