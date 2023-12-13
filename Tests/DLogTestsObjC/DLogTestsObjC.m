@@ -123,21 +123,27 @@ static void testAll(LogProtocol* logger, NSString *category) {
 
 - (void)test_Log {
   let logger = [DLog new];
-  XCTAssertNotNil(logger);
-  
   testAll(logger, nil);
+}
+
+- (void)test_trace_func_params:(LogProtocol *)logger text:(NSString *)text value:(NSInteger)value {
+  XCTAssertNotNil(logger);
+  XCTAssertTrue([logger.trace() match:matchString(nil, @"\\{func:test_trace_func_params,thread:\\{name:main,number:1\\}\\}$")]);
+}
+
+- (void)test_trace_func {
+  let logger = [DLog new];
+  XCTAssertTrue([logger.trace() match:matchString(nil, @"\\{func:test_trace_func,thread:\\{name:main,number:1\\}\\}$")]);
+  [self test_trace_func_params:logger text:@"Hello" value:100];
 }
 
 - (void)test_LogWithOutputs {
   let logger = [[DLog alloc] initWithOutputs:@[]];
-  XCTAssertNotNil(logger);
-  
   XCTAssert([read_stdout(^{ logger.trace(); }) match: @"test_LogWithOutputs"]);
 }
 
 - (void)test_Category {
   let logger = [DLog new];
-  XCTAssertNotNil(logger);
   
   let net = logger[@"NET"];
   XCTAssertNotNil(net);
@@ -147,7 +153,6 @@ static void testAll(LogProtocol* logger, NSString *category) {
 
 - (void)test_Emoji {
   let logger = [[DLog alloc] initWithOutputs:@[LogOutput.textEmoji, LogOutput.stdOut]];
-  XCTAssertNotNil(logger);
   
   XCTAssertTrue([logger.log(@"log") match:@"💬"]);
   XCTAssertTrue([logger.trace() match:@"#️⃣"]);
@@ -169,7 +174,6 @@ static void testAll(LogProtocol* logger, NSString *category) {
 
 - (void)test_scope {
   let logger = [DLog new];
-  XCTAssertNotNil(logger);
   
   var scope = logger.scope(@"Scope 1", ^(LogScope* scope) {
     testAll(scope, nil);
@@ -189,7 +193,6 @@ static void testAll(LogProtocol* logger, NSString *category) {
 
 - (void)test_Interval {
   let logger = [DLog new];
-  XCTAssertNotNil(logger);
   
   let interval = logger.interval(@"interval", ^{
     [NSThread sleep];
@@ -224,8 +227,6 @@ static void testAll(LogProtocol* logger, NSString *category) {
   
   for (LogOutput* output in outputs) {
     let logger = [[DLog alloc] initWithOutputs:@[output]];
-    XCTAssertNotNil(logger);
-    
     logger.debug(@"debug");
   }
   
@@ -252,7 +253,6 @@ static void testAll(LogProtocol* logger, NSString *category) {
   XCTAssertNotNil(filterItem);
   
   let logger = [[DLog alloc] initWithOutputs:@[LogOutput.textPlain, filterItem, filterScope, LogOutput.stdOut]];
-  XCTAssertNotNil(logger);
   
   let scope = logger.scope(@"Scope");
   XCTAssertNotNil(scope);
@@ -266,7 +266,6 @@ static void testAll(LogProtocol* logger, NSString *category) {
 
 - (void)test_Disabled {
   let logger = DLog.disabled;
-  XCTAssertNotNil(logger);
   
   let text = read_stdout(^{
     logger.log(@"log");
@@ -287,7 +286,6 @@ static void testAll(LogProtocol* logger, NSString *category) {
 
 - (void)test_metadata {
   let logger = [DLog new];
-  XCTAssertNotNil(logger);
   
   logger.metadata[@"id"] = @12345;
   XCTAssert([logger.debug(@"debug") match:@"\\(id:12345\\)"]);

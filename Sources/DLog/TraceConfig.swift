@@ -25,6 +25,13 @@
 
 import Foundation
 
+/// Contains configuration values regarding to func info.
+public struct FuncConfig {
+  
+  // Params of a function
+  public var params = false
+}
+
 /// Indicates which info from threads should be used.
 public struct ThreadOptions: OptionSet {
   /// The corresponding value of the raw type.
@@ -146,7 +153,7 @@ public struct TraceConfig {
   public var options: TraceOptions = .compact
   
   /// Configuration of func info
-  //public var funcConfig = FuncConfig()
+  public var funcConfig = FuncConfig()
   
   /// Configuration of thread info
   public var threadConfig = ThreadConfig()

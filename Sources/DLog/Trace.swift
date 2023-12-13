@@ -25,6 +25,29 @@
 
 import Foundation
 
+// MARK: - Func
+
+fileprivate func `func`(function: String, config: FuncConfig) -> String {
+  let isObjC = function.hasPrefix("-[")
+  if isObjC {
+    var funcName = function
+    if let range = funcName.range(of: #"[^\s]+]$"#, options: [.regularExpression]) {
+      funcName = String(function[range].dropLast())
+    }
+    if config.params == false, let index = funcName.firstIndex(of: ":") {
+      funcName = String(funcName[funcName.startIndex..<index])
+    }
+    return funcName
+  }
+  else {
+    if config.params == false {
+      if let range = function.range(of: "[^(]+", options: [.regularExpression]) {
+        return String(function[range])
+      }
+    }
+  }
+  return function
+}
 
 // MARK: - Thread
 
@@ -54,7 +77,8 @@ fileprivate extension Thread {
     var name = ""
     let nsString = description as NSString
     if let match = Self.regexThread.matches(in: description, options: [], range: NSMakeRange(0, nsString.length)).first,
-       match.numberOfRanges == 3 {
+       match.numberOfRanges == 3
+    {
       number = nsString.substring(with: match.range(at: 1))
       name = nsString.substring(with: match.range(at: 2))
       if name == "(null)" {
@@ -124,7 +148,7 @@ fileprivate func stack(_ addresses: ArraySlice<NSNumber>, config: StackConfig) -
 
 func traceInfo(text: String?, function: String, addresses: ArraySlice<NSNumber>, traceConfig: TraceConfig) -> String {
   let items: [(TraceOptions, String, () -> Any)] = [
-    (.function, "func", { function }),
+    (.function, "func", { `func`(function: function, config: traceConfig.funcConfig) }),
     (.queue, "queue", { "\(String(cString: __dispatch_queue_get_label(nil)))" }),
     (.thread, "thread", { Thread.current.dict(config: traceConfig.threadConfig) }),
     (.stack, "stack", { stack(addresses, config: traceConfig.stackConfig) }),
