@@ -84,10 +84,10 @@ public class LogProtocol: NSObject {
                     file: String = #file, function: String = #function, line: UInt = #line,
                     addresses: [NSNumber] = Thread.callStackReturnAddresses) -> String? {
     let msg: () -> LogMessage = {
-      let info = traceInfo(text: message()?.text,
-                           function: function,
-                           addresses: addresses.dropFirst(),
-                           traceConfig: self.config.traceConfig)
+      let info = traceMetadata(text: message()?.text,
+                       function: function,
+                       addresses: addresses.dropFirst(),
+                       traceConfig: self.config.traceConfig)
       return LogMessage(stringLiteral: info)
     }
     return logger.log(message: msg, type: .trace, category: category, config: config, scope: _scope, metadata: metadata.data, file: file, function: function, line: line)
