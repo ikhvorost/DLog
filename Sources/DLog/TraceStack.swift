@@ -35,20 +35,20 @@ public struct StackOptions: OptionSet {
     self.rawValue = rawValue
   }
   
-  /// Module name
-  public static let module = Self(0)
-  
   /// Address
-  public static let address = Self(1)
+  public static let address = Self(0)
   
-  /// Stack symbols
-  public static let symbols = Self(2)
+  /// Frame
+  public static let frame = Self(1)
+  
+  /// Module name
+  public static let module = Self(2)
   
   /// Offset
   public static let offset = Self(3)
   
-  /// Frame
-  public static let frame = Self(4)
+  /// Stack symbols
+  public static let symbols = Self(4)
 }
 
 /// Contains configuration values regarding to stack info
@@ -71,11 +71,10 @@ fileprivate func demangle(_ mangled: String) -> String? {
 }
 
 func stackMetadata(stackAddresses: ArraySlice<NSNumber>, config: StackConfig) -> [Metadata] {
-  var info = dl_info()
-  
-  return stackAddresses
+  stackAddresses
     .compactMap { address -> (String, UInt, String, UInt)? in
       let pointer = UnsafeRawPointer(bitPattern: address.uintValue)
+      var info = dl_info()
       guard dladdr(pointer, &info) != 0 else {
         return nil
       }
@@ -94,13 +93,12 @@ func stackMetadata(stackAddresses: ArraySlice<NSNumber>, config: StackConfig) ->
     .enumerated()
     .map { item in
       let items: [(StackOptions, String, () -> Any)] = [
-        (.module, "module", { "\(item.element.0)" }),
         (.address, "address", { String(format:"0x%016llx", item.element.1) }),
-        (.symbols, "symbols", { "\(item.element.2)" }),
-        (.offset, "offset", { "\(item.element.3)" }),
         (.frame, "frame", { "\(item.offset)" }),
+        (.module, "module", { "\(item.element.0)" }),
+        (.offset, "offset", { "\(item.element.3)" }),
+        (.symbols, "symbols", { "\(item.element.2)" }),
       ]
-      let dict = dictionary(from: items, options: config.options)
-      return dict
+      return Metadata.metadata(from: items, options: config.options)
     }
 }

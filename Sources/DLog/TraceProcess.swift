@@ -36,17 +36,17 @@ public struct ProcessOptions: OptionSet {
     self.rawValue = rawValue
   }
   
-  /// The identifier of the process.
-  public static let pid = Self(0)
+  /// Global unique identifier for the process.
+  public static let guid = Self(0)
   
   /// The name of the process.
   public static let name = Self(1)
   
-  /// Global unique identifier for the process.
-  public static let guid = Self(2)
+  /// The identifier of the process.
+  public static let pid = Self(2)
     
-  /// Compact: `.pid` and `.name`
-  public static let compact: Self = [.pid, .name]
+  /// Compact: `.name` and `.pid`.
+  public static let compact: Self = [.name, .pid]
 }
 
 /// Contains configuration values regarding to a process info.
@@ -58,11 +58,9 @@ public struct ProcessConfig {
 
 func processMetadata(processInfo: ProcessInfo, config: ProcessConfig) -> Metadata {
   let items: [(ProcessOptions, String, () -> Any)] = [
-    (.pid, "pid", { processInfo.processIdentifier }),
-    (.name, "name", { processInfo.processName }),
     (.guid, "guid", { processInfo.globallyUniqueString }),
+    (.name, "name", { processInfo.processName }),
+    (.pid, "pid", { processInfo.processIdentifier }),
   ]
-  
-  let dict = dictionary(from: items, options: config.options)
-  return dict
+  return Metadata.metadata(from: items, options: config.options)
 }

@@ -35,20 +35,20 @@ public struct TraceOptions: OptionSet {
     self.rawValue = rawValue
   }
   
-  /// Process
-  public static let process = Self(0)
+  /// Function
+  public static let function = Self(0)
   
-  /// Thread
-  public static let thread = Self(1)
+  /// Process
+  public static let process = Self(1)
   
   /// Queue
   public static let queue = Self(2)
   
-  /// Function
-  public static let function = Self(3)
-  
   /// Stack
-  public static let stack = Self(4)
+  public static let stack = Self(3)
+  
+  /// Thread
+  public static let thread = Self(4)
 
   /// Compact: `.thread` and `.function`
   public static let compact: Self = [.thread, .function]
@@ -87,45 +87,25 @@ public struct TraceConfig {
   public var stackConfig = StackConfig()
 }
 
-fileprivate func queueLabel() -> String {
-  String(cString: __dispatch_queue_get_label(nil))
+struct TraceInfo {
+  let processInfo = ProcessInfo.processInfo
+  let queueLabel = String(cString: __dispatch_queue_get_label(nil))
+  let stackAddresses = Thread.callStackReturnAddresses.dropFirst(2)
+  let thread = Thread.current
+  let tid: UInt64 = {
+    var value: UInt64 = 0
+    pthread_threadid_np(nil, &value)
+    return value
+  }()
 }
 
-extension Array where Element == String {
-  func joinedCompact() -> String {
-    compactMap { $0.isEmpty ? nil : $0 }
-      .joined(separator: " ")
-  }
-}
-
-func dictionary<Option: OptionSet>(from items: [(Option, String, () -> Any)], options: Option) -> [String : Any] {
-  let keyValues: [(String, Any)] = items
-    .compactMap {
-      guard options.contains($0.0 as! Option.Element) else {
-        return nil
-      }
-      let key = $0.1
-      let value = $0.2()
-      
-      if let text = value as? String, text.isEmpty {
-        return nil
-      }
-      else if let dict = value as? [String : Any], dict.isEmpty {
-        return nil
-      }
-      
-      return (key, value)
-    }
-  return Dictionary(uniqueKeysWithValues: keyValues)
-}
-
-func traceMetadata(function: String, processInfo: ProcessInfo, thread: Thread, stackAddresses: ArraySlice<NSNumber>, traceConfig: TraceConfig) -> Metadata {
+func traceMetadata(function: String, traceInfo: TraceInfo, traceConfig: TraceConfig) -> Metadata {
   let items: [(TraceOptions, String, () -> Any)] = [
-    (.process, "process", { processMetadata(processInfo: processInfo, config: traceConfig.processConfig) }),
-    (.thread, "thread", { threadMetadata(thread: thread, config: traceConfig.threadConfig) }),
-    (.queue, "queue", { queueLabel() }),
     (.function, "func", { funcInfo(function: function, config: traceConfig.funcConfig) }),
-    (.stack, "stack", { stackMetadata(stackAddresses: stackAddresses, config: traceConfig.stackConfig) }),
+    (.process, "process", { processMetadata(processInfo: traceInfo.processInfo, config: traceConfig.processConfig) }),
+    (.queue, "queue", { traceInfo.queueLabel }),
+    (.stack, "stack", { stackMetadata(stackAddresses: traceInfo.stackAddresses, config: traceConfig.stackConfig) }),
+    (.thread, "thread", { threadMetadata(thread: traceInfo.thread, tid: traceInfo.tid, config: traceConfig.threadConfig) }),
   ]
-  return dictionary(from: items, options: traceConfig.options)
+  return Metadata.metadata(from: items, options: traceConfig.options)
 }

@@ -26,6 +26,48 @@
 import Foundation
 import os.log
 
+/// Indicates which info from intervals should be used.
+public struct IntervalOptions: OptionSet {
+  /// The corresponding value of the raw type.
+  public let rawValue: Int
+  
+  /// Creates a new option set from the given raw value.
+  public init(rawValue: Int) {
+    self.rawValue = rawValue
+  }
+  
+  /// Average time duration
+  public static let average = Self(0)
+  
+  /// Number of total calls
+  public static let count = Self(1)
+  
+  /// Time duration
+  public static let duration = Self(2)
+  
+  /// Maximum time duration
+  public static let max = Self(3)
+  
+  /// Minimum time duration
+  public static let min = Self(4)
+  
+  /// Total time duration of all calls
+  public static let total = Self(5)
+  
+  /// Compact: `.duration` and `.average`
+  public static let compact: Self = [.duration, .average]
+  
+  /// Regular: `.duration`, `.average`, `.count` and `.total`
+  public static let regular: Self = [.duration, .average, .count, .total]
+}
+
+/// Contains configuration values regarding to intervals.
+public struct IntervalConfig {
+  
+  /// Set which info from the intervals should be used. Default value is `IntervalOptions.compact`.
+  public var options: IntervalOptions = .compact
+}
+
 /// Accumulated interval statistics
 public struct IntervalStatistics {
   /// A number of total calls
@@ -164,15 +206,14 @@ public class LogInterval: LogItem {
     
     // Metadata
     let items: [(IntervalOptions, String, () -> Any)] = [
-      (.duration, "duration", { stringFromTimeInterval(self.duration) }),
+      (.average, "average", { stringFromTimeInterval(statistics.average) }),
       (.count, "count", { statistics.count }),
-      (.total, "total", { stringFromTimeInterval(statistics.total) }),
-      (.min, "min", { stringFromTimeInterval(statistics.min) }),
+      (.duration, "duration", { stringFromTimeInterval(self.duration) }),
       (.max, "max", { stringFromTimeInterval(statistics.max) }),
-      (.average, "average", { stringFromTimeInterval(statistics.average) })
+      (.min, "min", { stringFromTimeInterval(statistics.min) }),
+      (.total, "total", { stringFromTimeInterval(statistics.total) }),
     ]
-    let dict = dictionary(from: items, options: config.intervalConfig.options)
-    metadata = [_metadata, dict]
+    metadata = [_metadata, Metadata.metadata(from: items, options: config.intervalConfig.options)]
     
     logger.end(interval: self)
   }

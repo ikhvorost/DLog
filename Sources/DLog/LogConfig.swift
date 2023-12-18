@@ -36,52 +36,6 @@ extension OptionSet where RawValue == Int {
   }
 }
 
-// MARK: - IntervalConfig
-
-/// Indicates which info from intervals should be used.
-public struct IntervalOptions: OptionSet {
-  /// The corresponding value of the raw type.
-  public let rawValue: Int
-  
-  /// Creates a new option set from the given raw value.
-  public init(rawValue: Int) {
-    self.rawValue = rawValue
-  }
-  
-  /// Time duration
-  public static let duration = Self(0)
-  
-  /// Number of total calls
-  public static let count = Self(1)
-  
-  /// Total time duration of all calls
-  public static let total = Self(2)
-  
-  /// Minimum time duration
-  public static let min = Self(3)
-  
-  /// Maximum time duration
-  public static let max = Self(4)
-  
-  /// Average time duration∂ß
-  public static let average = Self(5)
-  
-  /// Compact: `.duration` and `.average`
-  public static let compact: Self = [.duration, .average]
-  
-  /// Regular: `.duration`, `.average`, `.count` and `.total`
-  public static let regular: Self = [.duration, .average, .count, .total]
-}
-
-/// Contains configuration values regarding to intervals.
-public struct IntervalConfig {
-  
-  /// Set which info from the intervals should be used. Default value is `IntervalOptions.compact`.
-  public var options: IntervalOptions = .compact
-}
-
-// MARK: - LogConfig
-
 /// Indicates which info from the logger should be used.
 public struct LogOptions: OptionSet {
   /// The corresponding value of the raw type.

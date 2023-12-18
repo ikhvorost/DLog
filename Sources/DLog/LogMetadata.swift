@@ -27,6 +27,32 @@ import Foundation
 public typealias Metadata = [String : Any]
 
 extension Metadata {
+  static func metadata<Option: OptionSet>(from items: [(Option, String, () -> Any)], options: Option) -> Metadata {
+    let keyValues: [(String, Any)] = items
+      .compactMap { (option: Option, key: String, f:() -> Any) in
+        // Option
+        assert(option is Option.Element)
+        guard options.contains(option as! Option.Element) else {
+          return nil
+        }
+        
+        // Key
+        assert(key.isEmpty == false)
+        
+        // Value
+        let value = f()
+        if let text = value as? String, text.isEmpty {
+          return nil
+        }
+        else if let dict = value as? Metadata, dict.isEmpty {
+          return nil
+        }
+        
+        return (key, value)
+      }
+    return Dictionary(uniqueKeysWithValues: keyValues)
+  }
+  
   func json(quotes: Bool = false, pretty: Bool = false) -> String {
     let options: JSONSerialization.WritingOptions = pretty ? [.sortedKeys, .prettyPrinted] : [.sortedKeys]
     guard self.isEmpty == false,

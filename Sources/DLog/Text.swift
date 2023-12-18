@@ -26,6 +26,12 @@
 
 import Foundation
 
+fileprivate extension Array where Element == String {
+  func joinedCompact() -> String {
+    compactMap { $0.isEmpty ? nil : $0 }
+      .joined(separator: " ")
+  }
+}
 
 private enum ANSIEscapeCode: String {
   case reset = "\u{001b}[0m"

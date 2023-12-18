@@ -25,6 +25,41 @@
 
 import Foundation
 
+fileprivate extension QualityOfService {
+  
+  private static let names: [QualityOfService : String] = [
+    .userInteractive : "userInteractive",
+    .userInitiated: "userInitiated",
+    .utility: "utility",
+    .background: "background",
+    .default :  "default",
+  ]
+  
+  var description: String {
+    precondition(Self.names[self] != nil)
+    return Self.names[self]!
+  }
+}
+
+fileprivate extension Thread {
+  
+  private static let regex = try! NSRegularExpression(pattern: #"\{number = ([0-9]+), name = ([^}]+)\}$"#)
+  
+  var info: (name: String, number: String) {
+    var name = ""
+    var number = ""
+    let str = description as NSString
+    if let match = Self.regex.matches(in: description, options: [], range: NSMakeRange(0, str.length)).first, match.numberOfRanges == 3 {
+      number = str.substring(with: match.range(at: 1))
+      name = str.substring(with: match.range(at: 2))
+      if name == "(null)" {
+        name = ""
+      }
+    }
+    return (name, number)
+  }
+}
+
 /// Indicates which info from threads should be used.
 public struct ThreadOptions: OptionSet {
   /// The corresponding value of the raw type.
@@ -35,23 +70,23 @@ public struct ThreadOptions: OptionSet {
     self.rawValue = rawValue
   }
   
-  /// TID
-  public static let tid = Self(0)
+  /// Name
+  public static let name = Self(0)
   
   /// Number
   public static let number = Self(1)
   
-  /// Name (if it exists)
-  public static let name = Self(2)
-  
   /// Priority
-  public static let priority = Self(3)
+  public static let priority = Self(2)
   
   /// QoS
-  public static let qos = Self(4)
+  public static let qos = Self(3)
   
   /// Stack size
-  public static let stackSize = Self(5)
+  public static let stackSize = Self(4)
+  
+  /// TID
+  public static let tid = Self(5)
   
   /// Compact: `.number` and `.name`
   public static let compact: Self = [.number, .name]
@@ -67,53 +102,14 @@ public struct ThreadConfig {
   public var options: ThreadOptions = .compact
 }
 
-fileprivate extension QualityOfService {
-  
-  static let names: [QualityOfService : String] = [
-    .userInteractive : "userInteractive",
-    .userInitiated: "userInitiated",
-    .utility: "utility",
-    .background: "background",
-    .default :  "default",
-  ]
-  
-  var description: String {
-    precondition(Self.names[self] != nil)
-    return Self.names[self]!
-  }
-}
-
-fileprivate let regexThread = try! NSRegularExpression(pattern: "number = ([0-9]+), name = ([^}]+)")
-
-fileprivate func tid() -> UInt64 {
-  var tid: UInt64 = 0
-  pthread_threadid_np(nil, &tid)
-  return tid
-}
-
-func threadMetadata(thread: Thread, config: ThreadConfig) -> Metadata {
-  var number = ""
-  var name = ""
-  let nsString = thread.description as NSString
-  if let match = regexThread.matches(in: thread.description, options: [], range: NSMakeRange(0, nsString.length)).first,
-     match.numberOfRanges == 3
-  {
-    number = nsString.substring(with: match.range(at: 1))
-    name = nsString.substring(with: match.range(at: 2))
-    if name == "(null)" {
-      name = ""
-    }
-  }
-  
+func threadMetadata(thread: Thread, tid: UInt64, config: ThreadConfig) -> Metadata {
   let items: [(ThreadOptions, String, () -> Any)] = [
-    (.tid, "tid", { tid() }),
-    (.number, "number", { number }),
-    (.name, "name", { name }),
+    (.name, "name", { thread.info.name }),
+    (.number, "number", { thread.info.number }),
     (.priority, "priority", { thread.threadPriority }),
     (.qos, "qos", { "\(thread.qualityOfService.description)" }),
     (.stackSize, "stackSize", { "\(ByteCountFormatter.string(fromByteCount: Int64(thread.stackSize), countStyle: .memory))" }),
+    (.tid, "tid", { tid }),
   ]
-  
-  let dict = dictionary(from: items, options: config.options)
-  return dict
+  return Metadata.metadata(from: items, options: config.options)
 }
