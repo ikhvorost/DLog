@@ -139,7 +139,7 @@ static void testAll(LogProtocol* logger, NSString *category) {
 
 - (void)test_LogWithOutputs {
   let logger = [[DLog alloc] initWithOutputs:@[]];
-  XCTAssert([read_stdout(^{ logger.trace(); }) match: @"test_LogWithOutputs"]);
+  XCTAssert([read_stdout(^{ logger.trace(); }) match: @"\\{func:test_LogWithOutputs,"]);
 }
 
 - (void)test_Category {
@@ -166,10 +166,10 @@ static void testAll(LogProtocol* logger, NSString *category) {
 
 - (void)test_stdOutErr {
   let logOut = [[DLog alloc] initWithOutputs:@[LogOutput.textPlain, LogOutput.stdOut]];
-  XCTAssert([read_stdout(^{ logOut.trace(); }) match: @"test_stdOutErr"]);
+  XCTAssert([read_stdout(^{ logOut.trace(); }) match: @"\\{func:test_stdOutErr,"]);
   
   let logErr = [[DLog alloc] initWithOutputs:@[LogOutput.textPlain, LogOutput.stdErr]];
-  XCTAssert([read_stderr(^{ logErr.trace(); }) match: @"test_stdOutErr"]);
+  XCTAssert([read_stderr(^{ logErr.trace(); }) match: @"\\{func:test_stdOutErr,"]);
 }
 
 - (void)test_scope {

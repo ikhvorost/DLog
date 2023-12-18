@@ -37,7 +37,7 @@ func funcInfo(function: String, config: FuncConfig) -> String {
   let isObjC = function.hasPrefix("-[")
   if isObjC {
     var funcName = function
-    if let range = funcName.range(of: #"[^\s]+]$"#, options: [.regularExpression]) {
+    if let range = funcName.range(of: #"[^\s]+\]"#, options: [.regularExpression]) {
       funcName = String(function[range].dropLast())
     }
     if config.params == false, let index = funcName.firstIndex(of: ":") {
@@ -47,7 +47,7 @@ func funcInfo(function: String, config: FuncConfig) -> String {
   }
   else {
     if config.params == false {
-      if let range = function.range(of: "[^(]+", options: [.regularExpression]) {
+      if let range = function.range(of: #"^[^\(]+"#, options: [.regularExpression]) {
         return String(function[range])
       }
     }
