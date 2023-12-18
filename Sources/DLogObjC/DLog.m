@@ -9,8 +9,8 @@
 }
 
 - (TraceBlock)trace {
-  return ^(NSString* text, NSString* file, NSString* func, NSUInteger line, NSArray<NSNumber*>* addresses){
-    return [self trace:^{ return [[LogMessage alloc] initWithStringLiteral:text]; } file:file function:func line:line addresses:addresses];
+  return ^(NSString* text, NSString* file, NSString* func, NSUInteger line){
+    return [self trace:^{ return [[LogMessage alloc] initWithStringLiteral:text]; } file:file function:func line:line];
   };
 }
 

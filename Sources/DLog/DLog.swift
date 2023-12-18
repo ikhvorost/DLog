@@ -155,7 +155,7 @@ public class DLog: LogProtocol {
     out.intervalEnd(interval: interval)
   }
   
-  func log(message: @escaping () -> LogMessage, type: LogType, category: String, config: LogConfig, scope: LogScope?, metadata: Metadata, file: String, function: String, line: UInt) -> String? {
+  func log(message: @escaping () -> LogMessage, type: LogType, category: String, config: LogConfig, scope: LogScope?, metadata: @autoclosure @escaping () -> [Metadata], file: String, function: String, line: UInt) -> String? {
     guard let out = output else { return nil }
     let item = LogItem(type: type, category: category, config: config, scope: scope, metadata: metadata, file: file, funcName: function, line: line, message: message)
     return out.log(item: item)

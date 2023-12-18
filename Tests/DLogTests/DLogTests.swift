@@ -331,7 +331,7 @@ final class DLogTests: XCTestCase {
     XCTAssertNotNil(lineLogger.info("info"))
     
     // Text
-    let textLogger = DLog(.textPlain => .filter { $0.text.contains("hello") } => .stdout)
+    let textLogger = DLog(.textPlain => .filter { $0.message.contains("hello") } => .stdout)
     XCTAssertNotNil(textLogger.info("hello world"))
     XCTAssertNotNil(textLogger.debug("hello"))
     XCTAssertNil(textLogger.info("info"))
@@ -364,7 +364,7 @@ final class DLogTests: XCTestCase {
     
     // Metadata
     let metadataLogger = DLog(.textPlain
-                              => .filter { (item: LogItem) in item.metadata["id"] as? Int == 12345 }
+                              => .filter { (item: LogItem) in item.metadata.first?["id"] as? Int == 12345 }
                               => .stdout)
     metadataLogger.metadata["id"] = 12
     XCTAssertNil(metadataLogger.log("load"))
@@ -465,7 +465,11 @@ final class DLogTests: XCTestCase {
     
     let logger = DLog(config: config)
     
-    XCTAssert(logger.trace()?.match(#"\{func:test_ConfigEmpty,thread:\{name:main,number:1\}\}$"#) == true)
+    XCTAssert(logger.trace("trace") == "trace")
+    
+    logger.scope("scope") {
+      XCTAssert($0.trace("trace") == "trace")
+    }
   }
   
   func test_ConfigAll() {
@@ -493,20 +497,20 @@ final class DLogTests: XCTestCase {
     // Trace
     XCTAssert(logger.trace()?.match(#"\#(Sign) \#(Time) \#(CategoryTag) \#(TraceTag) \#(Location) \{func:test_ConfigCategory,thread:\{name:main,number:1\}\}$"#) == true)
     XCTAssert(viewLogger.trace()?.match(#"\#(Sign) \#(Time) \[VIEW\] \#(TraceTag) \#(Location) \{func:test_ConfigCategory,thread:\{name:main,number:1\}\}$"#) == true)
-    XCTAssert(netLogger.trace()?.match(#"> \#(Time) \#(Level) \[NET\] \#(TraceTag) \{queue:com.apple.main-thread\}$"#) == true)
+    XCTAssert(netLogger.trace()?.match(#"> \#(Time) \#(Level) \[NET\] \#(TraceTag)$"#) == true) // No metadata
     
     // Interval
     XCTAssert(read_stdout { logger.interval("signpost") { delay() }}?.match(#"\#(Sign) \#(Time) \#(CategoryTag) \#(IntervalTag) \#(Location) \#(Interval) signpost$"#) == true)
     XCTAssert(read_stdout { viewLogger.interval("signpost") { delay() }}?.match(#"\#(Sign) \#(Time) \[VIEW\] \#(IntervalTag) \#(Location) \#(Interval) signpost$"#) == true)
-    XCTAssert(read_stdout { netLogger.interval("signpost") { delay() }}?.match(#"> \#(Time) \#(Level) \[NET\] \#(IntervalTag) \{total:\#(SECS)\} signpost$"#) == true)
+    XCTAssert(read_stdout { netLogger.interval("signpost") { delay() }}?.match(#"> \#(Time) \#(Level) \[NET\] \#(IntervalTag) signpost$"#) == true) // No metadata
   }
 }
 
 final class MetadataTests: XCTestCase {
   
-  let idText = #"\(id:12345\)"#
-  let nameText = #"\(name:Bob\)"#
-  let idNameText = #"\(id:12345,name:Bob\)"#
+  let idText = #"\{id:12345\}"#
+  let nameText = #"\{name:Bob\}"#
+  let idNameText = #"\{id:12345,name:Bob\}"#
   
   func test_metadata() {
     let logger = DLog()
@@ -1061,16 +1065,6 @@ final class ScopeTests: XCTestCase {
     }
   }
   
-  func test_scope_config_empty() {
-    var config = LogConfig()
-    config.options = []
-    let logger = DLog(config: config)
-    
-    logger.scope("scope") {
-      XCTAssert($0.trace()?.match(#"\{func:test_scope_config_empty,thread:\{name:main,number:1\}\}$"#) == true)
-    }
-  }
-  
   func test_scope_stack() {
     var config = LogConfig()
     config.options = .all
@@ -1208,6 +1202,22 @@ final class TraceTests: XCTestCase {
     XCTAssert(logger.trace("trace")?.match(#"\{func:test_trace_text,thread:\{name:main,number:1\}\} trace$"#) == true)
   }
   
+  func test_trace_process() {
+    var config = LogConfig()
+    config.traceConfig.options = .process
+    let logger = DLog(config: config)
+    XCTAssert(logger.trace()?.match(#"\{process:\{name:[^,]+,pid:\d+\}\}"#) == true)
+  }
+  
+  func test_trace_process_all() {
+    var config = LogConfig()
+    config.traceConfig.options = .process
+    config.traceConfig.processConfig.options = .all
+    
+    let logger = DLog(config: config)
+    XCTAssert(logger.trace()?.match(#"\{process:\{guid:[^,]+,name:[^,]+,pid:\d+\}\}"#) == true)
+  }
+  
   func test_trace_func_only() {
     var config = LogConfig()
     config.traceConfig.options = .function
@@ -1285,7 +1295,7 @@ final class TraceTests: XCTestCase {
     config.traceConfig.options = .thread
     config.traceConfig.threadConfig.options = .all
     let logger = DLog(config: config)
-    XCTAssert(logger.trace()?.match(#"\{thread:\{name:main,number:1,priority:0\.\d,qos:[^,]+,stackSize:\d+ KB\}\}$"#) == true)
+    XCTAssert(logger.trace()?.match(#"\{thread:\{name:main,number:1,priority:0\.\d,qos:[^,]+,stackSize:\d+ KB\,tid:\d+\}\}$"#) == true)
   }
   
   func test_trace_thread_options_empty() {
@@ -1342,6 +1352,6 @@ final class TraceTests: XCTestCase {
     config.traceConfig.options = .all
     let logger = DLog(config: config)
     let text = logger.trace()
-    XCTAssert(text?.match(#"\#(Location) \{func:test_trace_config_all,queue:com\.apple\.main-thread,stack:\[\{symbols:DLogTests\.TraceTests\.test_trace_config_all\(\) -> \(\)\}"#) == true)
+    XCTAssert(text?.match(#"\#(Location) \{func:test_trace_config_all,process:\{name:[^,]+,pid:\d+\},queue:com\.apple\.main-thread,stack:\[\{symbols:DLogTests\.TraceTests\.test_trace_config_all\(\) -> \(\)\}"#) == true)
   }
 }

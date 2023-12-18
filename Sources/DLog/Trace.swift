@@ -25,21 +25,70 @@
 
 import Foundation
 
-fileprivate func queue() -> String {
-  String(cString: __dispatch_queue_get_label(nil))
+/// Indicates which info from the `trace` method should be used.
+public struct TraceOptions: OptionSet {
+  /// The corresponding value of the raw type.
+  public let rawValue: Int
+  
+  /// Creates a new option set from the given raw value.
+  public init(rawValue: Int) {
+    self.rawValue = rawValue
+  }
+  
+  /// Process
+  public static let process = Self(0)
+  
+  /// Thread
+  public static let thread = Self(1)
+  
+  /// Queue
+  public static let queue = Self(2)
+  
+  /// Function
+  public static let function = Self(3)
+  
+  /// Stack
+  public static let stack = Self(4)
+
+  /// Compact: `.thread` and `.function`
+  public static let compact: Self = [.thread, .function]
+  
+  /// Regular: `.thread`, `.queue` and `.function`
+  public static let regular: Self = [.thread, .queue, .function]
 }
 
-func traceMetadata(text: String?, function: String, addresses: ArraySlice<NSNumber>, traceConfig: TraceConfig) -> String {
-  let items: [(TraceOptions, String, () -> Any)] = [
-    (.process, "process", { process(config: traceConfig.processConfig) }),
-    (.thread, "thread", { thread(config: traceConfig.threadConfig) }),
-    (.queue, "queue", { queue() }),
-    (.function, "func", { `func`(function: function, config: traceConfig.funcConfig) }),
-    (.stack, "stack", { stack(addresses, config: traceConfig.stackConfig) }),
-  ]
-  let dict = dictionary(from: items, options: traceConfig.options)
-  let pretty = traceConfig.style == .pretty
-  return [dict.json(pretty: pretty), text ?? ""].joinedCompact()
+/// Trace view style
+public enum TraceViewStyle {
+  /// Flat view
+  case flat
+  
+  /// Pretty view
+  case pretty
+}
+
+/// Contains configuration values regarding to the `trace` method.
+public struct TraceConfig {
+  /// View style
+  public var style: TraceViewStyle = .flat
+  
+  /// Set which info from the `trace` method should be used. Default value is `TraceOptions.compact`.
+  public var options: TraceOptions = .compact
+  
+  /// Configuration of process info
+  public var processConfig = ProcessConfig()
+  
+  /// Configuration of func info
+  public var funcConfig = FuncConfig()
+  
+  /// Configuration of thread info
+  public var threadConfig = ThreadConfig()
+  
+  /// Configuration of stack info
+  public var stackConfig = StackConfig()
+}
+
+fileprivate func queueLabel() -> String {
+  String(cString: __dispatch_queue_get_label(nil))
 }
 
 extension Array where Element == String {
@@ -68,4 +117,15 @@ func dictionary<Option: OptionSet>(from items: [(Option, String, () -> Any)], op
       return (key, value)
     }
   return Dictionary(uniqueKeysWithValues: keyValues)
+}
+
+func traceMetadata(function: String, processInfo: ProcessInfo, thread: Thread, stackAddresses: ArraySlice<NSNumber>, traceConfig: TraceConfig) -> Metadata {
+  let items: [(TraceOptions, String, () -> Any)] = [
+    (.process, "process", { processMetadata(processInfo: processInfo, config: traceConfig.processConfig) }),
+    (.thread, "thread", { threadMetadata(thread: thread, config: traceConfig.threadConfig) }),
+    (.queue, "queue", { queueLabel() }),
+    (.function, "func", { funcInfo(function: function, config: traceConfig.funcConfig) }),
+    (.stack, "stack", { stackMetadata(stackAddresses: stackAddresses, config: traceConfig.stackConfig) }),
+  ]
+  return dictionary(from: items, options: traceConfig.options)
 }

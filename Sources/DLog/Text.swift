@@ -178,7 +178,7 @@ public class Text : LogOutput {
     var time = { Self.dateFormatter.string(from: item.time) }
     var level = { String(format: "[%02d]", item.scope?.level ?? 0) }
     var category = { "[\(item.category)]" }
-    let padding: () -> String = {
+    let padding = {
       guard let scope = item.scope, scope.level > 0 else { return "" }
       return (1...scope.level)
         .map {
@@ -190,8 +190,17 @@ public class Text : LogOutput {
     }
     var type = { "[\(item.type.title)]" }
     var location = { "<\(item.fileName):\(item.line)>" }
-    var metadata = { item.metadata.json(parenthesis: true) }
-    var text = item.text
+    var metadata = {
+      item.metadata
+        .filter { $0.isEmpty == false }
+        .map {
+          let pretty = item.type == .trace && item.config.traceConfig.style == .pretty
+          return $0.json(pretty: pretty)
+        }
+        .joined(separator: " ")
+    }
+    
+    var message = item.message
     
     switch style {
       case .plain:
@@ -201,14 +210,25 @@ public class Text : LogOutput {
         assert(Self.tags[item.type] != nil)
         let tag = Self.tags[item.type]!
         
-        sign = { "\(item.config.sign)".color(.dim) }
-        time = { Self.dateFormatter.string(from: item.time).color(.dim) }
-        level = { String(format: "[%02d]", item.scope?.level ?? 0).color(.dim) }
+        let s = sign
+        sign = { s().color(.dim) }
+        
+        let t = time
+        time = { t().color(.dim) }
+        
+        let l = level
+        level = { l().color(.dim) }
+        
         category = { item.category.color(.textBlue) }
         type = { " \(item.type.title) ".color(tag.colors) }
-        location = { "<\(item.fileName):\(item.line)>".color([.dim, tag.textColor]) }
-        metadata = { item.metadata.json(parenthesis: true).color(.dim) }
-        text = text.color(tag.textColor)
+        
+        let loc = location
+        location = { loc().color([.dim, tag.textColor]) }
+        
+        let m = metadata
+        metadata = { m().color(.dim) }
+        
+        message = message.color(tag.textColor)
         
       case .emoji:
         type = { "\(item.type.icon) [\(item.type.title)]" }
@@ -225,7 +245,7 @@ public class Text : LogOutput {
       (.metadata, metadata)
     ]
     let prefix = logPrefix(items: items, options: item.config.options)
-    return [prefix, text].joinedCompact()
+    return [prefix, message].joinedCompact()
   }
   
   private func textScope(scope: LogScope) -> String {

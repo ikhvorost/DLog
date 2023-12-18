@@ -243,7 +243,7 @@ static void testAll(LogProtocol* logger, NSString *category) {
     [logItem.fileName isEqualToString:@"DLogTestsObjC.m"] &&
     [logItem.funcName isEqualToString:@"-[DLogTestsObjC test_filter]"] &&
     (logItem.line > __LINE__) &&
-    [logItem.text isEqualToString:@"debug"];
+    [logItem.message isEqualToString:@"debug"];
   }];
   
   let filterScope = [LogOutput filterWithScope:^BOOL(LogScope* scope) {
@@ -288,30 +288,30 @@ static void testAll(LogProtocol* logger, NSString *category) {
   let logger = [DLog new];
   
   logger.metadata[@"id"] = @12345;
-  XCTAssert([logger.debug(@"debug") match:@"\\(id:12345\\)"]);
+  XCTAssert([logger.debug(@"debug") match:@"\\{id:12345\\}"]);
   
   logger.metadata[@"id"] = nil;
   logger.metadata[@"name"] = @"Bob";
-  XCTAssert([logger.debug(@"debug") match:@"\\(name:Bob\\)"]);
+  XCTAssert([logger.debug(@"debug") match:@"\\{name:Bob\\}"]);
   
   // Category
   let net = logger[@"NET"];
-  XCTAssert([net.debug(@"debug") match:@"\\(name:Bob\\)"]);
+  XCTAssert([net.debug(@"debug") match:@"\\{name:Bob\\}"]);
   [net.metadata clear];
-  XCTAssert([net.debug(@"debug") match:@"\\(name:Bob\\)"] == NO);
+  XCTAssert([net.debug(@"debug") match:@"\\{name:Bob\\}"] == NO);
   
-  XCTAssert([logger.debug(@"debug") match:@"\\(name:Bob\\)"]);
+  XCTAssert([logger.debug(@"debug") match:@"\\{name:Bob\\}"]);
   
   // Scope
   var scope = logger.scope(@"Scope", ^(LogScope* scope) {
-    XCTAssert([scope.debug(@"debug") match:@"\\(name:Bob\\)"]);
+    XCTAssert([scope.debug(@"debug") match:@"\\{name:Bob\\}"]);
     scope.metadata[@"name"] = nil;
-    XCTAssert([scope.debug(@"debug") match:@"\\(name:Bob\\)"] == NO);
+    XCTAssert([scope.debug(@"debug") match:@"\\{name:Bob\\}"] == NO);
     scope.metadata[@"id"] = @12345;
-    XCTAssert([scope.debug(@"debug") match:@"\\(id:12345\\)"]);
+    XCTAssert([scope.debug(@"debug") match:@"\\{id:12345\\}"]);
   });
   
-  XCTAssert([logger.debug(@"debug") match:@"\\(name:Bob\\)"]);
+  XCTAssert([logger.debug(@"debug") match:@"\\{name:Bob\\}"]);
 }
 
 @end

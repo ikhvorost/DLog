@@ -77,6 +77,7 @@ public class LogInterval: LogItem {
   private let logger: DLog
   private let id: Int
   private let name: String
+  private let _metadata: Metadata
   @Atomic
   private var begun = false
   
@@ -97,28 +98,15 @@ public class LogInterval: LogItem {
   /// Accumulated interval statistics
   public var statistics: IntervalStatistics { StatisticsStore.shared[id] }
   
-  /// Text of this log message.
-  public override var text: String {
-    let statistics = self.statistics
-    let items: [(IntervalOptions, String, () -> Any)] = [
-      (.duration, "duration", { stringFromTimeInterval(self.duration) }),
-      (.count, "count", { statistics.count }),
-      (.total, "total", { stringFromTimeInterval(statistics.total) }),
-      (.min, "min", { stringFromTimeInterval(statistics.min) }),
-      (.max, "max", { stringFromTimeInterval(statistics.max) }),
-      (.average, "average", { stringFromTimeInterval(statistics.average) })
-    ]
-    let dict = dictionary(from: items, options: config.intervalConfig.options)
-    let text = [dict.json(), name].joinedCompact()
-    return text
-  }
-  
   init(logger: DLog, name: String, staticName: StaticString?, category: String, config: LogConfig, scope: LogScope?, metadata: Metadata, file: String, funcName: String, line: UInt) {
     self.logger = logger
     self.name = name
     self.id = "\(file):\(funcName):\(line)".hash
     self.staticName = staticName
-    super.init(type: .interval, category: category, config: config, scope: scope, metadata: metadata, file: file, funcName: funcName, line: line, message: nil)
+    self._metadata = metadata
+    
+    let message = { LogMessage(stringLiteral: name) }
+    super.init(type: .interval, category: category, config: config, scope: scope, metadata: {[metadata]}, file: file, funcName: funcName, line: line, message: message)
   }
   
   /// Start a time interval.
@@ -161,18 +149,30 @@ public class LogInterval: LogItem {
     time = Date()
     
     // Statistics
-    var record = self.statistics
-    record.count += 1
-    record.total += duration
-    if record.min == 0 || record.min > duration {
-      record.min = duration
+    var statistics = self.statistics
+    statistics.count += 1
+    statistics.total += duration
+    if statistics.min == 0 || statistics.min > duration {
+      statistics.min = duration
     }
-    if record.max == 0 || record.max < duration {
-      record.max = duration
+    if statistics.max == 0 || statistics.max < duration {
+      statistics.max = duration
     }
-    record.average = record.total / Double(record.count)
+    statistics.average = statistics.total / Double(statistics.count)
     
-    StatisticsStore.shared[id] = record
+    StatisticsStore.shared[id] = statistics
+    
+    // Metadata
+    let items: [(IntervalOptions, String, () -> Any)] = [
+      (.duration, "duration", { stringFromTimeInterval(self.duration) }),
+      (.count, "count", { statistics.count }),
+      (.total, "total", { stringFromTimeInterval(statistics.total) }),
+      (.min, "min", { stringFromTimeInterval(statistics.min) }),
+      (.max, "max", { stringFromTimeInterval(statistics.max) }),
+      (.average, "average", { stringFromTimeInterval(statistics.average) })
+    ]
+    let dict = dictionary(from: items, options: config.intervalConfig.options)
+    metadata = [_metadata, dict]
     
     logger.end(interval: self)
   }

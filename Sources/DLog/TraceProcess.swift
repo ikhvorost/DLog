@@ -56,13 +56,11 @@ public struct ProcessConfig {
   public var options: ProcessOptions = .compact
 }
 
-func process(config: ProcessConfig) -> [String : Any] {
-  let process = ProcessInfo()
-  
+func processMetadata(processInfo: ProcessInfo, config: ProcessConfig) -> Metadata {
   let items: [(ProcessOptions, String, () -> Any)] = [
-    (.pid, "pid", { process.processIdentifier }),
-    (.name, "name", { process.processName }),
-    (.guid, "guid", { process.globallyUniqueString }),
+    (.pid, "pid", { processInfo.processIdentifier }),
+    (.name, "name", { processInfo.processName }),
+    (.guid, "guid", { processInfo.globallyUniqueString }),
   ]
   
   let dict = dictionary(from: items, options: config.options)

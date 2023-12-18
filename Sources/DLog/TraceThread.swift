@@ -91,9 +91,7 @@ fileprivate func tid() -> UInt64 {
   return tid
 }
 
-func thread(config: ThreadConfig) -> [String : Any] {
-  let thread = Thread.current
-  
+func threadMetadata(thread: Thread, config: ThreadConfig) -> Metadata {
   var number = ""
   var name = ""
   let nsString = thread.description as NSString

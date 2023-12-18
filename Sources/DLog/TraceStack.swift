@@ -70,10 +70,10 @@ fileprivate func demangle(_ mangled: String) -> String? {
   return nil
 }
 
-func stack(_ addresses: ArraySlice<NSNumber>, config: StackConfig) -> [[String : Any]] {
+func stackMetadata(stackAddresses: ArraySlice<NSNumber>, config: StackConfig) -> [Metadata] {
   var info = dl_info()
   
-  return addresses
+  return stackAddresses
     .compactMap { address -> (String, UInt, String, UInt)? in
       let pointer = UnsafeRawPointer(bitPattern: address.uintValue)
       guard dladdr(pointer, &info) != 0 else {
@@ -90,7 +90,7 @@ func stack(_ addresses: ArraySlice<NSNumber>, config: StackConfig) -> [[String :
       
       return (module, address.uintValue, name, offset)
     }
-    .prefix(config.depth > 0 ? config.depth : addresses.count)
+    .prefix(config.depth > 0 ? config.depth : stackAddresses.count)
     .enumerated()
     .map { item in
       let items: [(StackOptions, String, () -> Any)] = [

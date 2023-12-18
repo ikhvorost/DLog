@@ -87,27 +87,25 @@ public class LogItem: NSObject {
   /// The line number of code this log message originates from.
   public let line: UInt
   
-  private var message: (() -> LogMessage)?
-  
+  private let _message: () -> LogMessage
   /// Text of this log message.
-  public var text: String {
-    return message?().text ?? ""
-  }
+  public lazy var message: String = { _message().text }()
   
   let config: LogConfig
   
+  private let _metadata: () -> [Metadata]
   /// Metadata of log message
-  public let metadata: Metadata
+  public lazy var metadata: [Metadata] = { _metadata() }()
   
-  init(type: LogType, category: String, config: LogConfig, scope: LogScope?, metadata: Metadata, file: String, funcName: String, line: UInt, message: (() -> LogMessage)?) {
+  init(type: LogType, category: String, config: LogConfig, scope: LogScope?, metadata: @escaping () -> [Metadata], file: String, funcName: String, line: UInt, message: @escaping () -> LogMessage) {
     self.type = type
     self.category = category
     self.config = config
     self.scope = scope
-    self.metadata = metadata
+    self._metadata = metadata
     self.fileName = (file as NSString).lastPathComponent
     self.funcName = funcName
     self.line = line
-    self.message = message
+    self._message = message
   }
 }

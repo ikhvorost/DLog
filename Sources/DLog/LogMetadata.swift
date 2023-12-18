@@ -27,46 +27,42 @@ import Foundation
 public typealias Metadata = [String : Any]
 
 extension Metadata {
-  func json(parenthesis: Bool = false, pretty: Bool = false) -> String {
+  func json(quotes: Bool = false, pretty: Bool = false) -> String {
     let options: JSONSerialization.WritingOptions = pretty ? [.sortedKeys, .prettyPrinted] : [.sortedKeys]
     guard self.isEmpty == false,
           let data = try? JSONSerialization.data(withJSONObject: self, options: options),
           let json = String(data: data, encoding: .utf8) else {
       return ""
     }
-    var result = json
-    if parenthesis {
-      let start = json.index(after: json.startIndex)
-      let end = json.index(before: json.endIndex)
-      result = "(\(json[start..<end]))"
-    }
-    return result.replacingOccurrences(of: "\"", with: "") // Remove quotes
+    return quotes ? json : json.replacingOccurrences(of: "\"", with: "")
   }
 }
 
 /// Contextual metadata
 @objcMembers
 public class LogMetadata: NSObject {
-  var data = Metadata()
+  private var _data = Metadata()
   
   init(data: Metadata = Metadata()) {
-    self.data = data
+    _data = data
+  }
+  
+  var data: Metadata {
+    synchronized(self) { _data }
   }
   
   /// Gets and sets a value by a string key to metadata.
   public subscript(name: String) -> Any? {
     get {
-      synchronized(self) { data[name] }
+      synchronized(self) { _data[name] }
     }
     set {
-      synchronized(self) { data[name] = newValue }
+      synchronized(self) { _data[name] = newValue }
     }
   }
   
   /// Clears metadata
   public func clear() {
-    synchronized(self) {
-      data.removeAll()
-    }
+    synchronized(self) { _data.removeAll() }
   }
 }

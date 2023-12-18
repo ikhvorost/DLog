@@ -11,7 +11,7 @@
 
 #define log(format, ...) log(DLOG_PARAMS(format, ##__VA_ARGS__))
 
-#define trace_2(format, ...) trace(DLOG_PARAMS((format), ##__VA_ARGS__), NSThread.callStackReturnAddresses)
+#define trace_2(format, ...) trace(DLOG_PARAMS((format), ##__VA_ARGS__))
 #define trace_1(format) trace_2(format)
 #define trace_0() trace_1(nil)
 #define trace_x(x,a,b,FUNC, ...)  FUNC
@@ -39,7 +39,7 @@
 
 
 typedef NSString* (^LogBlock)(NSString*, NSString*, NSString*, NSUInteger);
-typedef NSString* (^TraceBlock)(NSString*, NSString*, NSString*, NSUInteger, NSArray<NSNumber*>*);
+typedef NSString* (^TraceBlock)(NSString*, NSString*, NSString*, NSUInteger);
 typedef NSString* (^AssertBlock)(BOOL, NSString*, NSString*, NSString*, NSUInteger);
 typedef LogScope* (^ScopeBlock)(NSString*, NSString*, NSString*, NSUInteger, void (^)(LogScope*));
 typedef LogInterval* (^IntervalBlock)(NSString*, NSString*, NSString*, NSUInteger, void (^)());

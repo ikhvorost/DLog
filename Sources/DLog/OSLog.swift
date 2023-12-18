@@ -92,7 +92,7 @@ public class OSLog : LogOutput {
     
     assert(Self.types[item.type] != nil)
     let type = Self.types[item.type]!
-    os_log("%{public}@ %{public}@", dso: Dynamic.dso, log: log, type: type, location, item.text)
+    os_log("%{public}@ %{public}@", dso: Dynamic.dso, log: log, type: type, location, item.message)
     
     return super.log(item: item)
   }

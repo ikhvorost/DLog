@@ -33,7 +33,7 @@ public struct FuncConfig {
   public var params = false
 }
 
-func `func`(function: String, config: FuncConfig) -> String {
+func funcInfo(function: String, config: FuncConfig) -> String {
   let isObjC = function.hasPrefix("-[")
   if isObjC {
     var funcName = function
