@@ -319,15 +319,15 @@ final class DLogTests: XCTestCase {
     XCTAssertNotNil(typeLogger.debug("debug"))
     
     // File name
-    let fileLogger = DLog(.textPlain => .filter { $0.fileName == "DLogTests.swift" } => .stdout)
+    let fileLogger = DLog(.textPlain => .filter { $0.location.fileName == "DLogTests.swift" } => .stdout)
     XCTAssertNotNil(fileLogger.info("info"))
     
     // Func name
-    let funcLogger = DLog(.textPlain => .filter { $0.funcName == "test_Filter()" } => .stdout)
+    let funcLogger = DLog(.textPlain => .filter { $0.location.function == "test_Filter()" } => .stdout)
     XCTAssertNotNil(funcLogger.info("info"))
     
     // Line
-    let lineLogger = DLog(.textPlain => .filter { $0.line > #line } => .stdout)
+    let lineLogger = DLog(.textPlain => .filter { $0.location.line > #line } => .stdout)
     XCTAssertNotNil(lineLogger.info("info"))
     
     // Text

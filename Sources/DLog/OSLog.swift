@@ -88,7 +88,7 @@ public class OSLog : LogOutput {
   override func log(item: LogItem) -> String? {
     let log = oslog(category: item.category)
     
-    let location = "<\(item.fileName):\(item.line)>"
+    let location = "<\(item.location.fileName):\(item.location.line)>"
     
     assert(Self.types[item.type] != nil)
     let type = Self.types[item.type]!

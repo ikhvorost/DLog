@@ -195,7 +195,7 @@ public class Text : LogOutput {
         .joined()
     }
     var type = { "[\(item.type.title)]" }
-    var location = { "<\(item.fileName):\(item.line)>" }
+    var location = { "<\(item.location.fileName):\(item.location.line)>" }
     var metadata = {
       item.metadata
         .filter { $0.isEmpty == false }

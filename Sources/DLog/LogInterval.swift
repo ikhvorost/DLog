@@ -140,15 +140,15 @@ public class LogInterval: LogItem {
   /// Accumulated interval statistics
   public var statistics: IntervalStatistics { StatisticsStore.shared[id] }
   
-  init(logger: DLog, name: String, staticName: StaticString?, category: String, config: LogConfig, scope: LogScope?, metadata: Metadata, file: String, funcName: String, line: UInt) {
+  init(logger: DLog, name: String, staticName: StaticString?, category: String, config: LogConfig, scope: LogScope?, metadata: Metadata, location: LogLocation) {
     self.logger = logger
     self.name = name
-    self.id = "\(file):\(funcName):\(line)".hash
+    self.id = "\(location.file):\(location.function):\(location.line)".hash
     self.staticName = staticName
     self._metadata = metadata
     
     let message = { LogMessage(stringLiteral: name) }
-    super.init(type: .interval, category: category, config: config, scope: scope, metadata: {[metadata]}, file: file, funcName: funcName, line: line, message: message)
+    super.init(type: .interval, category: category, config: config, scope: scope, metadata: {[metadata]}, location: location, message: message)
   }
   
   /// Start a time interval.

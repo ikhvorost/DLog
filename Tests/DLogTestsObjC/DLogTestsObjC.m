@@ -240,9 +240,9 @@ static void testAll(LogProtocol* logger, NSString *category) {
     [logItem.category isEqualToString:@"DLOG"] &&
     [logItem.scope.name isEqualToString:@"Scope"] &&
     logItem.type == LogTypeDebug &&
-    [logItem.fileName isEqualToString:@"DLogTestsObjC.m"] &&
-    [logItem.funcName isEqualToString:@"-[DLogTestsObjC test_filter]"] &&
-    (logItem.line > __LINE__) &&
+    [logItem.location.fileName isEqualToString:@"DLogTestsObjC.m"] &&
+    [logItem.location.function isEqualToString:@"-[DLogTestsObjC test_filter]"] &&
+    (logItem.location.line > __LINE__) &&
     [logItem.message isEqualToString:@"debug"];
   }];
   

@@ -61,7 +61,7 @@ public class LogProtocol: NSObject {
   ///
   @discardableResult
   public func log(_ message: @escaping @autoclosure () -> LogMessage, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-    return logger.log(message: message, type: .log, category: category, config: config, scope: _scope, metadata: [self.metadata.data], file: file, function: function, line: line)
+    logger.log(message: message, type: .log, category: category, config: config, scope: _scope, metadata: [self.metadata.data], location: LogLocation(file, function, line))
   }
   
   /// Logs trace information to help debug problems during the development of your code.
@@ -88,7 +88,7 @@ public class LogProtocol: NSObject {
         traceMetadata(function: function, traceInfo: traceInfo, traceConfig: self.config.traceConfig)
       ]
     }
-    return logger.log(message: message, type: .trace, category: category, config: config, scope: _scope, metadata: metadata(), file: file, function: function, line: line)
+    return logger.log(message: message, type: .trace, category: category, config: config, scope: _scope, metadata: metadata(), location: LogLocation(file, function, line))
   }
   
   /// Logs a message to help debug problems during the development of your code.
@@ -108,7 +108,7 @@ public class LogProtocol: NSObject {
   ///
   @discardableResult
   public func debug(_ message: @escaping @autoclosure () -> LogMessage, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-    return logger.log(message: message, type: .debug, category: category, config: config, scope: _scope, metadata: [self.metadata.data], file: file, function: function, line: line)
+    return logger.log(message: message, type: .debug, category: category, config: config, scope: _scope, metadata: [self.metadata.data],  location: LogLocation(file, function, line))
   }
   
   /// Logs a message that is helpful, but not essential, to diagnose issues with your code.
@@ -128,7 +128,7 @@ public class LogProtocol: NSObject {
   ///
   @discardableResult
   public func info(_ message: @escaping @autoclosure () -> LogMessage, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-    return logger.log(message: message, type: .info, category: category, config: config, scope: _scope, metadata: [self.metadata.data], file: file, function: function, line: line)
+    return logger.log(message: message, type: .info, category: category, config: config, scope: _scope, metadata: [self.metadata.data], location: LogLocation(file, function, line))
   }
   
   /// Logs a warning that occurred during the execution of your code.
@@ -148,7 +148,7 @@ public class LogProtocol: NSObject {
   ///
   @discardableResult
   public func warning(_ message: @escaping @autoclosure () -> LogMessage, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-    return logger.log(message: message, type: .warning, category: category, config: config, scope: _scope, metadata: [self.metadata.data], file: file, function: function, line: line)
+    return logger.log(message: message, type: .warning, category: category, config: config, scope: _scope, metadata: [self.metadata.data], location: LogLocation(file, function, line))
   }
   
   /// Logs an error that occurred during the execution of your code.
@@ -168,7 +168,7 @@ public class LogProtocol: NSObject {
   ///
   @discardableResult
   public func error(_ message: @escaping @autoclosure () -> LogMessage, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-    return logger.log(message: message, type: .error, category: category, config: config, scope: _scope, metadata: [self.metadata.data], file: file, function: function, line: line)
+    return logger.log(message: message, type: .error, category: category, config: config, scope: _scope, metadata: [self.metadata.data], location: LogLocation(file, function, line))
   }
   
   /// Logs a traditional C-style assert notice with an optional message.
@@ -190,7 +190,7 @@ public class LogProtocol: NSObject {
   @discardableResult
   public func assert(_ condition: @autoclosure () -> Bool, _ message: @escaping @autoclosure () -> LogMessage = "", file: String = #file, function: String = #function, line: UInt = #line) -> String? {
     guard logger != .disabled && !condition()  else { return nil }
-    return logger.log(message: message, type: .assert, category: category, config: config, scope: _scope, metadata: [self.metadata.data], file: file, function: function, line: line)
+    return logger.log(message: message, type: .assert, category: category, config: config, scope: _scope, metadata: [self.metadata.data], location: LogLocation(file, function, line))
   }
   
   /// Logs a bug or fault that occurred during the execution of your code.
@@ -210,7 +210,7 @@ public class LogProtocol: NSObject {
   ///
   @discardableResult
   public func fault(_ message: @escaping @autoclosure () -> LogMessage, file: String = #file, function: String = #function, line: UInt = #line) -> String? {
-    return logger.log(message: message, type: .fault, category: category, config: config, scope: _scope, metadata: [self.metadata.data], file: file, function: function, line: line)
+    return logger.log(message: message, type: .fault, category: category, config: config, scope: _scope, metadata: [self.metadata.data], location: LogLocation(file, function, line))
   }
   
   /// Creates a scope object that can assign log messages to itself.
@@ -243,7 +243,7 @@ public class LogProtocol: NSObject {
   }
   
   private func interval(name: String, staticName: StaticString?, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
-    let interval = LogInterval(logger: logger, name: name, staticName: staticName, category: category, config: config, scope: _scope, metadata: self.metadata.data, file: file, funcName: function, line: line)
+    let interval = LogInterval(logger: logger, name: name, staticName: staticName, category: category, config: config, scope: _scope, metadata: self.metadata.data, location: LogLocation(file, function, line))
     if let block = closure {
       interval.begin()
       block()

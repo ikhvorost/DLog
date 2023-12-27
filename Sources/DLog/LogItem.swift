@@ -26,6 +26,30 @@
 import Foundation
 
 
+/// The location of a log message.
+@objcMembers
+public class LogLocation: NSObject {
+  /// The file path of a log message.
+  public let file: String
+  
+  /// The function name of a log message.
+  public let function: String
+  
+  /// The line number of a log message.
+  public let line: UInt
+  
+  /// The file name of a log message.
+  public lazy var fileName: String = {
+    (file as NSString).lastPathComponent
+  }()
+  
+  init(_ file: String, _ function: String, _ line: UInt) {
+    self.file = file
+    self.function = function
+    self.line = line
+  }
+}
+
 /// Logging levels supported by the logger.
 ///
 /// A log type controls the conditions under which a message should be logged.
@@ -78,14 +102,8 @@ public class LogItem: NSObject {
   /// The log level of this log message.
   public let type: LogType
   
-  /// The file name this log message originates from.
-  public let fileName: String
-  
-  /// The function name this log message originates from.
-  public let funcName: String
-  
-  /// The line number of code this log message originates from.
-  public let line: UInt
+  /// The location of a log message.
+  public let location: LogLocation
   
   private let _message: () -> LogMessage
   /// Text of this log message.
@@ -97,15 +115,13 @@ public class LogItem: NSObject {
   /// Metadata of log message
   public lazy var metadata: [Metadata] = { _metadata() }()
   
-  init(type: LogType, category: String, config: LogConfig, scope: LogScope?, metadata: @escaping () -> [Metadata], file: String, funcName: String, line: UInt, message: @escaping () -> LogMessage) {
+  init(type: LogType, category: String, config: LogConfig, scope: LogScope?, metadata: @escaping () -> [Metadata], location: LogLocation, message: @escaping () -> LogMessage) {
     self.type = type
     self.category = category
     self.config = config
     self.scope = scope
     self._metadata = metadata
-    self.fileName = (file as NSString).lastPathComponent
-    self.funcName = funcName
-    self.line = line
+    self.location = location
     self._message = message
   }
 }
