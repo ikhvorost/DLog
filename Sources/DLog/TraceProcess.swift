@@ -36,17 +36,29 @@ public struct ProcessOptions: OptionSet {
     self.rawValue = rawValue
   }
   
+  /// CPU usage (%).
+  public static let cpu = Self(0)
+  
   /// Global unique identifier for the process.
-  public static let guid = Self(0)
+  public static let guid = Self(1)
+  
+  /// Memory usage (MB).
+  public static let memory = Self(2)
   
   /// The name of the process.
-  public static let name = Self(1)
+  public static let name = Self(3)
   
   /// The identifier of the process.
-  public static let pid = Self(2)
+  public static let pid = Self(4)
+  
+  /// Threads count.
+  public static let threads = Self(5)
+  
+  /// Wakeups per second (WPS).
+  public static let wps = Self(6)
     
-  /// Compact: `.name` and `.pid`.
-  public static let compact: Self = [.name, .pid]
+  /// Compact: `.cpu`, `.memory`, `.pid` and `.threads`
+  public static let compact: Self = [.cpu, .memory, .pid, .threads]
 }
 
 /// Contains configuration values regarding to a process info.
@@ -56,11 +68,43 @@ public struct ProcessConfig {
   public var options: ProcessOptions = .compact
 }
 
+fileprivate class Power {
+  
+  static let shared = Power()
+  
+  private var timer: Timer?
+  
+  private(set) var wakeupsTotalCount: UInt64 = 0
+  private(set) var wakeupsPerSecond: UInt64 = 0
+  
+  // mWh
+  private(set) var energyTotal = 0.0
+  private(set) var energyPerSecond = 0.0
+  
+  private init() {
+    timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { timer in
+      let wakeups = TaskInfo.power.task_interrupt_wakeups
+      self.wakeupsPerSecond = wakeups - self.wakeupsTotalCount
+      self.wakeupsTotalCount = wakeups
+      
+      // nJ / 3600 = nWh
+      let mWh = Double(TaskInfo.power_v2.task_energy) / (3600 * 1000000)
+      self.energyPerSecond = mWh - self.energyTotal
+      self.energyTotal = mWh
+    }
+    timer?.fire()
+  }
+}
+
 func processMetadata(processInfo: ProcessInfo, config: ProcessConfig) -> Metadata {
   let items: [(ProcessOptions, String, () -> Any)] = [
+    (.cpu, "cpu", { "\(threadsInfo().cpuUsage)%" }),
     (.guid, "guid", { processInfo.globallyUniqueString }),
+    (.memory, "memory", { "\(TaskInfo.vm.phys_footprint / (1024 * 1024))MB"}),
     (.name, "name", { processInfo.processName }),
     (.pid, "pid", { processInfo.processIdentifier }),
+    (.threads, "threads", { threadsInfo().threadsCount }),
+    (.wps, "wps", { Power.shared.wakeupsPerSecond }),
   ]
   return Metadata.metadata(from: items, options: config.options)
 }

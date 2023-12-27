@@ -83,7 +83,10 @@ public class LogProtocol: NSObject {
   public func trace(_ message: @escaping @autoclosure () -> LogMessage = "", file: String = #file, function: String = #function, line: UInt = #line) -> String? {
     let traceInfo = TraceInfo()
     let metadata: () -> [Metadata] = {
-      [self.metadata.data, traceMetadata(function: function, traceInfo: traceInfo, traceConfig: self.config.traceConfig)]
+      [
+        self.metadata.data,
+        traceMetadata(function: function, traceInfo: traceInfo, traceConfig: self.config.traceConfig)
+      ]
     }
     return logger.log(message: message, type: .trace, category: category, config: config, scope: _scope, metadata: metadata(), file: file, function: function, line: line)
   }

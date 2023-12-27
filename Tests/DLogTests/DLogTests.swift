@@ -1041,7 +1041,7 @@ final class IntervalTests: XCTestCase {
     }?.match(#"> signpost$"#) == true)
   }
   
-  func test_IntervalConfigAll() {
+  func test_Interval_Config_All() {
     var config = LogConfig()
     config.intervalConfig.options = .all
     
@@ -1206,7 +1206,7 @@ final class TraceTests: XCTestCase {
     var config = LogConfig()
     config.traceConfig.options = .process
     let logger = DLog(config: config)
-    XCTAssert(logger.trace()?.match(#"\{process:\{name:[^,]+,pid:\d+\}\}"#) == true)
+    XCTAssert(logger.trace()?.match(#"\{process:\{cpu:\d+%,memory:\d+MB,pid:\d+,threads:\d+\}\}"#) == true)
   }
   
   func test_trace_process_all() {
@@ -1215,7 +1215,7 @@ final class TraceTests: XCTestCase {
     config.traceConfig.processConfig.options = .all
     
     let logger = DLog(config: config)
-    XCTAssert(logger.trace()?.match(#"\{process:\{guid:[^,]+,name:[^,]+,pid:\d+\}\}"#) == true)
+    XCTAssert(logger.trace()?.match(#"\{process:\{cpu:\d+%,guid:[^,]+,memory:\d+MB,name:[^,]+,pid:\d+,threads:\d+,wps:\d+\}\}"#) == true)
   }
   
   func test_trace_func_only() {
@@ -1352,6 +1352,6 @@ final class TraceTests: XCTestCase {
     config.traceConfig.options = .all
     let logger = DLog(config: config)
     let text = logger.trace()
-    XCTAssert(text?.match(#"\#(Location) \{func:test_trace_config_all,process:\{name:[^,]+,pid:\d+\},queue:com\.apple\.main-thread,stack:\[\{symbols:DLogTests\.TraceTests\.test_trace_config_all\(\) -> \(\)\}"#) == true)
+    XCTAssert(text?.match(#"\#(Location) \{func:test_trace_config_all,process:\{cpu:\d+%,memory:\d+MB,pid:\d+,threads:\d+\},queue:com\.apple\.main-thread,stack:\[\{symbols:DLogTests\.TraceTests\.test_trace_config_all\(\) -> \(\)\}"#) == true)
   }
 }
