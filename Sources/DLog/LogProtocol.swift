@@ -242,7 +242,12 @@ public class LogProtocol: NSObject {
     return scope
   }
   
-  private func interval(name: String, staticName: StaticString?, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
+  private func interval(name: String, staticName: StaticString?, intervalConfig: IntervalConfig?, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
+    var config = config
+    if let intervalConfig {
+      config.intervalConfig = intervalConfig
+    }
+    
     let interval = LogInterval(logger: logger, name: name, staticName: staticName, category: category, config: config, scope: _scope, metadata: self.metadata.data, location: LogLocation(file, function, line))
     if let block = closure {
       interval.begin()
@@ -271,13 +276,13 @@ public class LogProtocol: NSObject {
   /// - Returns: An `LogInterval` object for the new interval.
   ///
   @discardableResult
-  public func interval(_ name: StaticString, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval {
-    return interval(name: "\(name)", staticName: name, file: file, function: function, line: line, closure: closure)
+  public func interval(_ name: StaticString, config: IntervalConfig? = nil, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval {
+    return interval(name: "\(name)", staticName: name, intervalConfig: config, file: file, function: function, line: line, closure: closure)
   }
   
   /// Creates an interval object for Objective-C code.
   @discardableResult
   public func interval(name: String, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval {
-    return interval(name: name, staticName: nil, file: file, function: function, line: line, closure: closure)
+    return interval(name: name, staticName: nil, intervalConfig: nil, file: file, function: function, line: line, closure: closure)
   }
 }

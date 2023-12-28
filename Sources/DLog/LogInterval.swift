@@ -66,6 +66,9 @@ public struct IntervalConfig {
   
   /// Set which info from the intervals should be used. Default value is `IntervalOptions.compact`.
   public var options: IntervalOptions = .compact
+  
+  /// Creates the interval's default configuration.
+  public init() {}
 }
 
 /// Accumulated interval statistics

@@ -1028,6 +1028,17 @@ final class IntervalTests: XCTestCase {
     }?.match(#"\#(Interval)$"#) == true)
   }
   
+  func test_intervalConfig_custom() {
+    let logger = DLog()
+    
+    var config = IntervalConfig()
+    config.options = .total
+    
+    XCTAssert(read_stdout {
+      logger.interval("signpost", config: config) { delay() }
+    }?.match(#"\{total:\#(SECS)\} signpost$"#) == true)
+  }
+  
   func test_IntervalConfigEmpty() {
     var config = LogConfig()
     config.intervalConfig.options = []

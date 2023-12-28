@@ -7,7 +7,7 @@
 #define DLOG_CONCAT_(a, b) a##b
 #define DLOG_CONCAT(a, b) DLOG_CONCAT_(a, b)
 
-#define DLOG_PARAMS(format, ...) [NSString stringWithFormat:(format) ?: @"", ##__VA_ARGS__], @(__FILE__).lastPathComponent, @(__FUNCTION__), __LINE__
+#define DLOG_PARAMS(format, ...) [NSString stringWithFormat:(format) ?: @"", ##__VA_ARGS__], @(__FILE__), @(__FUNCTION__), __LINE__
 
 #define log(format, ...) log(DLOG_PARAMS(format, ##__VA_ARGS__))
 
