@@ -67,7 +67,7 @@ public struct IntervalConfig {
   /// Set which info from the intervals should be used. Default value is `IntervalOptions.compact`.
   public var options: IntervalOptions = .compact
   
-  /// Creates the interval's default configuration.
+  /// Creates default configuration.
   public init() {}
 }
 
@@ -151,7 +151,7 @@ public class LogInterval: LogItem {
     self._metadata = metadata
     
     let message = { LogMessage(stringLiteral: name) }
-    super.init(type: .interval, category: category, config: config, scope: scope, metadata: {[metadata]}, location: location, message: message)
+    super.init(message: message, type: .interval, category: category, config: config, scope: scope, metadata: {[metadata]}, location: location)
   }
   
   /// Start a time interval.

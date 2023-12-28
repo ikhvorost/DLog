@@ -91,6 +91,6 @@ public struct LogConfig {
   /// Configuration of intervals
   public var intervalConfig = IntervalConfig()
   
-  /// Creates the logger's default configuration.
+  /// Creates default configuration.
   public init() {}
 }

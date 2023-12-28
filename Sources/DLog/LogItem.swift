@@ -115,13 +115,13 @@ public class LogItem: NSObject {
   /// Metadata of log message
   public lazy var metadata: [Metadata] = { _metadata() }()
   
-  init(type: LogType, category: String, config: LogConfig, scope: LogScope?, metadata: @escaping () -> [Metadata], location: LogLocation, message: @escaping () -> LogMessage) {
+  init(message: @escaping () -> LogMessage, type: LogType, category: String, config: LogConfig, scope: LogScope?, metadata: @escaping () -> [Metadata], location: LogLocation) {
+    self._message = message
     self.type = type
     self.category = category
     self.config = config
     self.scope = scope
     self._metadata = metadata
     self.location = location
-    self._message = message
   }
 }

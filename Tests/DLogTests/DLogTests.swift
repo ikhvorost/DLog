@@ -943,13 +943,15 @@ final class FormatTests: XCTestCase {
 
 final class IntervalTests: XCTestCase {
   
-  func test_Interval() {
+  func test_interval() {
     let logger = DLog()
     
     XCTAssert(read_stdout {
-      logger.interval("signpost") {
-        delay()
-      }
+      logger.interval() { delay() }
+    }?.match(#"\#(Interval)$"#) == true)
+    
+    XCTAssert(read_stdout {
+      logger.interval("signpost") { delay() }
     }?.match(#"\#(Interval) signpost$"#) == true)
   }
   
@@ -1206,11 +1208,7 @@ final class TraceTests: XCTestCase {
   func test_trace() {
     let logger = DLog()
     XCTAssert(logger.trace()?.match(#"\{func:test_trace,thread:\{name:main,number:1\}\}$"#) == true)
-  }
-  
-  func test_trace_text() {
-    let logger = DLog()
-    XCTAssert(logger.trace("trace")?.match(#"\{func:test_trace_text,thread:\{name:main,number:1\}\} trace$"#) == true)
+    XCTAssert(logger.trace("trace")?.match(#"\{func:test_trace,thread:\{name:main,number:1\}\} trace$"#) == true)
   }
   
   func test_trace_process() {
@@ -1349,6 +1347,15 @@ final class TraceTests: XCTestCase {
         \}
         """#
     XCTAssert(text?.match(format) == true)
+  }
+  
+  func test_trace_custom_config() {
+    let logger = DLog()
+    
+    var config = TraceConfig()
+    config.options = .function
+    
+    XCTAssert(logger.trace(config: config)?.match(#"\{func:test_trace_custom_config\}$"#) == true)
   }
   
   func test_trace_config_empty() {

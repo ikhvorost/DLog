@@ -85,6 +85,9 @@ public struct TraceConfig {
   
   /// Configuration of stack info
   public var stackConfig = StackConfig()
+  
+  /// Creates default configuration.
+  public init() {}
 }
 
 struct TraceInfo {

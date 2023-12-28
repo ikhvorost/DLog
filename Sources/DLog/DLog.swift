@@ -157,7 +157,7 @@ public class DLog: LogProtocol {
   
   func log(message: @escaping () -> LogMessage, type: LogType, category: String, config: LogConfig, scope: LogScope?, metadata: @autoclosure @escaping () -> [Metadata], location: LogLocation) -> String? {
     guard let out = output else { return nil }
-    let item = LogItem(type: type, category: category, config: config, scope: scope, metadata: metadata, location: location, message: message)
+    let item = LogItem(message: message, type: type, category: category, config: config, scope: scope, metadata: metadata, location: location)
     return out.log(item: item)
   }
 }
