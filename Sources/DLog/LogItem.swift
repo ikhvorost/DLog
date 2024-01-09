@@ -29,21 +29,33 @@ import Foundation
 /// The location of a log message.
 @objcMembers
 public class LogLocation: NSObject {
-  /// The file path of a log message.
+  /// The file ID.
+  public let fileID: String
+  
+  /// The file path.
   public let file: String
   
-  /// The function name of a log message.
+  /// The function name.
   public let function: String
   
-  /// The line number of a log message.
+  /// The line number.
   public let line: UInt
   
-  /// The file name of a log message.
+  /// The module name.
+  public lazy var moduleName: String = {
+    guard fileID.contains("/") else {
+      return fileID
+    }
+    return (fileID as NSString).pathComponents.first!
+  }()
+  
+  /// The file name.
   public lazy var fileName: String = {
     (file as NSString).lastPathComponent
   }()
   
-  init(_ file: String, _ function: String, _ line: UInt) {
+  public init(_ fileID: String, _ file: String, _ function: String, _ line: UInt) {
+    self.fileID = fileID
     self.file = file
     self.function = function
     self.line = line

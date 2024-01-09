@@ -102,12 +102,12 @@ struct TraceInfo {
   }()
 }
 
-func traceMetadata(function: String, traceInfo: TraceInfo, traceConfig: TraceConfig) -> Metadata {
+func traceMetadata(location: LogLocation, traceInfo: TraceInfo, traceConfig: TraceConfig) -> Metadata {
   let items: [(TraceOptions, String, () -> Any)] = [
-    (.function, "func", { funcInfo(function: function, config: traceConfig.funcConfig) }),
+    (.function, "func", { funcInfo(function: location.function, config: traceConfig.funcConfig) }),
     (.process, "process", { processMetadata(processInfo: traceInfo.processInfo, config: traceConfig.processConfig) }),
     (.queue, "queue", { traceInfo.queueLabel }),
-    (.stack, "stack", { stackMetadata(stackAddresses: traceInfo.stackAddresses, config: traceConfig.stackConfig) }),
+    (.stack, "stack", { stackMetadata(moduleName: location.moduleName, stackAddresses: traceInfo.stackAddresses, config: traceConfig.stackConfig) }),
     (.thread, "thread", { threadMetadata(thread: traceInfo.thread, tid: traceInfo.tid, config: traceConfig.threadConfig) }),
   ]
   return Metadata.metadata(from: items, options: traceConfig.options)

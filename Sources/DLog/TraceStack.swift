@@ -47,21 +47,35 @@ public struct StackOptions: OptionSet {
   /// Offset
   public static let offset = Self(3)
   
-  /// Stack symbols
-  public static let symbols = Self(4)
+  /// Stack symbol
+  public static let symbol = Self(4)
+}
+
+/// Contains configuration values regarding to stack view
+public enum StackView {
+  /// Show frames for all modules and libraries
+  case all
+  
+  /// Show frames for the current module only
+  case module
 }
 
 /// Contains configuration values regarding to stack info
 public struct StackConfig {
-  /// Set which info from stacks should be used. Default value is `StackOptions.symbols`.
-  public var options: StackOptions = .symbols
+  /// Set which info from stacks should be used. Default value is `StackOptions.symbol`.
+  public var options: StackOptions = [.frame, .symbol]
   
   /// Depth of stack
   public var depth = 0
+  
+  /// View of stack
+  public var view: StackView = .module
 }
 
-fileprivate func demangle(_ mangled: String) -> String? {
-  guard mangled.hasPrefix("$s") else { return nil }
+fileprivate func swift_demangle(_ mangled: String) -> String? {
+  guard mangled.hasPrefix("$s") else {
+    return nil
+  }
   
   if let cString = Dynamic.swift_demangle?(mangled, mangled.count, nil, nil, 0) {
     defer { cString.deallocate() }
@@ -70,34 +84,31 @@ fileprivate func demangle(_ mangled: String) -> String? {
   return nil
 }
 
-func stackMetadata(stackAddresses: ArraySlice<NSNumber>, config: StackConfig) -> [Metadata] {
+func stackMetadata(moduleName: String, stackAddresses: ArraySlice<NSNumber>, config: StackConfig) -> [Metadata] {
   stackAddresses
-    .compactMap { address -> (String, UInt, String, UInt)? in
-      let pointer = UnsafeRawPointer(bitPattern: address.uintValue)
+    .compactMap { item -> (address: UInt, module: String, offset: UInt, symbol: String)? in
+      let address = item.uintValue
       var info = dl_info()
-      guard dladdr(pointer, &info) != 0 else {
+      guard dladdr(UnsafeRawPointer(bitPattern: address), &info) != 0,
+            let module = NSString(utf8String: info.dli_fname)?.lastPathComponent,
+            let sname = String(validatingUTF8: info.dli_sname)
+      else {
         return nil
       }
       
-      let fname = String(validatingUTF8: info.dli_fname)!
-      let module = (fname as NSString).lastPathComponent
-      
-      let sname = String(validatingUTF8: info.dli_sname)!
-      let name = demangle(sname) ?? sname
-      
-      let offset = address.uintValue - UInt(bitPattern: info.dli_saddr)
-      
-      return (module, address.uintValue, name, offset)
+      let offset = address - UInt(bitPattern: info.dli_saddr)
+      return (address, module, offset, sname)
     }
     .prefix(config.depth > 0 ? config.depth : stackAddresses.count)
     .enumerated()
+    .filter { config.view == .all || $0.element.module == moduleName }
     .map { item in
       let items: [(StackOptions, String, () -> Any)] = [
-        (.address, "address", { String(format:"0x%016llx", item.element.1) }),
-        (.frame, "frame", { "\(item.offset)" }),
-        (.module, "module", { "\(item.element.0)" }),
-        (.offset, "offset", { "\(item.element.3)" }),
-        (.symbols, "symbols", { "\(item.element.2)" }),
+        (.address, "address", { String(format:"0x%llx", item.element.address) }),
+        (.frame, "frame", { item.offset }),
+        (.module, "module", { item.element.module }),
+        (.offset, "offset", { item.element.offset }),
+        (.symbol, "symbol", { swift_demangle(item.element.symbol) ?? item.element.symbol }),
       ]
       return Metadata.metadata(from: items, options: config.options)
     }

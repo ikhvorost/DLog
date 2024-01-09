@@ -7,7 +7,8 @@
 #define DLOG_CONCAT_(a, b) a##b
 #define DLOG_CONCAT(a, b) DLOG_CONCAT_(a, b)
 
-#define DLOG_PARAMS(format, ...) [NSString stringWithFormat:(format) ?: @"", ##__VA_ARGS__], @(__FILE__), @(__FUNCTION__), __LINE__
+#define DLOG_LOCATION fileID(NSBundle.mainBundle, @(__FILE__)), @(__FILE__), @(__FUNCTION__), __LINE__
+#define DLOG_PARAMS(format, ...) [NSString stringWithFormat:(format) ?: @"", ##__VA_ARGS__], DLOG_LOCATION
 
 #define log(format, ...) log(DLOG_PARAMS(format, ##__VA_ARGS__))
 
@@ -29,26 +30,26 @@
 
 #define fault(format, ...) fault(DLOG_PARAMS(format, ##__VA_ARGS__))
 
-#define scope_2(name, block) scope((name),  @(__FILE__).lastPathComponent, @(__FUNCTION__), __LINE__, (block))
+#define scope_2(name, block) scope((name), (block))
 #define scope_1(name) scope_2((name), nil)
 #define scope(...) DLOG_CONCAT(scope_, DLOG_VARGS(__VA_ARGS__))(__VA_ARGS__)
 
-#define interval_2(name, block) interval((name),  @(__FILE__).lastPathComponent, @(__FUNCTION__), __LINE__, (block))
+#define interval_2(name, block) interval((name), DLOG_LOCATION, (block))
 #define interval_1(name) interval_2((name), nil)
 #define interval(...) DLOG_CONCAT(interval_, DLOG_VARGS(__VA_ARGS__))(__VA_ARGS__)
 
 
-typedef NSString* (^LogBlock)(NSString*, NSString*, NSString*, NSUInteger);
-typedef NSString* (^TraceBlock)(NSString*, NSString*, NSString*, NSUInteger);
-typedef NSString* (^AssertBlock)(BOOL, NSString*, NSString*, NSString*, NSUInteger);
-typedef LogScope* (^ScopeBlock)(NSString*, NSString*, NSString*, NSUInteger, void (^)(LogScope*));
-typedef LogInterval* (^IntervalBlock)(NSString*, NSString*, NSString*, NSUInteger, void (^)());
+typedef NSString* _Nullable (^_Nonnull LogBlock)(NSString* _Nullable, NSString* _Nonnull, NSString* _Nonnull, NSString* _Nonnull, NSUInteger);
+typedef NSString* _Nullable (^_Nonnull AssertBlock)(BOOL, NSString* _Nullable, NSString* _Nonnull, NSString* _Nonnull, NSString* _Nonnull, NSUInteger);
+typedef LogScope* _Nonnull (^_Nonnull ScopeBlock)(NSString* _Nonnull, void (^_Nullable)(LogScope* _Nonnull));
+typedef LogInterval* _Nonnull (^_Nonnull IntervalBlock)(NSString* _Nonnull, NSString* _Nonnull, NSString* _Nonnull, NSString* _Nonnull, NSUInteger, void (^_Nullable)());
 
+extern NSString* _Nonnull fileID(NSBundle* _Nonnull bundle, NSString* _Nonnull file);
 
 @interface LogProtocol (PropertyWrapper)
 
 @property (nonatomic, readonly) LogBlock log;
-@property (nonatomic, readonly) TraceBlock trace;
+@property (nonatomic, readonly) LogBlock trace;
 @property (nonatomic, readonly) LogBlock debug;
 @property (nonatomic, readonly) LogBlock info;
 @property (nonatomic, readonly) LogBlock warning;
