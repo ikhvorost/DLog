@@ -12,8 +12,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Build
-      run: swift build -v
-    - name: Run tests
+      run: sh build.sh
+    - name: Test
       run: |
         swift test --enable-code-coverage -v
         xcrun llvm-cov export -format="lcov" .build/debug/DLogPackageTests.xctest/contents/macos/DLogPackageTests -instr-profile .build/debug/codecov/default.profdata -ignore-filename-regex='Tests' -ignore-filename-regex='Net' > info.lcov
