@@ -11,8 +11,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Xcode
-      run: xcodebuild -version
+    - name: Xcode 15
+      run: |
+        sudo xcode-select -s '/Applications/Xcode_15.2.app/Contents/Developer'
+        xcodebuild -version
     - name: Build
       run: sh build.sh
     - name: Test
