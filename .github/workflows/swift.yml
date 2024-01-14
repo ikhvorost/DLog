@@ -10,15 +10,22 @@ jobs:
     runs-on: macOS-13
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Xcode 15
+    - uses: actions/checkout@v3
+
+    - name: Xcode 15.2
       run: |
-        ls /Applications
+        sudo xcode-select -s '/Applications/Xcode_15.2.app/Contents/Developer'
         xcodebuild -version
+
     - name: Build
-      run: sh build.sh
+      run: sh build.sh DLog-Package
+
     - name: Test
       run: |
         swift test --enable-code-coverage -v
         xcrun llvm-cov export -format="lcov" .build/debug/DLogPackageTests.xctest/contents/macos/DLogPackageTests -instr-profile .build/debug/codecov/default.profdata -ignore-filename-regex='Tests' -ignore-filename-regex='Net' > info.lcov
-        bash <(curl -s https://codecov.io/bash)
+
+    - name: Codecov
+      uses: codecov/codecov-action@v3
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
