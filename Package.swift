@@ -1,4 +1,4 @@
-// swift-tools-version:5.3
+// swift-tools-version:5.9
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -9,6 +9,7 @@ let package = Package(
     .iOS(.v12),
     .macOS(.v10_14),
     .tvOS(.v12),
+    .visionOS(.v1),
     .watchOS(.v5)
   ],
   products: [
@@ -21,7 +22,7 @@ let package = Package(
     .target(name: "DLogObjC", dependencies: ["DLog"]),
     .target(name: "NetConsole"),
     .testTarget(name: "DLogTests", dependencies: ["DLog"]),
-    .testTarget(name: "DLogTestsObjC", dependencies: ["DLogObjC"]),
+    .testTarget(name: "DLogTestsObjC", dependencies: ["DLogObjC"])
   ],
   swiftLanguageVersions: [.v5]
 )
