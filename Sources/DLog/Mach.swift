@@ -71,7 +71,7 @@ func threadsInfo() -> (cpuUsage: Int32, threadsCount: UInt32) {
   
   defer {
     let size = MemoryLayout<thread_t>.size * Int(thread_count)
-    vm_deallocate(mach_task_self_, vm_address_t(bitPattern: threads), vm_size_t(size))
+    vm_deallocate(mach_task_self_, vm_address_t(threads.pointee), vm_size_t(size))
   }
   
   var cpu_usage: Int32 = 0

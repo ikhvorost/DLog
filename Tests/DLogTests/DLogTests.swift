@@ -274,7 +274,7 @@ final class DLogTests: XCTestCase {
   }
   
   // MARK: - Net
-  
+#if !os(watchOS)
   func test_net() {
     let logger = DLog(.net)
     XCTAssertNotNil(logger.debug("oslog"))
@@ -298,6 +298,7 @@ final class DLogTests: XCTestCase {
     let log2 = DLog(.net("MyName"))
     XCTAssertNotNil(log2.debug("oslog"))
   }
+#endif
   
   // MARK: - Filter
   
@@ -427,7 +428,7 @@ final class DLogTests: XCTestCase {
                       => .file("dlog.txt")
                       => .oslog
                       => .filter { $0.type == .debug }
-                      => .net)
+    )
     
     let netLogger = logger["NET"]
     netLogger.log("log")
@@ -1224,7 +1225,7 @@ final class TraceTests: XCTestCase {
     config.traceConfig.processConfig.options = .all
     
     let logger = DLog(config: config)
-    XCTAssert(logger.trace()?.match(#"\{process:\{cpu:\d+%,guid:[^,]+,memory:\d+MB,name:[^,]+,pid:\d+,threads:\d+,wps:\d+\}\}"#) == true)
+    XCTAssert(logger.trace()?.match(#"\{process:\{cpu:\d+%,guid:[^,]+,memory:\d+MB,name:[^,]+,pid:\d+,threads:\d+,wakeups:\{idle:\d+,interrupt:\d+,timer:\d+\}\}\}"#) == true)
   }
   
   func test_trace_func_only() {

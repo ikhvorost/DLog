@@ -221,8 +221,10 @@ static void testAll(LogProtocol* logger, NSString *category) {
       return logItem.type == LogTypeDebug;
     }],
     [LogOutput file:@"dlog.txt" append:NO],
+#if !TARGET_OS_WATCH
     [LogOutput net],
     [LogOutput net:@"dlog"],
+#endif
   ];
   
   for (LogOutput* output in outputs) {
@@ -236,7 +238,7 @@ static void testAll(LogProtocol* logger, NSString *category) {
 - (void)test_filter {
   let filterItem = [LogOutput filterWithItem:^BOOL(LogItem* logItem) {
     return
-    [logItem.time compare:NSDate.now] == NSOrderedAscending &&
+    [logItem.time compare:NSDate.date] == NSOrderedAscending &&
     [logItem.category isEqualToString:@"DLOG"] &&
     [logItem.scope.name isEqualToString:@"Scope"] &&
     logItem.type == LogTypeDebug &&

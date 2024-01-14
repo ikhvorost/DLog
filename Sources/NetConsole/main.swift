@@ -27,8 +27,10 @@
 
 import Foundation
 
+#if !os(watchOS)
+
 class Service : NSObject {
-  
+
   enum ANSIEscapeCode: String {
     case reset = "\u{001b}[0m"
     case clear = "\u{001b}c"
@@ -176,3 +178,5 @@ let _ = Service(name: name, debug: debug, autoClear: autoClear)
 print(overview)
 
 RunLoop.main.run()
+
+#endif
