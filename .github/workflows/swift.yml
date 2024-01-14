@@ -14,7 +14,6 @@ jobs:
     - name: Xcode 15
       run: |
         ls /Applications
-#        sudo xcode-select -s '/Applications/Xcode_15.1.app/Contents/Developer'
         xcodebuild -version
     - name: Build
       run: sh build.sh
