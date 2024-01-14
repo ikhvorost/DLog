@@ -22,7 +22,8 @@ jobs:
 
     - name: Test
       run: |
-        swift test --enable-code-coverage -v
+        swift build
+        swift test --enable-code-coverage
         xcrun llvm-cov export -format="lcov" .build/debug/DLogPackageTests.xctest/contents/macos/DLogPackageTests -instr-profile .build/debug/codecov/default.profdata -ignore-filename-regex='Tests' -ignore-filename-regex='Net' > info.lcov
 
     - name: Codecov

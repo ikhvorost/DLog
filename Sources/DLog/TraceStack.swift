@@ -91,17 +91,31 @@ func stackMetadata(moduleName: String, stackAddresses: ArraySlice<NSNumber>, con
       var info = dl_info()
       guard dladdr(UnsafeRawPointer(bitPattern: address), &info) != 0,
             let module = NSString(utf8String: info.dli_fname)?.lastPathComponent,
-            let sname = String(validatingUTF8: info.dli_sname)
+            let symbol = String(validatingUTF8: info.dli_sname)
       else {
         return nil
       }
       
       let offset = address - UInt(bitPattern: info.dli_saddr)
-      return (address, module, offset, sname)
+      return (address, module, offset, symbol)
     }
     .prefix(config.depth > 0 ? config.depth : stackAddresses.count)
     .enumerated()
-    .filter { config.view == .all || $0.element.module == moduleName }
+    .filter {
+      guard config.view == .module else {
+        return true
+      }
+
+      let module = $0.element.module
+      let result = module == moduleName
+#if DEBUG
+      // Fix: swift test
+      if result == false {
+        return module.replacingOccurrences(of: "Package", with: "") == moduleName
+      }
+#endif
+      return result
+    }
     .map { item in
       let items: [(StackOptions, String, () -> Any)] = [
         (.address, "address", { String(format:"0x%llx", item.element.address) }),
