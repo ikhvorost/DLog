@@ -88,8 +88,7 @@ public enum LogPrivacy {
     var info = kinfo_proc()
     var size = MemoryLayout.size(ofValue: info)
     var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_PID, getpid()]
-    return sysctl(&mib, UInt32(mib.count), &info, &size, nil, 0) == 0 &&
-    (info.kp_proc.p_flag & P_TRACED) != 0
+    return sysctl(&mib, UInt32(mib.count), &info, &size, nil, 0) == 0 && (info.kp_proc.p_flag & P_TRACED) != 0
   }()
   
   private static let isXCTest: Bool = { NSClassFromString("XCTest") != nil }()

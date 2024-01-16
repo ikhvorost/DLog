@@ -122,7 +122,6 @@ public class LogInterval: LogItem {
   private let logger: DLog
   private let id: Int
   private let name: String
-  private let _metadata: Metadata
   @Atomic
   private var begun = false
   
@@ -148,7 +147,6 @@ public class LogInterval: LogItem {
     self.name = name
     self.id = "\(location.file):\(location.function):\(location.line)".hash
     self.staticName = staticName
-    self._metadata = metadata
     
     let message = { LogMessage(stringLiteral: name) }
     super.init(message: message, type: .interval, category: category, config: config, scope: scope, metadata: {[metadata]}, location: location)
@@ -216,7 +214,8 @@ public class LogInterval: LogItem {
       (.min, "min", { stringFromTimeInterval(statistics.min) }),
       (.total, "total", { stringFromTimeInterval(statistics.total) }),
     ]
-    metadata = [_metadata, Metadata.metadata(from: items, options: config.intervalConfig.options)]
+    let metadata = Metadata.metadata(from: items, options: config.intervalConfig.options)
+    self.metadata = _metadata() + [metadata]
     
     logger.end(interval: self)
   }

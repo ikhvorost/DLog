@@ -247,7 +247,7 @@ public class LogProtocol: NSObject {
   ///
   @discardableResult
   public func scope(_ name: String, metadata: Metadata? = nil, closure: ((LogScope) -> Void)? = nil) -> LogScope {
-    let scope = LogScope(name: name, logger: logger, category: category, config: self.config, metadata: metadata ?? self.logger.metadata.data)
+    let scope = LogScope(name: name, logger: logger, category: category, config: self.config, metadata: metadata ?? logger.metadata.data)
     if let block = closure {
       scope.enter()
       block(scope)
@@ -262,7 +262,7 @@ public class LogProtocol: NSObject {
       config.intervalConfig = intervalConfig
     }
     
-    let interval = LogInterval(logger: logger, name: name, staticName: staticName, category: category, config: config, scope: _scope, metadata: self.metadata.data, location: location)
+    let interval = LogInterval(logger: logger, name: name, staticName: staticName, category: category, config: config, scope: _scope, metadata: metadata.data, location: location)
     if let block = closure {
       interval.begin()
       block()

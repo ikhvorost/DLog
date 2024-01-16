@@ -123,7 +123,7 @@ public class LogItem: NSObject {
   
   let config: LogConfig
   
-  private let _metadata: () -> [Metadata]
+  let _metadata: () -> [Metadata]
   /// Metadata of log message
   public lazy var metadata: [Metadata] = { _metadata() }()
   

@@ -39,7 +39,6 @@ struct TaskInfo {
   }
   
   static var power: task_power_info { taskInfo(task_power_info(), TASK_POWER_INFO) }
-  static var power_v2: task_power_info_v2 { taskInfo(task_power_info_v2(), TASK_POWER_INFO_V2) }
   static var vm: task_vm_info { taskInfo(task_vm_info(), TASK_VM_INFO) }
 }
 
@@ -65,18 +64,18 @@ struct ThreadInfo {
 func threadsInfo() -> (cpuUsage: Int32, threadsCount: UInt32) {
   var thread_list: thread_act_array_t?
   var thread_count: mach_msg_type_number_t = 0
-  guard task_threads(mach_task_self_, &thread_list, &thread_count) == KERN_SUCCESS, let threads = thread_list else {
-    return (0, 0)
-  }
+  task_threads(mach_task_self_, &thread_list, &thread_count)
   
   defer {
-    let size = MemoryLayout<thread_t>.size * Int(thread_count)
-    vm_deallocate(mach_task_self_, vm_address_t(threads.pointee), vm_size_t(size))
+    if thread_count > 0 {
+      let size = MemoryLayout<thread_t>.size * Int(thread_count)
+      vm_deallocate(mach_task_self_, vm_address_t(thread_list!.pointee), vm_size_t(size))
+    }
   }
   
   var cpu_usage: Int32 = 0
   for i in 0..<Int(thread_count) {
-    let basic = ThreadInfo.basic(thread: threads[i])
+    let basic = ThreadInfo.basic(thread: thread_list![i])
     if basic.flags & TH_FLAGS_IDLE == 0 {
       cpu_usage += basic.cpu_usage
     }

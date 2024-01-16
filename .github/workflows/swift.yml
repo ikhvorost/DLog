@@ -15,14 +15,12 @@ jobs:
     - name: Xcode 15.2
       run: |
         sudo xcode-select -s '/Applications/Xcode_15.2.app/Contents/Developer'
-        xcodebuild -version
 
     - name: Build
-      run: sh build.sh DLog-Package
+      run: swift build
 
     - name: Test
       run: |
-        swift build
         swift test --enable-code-coverage
         xcrun llvm-cov export -format="lcov" .build/debug/DLogPackageTests.xctest/contents/macos/DLogPackageTests -instr-profile .build/debug/codecov/default.profdata -ignore-filename-regex='Tests' -ignore-filename-regex='Net' > info.lcov
 

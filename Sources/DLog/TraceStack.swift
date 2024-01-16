@@ -73,15 +73,12 @@ public struct StackConfig {
 }
 
 fileprivate func swift_demangle(_ mangled: String) -> String? {
-  guard mangled.hasPrefix("$s") else {
+  guard mangled.hasPrefix("$s"), let cString = Dynamic.swift_demangle?(mangled, mangled.count, nil, nil, 0) else {
     return nil
   }
   
-  if let cString = Dynamic.swift_demangle?(mangled, mangled.count, nil, nil, 0) {
-    defer { cString.deallocate() }
-    return String(cString: cString)
-  }
-  return nil
+  defer { cString.deallocate() }
+  return String(cString: cString)
 }
 
 func stackMetadata(moduleName: String, stackAddresses: ArraySlice<NSNumber>, config: StackConfig) -> [Metadata] {

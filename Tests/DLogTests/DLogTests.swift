@@ -1370,6 +1370,7 @@ final class TraceTests: XCTestCase {
   func test_trace_config_all() {
     var config = LogConfig()
     config.traceConfig.options = .all
+    config.traceConfig.stackConfig.view = .all
     let logger = DLog(config: config)
     let text = logger.trace()
     XCTAssert(text?.match(#"\#(Location) \{func:test_trace_config_all,process:\{cpu:\d+%,memory:\d+MB,pid:\d+,threads:\d+\},queue:com\.apple\.main-thread,stack:\[\{frame:\d+,symbol:DLogTests\.TraceTests\.test_trace_config_all\(\) -> \(\)\}"#) == true)
