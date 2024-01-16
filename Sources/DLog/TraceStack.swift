@@ -104,14 +104,10 @@ func stackMetadata(moduleName: String, stackAddresses: ArraySlice<NSNumber>, con
       }
 
       let module = $0.element.module
-      let result = module == moduleName
-#if DEBUG
-      // Fix: swift test
-      if result == false {
-        return module.replacingOccurrences(of: "Package", with: "") == moduleName
-      }
-#endif
-      return result
+      
+      return module == moduleName
+        ? true
+        : module.replacingOccurrences(of: "Package", with: "") == moduleName // Fix: swift test
     }
     .map { item in
       let items: [(StackOptions, String, () -> Any)] = [
