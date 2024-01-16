@@ -647,7 +647,6 @@ final class FormatTests: XCTestCase {
     XCTAssert(logger.log("Private: \(cardNumber, privacy: .private)")?.match("<private>") == true)
     
     XCTAssert(logger.log("Private hash: \(cardNumber, privacy: .private(mask: .hash))")?.match("[0-9a-fA-F]+") == true)
-    XCTAssert(logger.log("Private hash: \(cardNumber, privacy: .private(mask: .hash, auto: false))")?.match("[0-9a-fA-F]+") == true)
     
     XCTAssert(logger.log("Private random: \(empty, privacy: .private(mask: .random))")?.match(": $") == true)
     XCTAssert(logger.log("Private random: \(cardNumber, privacy: .private(mask: .random))")?.match(cardNumber) == false)

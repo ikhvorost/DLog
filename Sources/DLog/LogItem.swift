@@ -43,10 +43,7 @@ public class LogLocation: NSObject {
   
   /// The module name.
   public lazy var moduleName: String = {
-    guard fileID.contains("/") else {
-      return fileID
-    }
-    return (fileID as NSString).pathComponents.first!
+    (fileID as NSString).pathComponents.first!
   }()
   
   /// The file name.

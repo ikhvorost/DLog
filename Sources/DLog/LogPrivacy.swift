@@ -73,8 +73,7 @@ public enum LogPrivacy {
   ///
   /// - Parameters:
   ///   - mask: Mask to use with the privacy option.
-  ///   - auto: If `true` the mask is not applied while debugging. If `false` the mask is applied both in Debug and Release. Defaults to `true`.
-  case `private`(mask: Mask, auto: Bool = true)
+  case `private`(mask: Mask)
   
   /// Sets the privacy level of a log message to private.
   ///
@@ -83,15 +82,6 @@ public enum LogPrivacy {
   public static var `private`: Self {
     .private(mask: .custom(value: "<private>"))
   }
-  
-  private static let isDebugger: Bool = {
-    var info = kinfo_proc()
-    var size = MemoryLayout.size(ofValue: info)
-    var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_PID, getpid()]
-    return sysctl(&mib, UInt32(mib.count), &info, &size, nil, 0) == 0 && (info.kp_proc.p_flag & P_TRACED) != 0
-  }()
-  
-  private static let isXCTest: Bool = { NSClassFromString("XCTest") != nil }()
   
   private static let letters: [Character] = {
     let lower = (Unicode.Scalar("a").value...Unicode.Scalar("z").value)
@@ -215,14 +205,8 @@ public enum LogPrivacy {
       case .public:
         return text
         
-      case let .private(mask, auto):
-        // Skip for debugging and testing
-        guard !auto || !Self.isDebugger || Self.isXCTest else {
-          return text
-        }
-        
+      case let .private(mask):
         switch mask {
-            
           case .hash:
             return String(format: "%02X", text.hashValue)
             
