@@ -42,14 +42,14 @@ public class LogLocation: NSObject {
   public let line: UInt
   
   /// The module name.
-  public lazy var moduleName: String = {
+  public var moduleName: String {
     (fileID as NSString).pathComponents.first!
-  }()
+  }
   
   /// The file name.
-  public lazy var fileName: String = {
+  public var fileName: String {
     (file as NSString).lastPathComponent
-  }()
+  }
   
   public init(_ fileID: String, _ file: String, _ function: String, _ line: UInt) {
     self.fileID = fileID
@@ -116,13 +116,13 @@ public class LogItem: NSObject {
   
   private let _message: () -> LogMessage
   /// Text of this log message.
-  public lazy var message: String = { _message().text }()
+  public private(set) lazy var message: String = { _message().text }()
   
   let config: LogConfig
   
   let _metadata: () -> [Metadata]
   /// Metadata of log message
-  public lazy var metadata: [Metadata] = { _metadata() }()
+  public internal(set) lazy var metadata: [Metadata] = { _metadata() }()
   
   init(message: @escaping () -> LogMessage, type: LogType, category: String, config: LogConfig, scope: LogScope?, metadata: @escaping () -> [Metadata], location: LogLocation) {
     self._message = message

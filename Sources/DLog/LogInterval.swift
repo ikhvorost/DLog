@@ -74,19 +74,19 @@ public struct IntervalConfig {
 /// Accumulated interval statistics
 public struct IntervalStatistics {
   /// A number of total calls
-  public var count = 0
+  public let count: Int
   
   /// A total time duration of all calls
-  public var total: TimeInterval = 0
+  public let total: TimeInterval
   
   /// A minimum time duration
-  public var min: TimeInterval = 0
+  public let min: TimeInterval
   
   /// A maximum time duration
-  public var max: TimeInterval = 0
+  public let max: TimeInterval
   
   /// An average time duration
-  public var average: TimeInterval = 0
+  public let average: TimeInterval
 }
 
 fileprivate class StatisticsStore {
@@ -100,7 +100,7 @@ fileprivate class StatisticsStore {
         if let data = intervals[id] {
           return data
         }
-        let data = IntervalStatistics()
+        let data = IntervalStatistics(count: 0, total: 0, min: 0, max: 0, average: 0)
         intervals[id] = data
         return data
       }
@@ -192,27 +192,26 @@ public class LogInterval: LogItem {
     time = Date()
     
     // Statistics
-    var statistics = self.statistics
-    statistics.count += 1
-    statistics.total += duration
-    if statistics.min == 0 || statistics.min > duration {
-      statistics.min = duration
-    }
-    if statistics.max == 0 || statistics.max < duration {
-      statistics.max = duration
-    }
-    statistics.average = statistics.total / Double(statistics.count)
+    let stats = self.statistics
+    let count = stats.count + 1
+    let total = stats.total + duration
+    let newStats = IntervalStatistics(
+      count: count,
+      total: total,
+      min: stats.min == 0 || stats.min > duration ? duration : stats.min,
+      max: stats.max == 0 || stats.max < duration ? duration : stats.max,
+      average: total / Double(count))
     
-    StatisticsStore.shared[id] = statistics
+    StatisticsStore.shared[id] = newStats
     
     // Metadata
     let items: [(IntervalOptions, String, () -> Any)] = [
-      (.average, "average", { stringFromTimeInterval(statistics.average) }),
-      (.count, "count", { statistics.count }),
+      (.average, "average", { stringFromTimeInterval(newStats.average) }),
+      (.count, "count", { newStats.count }),
       (.duration, "duration", { stringFromTimeInterval(self.duration) }),
-      (.max, "max", { stringFromTimeInterval(statistics.max) }),
-      (.min, "min", { stringFromTimeInterval(statistics.min) }),
-      (.total, "total", { stringFromTimeInterval(statistics.total) }),
+      (.max, "max", { stringFromTimeInterval(newStats.max) }),
+      (.min, "min", { stringFromTimeInterval(newStats.min) }),
+      (.total, "total", { stringFromTimeInterval(newStats.total) }),
     ]
     let metadata = Metadata.metadata(from: items, options: config.intervalConfig.options)
     self.metadata = _metadata() + [metadata]
