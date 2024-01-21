@@ -1,11 +1,10 @@
 # DLog
 
-[![Swift: 5](https://img.shields.io/badge/Swift-5%2b-f48041.svg?style=flat)](https://developer.apple.com/swift)
-![Platforms: iOS, macOS, tvOS, watchOS](https://img.shields.io/badge/Platforms-iOS%20|%20macOS%20|%20tvOS%20|%20watchOS%20-blue.svg?style=flat)
-[![Swift Package Manager: compatible](https://img.shields.io/badge/Swift%20Package%20Manager-compatible-4BC51D.svg?style=flat)](https://swift.org/package-manager/)
-[![Build](https://github.com/ikhvorost/DLog/actions/workflows/swift.yml/badge.svg?branch=master)](https://github.com/ikhvorost/DLog/actions/workflows/swift.yml)
-[![Codecov](https://codecov.io/gh/ikhvorost/DLog/branch/master/graph/badge.svg?token=DJLKDA9W1Q)](https://codecov.io/gh/ikhvorost/DLog)
-[![Swift Doc Coverage](https://img.shields.io/badge/Swift%20Doc%20Coverage-100%25-f39f37)](https://github.com/SwiftDocOrg/swift-doc)
+[![Swift: 5.9, 5.8, 5.7, 5.6](https://img.shields.io/badge/Swift-5.9%20|%205.8%20|%205.7%20|%205.6-de5d43.svg?style=flat&logo=swift)](https://developer.apple.com/swift)
+![Platforms: iOS, macOS, tvOS, visionOS, watchOS](https://img.shields.io/badge/Platforms-iOS%20|%20macOS%20|%20tvOS%20|%20visionOS%20|%20watchOS-blue.svg?style=flat&logo=apple)
+[![Swift Package Manager: compatible](https://img.shields.io/badge/Swift%20Package%20Manager-compatible-4BC51D.svg?style=flat&logo=apple)](https://swift.org/package-manager/)
+![Build: status](https://github.com/ikhvorost/DLog/actions/workflows/swift.yml/badge.svg?branch=master)
+[![Codecov: code coverage](https://codecov.io/gh/ikhvorost/DLog/branch/master/graph/badge.svg?token=DJLKDA9W1Q)](https://codecov.io/gh/ikhvorost/DLog)
 
 [![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/donate/?hosted_button_id=TSPDD3ZAAH24C)
 
@@ -163,8 +162,8 @@ startup()
 Outputs:
 
 ```
-• 19:11:23.278 [DLOG] [TRACE] <DLogTests.swift:521> {func:startup(),thread:{name:main,number:1}}
-• 19:11:23.279 [DLOG] [TRACE] <DLogTests.swift:522> {func:startup(),thread:{name:main,number:1}} start
+• 10:09:08.343 [DLOG] [TRACE] <DLogTests.swift:174> {func:startup,thread:{name:main,number:1}}
+• 10:09:08.345 [DLOG] [TRACE] <DLogTests.swift:175> {func:startup,thread:{name:main,number:1}} start
 ```
 
 ### `debug`
@@ -298,8 +297,6 @@ Outputs:
 ```
 • 12:04:29.758 [DLOG] [LOG] <DLogTests.swift:508> <private>
 ```
-
-> NOTE: Messages with `private` option are interpreted as `public` in debugging (XCode debugger is attached). If you want to disable this feature in debugging you should set `auto` parameter to `false`, e.g.: `logger.log("\(phoneNumber, privacy: .private(mask: .custom(value: "<private>"), auto: false))")`
 
 #### `private(mask: .hash)`
 
@@ -1089,8 +1086,8 @@ netLogger.trace("net")
 
 Outputs:
 ```
-• 19:53:11.990 [DLOG] [TRACE] <DLogTests.swift:527> {func:test_review(),thread:{name:main,number:1}} default
-> 19:53:11.991 [NET] [TRACE] {queue:com.apple.main-thread} net
+• 10:12:12.332 [DLOG] [TRACE] <DLogTests.swift:182> {func:test,thread:{name:main,number:1}} default
+> 10:12:12.334 [NET] [TRACE] net
 ```
 
 ## Metadata
@@ -1111,9 +1108,9 @@ logger.log("finish")
 
 Outputs:
 ```
-• 19:38:56.401 [DLOG] [LOG] <DLogTests.swift:514> (id:12345) start
-• 19:38:56.402 [DLOG] [LOG] <DLogTests.swift:516> (id:12345,process:main) attach
-• 19:38:56.402 [DLOG] [LOG] <DLogTests.swift:518> finish
+• 10:13:11.372 [DLOG] [LOG] <DLogTests.swift:174> {id:12345} start
+• 10:13:11.374 [DLOG] [LOG] <DLogTests.swift:177> {id:12345,process:main} attach
+• 10:13:11.374 [DLOG] [LOG] <DLogTests.swift:180> finish
 ```
 
 Where: `(id:12345,process:main)` - key-value pairs of the current metadata.
@@ -1143,14 +1140,14 @@ category.log("close")
 
 Outputs:
 ```
-• 20:08:04.574 [DLOG] [LOG] <DLogTests.swift:514> (id:12345) start
-• 20:08:04.575 [DLOG] ┌ [scope] 
-• 20:08:04.575 [DLOG] ├ [LOG] <DLogTests.swift:517> (id:12345) start
-• 20:08:04.575 [DLOG] ├ [LOG] <DLogTests.swift:519> finish
-• 20:08:04.575 [DLOG] └ [scope] (0s)
-• 20:08:04.576 [NET] [LOG] <DLogTests.swift:524> (id:12345,method:POST) post data
-• 20:08:04.576 [NET] [LOG] <DLogTests.swift:525> (id:12345,method:POST) receive response
-• 20:08:04.576 [NET] [LOG] <DLogTests.swift:528> close
+• 10:13:54.542 [DLOG] [LOG] <DLogTests.swift:174> {id:12345} start
+• 10:13:54.543 [DLOG] ┌ [scope] 
+• 10:13:54.543 [DLOG] ├ [LOG] <DLogTests.swift:178> {id:12345} start
+• 10:13:54.544 [DLOG] ├ [LOG] <DLogTests.swift:180> finish
+• 10:13:54.544 [DLOG] └ [scope] (0s)
+• 10:13:54.546 [NET] [LOG] <DLogTests.swift:186> {id:12345,method:POST} post data
+• 10:13:54.546 [NET] [LOG] <DLogTests.swift:187> {id:12345,method:POST} receive response
+• 10:13:54.546 [NET] [LOG] <DLogTests.swift:190> close
 ```
 
 ## Outputs
@@ -1684,7 +1681,7 @@ doTest()
 Outputs:
 
 ```
-• 16:42:56.065 [DLOG] [TRACE] <DLogTests.swift:521> {func:doTest(),thread:{name:main,number:1}}
+• 16:42:56.065 [DLOG] [TRACE] <DLogTests.swift:521> {func:doTest,thread:{name:main,number:1}}
 ```
 
 But you can change it to show a function and queue names with pretty style:
@@ -1706,8 +1703,8 @@ doTest()
 Outputs:
 
 ```
-• 19:34:31.637 [DLOG] [TRACE] <DLogTests.swift:178> {
-  func : doTest(),
+• 10:17:59.021 [DLOG] [TRACE] <DLogTests.swift:180> {
+  func : doTest,
   queue : com.apple.main-thread
 }
 ```
@@ -1736,8 +1733,8 @@ DispatchQueue.global().async {
 Outputs:
 
 ```
-• 16:44:54.548 [DLOG] [TRACE] <DLogTests.swift:524> {func:doTest(),thread:{number:1,qos:userInteractive}}
-• 16:44:54.549 [DLOG] [TRACE] <DLogTests.swift:524> {func:doTest(),thread:{number:2,qos:userInitiated}}
+• 10:18:40.976 [DLOG] [TRACE] <DLogTests.swift:179> {func:doTest,thread:{number:1,qos:userInteractive}}
+• 10:18:40.978 [DLOG] [TRACE] <DLogTests.swift:179> {func:doTest,thread:{number:2,qos:userInitiated}}
 ```
 
 #### `StackConfig`
@@ -1746,24 +1743,24 @@ The `trace` method can output the call stack backtrace of the current thread at 
 
 ```swift
 let logger: DLog = {
-    var config = LogConfig()
-    config.traceConfig.options = [.stack]
-    config.traceConfig.stackConfig.options = [.symbols, .frame]
-    config.traceConfig.stackConfig.depth = 3
-    config.traceConfig.style = .pretty
-    return DLog(config: config)
+  var config = LogConfig()
+  config.traceConfig.options = [.stack]
+  config.traceConfig.stackConfig.options = [.symbol, .frame]
+  config.traceConfig.stackConfig.depth = 3
+  config.traceConfig.style = .pretty
+  return DLog(config: config)
 }()
 
 func third() {
-    logger.trace()
+  logger.trace()
 }
 
 func second() {
-    third()
+  third()
 }
 
 func first() {
-    second()
+  second()
 }
 
 first()
@@ -1772,19 +1769,19 @@ first()
 Outputs:
 
 ```
-• 18:57:05.195 [DLOG] [TRACE] <DLogTests.swift:178> {
+• 10:20:47.180 [DLOG] [TRACE] <DLogTests.swift:183> {
   stack : [
     {
       frame : 0,
-      symbols : DLogTests.third() -> ()
+      symbol : third #1 () -> () in DLogTests.DLogTests.test() -> ()
     },
     {
       frame : 1,
-      symbols : DLogTests.second() -> ()
+      symbol : second #1 () -> () in DLogTests.DLogTests.test() -> ()
     },
     {
       frame : 2,
-      symbols : DLogTests.first() -> ()
+      symbol : first #1 () -> () in DLogTests.DLogTests.test() -> ()
     }
   ]
 }
@@ -1810,7 +1807,7 @@ logger.interval("signpost") {
 Outputs:
 
 ```
-• 18:59:49.314 [DLOG] [INTERVAL] <DLogTests.swift:177> {average:3.005s,count:1,duration:3.005s,max:3.005s,min:3.005s,total:3.005s} signpost
+• 10:21:47.407 [DLOG] [INTERVAL] <DLogTests.swift:178> {average:3.005s,count:1,duration:3.005s,max:3.005s,min:3.005s,total:3.005s} signpost
 ```
 
 ## Objective-C
