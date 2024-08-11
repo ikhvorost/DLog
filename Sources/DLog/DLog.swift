@@ -28,7 +28,7 @@ import Foundation
 
 /// The central class to emit log messages to specified outputs using one of the methods corresponding to a log level.
 ///
-public class DLog: LogProtocol {
+public class DLog: Log {
   
   private let output: LogOutput?
   
@@ -53,7 +53,7 @@ public class DLog: LogProtocol {
   /// - Parameters:
   ///     - name: Name of category.
   @objc
-  public subscript(name: String) -> LogProtocol {
+  public subscript(name: String) -> Log {
     category(name: name)
   }
   
@@ -71,8 +71,8 @@ public class DLog: LogProtocol {
   /// - Parameters:
   ///     - name: Name of category.
   ///     - config: Configuration of category.
-  public func category(name: String, config: LogConfig? = nil, metadata: Metadata? = nil) -> LogProtocol {
-    LogProtocol(logger: self, category: name, config: config ?? self.config, metadata: metadata ?? self.metadata.data)
+  public func category(name: String, config: LogConfig? = nil, metadata: Metadata? = nil) -> Log {
+    Log(logger: self, category: name, config: config ?? self.config, metadata: metadata ?? self.metadata.data)
   }
   
   /// Creates the logger instance with a target output object.

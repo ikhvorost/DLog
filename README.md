@@ -1875,7 +1875,7 @@ LogInterval* interval = logger.interval(@"interval", ^{
 **Category**
 
 ``` objective-c
-LogProtocol* netLogger = logger[@"NET"];
+Log* netLogger = logger[@"NET"];
 netLogger.log(@"net logger");
 ```
 

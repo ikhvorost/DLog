@@ -89,7 +89,7 @@ static NSString* read_stderr(VoidBlock block) {
 
 #pragma mark - Tests
 
-static void testAll(LogProtocol* logger, NSString *category) {
+static void testAll(Log* logger, NSString *category) {
   XCTAssertNotNil(logger);
   
   XCTAssertTrue([logger.log(@"log") match:matchString(category, @"log$")]);
@@ -126,7 +126,7 @@ static void testAll(LogProtocol* logger, NSString *category) {
   testAll(logger, nil);
 }
 
-- (void)test_trace_func_params:(LogProtocol *)logger text:(NSString *)text value:(NSInteger)value {
+- (void)test_trace_func_params:(Log *)logger text:(NSString *)text value:(NSInteger)value {
   XCTAssertNotNil(logger);
   XCTAssertTrue([logger.trace() match:matchString(nil, @"\\{func:test_trace_func_params,thread:\\{name:main,number:1\\}\\}$")]);
 }

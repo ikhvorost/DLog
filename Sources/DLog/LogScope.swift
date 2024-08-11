@@ -65,8 +65,9 @@ class ScopeStack {
 ///
 /// Scope provides a mechanism for grouping log messages.
 ///
-public class LogScope: LogProtocol {
-  @Atomic var time = Date()
+public class LogScope: Log {
+  @Atomic 
+  var time = Date()
   
   var os_state = os_activity_scope_state_s()
   
@@ -75,7 +76,8 @@ public class LogScope: LogProtocol {
   public internal(set) var level: Int = 0
   
   /// A time duration.
-  @Atomic public private(set) var duration: TimeInterval = 0
+  @Atomic 
+  public private(set) var duration: TimeInterval = 0
   
   /// Scope name.
   @objc

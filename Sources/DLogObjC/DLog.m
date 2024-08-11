@@ -8,7 +8,7 @@ NSString* fileID(NSBundle* bundle, NSString* file) {
 }
 
 
-@implementation LogProtocol (PropertyWrapper)
+@implementation Log (PropertyWrapper)
 
 
 - (LogBlock)log {

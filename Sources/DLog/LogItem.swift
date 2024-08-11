@@ -42,14 +42,14 @@ public class LogLocation: NSObject {
   public let line: UInt
   
   /// The module name.
-  public var moduleName: String {
+  public lazy var moduleName: String = {
     (fileID as NSString).pathComponents.first!
-  }
+  }()
   
   /// The file name.
-  public var fileName: String {
+  public lazy var fileName: String = {
     (file as NSString).lastPathComponent
-  }
+  }()
   
   public init(_ fileID: String, _ file: String, _ function: String, _ line: UInt) {
     self.fileID = fileID

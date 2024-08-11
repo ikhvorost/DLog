@@ -1,5 +1,5 @@
 //
-//  LogProtocol.swift
+//  Log.swift
 //
 //  Created by Iurii Khvorost <iurii.khvorost@gmail.com> on 2020/10/14.
 //  Copyright © 2020 Iurii Khvorost. All rights reserved.
@@ -28,7 +28,7 @@ import Foundation
 /// Base logger class
 ///
 @objcMembers
-public class LogProtocol: NSObject {
+public class Log: NSObject {
   var logger: DLog!
   let category: String
   let config: LogConfig

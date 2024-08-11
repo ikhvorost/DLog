@@ -139,7 +139,7 @@ let Interval = #"\{average:\#(SECS),duration:\#(SECS)\}"#
 
 let Empty = ">$"
 
-fileprivate func testAll(_ logger: LogProtocol, categoryTag: String = CategoryTag, metadata: String = "") {
+fileprivate func testAll(_ logger: Log, categoryTag: String = CategoryTag, metadata: String = "") {
   let padding = #"[\|\├\s]+"#
   
   XCTAssert(logger.log("log")?.match(#"\#(categoryTag)\#(padding)\#(LogTag) \#(Location)\#(metadata) log"#) == true)
@@ -389,7 +389,7 @@ final class DLogTests: XCTestCase {
       return ""
     }
     
-    let test: (LogProtocol, XCTestExpectation) -> Void = { logger, expectation in
+    let test: (Log, XCTestExpectation) -> Void = { logger, expectation in
       logger.log(failMessage())
       logger.trace(failMessage())
       logger.debug("\(failMessage())")
@@ -1235,7 +1235,7 @@ final class TraceTests: XCTestCase {
   }
   
   @discardableResult
-  func funcWithParams(_ logger: LogProtocol, a: Int, b: Int, c: Float) -> String? {
+  func funcWithParams(_ logger: Log, a: Int, b: Int, c: Float) -> String? {
     logger.trace()
   }
   

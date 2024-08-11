@@ -46,7 +46,7 @@ typedef LogInterval* _Nonnull (^_Nonnull IntervalBlock)(NSString* _Nonnull, NSSt
 
 extern NSString* _Nonnull fileID(NSBundle* _Nonnull bundle, NSString* _Nonnull file);
 
-@interface LogProtocol (PropertyWrapper)
+@interface Log (PropertyWrapper)
 
 @property (nonatomic, readonly) LogBlock log;
 @property (nonatomic, readonly) LogBlock trace;
