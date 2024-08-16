@@ -170,7 +170,7 @@ public class LogInterval: LogItem {
     time = Date()
     duration = 0
     
-    logger.begin(interval: self)
+    logger.output?.intervalBegin(interval: self)
   }
   
   /// Finish a time interval.
@@ -216,6 +216,6 @@ public class LogInterval: LogItem {
     let metadata = Metadata.metadata(from: items, options: config.intervalConfig.options)
     self.metadata = _metadata() + [metadata]
     
-    logger.end(interval: self)
+    logger.output?.intervalEnd(interval: self)
   }
 }

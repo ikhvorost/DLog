@@ -39,8 +39,8 @@
 #define interval(...) DLOG_CONCAT(interval_, DLOG_VARGS(__VA_ARGS__))(__VA_ARGS__)
 
 
-typedef NSString* _Nullable (^_Nonnull LogBlock)(NSString* _Nullable, NSString* _Nonnull, NSString* _Nonnull, NSString* _Nonnull, NSUInteger);
-typedef NSString* _Nullable (^_Nonnull AssertBlock)(BOOL, NSString* _Nullable, NSString* _Nonnull, NSString* _Nonnull, NSString* _Nonnull, NSUInteger);
+typedef LogItem* _Nullable (^_Nonnull LogBlock)(NSString* _Nullable, NSString* _Nonnull, NSString* _Nonnull, NSString* _Nonnull, NSUInteger);
+typedef LogItem* _Nullable (^_Nonnull AssertBlock)(BOOL, NSString* _Nullable, NSString* _Nonnull, NSString* _Nonnull, NSString* _Nonnull, NSUInteger);
 typedef LogScope* _Nonnull (^_Nonnull ScopeBlock)(NSString* _Nonnull, void (^_Nullable)(LogScope* _Nonnull));
 typedef LogInterval* _Nonnull (^_Nonnull IntervalBlock)(NSString* _Nonnull, NSString* _Nonnull, NSString* _Nonnull, NSString* _Nonnull, NSUInteger, void (^_Nullable)());
 

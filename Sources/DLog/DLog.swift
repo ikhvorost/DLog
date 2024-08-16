@@ -30,7 +30,7 @@ import Foundation
 ///
 public class DLog: Log {
   
-  private let output: LogOutput?
+  let output: LogOutput?
   
   /// The shared disabled logger.
   ///
@@ -125,39 +125,5 @@ public class DLog: Log {
   @objc
   public convenience init() {
     self.init(_:config:metadata:)()
-  }
-  
-  // Scope
-  
-  func enter(scope: LogScope) {
-    guard let out = output else { return }
-    ScopeStack.shared.append(scope) {
-      out.scopeEnter(scope: scope)
-    }
-  }
-  
-  func leave(scope: LogScope) {
-    guard let out = output else { return }
-    ScopeStack.shared.remove(scope) {
-      out.scopeLeave(scope: scope)
-    }
-  }
-  
-  // Interval
-  
-  func begin(interval: LogInterval) {
-    guard let out = output else { return }
-    out.intervalBegin(interval: interval)
-  }
-  
-  func end(interval: LogInterval) {
-    guard let out = output else { return }
-    out.intervalEnd(interval: interval)
-  }
-  
-  func log(message: @escaping () -> LogMessage, type: LogType, category: String, config: LogConfig, scope: LogScope?, metadata: @autoclosure @escaping () -> [Metadata], location: LogLocation) -> String? {
-    guard let out = output else { return nil }
-    let item = LogItem(message: message, type: type, category: category, config: config, scope: scope, metadata: metadata, location: location)
-    return out.log(item: item)
   }
 }

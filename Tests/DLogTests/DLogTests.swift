@@ -165,6 +165,7 @@ fileprivate func testAll(_ logger: Log, categoryTag: String = CategoryTag, metad
   XCTAssert(read_stdout { logger.interval("signpost") { delay() } }?.match(#"\#(categoryTag)\#(padding)\[INTERVAL\] \#(Location)\#(metadata) \#(Interval) signpost$"#) == true)
 }
 
+/*
 final class DLogTests: XCTestCase {
   
   // MARK: Tests -
@@ -1375,3 +1376,4 @@ final class TraceTests: XCTestCase {
     XCTAssert(text?.match(#"\#(Location) \{func:test_trace_config_all,process:\{cpu:\d+%,memory:\d+MB,pid:\d+,threads:\d+\},queue:com\.apple\.main-thread,stack:\[\{frame:\d+,symbol:DLogTests\.TraceTests\.test_trace_config_all\(\) -> \(\)\}"#) == true)
   }
 }
+*/

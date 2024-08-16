@@ -106,7 +106,10 @@ public class LogScope: Log {
   public func enter() {
     time = Date()
     duration = 0
-    logger.enter(scope: self)
+    
+    ScopeStack.shared.append(self) {
+      logger.output?.scopeEnter(scope: self)
+    }
   }
   
   /// Finish a scope.
@@ -125,6 +128,9 @@ public class LogScope: Log {
   @objc
   public func leave() {
     duration = -time.timeIntervalSinceNow
-    logger.leave(scope: self)
+    
+    ScopeStack.shared.remove(self) {
+      logger.output?.scopeLeave(scope: self)
+    }
   }
 }
