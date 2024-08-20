@@ -64,7 +64,7 @@ public class LogLocation: NSObject {
 /// A log type controls the conditions under which a message should be logged.
 ///
 @objc
-public enum LogType : Int {
+public enum LogType: Int {
   /// The default log level to capture non critical information.
   case log
   

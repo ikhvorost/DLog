@@ -68,8 +68,6 @@ public class OSLog : LogOutput {
   ///
   public init(subsystem: String = "com.dlog.logger", source: LogOutput = .textPlain) {
     self.subsystem = subsystem
-    
-    super.init(source: source)
   }
   
   private func oslog(category: String) -> os.OSLog {
@@ -85,7 +83,9 @@ public class OSLog : LogOutput {
   
   // MARK: - LogOutput
   
-  override func log(item: LogItem) -> String? {
+  override func log(item: LogItem) {
+    super.log(item: item)
+    
     let log = oslog(category: item.category)
     
     let location = "<\(item.location.fileName):\(item.location.line)>"
@@ -93,27 +93,27 @@ public class OSLog : LogOutput {
     assert(Self.types[item.type] != nil)
     let type = Self.types[item.type]!
     os_log("%{public}@ %{public}@", dso: Dynamic.dso, log: log, type: type, location, item.message)
-    
-    return super.log(item: item)
   }
   
-  override func scopeEnter(scope: LogScope) -> String? {
+  override func enter(scope: LogScope) {
+    super.enter(scope: scope)
+    
     if let os_activity_current = Dynamic.OS_ACTIVITY_CURRENT {
       let activity = _os_activity_create(Dynamic.dso, strdup(scope.name), os_activity_current, OS_ACTIVITY_FLAG_DEFAULT)
       os_activity_scope_enter(activity, &scope.os_state)
     }
-    return super.scopeEnter(scope: scope)
   }
   
-  override func scopeLeave(scope: LogScope) -> String? {
+  override func leave(scope: LogScope) {
+    super.leave(scope: scope)
+    
     if Dynamic.OS_ACTIVITY_CURRENT != nil {
       os_activity_scope_leave(&scope.os_state);
     }
-    return super.scopeLeave(scope: scope)
   }
   
-  override func intervalBegin(interval: LogInterval) {
-    super.intervalBegin(interval: interval)
+  override func begin(interval: LogInterval) {
+    super.begin(interval: interval)
     
     let log = oslog(category: interval.category)
     if interval.signpostID == nil {
@@ -125,12 +125,13 @@ public class OSLog : LogOutput {
     }
   }
   
-  override func intervalEnd(interval: LogInterval) -> String? {
+  override func end(interval: LogInterval) {
+    super.end(interval: interval)
+    
     let log = oslog(category: interval.category)
     
     if let name = interval.staticName {
       os_signpost(.end, log: log, name: name, signpostID: interval.signpostID!)
     }
-    return super.intervalEnd(interval: interval)
   }
 }

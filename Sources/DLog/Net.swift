@@ -61,7 +61,7 @@ private class LogBuffer {
 ///
 /// `NetConsole` service can be run from a command line on your machine and then the output connects and sends your log messages to it.
 ///
-public class Net : LogOutput {
+public class Net: NSObject {
   private static let type = "_dlog._tcp"
   private static let domain = "local."
   
@@ -85,8 +85,7 @@ public class Net : LogOutput {
   /// 	- source: A source output (defaults to `.textColored`)
   public init(name: String = "DLog", source: LogOutput = .textColored) {
     self.name = name
-    
-    super.init(source: source)
+    super.init()
     
     browser.delegate = self
     browser.searchForServices(ofType: Self.type, inDomain: Self.domain)
@@ -118,24 +117,6 @@ public class Net : LogOutput {
   private func log(_ text: String) {
     guard debug else { return }
     print("[NetOutput] \(text)")
-  }
-  
-  // MARK: - LogOutput
-  
-  override func log(item: LogItem) -> String? {
-    send(super.log(item: item))
-  }
-  
-  override func scopeEnter(scope: LogScope) -> String? {
-    send(super.scopeEnter(scope: scope))
-  }
-  
-  override func scopeLeave(scope: LogScope) -> String? {
-    send(super.scopeLeave(scope: scope))
-  }
-  
-  override func intervalEnd(interval: LogInterval) -> String? {
-    send(super.intervalEnd(interval: interval))
   }
 }
 

@@ -28,7 +28,7 @@ import Foundation
 
 /// Target output for a file.
 ///
-public class File : LogOutput {
+public class File {
   private let file: FileHandle?
   private let queue = DispatchQueue(label: "File")
   
@@ -63,8 +63,6 @@ public class File : LogOutput {
     if append {
       file?.seekToEndOfFile()
     }
-    
-    super.init(source: source)
   }
   
   private func write(_ text: String?) -> String? {
@@ -76,23 +74,5 @@ public class File : LogOutput {
       }
     }
     return text
-  }
-  
-  // MARK: - LogOutput
-  
-  override func log(item: LogItem) -> String? {
-    write(super.log(item: item))
-  }
-  
-  override func scopeEnter(scope: LogScope) -> String? {
-    write(super.scopeEnter(scope: scope))
-  }
-  
-  override func scopeLeave(scope: LogScope) -> String? {
-    write(super.scopeLeave(scope: scope))
-  }
-  
-  override func intervalEnd(interval: LogInterval) -> String? {
-    write(super.intervalEnd(interval: interval))
   }
 }

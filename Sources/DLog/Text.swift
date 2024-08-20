@@ -156,10 +156,8 @@ public class Text : LogOutput {
   /// - Parameters:
   ///		- style: Style of text to output (defaults to `.plain`).
   ///
-  public init(style: Style = .plain) {
+  public init(style: Style) {
     self.style = style
-    
-    super.init(source: nil)
   }
   
   private static let dateFormatter: DateFormatter = {
@@ -297,30 +295,27 @@ public class Text : LogOutput {
   
   // MARK: - LogOutput
   
-  override func log(item: LogItem) -> String? {
+  override func log(item: LogItem) {
     super.log(item: item)
-    return textMessage(item: item)
+    textMessage(item: item)
   }
   
-  override func scopeEnter(scope: LogScope) -> String? {
-    super.scopeEnter(scope: scope)
-    
-    return textScope(scope: scope)
+  override func enter(scope: LogScope) {
+    super.enter(scope: scope)
+    textScope(scope: scope)
   }
   
-  override func scopeLeave(scope: LogScope) -> String? {
-    super.scopeLeave(scope: scope)
-    
-    return textScope(scope: scope)
+  override func leave(scope: LogScope) {
+    super.leave(scope: scope)
+    textScope(scope: scope)
   }
   
-  override func intervalBegin(interval: LogInterval) {
-    super.intervalBegin(interval: interval)
+  override func begin(interval: LogInterval) {
+    super.begin(interval: interval)
   }
   
-  override func intervalEnd(interval: LogInterval) -> String? {
-    super.intervalEnd(interval: interval)
-    
-    return textMessage(item: interval)
+  override func end(interval: LogInterval) {
+    super.end(interval: interval)
+    textMessage(item: interval)
   }
 }

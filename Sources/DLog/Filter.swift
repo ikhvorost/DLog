@@ -28,6 +28,7 @@ import Foundation
 /// Middleware output for filtering
 ///
 public class Filter: LogOutput {
+  
   private let isItem: ((LogItem) -> Bool)?
   private let isScope: ((LogScope) -> Bool)?
   
@@ -44,32 +45,37 @@ public class Filter: LogOutput {
   public init(isItem: ((LogItem) -> Bool)?, isScope: ((LogScope) -> Bool)?) {
     self.isItem = isItem
     self.isScope = isScope
-    super.init(source: nil)
   }
   
   // MARK: - LogOutput
   
-  override func log(item: LogItem) -> String? {
-    let text = super.log(item: item)
-    let included = isItem == nil || isItem?(item) == true
-    return included ? text : nil
+  override func log(item: LogItem) {
+    if isItem == nil || isItem?(item) == true {
+      super.log(item: item)
+    }
   }
   
-  override func scopeEnter(scope: LogScope) -> String? {
-    let text = super.scopeEnter(scope: scope)
-    let included = isScope == nil || isScope?(scope) == true
-    return included == true ? text : nil
+  override func enter(scope: LogScope) {
+    if isScope == nil || isScope?(scope) == true {
+      super.enter(scope: scope)
+    }
   }
   
-  override func scopeLeave(scope: LogScope) -> String? {
-    let text = super.scopeLeave(scope: scope)
-    let included = isScope == nil || isScope?(scope) == true
-    return included ? text : nil
+  override func leave(scope: LogScope) {
+    if isScope == nil || isScope?(scope) == true {
+      super.leave(scope: scope)
+    }
   }
   
-  override func intervalEnd(interval: LogInterval) -> String? {
-    let text = super.intervalEnd(interval: interval)
-    let included = isItem == nil || isItem?(interval) == true
-    return included ? text : nil
+  override func begin(interval: LogInterval) {
+    if isItem == nil || isItem?(interval) == true {
+      super.begin(interval: interval)
+    }
+  }
+  
+  override func end(interval: LogInterval) {
+    if isItem == nil || isItem?(interval) == true {
+      super.end(interval: interval)
+    }
   }
 }

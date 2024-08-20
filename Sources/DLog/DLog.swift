@@ -86,39 +86,10 @@ public class DLog: Log {
   /// - Parameters:
   /// 	- output: A target output object. If it is omitted the logger uses `stdout` by default.
   ///
-  public init(_ output: LogOutput? = .stdout, config: LogConfig = LogConfig(), metadata: Metadata = Metadata()) {
+  public init(_ output: LogOutput? = .textEmoji, config: LogConfig = LogConfig(), metadata: Metadata = Metadata()) {
     self.output = output
     super.init(logger: nil, category: "DLOG", config: config, metadata: metadata)
     self.logger = self
-  }
-  
-  /// Creates the logger instance with a list of linked outputs for both swift and objective-c code.
-  ///
-  /// Swift:
-  ///
-  ///     let logger = DLog([.textPlain, .stdout])
-  ///
-  /// Objective-C:
-  ///
-  ///     DLog* logger = [[DLog alloc] initWithOutputs:@[LogOutput.textPlain, filter, LogOutput.stdOut]];
-  ///
-  /// - Parameters:
-  ///     - outputs: An array of outputs.
-  ///
-  @objc
-  public convenience init(outputs: [LogOutput]) {
-    var output: LogOutput?
-    
-    if outputs.count == 0 {
-      output = .stdout
-    }
-    else {
-      output = outputs.count == 1
-      ? outputs.first
-      : outputs.reduce(.textPlain, =>)
-    }
-    
-    self.init(output)
   }
   
   /// Creates the default logger.

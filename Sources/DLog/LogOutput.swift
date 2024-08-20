@@ -73,44 +73,26 @@ public class LogOutput : NSObject {
 #endif
   
   /// A source output.
-  public var source: LogOutput!
+  fileprivate var next: LogOutput?
   
-  init(source: LogOutput?) {
-    self.source = source
+  func log(item: LogItem) {
+    next?.log(item: item)
   }
   
-  @discardableResult
-  func log(item: LogItem) -> String? {
-    return source != nil
-    ? source.log(item: item)
-    : nil
+  func enter(scope: LogScope) {
+    next?.enter(scope: scope)
   }
   
-  @discardableResult
-  func scopeEnter(scope: LogScope) -> String? {
-    return source != nil
-    ? source.scopeEnter(scope: scope)
-    : nil
+  func leave(scope: LogScope) {
+    next?.leave(scope: scope)
   }
   
-  @discardableResult
-  func scopeLeave(scope: LogScope) -> String? {
-    return source != nil
-    ? source.scopeLeave(scope: scope)
-    : nil
+  func begin(interval: LogInterval) {
+    next?.begin(interval: interval)
   }
   
-  func intervalBegin(interval: LogInterval) {
-    if source != nil {
-      source.intervalBegin(interval: interval)
-    }
-  }
-  
-  @discardableResult
-  func intervalEnd(interval: LogInterval) -> String? {
-    return source != nil
-    ? source.intervalEnd(interval: interval)
-    : nil
+  func end(interval: LogInterval) {
+    next?.end(interval: interval)
   }
 }
 
@@ -131,7 +113,7 @@ extension LogOutput {
   /// 	let logger = DLog(.textEmoji => .stdout => .file("dlog.txt"))
   ///
   public static func => (left: LogOutput, right: LogOutput) -> LogOutput {
-    right.source = left
+    left.next = right
     return right
   }
 }

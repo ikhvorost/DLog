@@ -108,7 +108,7 @@ public class LogScope: Log {
     duration = 0
     
     ScopeStack.shared.append(self) {
-      logger.output?.scopeEnter(scope: self)
+      logger.output?.enter(scope: self)
     }
   }
   
@@ -130,7 +130,7 @@ public class LogScope: Log {
     duration = -time.timeIntervalSinceNow
     
     ScopeStack.shared.remove(self) {
-      logger.output?.scopeLeave(scope: self)
+      logger.output?.leave(scope: self)
     }
   }
 }
