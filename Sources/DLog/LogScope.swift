@@ -133,4 +133,45 @@ public class LogScope: Log {
       logger.output?.leave(scope: self)
     }
   }
+  
+  func text() -> String {
+    let start = duration == 0
+    
+    var sign = { "\(self.config.sign)" }
+    var time = start
+      ? LogItem.dateFormatter.string(from: time)
+      : LogItem.dateFormatter.string(from: time.addingTimeInterval(duration))
+    let ms = !start ? "(\(stringFromTimeInterval(duration)))" : nil
+    var category = { "[\(self.category)]" }
+    var level = { String(format: "[%02d]", self.level) }
+    let padding: () -> String = {
+      let text = (1..<self.level)
+        .map { ScopeStack.shared.exists(level: $0) ? "| " : "  " }
+        .joined()
+      return "\(text)\(start ? "┌" : "└")"
+    }
+    var text = "[\(name)] \(ms ?? "")"
+    
+    switch config.style {
+      case .emoji, .plain:
+        break
+        
+      case .colored:
+        sign = { "\(self.config.sign)".color(.dim) }
+        time = time.color(.dim)
+        level = { String(format: "[%02d]", self.level).color(.dim) }
+        category = { self.category.color(.textBlue) }
+        text = "[\(name.color(.textMagenta))] \((ms ?? "").color(.dim))"
+    }
+    
+    let items: [(LogOptions, () -> String)] = [
+      (.sign, sign),
+      (.time, { time }),
+      (.level, level),
+      (.category, category),
+      (.padding, padding),
+    ]
+    let prefix = LogItem.logPrefix(items: items, options: config.options)
+    return prefix.isEmpty ? text : "\(prefix) \(text)"
+  }
 }

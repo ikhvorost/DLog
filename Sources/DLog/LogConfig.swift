@@ -77,8 +77,22 @@ public struct LogOptions: OptionSet {
   public static let regular: Self = [.sign, .time, .category, .padding, .type, .location, .metadata]
 }
 
+/// Style of text to output.
+public enum Style {
+  /// Universal plain text.
+  case plain
+  
+  /// Text with type icons for info, debug etc. (useful for XCode console).
+  case emoji
+  
+  /// Colored text with ANSI escape codes (useful for Terminal and files).
+  case colored
+}
+
 /// Contains configuration values regarding to the logger
 public struct LogConfig {
+  public var style: Style = .emoji
+  
   /// Start sign of the logger
   public var sign: Character = "•"
   

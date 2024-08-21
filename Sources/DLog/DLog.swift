@@ -86,7 +86,7 @@ public class DLog: Log {
   /// - Parameters:
   /// 	- output: A target output object. If it is omitted the logger uses `stdout` by default.
   ///
-  public init(_ output: LogOutput? = .textEmoji, config: LogConfig = LogConfig(), metadata: Metadata = Metadata()) {
+  public init(_ output: LogOutput? = .stdout, config: LogConfig = LogConfig(), metadata: Metadata = Metadata()) {
     self.output = output
     super.init(logger: nil, category: "DLOG", config: config, metadata: metadata)
     self.logger = self

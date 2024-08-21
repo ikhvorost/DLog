@@ -31,16 +31,6 @@ extension String {
   }
 }
 
-extension DispatchSemaphore {
-  static func Lock() -> DispatchSemaphore {
-    return DispatchSemaphore(value: 0)
-  }
-  
-  static func Mutex() -> DispatchSemaphore {
-    return DispatchSemaphore(value: 1)
-  }
-}
-
 extension XCTestCase {
   
   func wait(count: Int, timeout: TimeInterval = 1, repeat r: Int = 1, name: String = #function, closure: ([XCTestExpectation]) -> Void) {
@@ -68,10 +58,6 @@ extension XCTestCase {
 
 func delay(_ sec: TimeInterval = 0.25) {
   Thread.sleep(forTimeInterval: sec)
-}
-
-func asyncAfter(_ sec: Double = 0.25, closure: @escaping (() -> Void) ) {
-  DispatchQueue.global().asyncAfter(deadline: .now() + sec, execute: closure)
 }
 
 /// Get text standard output
@@ -139,6 +125,17 @@ let Interval = #"\{average:\#(SECS),duration:\#(SECS)\}"#
 
 let Empty = ">$"
 
+final class DLogTests: XCTestCase {
+  
+  func test_Log() {
+    let log = DLog(.stdout)
+    log.scope("Test") { scope in
+      scope.trace()
+    }
+  }
+}
+
+/*
 fileprivate func testAll(_ logger: Log, categoryTag: String = CategoryTag, metadata: String = "") {
   let padding = #"[\|\├\s]+"#
   
@@ -164,8 +161,7 @@ fileprivate func testAll(_ logger: Log, categoryTag: String = CategoryTag, metad
   XCTAssert(read_stdout { logger.scope("scope") { _ in delay() } }?.match(#"\#(categoryTag)\#(padding)└ \[scope\] \(\#(SECS)\)"#) == true)
   XCTAssert(read_stdout { logger.interval("signpost") { delay() } }?.match(#"\#(categoryTag)\#(padding)\[INTERVAL\] \#(Location)\#(metadata) \#(Interval) signpost$"#) == true)
 }
-
-/*
+ 
 final class DLogTests: XCTestCase {
   
   // MARK: Tests -

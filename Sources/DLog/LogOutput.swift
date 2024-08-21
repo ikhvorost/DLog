@@ -27,15 +27,7 @@ import Foundation
 
 /// A base output class.
 @objcMembers
-public class LogOutput : NSObject {
-  /// Creates `Text` output with plain style.
-  public static var textPlain: Text { Text(style: .plain) }
-  
-  /// Creates `Text` output with emoji style.
-  public static var textEmoji: Text { Text(style: .emoji) }
-  
-  /// Creates `Text` output with colored style (ANSI escape codes).
-  public static var textColored: Text { Text(style: .colored) }
+public class LogOutput: NSObject {
   
   /// Creates `Standard` output for `stdout` stream.
   @objc(stdOut)
@@ -72,7 +64,7 @@ public class LogOutput : NSObject {
   public static func net(_ name: String) -> Net { Net(name: name) }
 #endif
   
-  /// A source output.
+  /// Next output.
   fileprivate var next: LogOutput?
   
   func log(item: LogItem) {

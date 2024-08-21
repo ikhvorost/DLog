@@ -28,7 +28,7 @@ import Foundation
 
 /// A target output that can output text messages to POSIX streams.
 ///
-public class Standard: NSObject {
+public class Standard: LogOutput {
   
   let stream: UnsafeMutablePointer<FILE>
   
@@ -41,14 +41,39 @@ public class Standard: NSObject {
   ///		- stream: POSIX stream: `Darwin.stdout`, `Darwin.stderr`.
   ///		- source: A source output (defaults to `.textPlain`).
   ///
-  public init(stream: UnsafeMutablePointer<FILE> = Darwin.stdout, source: LogOutput = .textPlain) {
+  public init(stream: UnsafeMutablePointer<FILE> = Darwin.stdout) {
     self.stream = stream
   }
   
-  private func echo(_ text: String?) -> String? {
-    if let str = text, !str.isEmpty {
-      fputs(str + "\n", stream)
+  private func echo(_ text: String) {
+    if !text.isEmpty {
+      fputs(text + "\n", stream)
     }
-    return text
+  }
+  
+  // MARK: - LogOutput
+  
+  override func log(item: LogItem) {
+    super.log(item: item)
+    echo(item.text())
+  }
+  
+  override func enter(scope: LogScope) {
+    super.enter(scope: scope)
+    echo(scope.text())
+  }
+  
+  override func leave(scope: LogScope) {
+    super.leave(scope: scope)
+    echo(scope.text())
+  }
+  
+//  override func begin(interval: LogInterval) {
+//    super.begin(interval: interval)
+//  }
+  
+  override func end(interval: LogInterval) {
+    super.end(interval: interval)
+    echo(interval.text())
   }
 }
