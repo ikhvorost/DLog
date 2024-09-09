@@ -28,9 +28,9 @@ import Foundation
 
 /// Target output for a file.
 ///
-public class File {
+public class File: LogOutput {
   private let file: FileHandle?
-  private let queue = DispatchQueue(label: "File")
+  private let queue = DispatchQueue(label: "dlog.file.queue")
   
   /// Initializes and returns the target file output object associated with the specified file.
   ///
@@ -45,7 +45,7 @@ public class File {
   /// 	- append: `true` if the file output object should append log messages to the end of an existing file or `false` if you want to clear one.
   /// 	- source: A source output object, if it is omitted, the file output takes `Text` plain output as a source output.
   ///
-  public init(path: String, append: Bool = false, source: LogOutput = .textPlain) {
+  public init(path: String, append: Bool = false) {
     let fileManager = FileManager.default
     if append == false {
       try? fileManager.removeItem(atPath: path)
@@ -65,14 +65,38 @@ public class File {
     }
   }
   
-  private func write(_ text: String?) -> String? {
-    if let str = text, !str.isEmpty {
-      queue.async {
-        if let data = (str + "\n").data(using: .utf8) {
-          self.file?.write(data)
-        }
+  private func write(_ text: @escaping @autoclosure () -> String) {
+    queue.async {
+      let text = text()
+      if !text.isEmpty, let data = (text + "\n").data(using: .utf8) {
+        self.file?.write(data)
       }
     }
-    return text
+  }
+  
+  // MARK: - LogOutput
+  
+  override func log(item: LogItem) {
+    super.log(item: item)
+    write(item.text())
+  }
+  
+  override func enter(scopeItem: LogScopeItem) {
+    super.enter(scopeItem: scopeItem)
+    write("\(scopeItem)")
+  }
+  
+  override func leave(scopeItem: LogScopeItem) {
+    super.leave(scopeItem: scopeItem)
+    write("\(scopeItem)")
+  }
+  
+  override func begin(interval: LogInterval) {
+    super.begin(interval: interval)
+  }
+  
+  override func end(interval: LogInterval) {
+    super.end(interval: interval)
+    write(interval.text())
   }
 }
