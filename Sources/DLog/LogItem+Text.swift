@@ -150,15 +150,15 @@ extension LogItem {
   func text() -> String {
     var sign = { "\(self.config.sign)" }
     var time = { Self.dateFormatter.string(from: self.time) }
-    var level = { String(format: "[%02d]", self.scope?.level ?? 0) }
+    var level = { String(format: "[%02d]", self.scope?.item.level ?? 0) }
     var category = { "[\(self.category)]" }
     let padding = {
-      guard let scope = self.scope, scope.level > 0 else { return "" }
-      return (1...scope.level)
+      guard let scope = self.scope, scope.item.level > 0 else { return "" }
+      return (1...scope.item.level)
         .map {
           ScopeStack.shared.exists(level: $0)
-          ? ($0 == scope.level) ? "├ " : "│ "
-          : "  "
+            ? ($0 == scope.item.level) ? "├ " : "│ "
+            : "  "
         }
         .joined()
     }

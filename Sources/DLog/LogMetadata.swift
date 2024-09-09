@@ -27,6 +27,7 @@ import Foundation
 public typealias Metadata = [String : Any]
 
 extension Metadata {
+  
   static func metadata<Option: OptionSet>(from items: [(Option, String, () -> Any)], options: Option) -> Metadata {
     let keyValues: [(String, Any)] = items
       .compactMap { (option: Option, key: String, f:() -> Any) in

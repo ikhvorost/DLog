@@ -31,6 +31,7 @@ import Foundation
 public class Standard: LogOutput {
   
   let stream: UnsafeMutablePointer<FILE>
+  let queue = DispatchQueue(label: "dlog.std.queue")
   
   /// Creates `Standard` output object.
   ///
@@ -45,9 +46,12 @@ public class Standard: LogOutput {
     self.stream = stream
   }
   
-  private func echo(_ text: String) {
-    if !text.isEmpty {
-      fputs(text + "\n", stream)
+  private func echo(_ text: @escaping @autoclosure () -> String) {
+    queue.async {
+      let text = text()
+      if !text.isEmpty {
+        fputs(text + "\n", self.stream)
+      }
     }
   }
   
@@ -58,14 +62,14 @@ public class Standard: LogOutput {
     echo(item.text())
   }
   
-  override func enter(scope: LogScope) {
-    super.enter(scope: scope)
-    echo(scope.text())
+  override func enter(scopeItem: LogScopeItem) {
+    super.enter(scopeItem: scopeItem)
+    echo("\(scopeItem)")
   }
   
-  override func leave(scope: LogScope) {
-    super.leave(scope: scope)
-    echo(scope.text())
+  override func leave(scopeItem: LogScopeItem) {
+    super.leave(scopeItem: scopeItem)
+    echo("\(scopeItem)")
   }
   
 //  override func begin(interval: LogInterval) {

@@ -25,6 +25,16 @@
 
 import Foundation
 
+
+// Forward pipe
+precedencegroup ForwardPipe {
+  associativity: left
+}
+/// Pipeline operator which defines a combined output from two outputs
+/// where the first one is a source and second is a target
+infix operator => : ForwardPipe
+
+
 /// A base output class.
 @objcMembers
 public class LogOutput: NSObject {
@@ -49,9 +59,9 @@ public class LogOutput: NSObject {
   }
   
   /// Creates `Filter` output for log scopes.
-  public static func filter(scope: @escaping (LogScope) -> Bool) -> Filter {
-    Filter(isItem: nil, isScope: scope)
-  }
+//  public static func filter(scope: @escaping (LogScope) -> Bool) -> Filter {
+//    Filter(isItem: nil, isScope: scope)
+//  }
   
   /// Creates `File` output with a file path to write.
   public static func file(_ path: String, append: Bool = false) -> File { File(path: path, append: append) }
@@ -64,19 +74,29 @@ public class LogOutput: NSObject {
   public static func net(_ name: String) -> Net { Net(name: name) }
 #endif
   
-  /// Next output.
-  fileprivate var next: LogOutput?
+  /// Forward pipe operator
+  ///
+  /// The operator allows to create a list of linked outputs.
+  ///
+  ///   let logger = DLog(.textEmoji => .stdout => .file("dlog.txt"))
+  ///
+  public static func => (left: LogOutput, right: LogOutput) -> LogOutput {
+    left.next = right
+    return right
+  }
+  
+  private var next: LogOutput?
   
   func log(item: LogItem) {
     next?.log(item: item)
   }
   
-  func enter(scope: LogScope) {
-    next?.enter(scope: scope)
+  func enter(scopeItem: LogScopeItem) {
+    next?.enter(scopeItem: scopeItem)
   }
   
-  func leave(scope: LogScope) {
-    next?.leave(scope: scope)
+  func leave(scopeItem: LogScopeItem) {
+    next?.leave(scopeItem: scopeItem)
   }
   
   func begin(interval: LogInterval) {
@@ -85,27 +105,5 @@ public class LogOutput: NSObject {
   
   func end(interval: LogInterval) {
     next?.end(interval: interval)
-  }
-}
-
-// Forward pipe
-precedencegroup ForwardPipe {
-  associativity: left
-}
-/// Pipeline operator which defines a combined output from two outputs
-/// where the first one is a source and second is a target
-infix operator => : ForwardPipe
-
-extension LogOutput {
-  
-  /// Forward pipe operator
-  ///
-  /// The operator allows to create a list of linked outputs.
-  ///
-  /// 	let logger = DLog(.textEmoji => .stdout => .file("dlog.txt"))
-  ///
-  public static func => (left: LogOutput, right: LogOutput) -> LogOutput {
-    left.next = right
-    return right
   }
 }
