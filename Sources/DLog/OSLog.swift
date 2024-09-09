@@ -66,7 +66,7 @@ public class OSLog : LogOutput {
   ///		logging (defaults to `"com.dlog.logger"`).
   ///		- source: A source output (defaults to `.textPlain`)
   ///
-  public init(subsystem: String = "com.dlog.logger", source: LogOutput = .textPlain) {
+  public init(subsystem: String = "com.dlog.logger") {
     self.subsystem = subsystem
   }
   
@@ -95,20 +95,20 @@ public class OSLog : LogOutput {
     os_log("%{public}@ %{public}@", dso: Dynamic.dso, log: log, type: type, location, item.message)
   }
   
-  override func enter(scope: LogScope) {
-    super.enter(scope: scope)
+  override func enter(scopeItem: LogScopeItem) {
+    super.enter(scopeItem: scopeItem)
     
     if let os_activity_current = Dynamic.OS_ACTIVITY_CURRENT {
-      let activity = _os_activity_create(Dynamic.dso, strdup(scope.name), os_activity_current, OS_ACTIVITY_FLAG_DEFAULT)
-      os_activity_scope_enter(activity, &scope.os_state)
+      let activity = _os_activity_create(Dynamic.dso, strdup(scopeItem.name), os_activity_current, OS_ACTIVITY_FLAG_DEFAULT)
+      os_activity_scope_enter(activity, &scopeItem.activity.os_state)
     }
   }
   
-  override func leave(scope: LogScope) {
-    super.leave(scope: scope)
+  override func leave(scopeItem: LogScopeItem) {
+    super.leave(scopeItem: scopeItem)
     
     if Dynamic.OS_ACTIVITY_CURRENT != nil {
-      os_activity_scope_leave(&scope.os_state);
+      os_activity_scope_leave(&scopeItem.activity.os_state)
     }
   }
   

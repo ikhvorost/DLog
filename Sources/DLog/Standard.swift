@@ -72,9 +72,9 @@ public class Standard: LogOutput {
     echo("\(scopeItem)")
   }
   
-//  override func begin(interval: LogInterval) {
-//    super.begin(interval: interval)
-//  }
+  override func begin(interval: LogInterval) {
+    super.begin(interval: interval)
+  }
   
   override func end(interval: LogInterval) {
     super.end(interval: interval)
