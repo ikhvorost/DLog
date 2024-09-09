@@ -61,14 +61,14 @@ private class LogBuffer {
 ///
 /// `NetConsole` service can be run from a command line on your machine and then the output connects and sends your log messages to it.
 ///
-public class Net: NSObject {
+public class Net: LogOutput {
   private static let type = "_dlog._tcp"
   private static let domain = "local."
   
   private let name: String
   private let browser = NetServiceBrowser()
   private var service: NetService?
-  private let queue = DispatchQueue(label: "NetOutput")
+  private let queue = DispatchQueue(label: "dlog.net.queue")
   private var outputStream : OutputStream?
   private let buffer = LogBuffer()
   
@@ -83,7 +83,7 @@ public class Net: NSObject {
   /// - Parameters:
   /// 	- name: A name of `NetConsole` service (defaults to `"DLog"`)
   /// 	- source: A source output (defaults to `.textColored`)
-  public init(name: String = "DLog", source: LogOutput = .textColored) {
+  public init(name: String = "DLog") {
     self.name = name
     super.init()
     
@@ -96,27 +96,53 @@ public class Net: NSObject {
     browser.stop()
   }
   
-  @discardableResult
-  private func send(_ text: String?, newline: Bool = true) -> String? {
-    if let str = text, !str.isEmpty {
-      queue.async {
-        if let stream = self.outputStream {
-          let data = str + (newline ? "\n" : "")
-          stream.write(data, maxLength: data.lengthOfBytes(using: .utf8))
-        }
-        else {
-          self.buffer.append(text: str)
-        }
+  private func send(_ text: @escaping @autoclosure () -> String, newline: Bool = true) {
+    queue.async {
+      let text = text()
+      guard !text.isEmpty else {
+        return
+      }
+      
+      if let stream = self.outputStream {
+        let data = text + (newline ? "\n" : "")
+        stream.write(data, maxLength: data.lengthOfBytes(using: .utf8))
+      }
+      else {
+        self.buffer.append(text: text)
       }
     }
-    
-    return text
   }
   
   // Log debug messages
   private func log(_ text: String) {
     guard debug else { return }
     print("[NetOutput] \(text)")
+  }
+  
+  // MARK: - LogOutput
+  
+  override func log(item: LogItem) {
+    super.log(item: item)
+    send(item.text())
+  }
+  
+  override func enter(scopeItem: LogScopeItem) {
+    super.enter(scopeItem: scopeItem)
+    send("\(scopeItem)")
+  }
+  
+  override func leave(scopeItem: LogScopeItem) {
+    super.leave(scopeItem: scopeItem)
+    send("\(scopeItem)")
+  }
+  
+  override func begin(interval: LogInterval) {
+    super.begin(interval: interval)
+  }
+  
+  override func end(interval: LogInterval) {
+    super.end(interval: interval)
+    send(interval.text())
   }
 }
 
