@@ -29,8 +29,8 @@ import Foundation
 ///
 public class Filter: LogOutput {
   
-  private let isItem: ((LogItem) -> Bool)?
-  private let isScope: ((LogScope) -> Bool)?
+  private let itemHandler: ((LogItem) -> Bool)?
+  private let scopeHandler: ((LogScopeItem) -> Bool)?
   
   /// Initializes a filter output that evaluates using a specified block object.
   ///
@@ -42,40 +42,45 @@ public class Filter: LogOutput {
   /// - Parameters:
   /// 	- block: The block is applied to the object to be evaluated.
   ///
-  public init(isItem: ((LogItem) -> Bool)?, isScope: ((LogScope) -> Bool)?) {
-    self.isItem = isItem
-    self.isScope = isScope
+  public init(itemHandler: ((LogItem) -> Bool)?, scopeHandler: ((LogScopeItem) -> Bool)?) {
+    self.itemHandler = itemHandler
+    self.scopeHandler = scopeHandler
   }
   
   // MARK: - LogOutput
   
   override func log(item: LogItem) {
-    if isItem == nil || isItem?(item) == true {
-      super.log(item: item)
+    guard itemHandler == nil || itemHandler?(item) == true else {
+      return
     }
+    super.log(item: item)
   }
   
-  override func enter(scope: LogScope) {
-    if isScope == nil || isScope?(scope) == true {
-      super.enter(scope: scope)
+  override func enter(scopeItem: LogScopeItem) {
+    guard scopeHandler == nil || scopeHandler?(scopeItem) == true else {
+      return
     }
+    super.enter(scopeItem: scopeItem)
   }
   
-  override func leave(scope: LogScope) {
-    if isScope == nil || isScope?(scope) == true {
-      super.leave(scope: scope)
+  override func leave(scopeItem: LogScopeItem) {
+    guard scopeHandler == nil || scopeHandler?(scopeItem) == true else {
+      return
     }
+    super.enter(scopeItem: scopeItem)
   }
   
   override func begin(interval: LogInterval) {
-    if isItem == nil || isItem?(interval) == true {
-      super.begin(interval: interval)
+    guard itemHandler == nil || itemHandler?(interval) == true else {
+      return
     }
+    super.begin(interval: interval)
   }
   
   override func end(interval: LogInterval) {
-    if isItem == nil || isItem?(interval) == true {
-      super.end(interval: interval)
+    guard itemHandler == nil || itemHandler?(interval) == true else {
+      return
     }
+    super.end(interval: interval)
   }
 }

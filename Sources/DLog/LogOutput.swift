@@ -51,27 +51,23 @@ public class LogOutput: NSObject {
   public static var oslog: OSLog { OSLog() }
   
   /// Creates `OSLog` output with a subsystem name.
-  public static func oslog(_ subsystem: String) -> OSLog { OSLog(subsystem: subsystem) }
+  public static func oslog(subsystem: String) -> OSLog { OSLog(subsystem: subsystem) }
   
   /// Creates `Filter` output for log items.
-  public static func filter(item: @escaping (LogItem) -> Bool) -> Filter {
-    Filter(isItem: item, isScope: nil)
-  }
+  public static func filter(item: @escaping (LogItem) -> Bool) -> Filter { Filter(itemHandler: item, scopeHandler: nil) }
   
   /// Creates `Filter` output for log scopes.
-//  public static func filter(scope: @escaping (LogScope) -> Bool) -> Filter {
-//    Filter(isItem: nil, isScope: scope)
-//  }
+  public static func filter(scope: @escaping (LogScopeItem) -> Bool) -> Filter { Filter(itemHandler: nil, scopeHandler: scope) }
   
   /// Creates `File` output with a file path to write.
-  public static func file(_ path: String, append: Bool = false) -> File { File(path: path, append: append) }
+  public static func file(path: String, append: Bool = false) -> File { File(path: path, append: append) }
   
 #if !os(watchOS)
   /// Creates `Net` output for default service name: `DLog`.
   public static var net: Net { Net() }
   
   /// Creates `Net` output for a service name.
-  public static func net(_ name: String) -> Net { Net(name: name) }
+  public static func net(name: String) -> Net { Net(name: name) }
 #endif
   
   /// Forward pipe operator
