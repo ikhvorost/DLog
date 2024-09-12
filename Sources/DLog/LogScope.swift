@@ -32,11 +32,11 @@ fileprivate class ScopeStack {
   private var scopes = [LogScope]()
   
   private func _stack(level: Int) -> [Bool] {
-    var stack = [Bool](repeating: false, count: level)
+    var stack = [Bool](repeating: false, count: level - 1)
     scopes.map { $0.level }
       .map { $0 - 1}
       .forEach {
-        if 0 <= $0, $0 < stack.count {
+        if $0 < stack.count {
           stack[$0] = true
         }
       }
@@ -54,10 +54,10 @@ fileprivate class ScopeStack {
       guard scopes.contains(scope) == false else {
         return
       }
-      let level = scopes.map { $0.level }.max() ?? 0
+      let level = (scopes.map { $0.level }.max() ?? 0) + 1
       let stack = _stack(level: level)
       scopes.append(scope)
-      complete(level + 1, stack)
+      complete(level, stack)
     }
   }
   
@@ -67,7 +67,7 @@ fileprivate class ScopeStack {
         return
       }
       scopes.remove(at: index)
-      let stack = _stack(level: scope.level - 1)
+      let stack = _stack(level: scope.level)
       complete(stack)
     }
   }
@@ -78,13 +78,17 @@ fileprivate class ScopeStack {
 /// Scope provides a mechanism for grouping log messages.
 ///
 public class LogScope: Log {
-  public let activity = Activity()
+  let activity = Activity()
+  
   public let name: String
   public fileprivate(set) var level = 0
   public fileprivate(set) var time = Date()
   public fileprivate(set) var duration: TimeInterval = 0
   
-  var item: Item {
+  var item: Item? {
+    guard level > 0 else {
+      return nil
+    }
     let stack = ScopeStack.shared.stack(level: level)
     return item(stack: stack)
   }
@@ -161,8 +165,7 @@ extension LogScope {
     public let time: Date
     public let duration: TimeInterval
     public let config: LogConfig
-    
-    let activity: Activity
+    public let activity: Activity
     
     public var description: String {
       let isStart = duration == 0
