@@ -81,14 +81,14 @@ public class File: LogOutput {
     write(item.text())
   }
   
-  override func enter(scopeItem: LogScopeItem) {
-    super.enter(scopeItem: scopeItem)
-    write("\(scopeItem)")
+  override func enter(item: LogScope.Item) {
+    super.enter(item: item)
+    write("\(item)")
   }
   
-  override func leave(scopeItem: LogScopeItem) {
-    super.leave(scopeItem: scopeItem)
-    write("\(scopeItem)")
+  override func leave(item: LogScope.Item) {
+    super.leave(item: item)
+    write("\(item)")
   }
   
   override func begin(interval: LogInterval) {

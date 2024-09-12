@@ -149,7 +149,7 @@ public class LogInterval: LogItem {
     self.staticName = staticName
     
     let message = { LogMessage(stringLiteral: name) }
-    super.init(message: message, type: .interval, category: category, config: config, scope: scope, metadata: {[metadata]}, location: location)
+    super.init(message: message, type: .interval, category: category, config: config, scope: scope?.item, metadata: {[metadata]}, location: location)
   }
   
   /// Start a time interval.

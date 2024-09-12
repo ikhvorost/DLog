@@ -106,7 +106,7 @@ public class LogItem: NSObject {
   public let category: String
   
   /// The scope of this log message.
-  public let scope: LogScope?
+  public let scope: LogScope.Item?
   
   /// The log level of this log message.
   public let type: LogType
@@ -124,7 +124,7 @@ public class LogItem: NSObject {
   /// Metadata of log message
   public internal(set) lazy var metadata: [Metadata] = { _metadata() }()
   
-  init(message: @escaping () -> LogMessage, type: LogType, category: String, config: LogConfig, scope: LogScope?, metadata: @escaping () -> [Metadata], location: LogLocation) {
+  init(message: @escaping () -> LogMessage, type: LogType, category: String, config: LogConfig, scope: LogScope.Item?, metadata: @escaping () -> [Metadata], location: LogLocation) {
     self._message = message
     self.type = type
     self.category = category

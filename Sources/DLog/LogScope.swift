@@ -26,93 +26,50 @@
 import Foundation
 import os.log
 
-class ScopeStack {
+fileprivate class ScopeStack {
   static let shared = ScopeStack()
   
   private var scopes = [LogScope]()
   
-  func exists(level: Int) -> Bool {
+  private func _stack(level: Int) -> [Bool] {
+    var stack = [Bool](repeating: false, count: level)
+    scopes.map { $0.level }
+      .map { $0 - 1}
+      .forEach {
+        if 0 <= $0, $0 < stack.count {
+          stack[$0] = true
+        }
+      }
+    return stack
+  }
+  
+  func stack(level: Int) -> [Bool] {
     synchronized(self) {
-      scopes.first { $0.item.level == level } != nil
+      _stack(level: level)
     }
   }
   
-  func append(scope: LogScope, closure: (Int) -> Void) {
+  func append(scope: LogScope, complete: (Int, [Bool]) -> Void) {
     synchronized(self) {
       guard scopes.contains(scope) == false else {
         return
       }
-      let maxLevel = scopes.map { $0.item.level } .max() ?? 0
+      let level = scopes.map { $0.level }.max() ?? 0
+      let stack = _stack(level: level)
       scopes.append(scope)
-      closure(maxLevel + 1)
+      complete(level + 1, stack)
     }
   }
   
-  func remove(scope: LogScope, closure: () -> Void) {
+  func remove(scope: LogScope, complete: ([Bool]) -> Void) {
     synchronized(self) {
       guard let index = scopes.firstIndex(of: scope) else {
         return
       }
-      closure()
       scopes.remove(at: index)
+      let stack = _stack(level: scope.level - 1)
+      complete(stack)
     }
-  }
-}
-
-public class Activity {
-  public var os_state = os_activity_scope_state_s()
-}
-
-public struct LogScopeItem: Sendable, CustomStringConvertible {
-  public let activity = Activity()
-  public let name: String
-  public let category: String
-  
-  public fileprivate(set) var level: Int = 0
-  public fileprivate(set) var time = Date()
-  public fileprivate(set) var duration: TimeInterval = 0
-  
-  let config: LogConfig
-  
-  public var description: String {
-    let isStart = duration == 0
-    
-    var sign = { "\(self.config.sign)" }
-    var time = isStart
-      ? LogItem.dateFormatter.string(from: time)
-      : LogItem.dateFormatter.string(from: time.addingTimeInterval(duration))
-    let ms = !isStart ? "(\(stringFromTimeInterval(duration)))" : nil
-    var category = { "[\(self.category)]" }
-    var level = { String(format: "[%02d]", self.level) }
-    let padding: () -> String = {
-      let text = (1..<self.level)
-        .map { ScopeStack.shared.exists(level: $0) ? "| " : "  " }
-        .joined()
-      return "\(text)\(isStart ? "┌" : "└")"
-    }
-    var text = "[\(name)] \(ms ?? "")"
-    
-    switch config.style {
-      case .emoji, .plain:
-        break
-        
-      case .colored:
-        sign = { "\(self.config.sign)".color(.dim) }
-        time = time.color(.dim)
-        level = { String(format: "[%02d]", self.level).color(.dim) }
-        category = { self.category.color(.textBlue) }
-        text = "[\(name.color(.textMagenta))] \((ms ?? "").color(.dim))"
-    }
-    
-    let items: [(LogOptions, () -> String)] = [
-      (.sign, sign),
-      (.time, { time }),
-      (.level, level),
-      (.category, category),
-      (.padding, padding),
-    ]
-    let prefix = LogItem.logPrefix(items: items, options: config.options)
-    return prefix.isEmpty ? text : "\(prefix) \(text)"
   }
 }
 
@@ -121,12 +78,25 @@ public struct LogScopeItem: Sendable, CustomStringConvertible {
 /// Scope provides a mechanism for grouping log messages.
 ///
 public class LogScope: Log {
-  var item: LogScopeItem
+  public let activity = Activity()
+  public let name: String
+  public fileprivate(set) var level = 0
+  public fileprivate(set) var time = Date()
+  public fileprivate(set) var duration: TimeInterval = 0
+  
+  var item: Item {
+    let stack = ScopeStack.shared.stack(level: level)
+    return item(stack: stack)
+  }
   
   init(name: String, logger: DLog, category: String, config: LogConfig, metadata: Metadata) {
-    item = LogScopeItem(name: name, category: category, config: config)
+    self.name = name
     super.init(logger: logger, category: category, config: config, metadata: metadata)
     self._scope = self
+  }
+  
+  private func item(stack: [Bool]) -> Item {
+    Item(name: name, category: category, level: level, stack: stack, time: time, duration: duration, config: config, activity: activity)
   }
   
   /// Start a scope.
@@ -144,11 +114,12 @@ public class LogScope: Log {
   ///
   @objc
   public func enter() {
-    ScopeStack.shared.append(scope: self) { level in
-      item.time = Date()
-      item.duration = 0
-      item.level = level
-      logger.output?.enter(scopeItem: item)
+    ScopeStack.shared.append(scope: self) { level, stack in
+      self.level = level
+      time = Date()
+      duration = 0
+      let item = item(stack: stack)
+      logger.output?.enter(item: item)
     }
   }
   
@@ -167,10 +138,71 @@ public class LogScope: Log {
   ///
   @objc
   public func leave() {
-    ScopeStack.shared.remove(scope: self) {
-      item.duration = -item.time.timeIntervalSinceNow
-      logger.output?.leave(scopeItem: item)
-      item.level = 0
+    ScopeStack.shared.remove(scope: self) { stack in
+      duration = -time.timeIntervalSinceNow
+      let item = item(stack: stack)
+      logger.output?.leave(item: item)
+      level = 0
+    }
+  }
+}
+
+extension LogScope {
+  
+  public class Activity {
+    public var os_state = os_activity_scope_state_s()
+  }
+  
+  public struct Item: CustomStringConvertible {
+    public let name: String
+    public let category: String
+    public let level: Int
+    public let stack: [Bool]
+    public let time: Date
+    public let duration: TimeInterval
+    public let config: LogConfig
+    
+    let activity: Activity
+    
+    public var description: String {
+      let isStart = duration == 0
+      
+      var sign = { "\(self.config.sign)" }
+      var time = isStart
+        ? LogItem.dateFormatter.string(from: time)
+        : LogItem.dateFormatter.string(from: time.addingTimeInterval(duration))
+      let ms = !isStart ? "(\(stringFromTimeInterval(duration)))" : nil
+      var category = { "[\(self.category)]" }
+      var level = { String(format: "[%02d]", self.level) }
+      let padding: () -> String = {
+        self.stack
+          .map { $0 ? "| " : "  " }
+          .joined()
+          .appending(isStart ? "┌" : "└")
+      }
+      var text = "[\(name)] \(ms ?? "")"
+      
+      switch config.style {
+        case .emoji, .plain:
+          break
+          
+        case .colored:
+          sign = { "\(self.config.sign)".color(.dim) }
+          time = time.color(.dim)
+          level = { String(format: "[%02d]", self.level).color(.dim) }
+          category = { self.category.color(.textBlue) }
+          text = "[\(name.color(.textMagenta))] \((ms ?? "").color(.dim))"
+      }
+      
+      let items: [(LogOptions, () -> String)] = [
+        (.sign, sign),
+        (.time, { time }),
+        (.level, level),
+        (.category, category),
+        (.padding, padding),
+      ]
+      let prefix = LogItem.logPrefix(items: items, options: config.options)
+      return prefix.isEmpty ? text : "\(prefix) \(text)"
     }
   }
 }

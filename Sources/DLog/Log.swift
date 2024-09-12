@@ -48,7 +48,7 @@ public class Log: NSObject {
     guard let output = logger.output else {
       return nil
     }
-    let item = LogItem(message: message, type: type, category: category, config: config, scope: scope, metadata: metadata, location: location)
+    let item = LogItem(message: message, type: type, category: category, config: config, scope: scope?.item, metadata: metadata, location: location)
     output.log(item: item)
     return item
   }
@@ -261,7 +261,7 @@ public class Log: NSObject {
     guard logger.output != nil else {
       return nil
     }
-    let scope = LogScope(name: name, logger: logger, category: category, config: self.config, metadata: metadata ?? logger.metadata.data)
+    let scope = LogScope(name: name, logger: logger, category: category, config: config, metadata: metadata ?? logger.metadata.data)
     if let block = closure {
       scope.enter()
       block(scope)

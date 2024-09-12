@@ -57,7 +57,7 @@ public class LogOutput: NSObject {
   public static func filter(item: @escaping (LogItem) -> Bool) -> Filter { Filter(itemHandler: item, scopeHandler: nil) }
   
   /// Creates `Filter` output for log scopes.
-  public static func filter(scope: @escaping (LogScopeItem) -> Bool) -> Filter { Filter(itemHandler: nil, scopeHandler: scope) }
+  public static func filter(scope: @escaping (LogScope.Item) -> Bool) -> Filter { Filter(itemHandler: nil, scopeHandler: scope) }
   
   /// Creates `File` output with a file path to write.
   public static func file(path: String, append: Bool = false) -> File { File(path: path, append: append) }
@@ -87,12 +87,12 @@ public class LogOutput: NSObject {
     next?.log(item: item)
   }
   
-  func enter(scopeItem: LogScopeItem) {
-    next?.enter(scopeItem: scopeItem)
+  func enter(item: LogScope.Item) {
+    next?.enter(item: item)
   }
   
-  func leave(scopeItem: LogScopeItem) {
-    next?.leave(scopeItem: scopeItem)
+  func leave(item: LogScope.Item) {
+    next?.leave(item: item)
   }
   
   func begin(interval: LogInterval) {

@@ -30,7 +30,7 @@ import Foundation
 public class Filter: LogOutput {
   
   private let itemHandler: ((LogItem) -> Bool)?
-  private let scopeHandler: ((LogScopeItem) -> Bool)?
+  private let scopeHandler: ((LogScope.Item) -> Bool)?
   
   /// Initializes a filter output that evaluates using a specified block object.
   ///
@@ -42,7 +42,7 @@ public class Filter: LogOutput {
   /// - Parameters:
   /// 	- block: The block is applied to the object to be evaluated.
   ///
-  public init(itemHandler: ((LogItem) -> Bool)?, scopeHandler: ((LogScopeItem) -> Bool)?) {
+  public init(itemHandler: ((LogItem) -> Bool)?, scopeHandler: ((LogScope.Item) -> Bool)?) {
     self.itemHandler = itemHandler
     self.scopeHandler = scopeHandler
   }
@@ -56,18 +56,18 @@ public class Filter: LogOutput {
     super.log(item: item)
   }
   
-  override func enter(scopeItem: LogScopeItem) {
-    guard scopeHandler == nil || scopeHandler?(scopeItem) == true else {
+  override func enter(item: LogScope.Item) {
+    guard scopeHandler == nil || scopeHandler?(item) == true else {
       return
     }
-    super.enter(scopeItem: scopeItem)
+    super.enter(item: item)
   }
   
-  override func leave(scopeItem: LogScopeItem) {
-    guard scopeHandler == nil || scopeHandler?(scopeItem) == true else {
+  override func leave(item: LogScope.Item) {
+    guard scopeHandler == nil || scopeHandler?(item) == true else {
       return
     }
-    super.enter(scopeItem: scopeItem)
+    super.enter(item: item)
   }
   
   override func begin(interval: LogInterval) {

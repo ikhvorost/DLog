@@ -126,14 +126,14 @@ public class Net: LogOutput {
     send(item.text())
   }
   
-  override func enter(scopeItem: LogScopeItem) {
-    super.enter(scopeItem: scopeItem)
-    send("\(scopeItem)")
+  override func enter(item: LogScope.Item) {
+    super.enter(item: item)
+    send("\(item)")
   }
   
-  override func leave(scopeItem: LogScopeItem) {
-    super.leave(scopeItem: scopeItem)
-    send("\(scopeItem)")
+  override func leave(item: LogScope.Item) {
+    super.leave(item: item)
+    send("\(item)")
   }
   
   override func begin(interval: LogInterval) {
