@@ -114,9 +114,8 @@ public class LogItem: NSObject {
   /// The location of a log message.
   public let location: LogLocation
   
-  private let _message: () -> LogMessage
   /// Text of this log message.
-  public private(set) lazy var message: String = { _message().text }()
+  public let message: String
   
   let config: LogConfig
   
@@ -124,8 +123,8 @@ public class LogItem: NSObject {
   /// Metadata of log message
   public internal(set) lazy var metadata: [Metadata] = { _metadata() }()
   
-  init(message: @escaping () -> LogMessage, type: LogType, category: String, config: LogConfig, scope: LogScope.Item?, metadata: @escaping () -> [Metadata], location: LogLocation) {
-    self._message = message
+  init(message: String, type: LogType, category: String, config: LogConfig, scope: LogScope.Item?, metadata: @escaping () -> [Metadata], location: LogLocation) {
+    self.message = message
     self.type = type
     self.category = category
     self.config = config

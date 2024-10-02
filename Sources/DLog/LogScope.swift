@@ -38,7 +38,8 @@ fileprivate class Stack {
 public class LogScope: Log {
   private static var stack = Stack()
   
-  let activity = Activity()
+  private let activity = Activity()
+  private var location: LogLocation
   
   public let name: String
   public fileprivate(set) var level = 0
@@ -67,14 +68,23 @@ public class LogScope: Log {
     return stack
   }
   
-  init(name: String, logger: DLog, category: String, config: LogConfig, metadata: Metadata) {
+  init(name: String, logger: DLog, category: String, config: LogConfig, metadata: Metadata?, location: LogLocation) {
     self.name = name
-    super.init(logger: logger, category: category, config: config, metadata: metadata)
-    self._scope = self
+    self.location = location
+    super.init(logger: logger, category: category, config: config, metadata: metadata ?? logger.metadata.data)
   }
   
   private func item(stack: [Bool]) -> Item {
-    Item(name: name, category: category, level: level, stack: stack, time: time, duration: duration, config: config, activity: activity)
+    Item(name: name,
+         category: category,
+         level: level,
+         stack: stack,
+         time: time,
+         duration: duration,
+         config: config,
+         activity: activity,
+         metadata: metadata.data,
+         location: location)
   }
   
   /// Start a scope.
@@ -91,7 +101,7 @@ public class LogScope: Log {
   ///     scope.leave()
   ///
   @objc
-  public func enter() {
+  public func enter(fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) {
     synchronized(Self.stack) {
       guard Self.stack.scopes.contains(self) == false else {
         return
@@ -103,6 +113,8 @@ public class LogScope: Log {
       self.level = level
       time = Date()
       duration = 0
+      location = LogLocation(fileID, file, function, line)
+      
       let item = item(stack: stack)
       logger.output?.enter(item: item)
     }
@@ -122,7 +134,7 @@ public class LogScope: Log {
   ///     scope.leave()
   ///
   @objc
-  public func leave() {
+  public func leave(fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) {
     synchronized(Self.stack) {
       guard let index = Self.stack.scopes.firstIndex(of: self) else {
         return
@@ -131,9 +143,10 @@ public class LogScope: Log {
       let stack = Self.stack(level: level)
       
       duration = -time.timeIntervalSinceNow
+      location = LogLocation(fileID, file, function, line)
+      
       let item = item(stack: stack)
       logger.output?.leave(item: item)
-      level = 0
     }
   }
 }
@@ -153,6 +166,8 @@ extension LogScope {
     public let duration: TimeInterval
     public let config: LogConfig
     public let activity: Activity
+    public let metadata: Metadata
+    public let location: LogLocation
     
     public var description: String {
       let isStart = duration == 0
@@ -161,7 +176,6 @@ extension LogScope {
       var time = isStart
         ? LogItem.dateFormatter.string(from: time)
         : LogItem.dateFormatter.string(from: time.addingTimeInterval(duration))
-      let ms = !isStart ? "(\(stringFromTimeInterval(duration)))" : nil
       var category = { "[\(self.category)]" }
       var level = { String(format: "[%02d]", self.level) }
       let padding: () -> String = {
@@ -170,10 +184,14 @@ extension LogScope {
           .joined()
           .appending(isStart ? "┌" : "└")
       }
-      var text = "[\(name)] \(ms ?? "")"
+      var type = { "" }
+      let ms = isStart ? nil : "(\(stringFromTimeInterval(duration)))"
+      var scope = { "[\(name)] \(ms ?? "")" }
+      var location = { "<\(self.location.fileName):\(self.location.line)>" }
+      var metadata = { self.metadata.json() }
       
       switch config.style {
-        case .emoji, .plain:
+        case .plain:
           break
           
         case .colored:
@@ -181,7 +199,17 @@ extension LogScope {
           time = time.color(.dim)
           level = { String(format: "[%02d]", self.level).color(.dim) }
           category = { self.category.color(.textBlue) }
-          text = "[\(name.color(.textMagenta))] \((ms ?? "").color(.dim))"
+          
+          let l = location
+          location = { l().color(.dim) }
+          
+          let m = metadata
+          metadata = { m().color(.dim) }
+          
+          scope = { "[\(name.color(.textMagenta))] \((ms ?? "").color(.dim))" }
+          
+        case .emoji:
+          type = { "\(isStart ? "⬇️" : "⬆️")" }
       }
       
       let items: [(LogOptions, () -> String)] = [
@@ -190,9 +218,12 @@ extension LogScope {
         (.level, level),
         (.category, category),
         (.padding, padding),
+        (.type, type),
+        (.scope, scope),
+        (.location, location),
+        (.metadata, metadata)
       ]
-      let prefix = LogItem.logPrefix(items: items, options: config.options)
-      return prefix.isEmpty ? text : "\(prefix) \(text)"
+      return LogItem.logPrefix(items: items, options: config.options)
     }
   }
 }

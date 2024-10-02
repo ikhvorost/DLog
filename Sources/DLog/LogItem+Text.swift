@@ -136,12 +136,12 @@ extension LogItem {
     return dateFormatter
   }()
   
-  static func logPrefix(items: [(LogOptions, () -> String)], options: LogOptions) -> String {
+  static func logPrefix(items: [(type: LogOptions, text:() -> String)], options: LogOptions) -> String {
     items.compactMap {
-      guard options.contains($0.0) else {
+      guard options.contains($0.type) || $0.type == .scope else {
         return nil
       }
-      let text = $0.1()
+      let text = $0.text()
       return text.trimTrailingWhitespace()
     }
     .joinedCompact()
