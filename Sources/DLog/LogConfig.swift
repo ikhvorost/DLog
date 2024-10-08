@@ -46,7 +46,7 @@ public struct LogOptions: OptionSet {
     self.rawValue = rawValue
   }
   
-  static let scope = Self(-1)
+  static let message = Self(-1)
   
   /// Start sign
   public static let sign = Self(0)

@@ -54,10 +54,10 @@ public class LogOutput: NSObject {
   public static func oslog(subsystem: String) -> OSLog { OSLog(subsystem: subsystem) }
   
   /// Creates `Filter` output for log items.
-  public static func filter(item: @escaping (LogItem) -> Bool) -> Filter { Filter(itemHandler: item, scopeHandler: nil) }
+  public static func filter(item: @escaping (LogItem) -> Bool) -> Filter { Filter(item: item, scope: nil) }
   
   /// Creates `Filter` output for log scopes.
-  public static func filter(scope: @escaping (LogScope.Item) -> Bool) -> Filter { Filter(itemHandler: nil, scopeHandler: scope) }
+  public static func filter(scope: @escaping (LogScope.Item) -> Bool) -> Filter { Filter(item: nil, scope: scope) }
   
   /// Creates `File` output with a file path to write.
   public static func file(path: String, append: Bool = false) -> File { File(path: path, append: append) }
@@ -95,11 +95,11 @@ public class LogOutput: NSObject {
     next?.leave(item: item)
   }
   
-  func begin(interval: LogInterval) {
+  func begin(interval: LogInterval.Item) {
     next?.begin(interval: interval)
   }
   
-  func end(interval: LogInterval) {
+  func end(interval: LogInterval.Item) {
     next?.end(interval: interval)
   }
 }

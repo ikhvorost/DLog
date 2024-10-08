@@ -29,7 +29,7 @@ import Foundation
 ///
 @objcMembers
 public class Log: NSObject {
-  var logger: DLog!
+  weak var logger: DLog!
   let category: String
   let config: LogConfig
   
@@ -43,9 +43,9 @@ public class Log: NSObject {
     self.metadata = LogMetadata(data: metadata)
   }
   
-  private func scope() -> LogScope.Item? {
+  private func stack() -> [Bool]? {
     if let scope = self as? LogScope {
-      return scope.item
+      return scope.stack
     }
     return nil
   }
@@ -54,7 +54,7 @@ public class Log: NSObject {
     guard let output = logger.output else {
       return nil
     }
-    let item = LogItem(message: message.text, type: type, category: category, config: config, scope: scope(), metadata: metadata, location: location)
+    let item = LogItem(message: message.text, type: type, category: category, config: config, stack: stack(), metadata: metadata, location: location)
     output.log(item: item)
     return item
   }
@@ -277,7 +277,7 @@ public class Log: NSObject {
     return scope
   }
   
-  private func interval(name: String, staticName: StaticString?, intervalConfig: IntervalConfig?, location: LogLocation, closure: (() -> Void)?) -> LogInterval? {
+  private func interval(message: String, staticName: StaticString?, intervalConfig: IntervalConfig?, location: LogLocation, closure: (() -> Void)?) -> LogInterval? {
     guard logger.output != nil else {
       return nil
     }
@@ -287,7 +287,7 @@ public class Log: NSObject {
       config.intervalConfig = intervalConfig
     }
     
-    let interval = LogInterval(logger: logger, name: name, staticName: staticName, category: category, config: config, scope: scope(), metadata: metadata.data, location: location)
+    let interval = LogInterval(logger: logger, message: message, staticName: staticName, category: category, config: config, stack: stack(), metadata: metadata.data, location: location)
     if let block = closure {
       interval.begin()
       block()
@@ -316,12 +316,110 @@ public class Log: NSObject {
   ///
   @discardableResult
   public func interval(_ name: StaticString = "", config: IntervalConfig? = nil, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval? {
-    interval(name: "\(name)", staticName: name, intervalConfig: config, location: LogLocation(fileID, file, function, line), closure: closure)
+    interval(message: "\(name)", staticName: name, intervalConfig: config, location: LogLocation(fileID, file, function, line), closure: closure)
   }
   
   /// Creates an interval object that logs a detailed message with accumulated statistics.
   @discardableResult
-  public func interval(name: String, fileID: String, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval? {
-    interval(name: name, staticName: nil, intervalConfig: nil, location: LogLocation(fileID, file, function, line), closure: closure)
+  public func interval(message: String, fileID: String, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval? {
+    interval(message: message, staticName: nil, intervalConfig: nil, location: LogLocation(fileID, file, function, line), closure: closure)
+  }
+}
+
+extension Log {
+  
+  public class Item: CustomStringConvertible {
+    public let time: Date
+    public let category: String
+    public let stack: [Bool]?
+    public let type: LogType
+    public let location: LogLocation
+    public let metadata: Metadata
+    public let message: String
+    public let config: LogConfig
+    
+    init(time: Date, category: String, stack: [Bool]?, type: LogType, location: LogLocation, metadata: Metadata, message: String, config: LogConfig) {
+      self.time = time
+      self.category = category
+      self.stack = stack
+      self.type = type
+      self.location = location
+      self.metadata = metadata
+      self.message = message
+      self.config = config
+    }
+    
+    func padding() -> String {
+      guard let stack else {
+        return ""
+      }
+      return stack
+        .map { $0 ? "| " : "  " }
+        .joined()
+        .appending("├")
+    }
+    
+    func typeText() -> String {
+      let tag = LogItem.tags[self.type]!
+      return switch config.style {
+        case .plain:
+          "[\(type.title)]"
+          
+        case .colored:
+          "[\(type.title)]".color(tag.colors)
+          
+        case .emoji:
+          "\(type.icon) [\(type.title)]"
+      }
+    }
+    
+    func messageText() -> String {
+      let tag = LogItem.tags[self.type]!
+      return switch config.style {
+        case .plain, .emoji:
+          message
+          
+        case .colored:
+          message.color(tag.textColor)
+      }
+    }
+    
+    public var description: String {
+      var sign = "\(config.sign)"
+      var time = LogItem.dateFormatter.string(from: self.time)
+      var level = String(format: "[%02d]", self.stack?.count ?? 0)
+      var category = "[\(self.category)]"
+      var location = "<\(self.location.fileName):\(self.location.line)>"
+      var metadata = self.metadata.json()
+      
+      switch config.style {
+        case .plain, .emoji:
+          break
+          
+        case .colored:
+          let tag = LogItem.tags[self.type]!
+          
+          sign = sign.color(.dim)
+          time = time.color(.dim)
+          level = level.color(.dim)
+          category = category.color(.textBlue)
+          location = location.color([.dim, tag.textColor])
+          metadata = metadata.color(.dim)
+      }
+      
+      let items: [(LogOptions, String)] = [
+        (.sign, sign),
+        (.time, time),
+        (.level, level),
+        (.category, category),
+        (.padding, padding()),
+        (.type, typeText()),
+        (.location, location),
+        (.metadata, metadata),
+        (.message, messageText()),
+      ]
+      
+      return LogItem.logPrefix(items: items, options: config.options)
+    }
   }
 }

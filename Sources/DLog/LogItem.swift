@@ -91,6 +91,9 @@ public enum LogType: Int {
   
   /// The interval log level.
   case interval
+  
+  case scopeEnter
+  case scopeLeave
 }
 
 /// A base log message class that the logger adds to the logs.
@@ -106,7 +109,7 @@ public class LogItem: NSObject {
   public let category: String
   
   /// The scope of this log message.
-  public let scope: LogScope.Item?
+  public let stack: [Bool]?
   
   /// The log level of this log message.
   public let type: LogType
@@ -123,13 +126,15 @@ public class LogItem: NSObject {
   /// Metadata of log message
   public internal(set) lazy var metadata: [Metadata] = { _metadata() }()
   
-  init(message: String, type: LogType, category: String, config: LogConfig, scope: LogScope.Item?, metadata: @escaping () -> [Metadata], location: LogLocation) {
+  init(message: String, type: LogType, category: String, config: LogConfig, stack: [Bool]?, metadata: @escaping () -> [Metadata], location: LogLocation) {
     self.message = message
     self.type = type
     self.category = category
     self.config = config
-    self.scope = scope
+    self.stack = stack
     self._metadata = metadata
     self.location = location
   }
 }
+
+

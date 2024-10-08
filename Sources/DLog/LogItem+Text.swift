@@ -77,7 +77,7 @@ extension String {
   }
 }
 
-private extension LogType {
+extension LogType {
   static let icons: [LogType : String] = [
     .log : "💬",
     .trace : "#️⃣",
@@ -88,6 +88,8 @@ private extension LogType {
     .assert : "🅰️",
     .fault : "🆘",
     .interval : "🕒",
+    .scopeEnter: "⬇️",
+    .scopeLeave: "⬆️",
   ]
   
   var icon: String {
@@ -104,6 +106,8 @@ private extension LogType {
     .assert : "ASSERT",
     .fault : "FAULT",
     .interval : "INTERVAL",
+    .scopeEnter : "SCOPE",
+    .scopeLeave : "SCOPE",
   ]
   
   var title: String {
@@ -113,12 +117,12 @@ private extension LogType {
 
 extension LogItem {
   
-  private struct Tag {
+  struct Tag {
     let textColor: ANSIEscapeCode
     let colors: [ANSIEscapeCode]
   }
   
-  private static let tags: [LogType : Tag] = [
+  static let tags: [LogType : Tag] = [
     .log : Tag(textColor: .textWhite, colors: [.backgroundWhite, .textBlack]),
     .info : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textWhite]),
     .trace : Tag(textColor: .textCyan, colors: [.backgroundCyan, .textBlack]),
@@ -128,6 +132,8 @@ extension LogItem {
     .fault : Tag(textColor: .textRed, colors: [.backgroundRed, .textWhite, .blink]),
     .assert : Tag(textColor: .textRed, colors: [.backgroundRed, .textWhite]),
     .interval : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textBlack]),
+    .scopeEnter : Tag(textColor: .textMagenta, colors: [.backgroundMagenta, .textBlack]),
+    .scopeLeave : Tag(textColor: .textMagenta, colors: [.backgroundMagenta, .textBlack]),
   ]
   
   static let dateFormatter: DateFormatter = {
@@ -136,40 +142,34 @@ extension LogItem {
     return dateFormatter
   }()
   
-  static func logPrefix(items: [(type: LogOptions, text:() -> String)], options: LogOptions) -> String {
+  static func logPrefix(items: [(type: LogOptions, text: String)], options: LogOptions) -> String {
     items.compactMap {
-      guard options.contains($0.type) || $0.type == .scope else {
+      guard options.contains($0.type) || $0.type == .message else {
         return nil
       }
-      let text = $0.text()
-      return text.trimTrailingWhitespace()
+      return $0.text.trimTrailingWhitespace()
     }
     .joinedCompact()
   }
   
   func text() -> String {
-    var sign = { "\(self.config.sign)" }
-    var time = { Self.dateFormatter.string(from: self.time) }
-    var level = { String(format: "[%02d]", self.scope?.level ?? 0) }
-    var category = { "[\(self.category)]" }
-    let padding = {
-      self.scope?.stack
+    var sign = "\(config.sign)"
+    var time = Self.dateFormatter.string(from: self.time)
+    var level = String(format: "[%02d]", self.stack?.count ?? "")
+    var category = "[\(self.category)]"
+    let padding = self.stack?
         .map { $0 ? "| " : "  " }
         .joined()
         .appending("├") ?? ""
-    }
-    var type = { "[\(self.type.title)]" }
-    var location = { "<\(self.location.fileName):\(self.location.line)>" }
-    var metadata = {
-      self.metadata
+    var type = "[\(self.type.title)]"
+    var location = "<\(self.location.fileName):\(self.location.line)>"
+    var metadata = self.metadata
         .filter { $0.isEmpty == false }
         .map {
           let pretty = self.type == .trace && self.config.traceConfig.style == .pretty
           return $0.json(pretty: pretty)
         }
         .joined(separator: " ")
-    }
-    
     var message = message
     
     switch config.style {
@@ -180,31 +180,20 @@ extension LogItem {
         assert(Self.tags[self.type] != nil)
         let tag = Self.tags[self.type]!
         
-        let s = sign
-        sign = { s().color(.dim) }
-        
-        let t = time
-        time = { t().color(.dim) }
-        
-        let l = level
-        level = { l().color(.dim) }
-        
-        category = { self.category.color(.textBlue) }
-        type = { " \(self.type.title) ".color(tag.colors) }
-        
-        let loc = location
-        location = { loc().color([.dim, tag.textColor]) }
-        
-        let m = metadata
-        metadata = { m().color(.dim) }
-        
+        sign = sign.color(.dim)
+        time = time.color(.dim)
+        level = level.color(.dim)
+        category = category.color(.textBlue)
+        type = " \(self.type.title) ".color(tag.colors)
+        location = location.color([.dim, tag.textColor])
+        metadata = metadata.color(.dim)
         message = message.color(tag.textColor)
         
       case .emoji:
-        type = { "\(self.type.icon) [\(self.type.title)]" }
+        type = "\(self.type.icon) [\(self.type.title)]"
     }
     
-    let items: [(LogOptions, () -> String)] = [
+    let items: [(LogOptions, String)] = [
       (.sign, sign),
       (.time, time),
       (.level, level),

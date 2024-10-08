@@ -91,12 +91,12 @@ public class File: LogOutput {
     write("\(item)")
   }
   
-  override func begin(interval: LogInterval) {
+  override func begin(interval: LogInterval.Item) {
     super.begin(interval: interval)
   }
   
-  override func end(interval: LogInterval) {
+  override func end(interval: LogInterval.Item) {
     super.end(interval: interval)
-    write(interval.text())
+    write("\(interval)")
   }
 }
