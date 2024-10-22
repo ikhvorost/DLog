@@ -90,7 +90,8 @@ public enum LogType: Int {
   case fault
   
   /// The interval log level.
-  case interval
+  case intervalBegin
+  case intervalEnd
   
   case scopeEnter
   case scopeLeave

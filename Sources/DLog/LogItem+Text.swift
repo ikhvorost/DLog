@@ -87,7 +87,8 @@ extension LogType {
     .error : "⚠️",
     .assert : "🅰️",
     .fault : "🆘",
-    .interval : "🕒",
+    .intervalBegin : "🕛",
+    .intervalEnd : "🕑",
     .scopeEnter: "⬇️",
     .scopeLeave: "⬆️",
   ]
@@ -105,7 +106,8 @@ extension LogType {
     .error : "ERROR",
     .assert : "ASSERT",
     .fault : "FAULT",
-    .interval : "INTERVAL",
+    .intervalBegin : "INTERVAL",
+    .intervalEnd : "INTERVAL",
     .scopeEnter : "SCOPE",
     .scopeLeave : "SCOPE",
   ]
@@ -131,7 +133,8 @@ extension LogItem {
     .error : Tag(textColor: .textYellow, colors: [.backgroundYellow, .textBlack]),
     .fault : Tag(textColor: .textRed, colors: [.backgroundRed, .textWhite, .blink]),
     .assert : Tag(textColor: .textRed, colors: [.backgroundRed, .textWhite]),
-    .interval : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textBlack]),
+    .intervalBegin : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textBlack]),
+    .intervalEnd : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textBlack]),
     .scopeEnter : Tag(textColor: .textMagenta, colors: [.backgroundMagenta, .textBlack]),
     .scopeLeave : Tag(textColor: .textMagenta, colors: [.backgroundMagenta, .textBlack]),
   ]
@@ -144,7 +147,7 @@ extension LogItem {
   
   static func logPrefix(items: [(type: LogOptions, text: String)], options: LogOptions) -> String {
     items.compactMap {
-      guard options.contains($0.type) || $0.type == .message else {
+      guard !$0.text.isEmpty && ($0.type == .message || options.contains($0.type)) else {
         return nil
       }
       return $0.text.trimTrailingWhitespace()

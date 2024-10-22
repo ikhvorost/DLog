@@ -72,11 +72,14 @@ public struct LogOptions: OptionSet {
   /// Metadata
   public static let metadata = Self(7)
   
+  // Data
+  public static let data = Self(8)
+  
   /// Compact: `.sign` and `.time`
   public static let compact: Self = [.sign, .time]
   
-  /// Regular: `.sign`, `.time`, `.category`, `.padding`, `.type`, `.location` and `.metadata`
-  public static let regular: Self = [.sign, .time, .category, .padding, .type, .location, .metadata]
+  /// Regular: `.sign`, `.time`, `.category`, `.padding`, `.type`, `.location`, `.metadata` and `.data`
+  public static let regular: Self = [.sign, .time, .category, .padding, .type, .location, .metadata, .data]
 }
 
 /// Style of text to output.

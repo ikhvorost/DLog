@@ -289,9 +289,9 @@ public class Log: NSObject {
     
     let interval = LogInterval(logger: logger, message: message, staticName: staticName, category: category, config: config, stack: stack(), metadata: metadata.data, location: location)
     if let block = closure {
-      interval.begin()
+      interval.begin(fileID: location.fileID, file: location.file, function: location.function, line: location.line)
       block()
-      interval.end()
+      interval.end(fileID: location.fileID, file: location.file, function: location.function, line: location.line)
     }
     return interval
   }
@@ -366,11 +366,15 @@ extension Log {
           "[\(type.title)]"
           
         case .colored:
-          "[\(type.title)]".color(tag.colors)
+          " \(type.title) ".color(tag.colors)
           
         case .emoji:
           "\(type.icon) [\(type.title)]"
       }
+    }
+    
+    func data() -> Metadata? {
+      nil
     }
     
     func messageText() -> String {
@@ -391,6 +395,7 @@ extension Log {
       var category = "[\(self.category)]"
       var location = "<\(self.location.fileName):\(self.location.line)>"
       var metadata = self.metadata.json()
+      var data = data()?.json() ?? ""
       
       switch config.style {
         case .plain, .emoji:
@@ -405,6 +410,7 @@ extension Log {
           category = category.color(.textBlue)
           location = location.color([.dim, tag.textColor])
           metadata = metadata.color(.dim)
+          data = data.color(.dim)
       }
       
       let items: [(LogOptions, String)] = [
@@ -416,9 +422,9 @@ extension Log {
         (.type, typeText()),
         (.location, location),
         (.metadata, metadata),
+        (.data, data),
         (.message, messageText()),
       ]
-      
       return LogItem.logPrefix(items: items, options: config.options)
     }
   }

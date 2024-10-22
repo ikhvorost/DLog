@@ -99,7 +99,7 @@ public class OSLog : LogOutput {
     super.enter(item: item)
     
     if let os_activity_current = Dynamic.OS_ACTIVITY_CURRENT {
-      let activity = _os_activity_create(Dynamic.dso, strdup(item.name), os_activity_current, OS_ACTIVITY_FLAG_DEFAULT)
+      let activity = _os_activity_create(Dynamic.dso, strdup(item.message), os_activity_current, OS_ACTIVITY_FLAG_DEFAULT)
       os_activity_scope_enter(activity, &item.activity.os_state)
     }
   }
@@ -112,26 +112,25 @@ public class OSLog : LogOutput {
     }
   }
   
-  override func begin(interval: LogInterval) {
+  override func begin(interval: LogInterval.Item) {
     super.begin(interval: interval)
-    
-    let log = oslog(category: interval.category)
-    if interval.signpostID == nil {
-      interval.signpostID = OSSignpostID(log: log)
-    }
-    
-    if let name = interval.staticName {
-      os_signpost(.begin, log: log, name: name, signpostID: interval.signpostID!)
-    }
+//    let log = oslog(category: interval.category)
+//    if interval.signpostID == nil {
+//      interval.signpostID = OSSignpostID(log: log)
+//    }
+//    
+//    if let name = interval.staticName {
+//      os_signpost(.begin, log: log, name: name, signpostID: interval.signpostID!)
+//    }
   }
   
-  override func end(interval: LogInterval) {
+  override func end(interval: LogInterval.Item) {
     super.end(interval: interval)
     
     let log = oslog(category: interval.category)
     
-    if let name = interval.staticName {
-      os_signpost(.end, log: log, name: name, signpostID: interval.signpostID!)
-    }
+//    if let name = interval.staticName {
+//      os_signpost(.end, log: log, name: name, signpostID: interval.signpostID!)
+//    }
   }
 }

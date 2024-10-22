@@ -127,12 +127,101 @@ let Empty = ">$"
 
 final class DLogTests: XCTestCase {
   
-  func test_Log() {
-    let log = DLog(.stdout)
-    log.scope("Test") { scope in
-      scope.trace()
+  func test_scope_stack() {
+    let log = DLog()
+    log.debug("start")
+    
+    log.scope("Scope 0") { scope in
+      scope.debug("0")
+      scope.scope("Scope 1") { scope in
+        scope.debug("1")
+        scope.scope("Scope 2") { scope in
+          scope.debug("2")
+        }
+      }
+    }
+    
+    log.debug("finish")
+  }
+  
+  func test_scope() {
+    let logger = DLog()
+    
+    let scope = logger.scope("Scope") { scope in
+      delay()
+      scope.log("log")
+      XCTAssert(scope.level == 1)
+    }
+    XCTAssert(scope?.level == 0)
+    XCTAssert(scope?.name == "Scope")
+    XCTAssert((scope?.duration ?? 0) >= 0.255)
+    
+    scope?.log("log")
+    scope?.enter()
+    XCTAssert(scope?.level == 1)
+    scope?.debug("debug")
+    scope?.leave()
+    scope?.log("log")
+    
+  }
+  
+  func test_scope_concurrent() {
+    let logger = DLog()
+    
+    wait(count: 10) { expectations in
+      for i in 0..<10 {
+        DispatchQueue.global().async {
+          delay([0.1, 0.2, 0.5].randomElement()!)
+          logger.scope("Scope \(i)") {
+            delay([0.1, 0.2, 0.4].randomElement()!)
+            $0.debug("scope \(i)")
+            expectations[i].fulfill()
+          }
+        }
+      }
     }
   }
+  
+  func test_interval() {
+    let logger = DLog()
+    
+    let interval = logger.interval("Interval") {
+      delay()
+    }
+    XCTAssert(interval?.message == "Interval")
+    if let duration = interval?.duration {
+      XCTAssert(duration >= 0.255)
+    }
+    if let stats = interval?.stats {
+      XCTAssert(stats.count == 1)
+      XCTAssert(stats.total >= 0.255)
+      XCTAssert(stats.min >= 0.255)
+      XCTAssert(stats.max >= 0.255)
+      XCTAssert(stats.average >= 0.255)
+    }
+  }
+  
+  func test_interval_begin_end() {
+    let logger = DLog()
+    
+    let interval = logger.interval("Interval")
+    interval?.begin()
+    delay()
+    interval?.end()
+    
+    XCTAssert(interval?.message == "Interval")
+    if let duration = interval?.duration {
+      XCTAssert(duration >= 0.255)
+    }
+    if let stats = interval?.stats {
+      XCTAssert(stats.count == 1)
+      XCTAssert(stats.total >= 0.255)
+      XCTAssert(stats.min >= 0.255)
+      XCTAssert(stats.max >= 0.255)
+      XCTAssert(stats.average >= 0.255)
+    }
+  }
+  
 }
 
 /*

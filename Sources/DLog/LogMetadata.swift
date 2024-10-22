@@ -28,9 +28,9 @@ public typealias Metadata = [String : Any]
 
 extension Metadata {
   
-  static func metadata<Option: OptionSet>(from items: [(Option, String, () -> Any)], options: Option) -> Metadata {
+  static func metadata<Option: OptionSet>(from items: [(Option, String, Any)], options: Option) -> Metadata {
     let keyValues: [(String, Any)] = items
-      .compactMap { (option: Option, key: String, f:() -> Any) in
+      .compactMap { (option: Option, key: String, value: Any) in
         // Option
         assert(option is Option.Element)
         guard options.contains(option as! Option.Element) else {
@@ -41,7 +41,6 @@ extension Metadata {
         assert(key.isEmpty == false)
         
         // Value
-        let value = f()
         if let text = value as? String, text.isEmpty {
           return nil
         }
