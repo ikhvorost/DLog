@@ -361,15 +361,11 @@ extension Log {
     
     func typeText() -> String {
       let tag = LogItem.tags[self.type]!
+      let text = "[\(type.title)]"
       return switch config.style {
-        case .plain:
-          "[\(type.title)]"
-          
-        case .colored:
-          " \(type.title) ".color(tag.colors)
-          
-        case .emoji:
-          "\(type.icon) [\(type.title)]"
+        case .plain: text
+        case .colored: text.color(tag.colors)
+        case .emoji: "\(type.icon) \(text)"
       }
     }
     
@@ -380,11 +376,8 @@ extension Log {
     func messageText() -> String {
       let tag = LogItem.tags[self.type]!
       return switch config.style {
-        case .plain, .emoji:
-          message
-          
-        case .colored:
-          message.color(tag.textColor)
+        case .plain, .emoji: message
+        case .colored: message.color(tag.textColor)
       }
     }
     

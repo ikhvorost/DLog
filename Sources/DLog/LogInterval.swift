@@ -127,7 +127,7 @@ public class LogInterval {
     
     override func typeText() -> String {
       let text = super.typeText()
-      return text.replacingOccurrences(of: "INTERVAL", with: "INTERVAL:\(message)")
+      return text.replacingOccurrences(of: "[INTERVAL]", with: "[INTERVAL:\(message)]")
     }
     
     override func data() -> Metadata? {

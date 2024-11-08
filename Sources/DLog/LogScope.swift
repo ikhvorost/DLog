@@ -74,7 +74,7 @@ public class LogScope: Log {
     
     override func typeText() -> String {
       let text = super.typeText()
-      return text.replacingOccurrences(of: "SCOPE", with: "SCOPE:\(message)")
+      return text.replacingOccurrences(of: "[SCOPE]", with: "[SCOPE:\(message)]")
     }
     
     override func data() -> Metadata? {
