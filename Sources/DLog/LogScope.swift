@@ -51,7 +51,7 @@ fileprivate class Stack {
 ///
 public class LogScope: Log {
   public class Activity {
-    public var os_state = os_activity_scope_state_s()
+    public var state = os_activity_scope_state_s()
   }
   
   public class Item: Log.Item {
@@ -140,7 +140,7 @@ public class LogScope: Log {
       location = LogLocation(fileID, file, function, line)
       
       let item = item(type: .scopeEnter, stack: stack)
-      logger.output?.enter(item: item)
+      logger.output?.log(item: item)
     }
   }
   
@@ -171,7 +171,7 @@ public class LogScope: Log {
       location = LogLocation(fileID, file, function, line)
       
       let item = item(type: .scopeLeave, stack: stack)
-      logger.output?.leave(item: item)
+      logger.output?.log(item: item)
     }
   }
 }

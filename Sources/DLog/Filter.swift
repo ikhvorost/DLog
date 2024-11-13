@@ -29,9 +29,7 @@ import Foundation
 ///
 public class Filter: LogOutput {
   
-  private let itemHandler: ((Log.Item) -> Bool)?
-  private let intervalHandler: ((LogInterval.Item) -> Bool)?
-  private let scopeHandler: ((LogScope.Item) -> Bool)?
+  private let handler: (Log.Item) -> Bool
   
   /// Initializes a filter output that evaluates using a specified block object.
   ///
@@ -43,46 +41,16 @@ public class Filter: LogOutput {
   /// - Parameters:
   /// 	- block: The block is applied to the object to be evaluated.
   ///
-  public init(item: ((Log.Item) -> Bool)? = nil, interval: ((LogInterval.Item) -> Bool)? = nil, scope: ((LogScope.Item) -> Bool)? = nil) {
-    self.itemHandler = item
-    self.intervalHandler = interval
-    self.scopeHandler = scope
+  public init(handler: @escaping (Log.Item) -> Bool) {
+    self.handler = handler
   }
   
   // MARK: - LogOutput
   
   override func log(item: Log.Item) {
-    guard itemHandler == nil || itemHandler?(item) == true else {
-      return
+    if handler(item) {
+      super.log(item: item)
     }
-    super.log(item: item)
   }
-  
-  override func enter(item: LogScope.Item) {
-    guard scopeHandler == nil || scopeHandler?(item) == true else {
-      return
-    }
-    super.enter(item: item)
-  }
-  
-  override func leave(item: LogScope.Item) {
-    guard scopeHandler == nil || scopeHandler?(item) == true else {
-      return
-    }
-    super.enter(item: item)
-  }
-  
-  override func begin(interval: LogInterval.Item) {
-    guard intervalHandler == nil || intervalHandler?(interval) == true else {
-      return
-    }
-    super.begin(interval: interval)
-  }
-  
-  override func end(interval: LogInterval.Item) {
-    guard intervalHandler == nil || intervalHandler?(interval) == true else {
-      return
-    }
-    super.end(interval: interval)
-  }
+
 }

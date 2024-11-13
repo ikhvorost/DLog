@@ -61,23 +61,4 @@ public class Standard: LogOutput {
     super.log(item: item)
     echo("\(item)")
   }
-  
-  override func enter(item: LogScope.Item) {
-    super.enter(item: item)
-    echo("\(item)")
-  }
-  
-  override func leave(item: LogScope.Item) {
-    super.leave(item: item)
-    echo("\(item)")
-  }
-  
-  override func begin(interval: LogInterval.Item) {
-    super.begin(interval: interval)
-  }
-  
-  override func end(interval: LogInterval.Item) {
-    super.end(interval: interval)
-    echo("\(interval)")
-  }
 }

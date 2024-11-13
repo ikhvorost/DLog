@@ -86,51 +86,45 @@ public class OSLog : LogOutput {
   override func log(item: Log.Item) {
     super.log(item: item)
     
-    let log = oslog(category: item.category)
-    
-    let location = "<\(item.location.fileName):\(item.location.line)>"
-    
-    assert(Self.types[item.type] != nil)
-    let type = Self.types[item.type]!
-    os_log("%{public}@ %{public}@", dso: Dynamic.dso, log: log, type: type, location, item.message)
-  }
-  
-  override func enter(item: LogScope.Item) {
-    super.enter(item: item)
-    
-    if let os_activity_current = Dynamic.OS_ACTIVITY_CURRENT {
-      let activity = _os_activity_create(Dynamic.dso, strdup(item.message), os_activity_current, OS_ACTIVITY_FLAG_DEFAULT)
-      os_activity_scope_enter(activity, &item.activity.os_state)
+    switch item {
+      // Scope
+      case let scope as LogScope.Item:
+        guard let os_activity_current = Dynamic.OS_ACTIVITY_CURRENT else {
+          break
+        }
+          
+        if scope.type == .scopeEnter {
+          let activity = _os_activity_create(Dynamic.dso, strdup(item.message), os_activity_current, OS_ACTIVITY_FLAG_DEFAULT)
+          os_activity_scope_enter(activity, &scope.activity.state)
+        }
+        else {
+          os_activity_scope_leave(&scope.activity.state)
+        }
+
+      // Interval
+      case let interval as LogInterval.Item:
+        guard let name = interval.staticName else {
+          break
+        }
+        
+        let log = oslog(category: interval.category)
+        let id = interval.signpost.id ?? OSSignpostID(log: log)
+        interval.signpost.id = id
+        
+        if interval.type == .intervalBegin {
+          os_signpost(.begin, log: log, name: name, signpostID: id)
+        }
+        else {
+          os_signpost(.end, log: log, name: name, signpostID: id)
+        }
+        
+      // Item
+      default:
+        let log = oslog(category: item.category)
+        let location = "<\(item.location.fileName):\(item.location.line)>"
+        assert(Self.types[item.type] != nil)
+        let type = Self.types[item.type]!
+        os_log("%{public}@ %{public}@", dso: Dynamic.dso, log: log, type: type, location, item.message)
     }
-  }
-  
-  override func leave(item: LogScope.Item) {
-    super.leave(item: item)
-    
-    if Dynamic.OS_ACTIVITY_CURRENT != nil {
-      os_activity_scope_leave(&item.activity.os_state)
-    }
-  }
-  
-  override func begin(interval: LogInterval.Item) {
-    super.begin(interval: interval)
-//    let log = oslog(category: interval.category)
-//    if interval.signpostID == nil {
-//      interval.signpostID = OSSignpostID(log: log)
-//    }
-//    
-//    if let name = interval.staticName {
-//      os_signpost(.begin, log: log, name: name, signpostID: interval.signpostID!)
-//    }
-  }
-  
-  override func end(interval: LogInterval.Item) {
-    super.end(interval: interval)
-    
-    let log = oslog(category: interval.category)
-    
-//    if let name = interval.staticName {
-//      os_signpost(.end, log: log, name: name, signpostID: interval.signpostID!)
-//    }
   }
 }

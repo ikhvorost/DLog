@@ -111,13 +111,18 @@ fileprivate class Store {
 /// Interval logs a point of interest in your code as running time statistics for debugging performance.
 ///
 public class LogInterval {
+  public class Signpost {
+    public var id: OSSignpostID?
+  }
   
   public class Item: Log.Item {
+    public let signpost: Signpost
     public let staticName: StaticString?
     public let duration: TimeInterval
     public let stats: IntervalStats
     
-    init(time: Date, category: String, stack: [Bool]?, type: LogType, location: LogLocation, metadata: Metadata, message: String, config: LogConfig, staticName: StaticString?, duration: TimeInterval, stats: IntervalStats) {
+    init(time: Date, category: String, stack: [Bool]?, type: LogType, location: LogLocation, metadata: Metadata, message: String, config: LogConfig, staticName: StaticString?, duration: TimeInterval, stats: IntervalStats, signpost: Signpost) {
+      self.signpost = signpost
       self.staticName = staticName
       self.duration = duration
       self.stats = stats
@@ -148,6 +153,7 @@ public class LogInterval {
   }
   
   private weak var logger: DLog?
+  private let signpost = Signpost()
   
   private let category: String
   private let config: LogConfig
@@ -162,14 +168,6 @@ public class LogInterval {
   
   /// A time duration
   public private(set) var duration: TimeInterval = 0
-  
-  // SignpostID
-  @Atomic
-  private var _signpostID: Any? = nil
-  var signpostID: OSSignpostID? {
-    set { _signpostID = newValue }
-    get { _signpostID as? OSSignpostID }
-  }
   
   /// Accumulated interval statistics
   public var stats: IntervalStats {
@@ -192,7 +190,7 @@ public class LogInterval {
   }
   
   private func item(type: LogType, stats: IntervalStats) -> Item {
-    Item(time: Date(), category: category, stack: stack, type: type, location: location, metadata: metadata, message: message, config: config, staticName: staticName, duration: duration, stats: stats)
+    Item(time: Date(), category: category, stack: stack, type: type, location: location, metadata: metadata, message: message, config: config, staticName: staticName, duration: duration, stats: stats, signpost: signpost)
   }
   
   /// Start a time interval.
@@ -218,7 +216,7 @@ public class LogInterval {
       
       let stats = Store.shared[id]
       let item = item(type: .intervalBegin, stats: stats)
-      logger?.output?.begin(interval: item)
+      logger?.output?.log(item: item)
     }
   }
   
@@ -254,7 +252,7 @@ public class LogInterval {
       Store.shared[id] = newStats
       
       let item = item(type: .intervalEnd, stats: newStats)
-      logger?.output?.end(interval: item)
+      logger?.output?.log(item: item)
     }
   }
 }

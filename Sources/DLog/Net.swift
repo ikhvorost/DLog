@@ -125,25 +125,6 @@ public class Net: LogOutput {
     super.log(item: item)
     send("\(item)")
   }
-  
-  override func enter(item: LogScope.Item) {
-    super.enter(item: item)
-    send("\(item)")
-  }
-  
-  override func leave(item: LogScope.Item) {
-    super.leave(item: item)
-    send("\(item)")
-  }
-  
-  override func begin(interval: LogInterval.Item) {
-    super.begin(interval: interval)
-  }
-  
-  override func end(interval: LogInterval.Item) {
-    super.end(interval: interval)
-    send("\(interval)")
-  }
 }
 
 extension Net : NetServiceBrowserDelegate {
