@@ -78,6 +78,11 @@ public class File: LogOutput {
   
   override func log(item: Log.Item) {
     super.log(item: item)
+    
+    guard item.type != .intervalBegin else {
+      return
+    }
+    
     write("\(item)")
   }
 }
