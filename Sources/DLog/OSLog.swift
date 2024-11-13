@@ -83,7 +83,7 @@ public class OSLog : LogOutput {
   
   // MARK: - LogOutput
   
-  override func log(item: LogItem) {
+  override func log(item: Log.Item) {
     super.log(item: item)
     
     let log = oslog(category: item.category)

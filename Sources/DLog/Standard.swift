@@ -57,9 +57,9 @@ public class Standard: LogOutput {
   
   // MARK: - LogOutput
   
-  override func log(item: LogItem) {
+  override func log(item: Log.Item) {
     super.log(item: item)
-    echo(item.text())
+    echo("\(item)")
   }
   
   override func enter(item: LogScope.Item) {

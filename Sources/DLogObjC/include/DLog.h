@@ -38,25 +38,27 @@
 #define interval_1(name) interval_2((name), nil)
 #define interval(...) DLOG_CONCAT(interval_, DLOG_VARGS(__VA_ARGS__))(__VA_ARGS__)
 
-
-typedef LogItem* _Nullable (^_Nonnull LogBlock)(NSString* _Nullable, NSString* _Nonnull, NSString* _Nonnull, NSString* _Nonnull, NSUInteger);
-typedef LogItem* _Nullable (^_Nonnull AssertBlock)(BOOL, NSString* _Nullable, NSString* _Nonnull, NSString* _Nonnull, NSString* _Nonnull, NSUInteger);
-typedef LogScope* _Nonnull (^_Nonnull ScopeBlock)(NSString* _Nonnull, void (^_Nullable)(LogScope* _Nonnull));
-//typedef LogInterval* _Nonnull (^_Nonnull IntervalBlock)(NSString* _Nonnull, NSString* _Nonnull, NSString* _Nonnull, NSString* _Nonnull, NSUInteger, void (^_Nullable)());
-
-extern NSString* _Nonnull fileID(NSBundle* _Nonnull bundle, NSString* _Nonnull file);
-
-@interface Log (PropertyWrapper)
-
-@property (nonatomic, readonly) LogBlock log;
-@property (nonatomic, readonly) LogBlock trace;
-@property (nonatomic, readonly) LogBlock debug;
-@property (nonatomic, readonly) LogBlock info;
-@property (nonatomic, readonly) LogBlock warning;
-@property (nonatomic, readonly) LogBlock error;
-@property (nonatomic, readonly) AssertBlock assertion;
-@property (nonatomic, readonly) LogBlock fault;
-@property (nonatomic, readonly) ScopeBlock scope;
-//@property (nonatomic, readonly) IntervalBlock interval;
-
-@end
+/*
+ typedef LogItem* _Nullable (^_Nonnull LogBlock)(NSString* _Nullable, NSString* _Nonnull, NSString* _Nonnull, NSString* _Nonnull, NSUInteger);
+ typedef LogItem* _Nullable (^_Nonnull AssertBlock)(BOOL, NSString* _Nullable, NSString* _Nonnull, NSString* _Nonnull, NSString* _Nonnull, NSUInteger);
+ typedef LogScope* _Nonnull (^_Nonnull ScopeBlock)(NSString* _Nonnull, void (^_Nullable)(LogScope* _Nonnull));
+ //typedef LogInterval* _Nonnull (^_Nonnull IntervalBlock)(NSString* _Nonnull, NSString* _Nonnull, NSString* _Nonnull, NSString* _Nonnull, NSUInteger, void (^_Nullable)());
+ 
+ extern NSString* _Nonnull fileID(NSBundle* _Nonnull bundle, NSString* _Nonnull file);
+ 
+ @interface Log (PropertyWrapper)
+ 
+ @property (nonatomic, readonly) LogBlock log;
+ @property (nonatomic, readonly) LogBlock trace;
+ @property (nonatomic, readonly) LogBlock debug;
+ @property (nonatomic, readonly) LogBlock info;
+ @property (nonatomic, readonly) LogBlock warning;
+ @property (nonatomic, readonly) LogBlock error;
+ @property (nonatomic, readonly) AssertBlock assertion;
+ @property (nonatomic, readonly) LogBlock fault;
+ @property (nonatomic, readonly) ScopeBlock scope;
+ //@property (nonatomic, readonly) IntervalBlock interval;
+ 
+ @end
+ 
+ */

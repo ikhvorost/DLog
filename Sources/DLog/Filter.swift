@@ -29,7 +29,7 @@ import Foundation
 ///
 public class Filter: LogOutput {
   
-  private let itemHandler: ((LogItem) -> Bool)?
+  private let itemHandler: ((Log.Item) -> Bool)?
   private let intervalHandler: ((LogInterval.Item) -> Bool)?
   private let scopeHandler: ((LogScope.Item) -> Bool)?
   
@@ -43,7 +43,7 @@ public class Filter: LogOutput {
   /// - Parameters:
   /// 	- block: The block is applied to the object to be evaluated.
   ///
-  public init(item: ((LogItem) -> Bool)? = nil, interval: ((LogInterval.Item) -> Bool)? = nil, scope: ((LogScope.Item) -> Bool)? = nil) {
+  public init(item: ((Log.Item) -> Bool)? = nil, interval: ((LogInterval.Item) -> Bool)? = nil, scope: ((LogScope.Item) -> Bool)? = nil) {
     self.itemHandler = item
     self.intervalHandler = interval
     self.scopeHandler = scope
@@ -51,7 +51,7 @@ public class Filter: LogOutput {
   
   // MARK: - LogOutput
   
-  override func log(item: LogItem) {
+  override func log(item: Log.Item) {
     guard itemHandler == nil || itemHandler?(item) == true else {
       return
     }

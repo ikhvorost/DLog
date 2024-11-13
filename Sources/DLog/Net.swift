@@ -121,9 +121,9 @@ public class Net: LogOutput {
   
   // MARK: - LogOutput
   
-  override func log(item: LogItem) {
+  override func log(item: Log.Item) {
     super.log(item: item)
-    send(item.text())
+    send("\(item)")
   }
   
   override func enter(item: LogScope.Item) {

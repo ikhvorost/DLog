@@ -26,6 +26,27 @@
 import Foundation
 
 
+extension String {
+  func color(_ codes: [ANSIEscapeCode]) -> String {
+    return codes.map { $0.rawValue }.joined() + self + ANSIEscapeCode.reset.rawValue
+  }
+  
+  func color(_ code: ANSIEscapeCode) -> String {
+    return color([code])
+  }
+  
+  func trimTrailingWhitespace() -> String {
+    replacingOccurrences(of: "\\s+$", with: "", options: .regularExpression)
+  }
+}
+
+fileprivate extension Array where Element == String {
+  func joinedCompact() -> String {
+    compactMap { $0.isEmpty ? nil : $0 }
+      .joined(separator: " ")
+  }
+}
+
 /// The location of a log message.
 @objcMembers
 public class LogLocation: NSObject {
@@ -97,45 +118,205 @@ public enum LogType: Int {
   case scopeLeave
 }
 
-/// A base log message class that the logger adds to the logs.
-///
-/// It contains all available properties of the log message.
-///
-@objcMembers
-public class LogItem: NSObject {
-  /// The timestamp of this log message.
-  public internal(set) var time = Date()
+extension LogType {
+  static let icons: [LogType : String] = [
+    .log : "💬",
+    .trace : "#️⃣",
+    .debug : "▶️",
+    .info : "✅",
+    .warning: "⚠️",
+    .error : "⚠️",
+    .assert : "🅰️",
+    .fault : "🆘",
+    .intervalBegin : "🕛",
+    .intervalEnd : "🕑",
+    .scopeEnter: "⬇️",
+    .scopeLeave: "⬆️",
+  ]
   
-  /// The category of this log message.
-  public let category: String
+  var icon: String {
+    Self.icons[self]!
+  }
   
-  /// The scope of this log message.
-  public let stack: [Bool]?
+  static let titles: [LogType : String] = [
+    .log : "LOG",
+    .trace : "TRACE",
+    .debug : "DEBUG",
+    .info : "INFO",
+    .warning : "WARNING",
+    .error : "ERROR",
+    .assert : "ASSERT",
+    .fault : "FAULT",
+    .intervalBegin : "INTERVAL",
+    .intervalEnd : "INTERVAL",
+    .scopeEnter : "SCOPE",
+    .scopeLeave : "SCOPE",
+  ]
   
-  /// The log level of this log message.
-  public let type: LogType
-  
-  /// The location of a log message.
-  public let location: LogLocation
-  
-  /// Text of this log message.
-  public let message: String
-  
-  let config: LogConfig
-  
-  let _metadata: () -> [Metadata]
-  /// Metadata of log message
-  public internal(set) lazy var metadata: [Metadata] = { _metadata() }()
-  
-  init(message: String, type: LogType, category: String, config: LogConfig, stack: [Bool]?, metadata: @escaping () -> [Metadata], location: LogLocation) {
-    self.message = message
-    self.type = type
-    self.category = category
-    self.config = config
-    self.stack = stack
-    self._metadata = metadata
-    self.location = location
+  var title: String {
+    Self.titles[self]!
   }
 }
 
+enum ANSIEscapeCode: String {
+  case reset = "\u{001b}[0m"
+  case clear = "\u{001b}c"
+  
+  case bold = "\u{001b}[1m"
+  case dim = "\u{001b}[2m"
+  case underline = "\u{001b}[4m"
+  case blink = "\u{001b}[5m"
+  case reversed = "\u{001b}[7m"
+  
+  // 8 colors
+  case textBlack = "\u{001B}[30m"
+  case textRed = "\u{001B}[31m"
+  case textGreen = "\u{001B}[32m"
+  case textYellow = "\u{001B}[33m"
+  case textBlue = "\u{001B}[34m"
+  case textMagenta = "\u{001B}[35m"
+  case textCyan = "\u{001B}[36m"
+  case textWhite = "\u{001B}[37m"
+  
+  case backgroundBlack = "\u{001b}[40m"
+  case backgroundRed = "\u{001b}[41m"
+  case backgroundGreen = "\u{001b}[42m"
+  case backgroundYellow = "\u{001b}[43m"
+  case backgroundBlue = "\u{001b}[44m"
+  case backgroundMagenta = "\u{001b}[45m"
+  case backgroundCyan = "\u{001b}[46m"
+  case backgroundWhite = "\u{001b}[47m"
+}
 
+extension Log {
+  
+  public class Item: CustomStringConvertible {
+    struct Tag {
+      let textColor: ANSIEscapeCode
+      let colors: [ANSIEscapeCode]
+    }
+    
+    static let tags: [LogType : Tag] = [
+      .log : Tag(textColor: .textWhite, colors: [.backgroundWhite, .textBlack]),
+      .info : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textWhite]),
+      .trace : Tag(textColor: .textCyan, colors: [.backgroundCyan, .textBlack]),
+      .debug : Tag(textColor: .textCyan, colors: [.backgroundCyan, .textBlack]),
+      .warning : Tag(textColor: .textYellow, colors: [.backgroundYellow, .textBlack]),
+      .error : Tag(textColor: .textYellow, colors: [.backgroundYellow, .textBlack]),
+      .fault : Tag(textColor: .textRed, colors: [.backgroundRed, .textWhite, .blink]),
+      .assert : Tag(textColor: .textRed, colors: [.backgroundRed, .textWhite]),
+      .intervalBegin : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textBlack]),
+      .intervalEnd : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textBlack]),
+      .scopeEnter : Tag(textColor: .textMagenta, colors: [.backgroundMagenta, .textBlack]),
+      .scopeLeave : Tag(textColor: .textMagenta, colors: [.backgroundMagenta, .textBlack]),
+    ]
+    
+    static let dateFormatter: DateFormatter = {
+      let dateFormatter = DateFormatter()
+      dateFormatter.dateFormat = "HH:mm:ss.SSS"
+      return dateFormatter
+    }()
+    
+    static func logPrefix(items: [(type: LogOptions, text: String)], options: LogOptions) -> String {
+      items.compactMap {
+        guard !$0.text.isEmpty && ($0.type == .message || options.contains($0.type)) else {
+          return nil
+        }
+        return $0.text.trimTrailingWhitespace()
+      }
+      .joinedCompact()
+    }
+    
+    public let time: Date
+    public let category: String
+    public let stack: [Bool]?
+    public let type: LogType
+    public let location: LogLocation
+    public let metadata: Metadata
+    public let message: String
+    public let config: LogConfig
+    
+    init(time: Date, category: String, stack: [Bool]?, type: LogType, location: LogLocation, metadata: Metadata, message: String, config: LogConfig) {
+      self.time = time
+      self.category = category
+      self.stack = stack
+      self.type = type
+      self.location = location
+      self.metadata = metadata
+      self.message = message
+      self.config = config
+    }
+    
+    func padding() -> String {
+      guard let stack else {
+        return ""
+      }
+      return stack
+        .map { $0 ? "| " : "  " }
+        .joined()
+        .appending("├")
+    }
+    
+    func typeText() -> String {
+      let tag = Log.Item.tags[self.type]!
+      let text = "[\(type.title)]"
+      return switch config.style {
+        case .plain: text
+        case .colored: text.color(tag.colors)
+        case .emoji: "\(type.icon) \(text)"
+      }
+    }
+    
+    func data() -> Metadata? {
+      nil
+    }
+    
+    func messageText() -> String {
+      let tag = Log.Item.tags[self.type]!
+      return switch config.style {
+        case .plain, .emoji: message
+        case .colored: message.color(tag.textColor)
+      }
+    }
+    
+    public var description: String {
+      var sign = "\(config.sign)"
+      var time = Log.Item.dateFormatter.string(from: self.time)
+      var level = String(format: "[%02d]", self.stack?.count ?? 0)
+      var category = "[\(self.category)]"
+      var location = "<\(self.location.fileName):\(self.location.line)>"
+      var metadata = self.metadata.json()
+      var data = data()?.json() ?? ""
+      
+      switch config.style {
+        case .plain, .emoji:
+          break
+          
+        case .colored:
+          let tag = Log.Item.tags[self.type]!
+          
+          sign = sign.color(.dim)
+          time = time.color(.dim)
+          level = level.color(.dim)
+          category = category.color(.textBlue)
+          location = location.color([.dim, tag.textColor])
+          metadata = metadata.color(.dim)
+          data = data.color(.dim)
+      }
+      
+      let items: [(LogOptions, String)] = [
+        (.sign, sign),
+        (.time, time),
+        (.level, level),
+        (.category, category),
+        (.padding, padding()),
+        (.type, typeText()),
+        (.location, location),
+        (.metadata, metadata),
+        (.data, data),
+        (.message, messageText()),
+      ]
+      return Log.Item.logPrefix(items: items, options: config.options)
+    }
+  }
+}

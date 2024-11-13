@@ -54,7 +54,7 @@ public class LogOutput: NSObject {
   public static func oslog(subsystem: String) -> OSLog { OSLog(subsystem: subsystem) }
   
   /// Creates `Filter` output for log items.
-  public static func filter(item: @escaping (LogItem) -> Bool) -> Filter { Filter(item: item, scope: nil) }
+  public static func filter(item: @escaping (Log.Item) -> Bool) -> Filter { Filter(item: item, scope: nil) }
   
   /// Creates `Filter` output for log scopes.
   public static func filter(scope: @escaping (LogScope.Item) -> Bool) -> Filter { Filter(item: nil, scope: scope) }
@@ -83,7 +83,7 @@ public class LogOutput: NSObject {
   
   private var next: LogOutput?
   
-  func log(item: LogItem) {
+  func log(item: Log.Item) {
     next?.log(item: item)
   }
   

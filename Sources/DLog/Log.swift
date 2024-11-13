@@ -50,11 +50,11 @@ public class Log: NSObject {
     return nil
   }
   
-  private func log(message: LogMessage, type: LogType, category: String, config: LogConfig, metadata: @autoclosure @escaping () -> [Metadata], location: LogLocation) -> LogItem? {
+  private func log(message: LogMessage, type: LogType, category: String, config: LogConfig, metadata: Metadata, location: LogLocation) -> Log.Item? {
     guard let output = logger.output else {
       return nil
     }
-    let item = LogItem(message: message.text, type: type, category: category, config: config, stack: stack(), metadata: metadata, location: location)
+    let item = Log.Item(time: Date(), category: category, stack: stack(), type: type, location: location, metadata: metadata, message: message.text, config: config)
     output.log(item: item)
     return item
   }
@@ -75,21 +75,22 @@ public class Log: NSObject {
   /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   ///
   @discardableResult
-  public func log(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> LogItem? {
-    log(message: message, type: .log, category: category, config: config, metadata: [self.metadata.data], location: LogLocation(fileID, file, function, line))
+  public func log(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
+    log(message: message, type: .log, category: category, config: config, metadata: metadata.data, location: LogLocation(fileID, file, function, line))
   }
   
-  private func trace(message: LogMessage, traceInfo: TraceInfo, traceConfig: TraceConfig?, location: LogLocation) -> LogItem? {
+  private func trace(message: LogMessage, traceInfo: TraceInfo, traceConfig: TraceConfig?, location: LogLocation) -> Log.Item? {
     var config = config
     if let traceConfig {
       config.traceConfig = traceConfig
     }
     
-    let metadata: () -> [Metadata] = {[
-      self.metadata.data,
-      traceMetadata(location: location, traceInfo: traceInfo, traceConfig: config.traceConfig)
-    ]}
-    return log(message: message, type: .trace, category: category, config: config, metadata: metadata(), location: location)
+    // TODO: LogTrace?
+//    let metadata: () -> [Metadata] = {[
+//      self.metadata.data,
+//      traceMetadata(location: location, traceInfo: traceInfo, traceConfig: config.traceConfig)
+//    ]}
+    return log(message: message, type: .trace, category: category, config: config, metadata: metadata.data, location: location)
   }
   
   /// Logs trace information to help debug problems during the development of your code.
@@ -108,14 +109,14 @@ public class Log: NSObject {
   /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   ///
   @discardableResult
-  public func trace(_ message: LogMessage = "", config: TraceConfig? = nil, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> LogItem? {
+  public func trace(_ message: LogMessage = "", config: TraceConfig? = nil, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
     let traceInfo = TraceInfo()
     return trace(message: message, traceInfo: traceInfo, traceConfig: config, location: LogLocation(fileID, file, function, line))
   }
   
   /// Logs trace information to help debug problems during the development of your code.
   @discardableResult
-  public func trace(_ message: LogMessage, fileID: String, file: String, function: String, line: UInt) -> LogItem? {
+  public func trace(_ message: LogMessage, fileID: String, file: String, function: String, line: UInt) -> Log.Item? {
     let traceInfo = TraceInfo()
     return trace(message: message, traceInfo: traceInfo, traceConfig: nil, location: LogLocation(fileID, file, function, line))
   }
@@ -136,8 +137,8 @@ public class Log: NSObject {
   /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   ///
   @discardableResult
-  public func debug(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> LogItem? {
-    log(message: message, type: .debug, category: category, config: config, metadata: [self.metadata.data],  location: LogLocation(fileID, file, function, line))
+  public func debug(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
+    log(message: message, type: .debug, category: category, config: config, metadata: metadata.data,  location: LogLocation(fileID, file, function, line))
   }
   
   /// Logs a message that is helpful, but not essential, to diagnose issues with your code.
@@ -156,8 +157,8 @@ public class Log: NSObject {
   /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   ///
   @discardableResult
-  public func info(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> LogItem? {
-    log(message: message, type: .info, category: category, config: config, metadata: [self.metadata.data], location: LogLocation(fileID, file, function, line))
+  public func info(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
+    log(message: message, type: .info, category: category, config: config, metadata: metadata.data, location: LogLocation(fileID, file, function, line))
   }
   
   /// Logs a warning that occurred during the execution of your code.
@@ -176,8 +177,8 @@ public class Log: NSObject {
   /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   ///
   @discardableResult
-  public func warning(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> LogItem? {
-    log(message: message, type: .warning, category: category, config: config, metadata: [self.metadata.data], location: LogLocation(fileID, file, function, line))
+  public func warning(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
+    log(message: message, type: .warning, category: category, config: config, metadata: metadata.data, location: LogLocation(fileID, file, function, line))
   }
   
   /// Logs an error that occurred during the execution of your code.
@@ -196,8 +197,8 @@ public class Log: NSObject {
   /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   ///
   @discardableResult
-  public func error(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> LogItem? {
-    log(message: message, type: .error, category: category, config: config, metadata: [self.metadata.data], location: LogLocation(fileID, file, function, line))
+  public func error(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
+    log(message: message, type: .error, category: category, config: config, metadata: metadata.data, location: LogLocation(fileID, file, function, line))
   }
   
   /// Logs a traditional C-style assert notice with an optional message.
@@ -217,11 +218,11 @@ public class Log: NSObject {
   /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   ///
   @discardableResult
-  public func assert(_ condition: @autoclosure () -> Bool, _ message: LogMessage = "", fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> LogItem? {
+  public func assert(_ condition: @autoclosure () -> Bool, _ message: LogMessage = "", fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
     guard logger.output != nil && !condition() else {
       return nil
     }
-    return log(message: message, type: .assert, category: category, config: config, metadata: [self.metadata.data], location: LogLocation(fileID, file, function, line))
+    return log(message: message, type: .assert, category: category, config: config, metadata: metadata.data, location: LogLocation(fileID, file, function, line))
   }
   
   /// Logs a bug or fault that occurred during the execution of your code.
@@ -240,8 +241,8 @@ public class Log: NSObject {
   /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   ///
   @discardableResult
-  public func fault(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> LogItem? {
-    log(message: message, type: .fault, category: category, config: config, metadata: [self.metadata.data], location: LogLocation(fileID, file, function, line))
+  public func fault(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
+    log(message: message, type: .fault, category: category, config: config, metadata: metadata.data, location: LogLocation(fileID, file, function, line))
   }
   
   /// Creates a scope object that can assign log messages to itself.
@@ -323,102 +324,5 @@ public class Log: NSObject {
   @discardableResult
   public func interval(message: String, fileID: String, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval? {
     interval(message: message, staticName: nil, intervalConfig: nil, location: LogLocation(fileID, file, function, line), closure: closure)
-  }
-}
-
-extension Log {
-  
-  public class Item: CustomStringConvertible {
-    public let time: Date
-    public let category: String
-    public let stack: [Bool]?
-    public let type: LogType
-    public let location: LogLocation
-    public let metadata: Metadata
-    public let message: String
-    public let config: LogConfig
-    
-    init(time: Date, category: String, stack: [Bool]?, type: LogType, location: LogLocation, metadata: Metadata, message: String, config: LogConfig) {
-      self.time = time
-      self.category = category
-      self.stack = stack
-      self.type = type
-      self.location = location
-      self.metadata = metadata
-      self.message = message
-      self.config = config
-    }
-    
-    func padding() -> String {
-      guard let stack else {
-        return ""
-      }
-      return stack
-        .map { $0 ? "| " : "  " }
-        .joined()
-        .appending("├")
-    }
-    
-    func typeText() -> String {
-      let tag = LogItem.tags[self.type]!
-      let text = "[\(type.title)]"
-      return switch config.style {
-        case .plain: text
-        case .colored: text.color(tag.colors)
-        case .emoji: "\(type.icon) \(text)"
-      }
-    }
-    
-    func data() -> Metadata? {
-      nil
-    }
-    
-    func messageText() -> String {
-      let tag = LogItem.tags[self.type]!
-      return switch config.style {
-        case .plain, .emoji: message
-        case .colored: message.color(tag.textColor)
-      }
-    }
-    
-    public var description: String {
-      var sign = "\(config.sign)"
-      var time = LogItem.dateFormatter.string(from: self.time)
-      var level = String(format: "[%02d]", self.stack?.count ?? 0)
-      var category = "[\(self.category)]"
-      var location = "<\(self.location.fileName):\(self.location.line)>"
-      var metadata = self.metadata.json()
-      var data = data()?.json() ?? ""
-      
-      switch config.style {
-        case .plain, .emoji:
-          break
-          
-        case .colored:
-          let tag = LogItem.tags[self.type]!
-          
-          sign = sign.color(.dim)
-          time = time.color(.dim)
-          level = level.color(.dim)
-          category = category.color(.textBlue)
-          location = location.color([.dim, tag.textColor])
-          metadata = metadata.color(.dim)
-          data = data.color(.dim)
-      }
-      
-      let items: [(LogOptions, String)] = [
-        (.sign, sign),
-        (.time, time),
-        (.level, level),
-        (.category, category),
-        (.padding, padding()),
-        (.type, typeText()),
-        (.location, location),
-        (.metadata, metadata),
-        (.data, data),
-        (.message, messageText()),
-      ]
-      return LogItem.logPrefix(items: items, options: config.options)
-    }
   }
 }

@@ -76,9 +76,9 @@ public class File: LogOutput {
   
   // MARK: - LogOutput
   
-  override func log(item: LogItem) {
+  override func log(item: Log.Item) {
     super.log(item: item)
-    write(item.text())
+    write("\(item)")
   }
   
   override func enter(item: LogScope.Item) {
