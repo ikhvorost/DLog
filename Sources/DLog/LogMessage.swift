@@ -133,6 +133,7 @@ public class LogMessage: NSObject,
   
   /// Creates an instance initialized to the given dictionary.
   public required init(dictionaryLiteral elements: (Any, Any)...) {
+    // TODO: json
     text = "\(elements)"
   }
   

@@ -48,8 +48,7 @@ fileprivate extension Array where Element == String {
 }
 
 /// The location of a log message.
-@objcMembers
-public class LogLocation: NSObject {
+public struct LogLocation {
   /// The file ID.
   public let fileID: String
   
@@ -63,20 +62,13 @@ public class LogLocation: NSObject {
   public let line: UInt
   
   /// The module name.
-  public lazy var moduleName: String = {
+  public var moduleName: String {
     (fileID as NSString).pathComponents.first!
-  }()
+  }
   
   /// The file name.
-  public lazy var fileName: String = {
+  public var fileName: String {
     (file as NSString).lastPathComponent
-  }()
-  
-  public init(_ fileID: String, _ file: String, _ function: String, _ line: UInt) {
-    self.fileID = fileID
-    self.file = file
-    self.function = function
-    self.line = line
   }
 }
 
@@ -114,6 +106,7 @@ public enum LogType: Int {
   case intervalBegin
   case intervalEnd
   
+  /// The scope log level.
   case scopeEnter
   case scopeLeave
 }

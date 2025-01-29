@@ -50,11 +50,11 @@ public class Log: NSObject {
     return nil
   }
   
-  private func log(message: LogMessage, type: LogType, category: String, config: LogConfig, metadata: Metadata, location: LogLocation) -> Log.Item? {
+  private func logItem(message: LogMessage, type: LogType, location: LogLocation) -> Log.Item? {
     guard let output = logger.output else {
       return nil
     }
-    let item = Log.Item(time: Date(), category: category, stack: stack(), type: type, location: location, metadata: metadata, message: message.text, config: config)
+    let item = Log.Item(time: Date(), category: category, stack: stack(), type: type, location: location, metadata: metadata.data, message: message.text, config: config)
     output.log(item: item)
     return item
   }
@@ -76,21 +76,7 @@ public class Log: NSObject {
   ///
   @discardableResult
   public func log(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
-    log(message: message, type: .log, category: category, config: config, metadata: metadata.data, location: LogLocation(fileID, file, function, line))
-  }
-  
-  private func trace(message: LogMessage, traceInfo: TraceInfo, traceConfig: TraceConfig?, location: LogLocation) -> Log.Item? {
-    var config = config
-    if let traceConfig {
-      config.traceConfig = traceConfig
-    }
-    
-    // TODO: LogTrace?
-//    let metadata: () -> [Metadata] = {[
-//      self.metadata.data,
-//      traceMetadata(location: location, traceInfo: traceInfo, traceConfig: config.traceConfig)
-//    ]}
-    return log(message: message, type: .trace, category: category, config: config, metadata: metadata.data, location: location)
+    logItem(message: message, type: .log, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
   }
   
   /// Logs trace information to help debug problems during the development of your code.
@@ -109,18 +95,17 @@ public class Log: NSObject {
   /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   ///
   @discardableResult
-  public func trace(_ message: LogMessage = "", config: TraceConfig? = nil, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
-    let traceInfo = TraceInfo()
-    return trace(message: message, traceInfo: traceInfo, traceConfig: config, location: LogLocation(fileID, file, function, line))
+  public func trace(_ message: LogMessage = "", fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
+    // TODO: LogTrace?
+    //let traceInfo = TraceInfo()
+    // TODO: LogTrace?
+    //    let metadata: () -> [Metadata] = {[
+    //      self.metadata.data,
+    //      traceMetadata(location: location, traceInfo: traceInfo, traceConfig: config.traceConfig)
+    //    ]}
+    return logItem(message: message, type: .trace, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
   }
   
-  /// Logs trace information to help debug problems during the development of your code.
-  @discardableResult
-  public func trace(_ message: LogMessage, fileID: String, file: String, function: String, line: UInt) -> Log.Item? {
-    let traceInfo = TraceInfo()
-    return trace(message: message, traceInfo: traceInfo, traceConfig: nil, location: LogLocation(fileID, file, function, line))
-  }
-
   /// Logs a message to help debug problems during the development of your code.
   ///
   /// Use this method during development to record information that might aid you in debugging problems later.
@@ -138,7 +123,7 @@ public class Log: NSObject {
   ///
   @discardableResult
   public func debug(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
-    log(message: message, type: .debug, category: category, config: config, metadata: metadata.data,  location: LogLocation(fileID, file, function, line))
+    logItem(message: message, type: .debug, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
   }
   
   /// Logs a message that is helpful, but not essential, to diagnose issues with your code.
@@ -158,7 +143,7 @@ public class Log: NSObject {
   ///
   @discardableResult
   public func info(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
-    log(message: message, type: .info, category: category, config: config, metadata: metadata.data, location: LogLocation(fileID, file, function, line))
+    logItem(message: message, type: .info, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
   }
   
   /// Logs a warning that occurred during the execution of your code.
@@ -178,7 +163,7 @@ public class Log: NSObject {
   ///
   @discardableResult
   public func warning(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
-    log(message: message, type: .warning, category: category, config: config, metadata: metadata.data, location: LogLocation(fileID, file, function, line))
+    logItem(message: message, type: .warning, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
   }
   
   /// Logs an error that occurred during the execution of your code.
@@ -198,7 +183,7 @@ public class Log: NSObject {
   ///
   @discardableResult
   public func error(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
-    log(message: message, type: .error, category: category, config: config, metadata: metadata.data, location: LogLocation(fileID, file, function, line))
+    logItem(message: message, type: .error, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
   }
   
   /// Logs a traditional C-style assert notice with an optional message.
@@ -222,7 +207,7 @@ public class Log: NSObject {
     guard logger.output != nil && !condition() else {
       return nil
     }
-    return log(message: message, type: .assert, category: category, config: config, metadata: metadata.data, location: LogLocation(fileID, file, function, line))
+    return logItem(message: message, type: .assert, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
   }
   
   /// Logs a bug or fault that occurred during the execution of your code.
@@ -242,7 +227,7 @@ public class Log: NSObject {
   ///
   @discardableResult
   public func fault(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
-    log(message: message, type: .fault, category: category, config: config, metadata: metadata.data, location: LogLocation(fileID, file, function, line))
+    logItem(message: message, type: .fault, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
   }
   
   /// Creates a scope object that can assign log messages to itself.
@@ -268,61 +253,46 @@ public class Log: NSObject {
     guard logger.output != nil else {
       return nil
     }
-    let location = LogLocation(fileID, file, function, line)
+    let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
     let scope = LogScope(name: name, logger: logger, category: category, config: config, metadata: metadata, location: location)
-    if let block = closure {
+    if let closure {
       scope.enter(fileID: fileID, file: file, function: function, line: line)
-      block(scope)
+      closure(scope)
       scope.leave(fileID: fileID, file: file, function: function, line: line)
     }
     return scope
-  }
-  
-  private func interval(message: String, staticName: StaticString?, intervalConfig: IntervalConfig?, location: LogLocation, closure: (() -> Void)?) -> LogInterval? {
-    guard logger.output != nil else {
-      return nil
-    }
-    
-    var config = config
-    if let intervalConfig {
-      config.intervalConfig = intervalConfig
-    }
-    
-    let interval = LogInterval(logger: logger, message: message, staticName: staticName, category: category, config: config, stack: stack(), metadata: metadata.data, location: location)
-    if let block = closure {
-      interval.begin(fileID: location.fileID, file: location.file, function: location.function, line: location.line)
-      block()
-      interval.end(fileID: location.fileID, file: location.file, function: location.function, line: location.line)
-    }
-    return interval
   }
   
   /// Creates an interval object that logs a detailed message with accumulated statistics.
   ///
   /// Logs a point of interest in your code as time intervals for debugging performances.
   ///
-  ///		let logger = DLog()
-  ///		logger.interval("Sorting") {
-  ///			...
-  ///		}
+  ///    let logger = DLog()
+  ///    logger.interval("Sorting") {
+  ///      ...
+  ///    }
   ///
   /// - Parameters:
-  /// 	- name: The name of new interval object.
-  /// 	- file: The file this log message originates from (defaults to `#file`).
-  /// 	- function: The function this log message originates from (defaults to `#function`).
-  /// 	- line: The line this log message originates (defaults to `#line`).
-  /// 	- closure: A closure to be executed with the interval.
+  ///   - name: The name of new interval object.
+  ///   - file: The file this log message originates from (defaults to `#file`).
+  ///   - function: The function this log message originates from (defaults to `#function`).
+  ///   - line: The line this log message originates (defaults to `#line`).
+  ///   - closure: A closure to be executed with the interval.
   ///
   /// - Returns: An `LogInterval` object for the new interval.
   ///
   @discardableResult
-  public func interval(_ name: StaticString = "", config: IntervalConfig? = nil, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval? {
-    interval(message: "\(name)", staticName: name, intervalConfig: config, location: LogLocation(fileID, file, function, line), closure: closure)
-  }
-  
-  /// Creates an interval object that logs a detailed message with accumulated statistics.
-  @discardableResult
-  public func interval(message: String, fileID: String, file: String, function: String, line: UInt, closure: (() -> Void)?) -> LogInterval? {
-    interval(message: message, staticName: nil, intervalConfig: nil, location: LogLocation(fileID, file, function, line), closure: closure)
+  public func interval(_ name: StaticString, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval? {
+    guard logger.output != nil else {
+      return nil
+    }
+    let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
+    let interval = LogInterval(logger: logger, name: name, category: category, config: config, stack: stack(), metadata: metadata.data, location: location)
+    if let closure {
+      interval.begin(fileID: location.fileID, file: location.file, function: location.function, line: location.line)
+      closure()
+      interval.end(fileID: location.fileID, file: location.file, function: location.function, line: location.line)
+    }
+    return interval
   }
 }

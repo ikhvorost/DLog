@@ -117,17 +117,17 @@ public class LogInterval {
   
   public class Item: Log.Item {
     public let signpost: Signpost
-    public let staticName: StaticString?
+    public let name: StaticString
     public let duration: TimeInterval
     public let stats: IntervalStats
     
-    init(time: Date, category: String, stack: [Bool]?, type: LogType, location: LogLocation, metadata: Metadata, message: String, config: LogConfig, staticName: StaticString?, duration: TimeInterval, stats: IntervalStats, signpost: Signpost) {
+    init(time: Date, category: String, stack: [Bool]?, type: LogType, location: LogLocation, metadata: Metadata, name: StaticString, config: LogConfig, duration: TimeInterval, stats: IntervalStats, signpost: Signpost) {
       self.signpost = signpost
-      self.staticName = staticName
+      self.name = name
       self.duration = duration
       self.stats = stats
       
-      super.init(time: time, category: category, stack: stack, type: type, location: location, metadata: metadata, message: message, config: config)
+      super.init(time: time, category: category, stack: stack, type: type, location: location, metadata: metadata, message: "\(name)", config: config)
     }
     
     override func typeText() -> String {
@@ -163,34 +163,33 @@ public class LogInterval {
   private let id: Int
   private var start: Date?
   
-  public let message: String
-  public let staticName: StaticString?
+  public let name: StaticString
   
   /// A time duration
   public private(set) var duration: TimeInterval = 0
   
   /// Accumulated interval statistics
   public var stats: IntervalStats {
+    // TODO: use actors
     synchronized(Store.shared) {
       Store.shared[id]
     }
   }
   
-  init(logger: DLog, message: String, staticName: StaticString?, category: String, config: LogConfig, stack: [Bool]?, metadata: Metadata, location: LogLocation) {
+  init(logger: DLog, name: StaticString, category: String, config: LogConfig, stack: [Bool]?, metadata: Metadata, location: LogLocation) {
     self.logger = logger
-    self.message = message
-    self.staticName = staticName
+    self.name = name
     self.category = category
     self.config = config
     self.stack = stack
     self.metadata = metadata
     self.location = location
     
-    self.id = "\(message):\(location.file):\(location.function):\(location.line)".hash
+    self.id = "\(name):\(location.file):\(location.function):\(location.line)".hash
   }
   
   private func item(type: LogType, stats: IntervalStats) -> Item {
-    Item(time: Date(), category: category, stack: stack, type: type, location: location, metadata: metadata, message: message, config: config, staticName: staticName, duration: duration, stats: stats, signpost: signpost)
+    Item(time: Date(), category: category, stack: stack, type: type, location: location, metadata: metadata, name: name, config: config, duration: duration, stats: stats, signpost: signpost)
   }
   
   /// Start a time interval.
@@ -212,7 +211,7 @@ public class LogInterval {
       
       start = Date()
       duration = 0
-      location = LogLocation(fileID, file, function, line)
+      location = LogLocation(fileID: fileID, file: file, function: function, line: line)
       
       let stats = Store.shared[id]
       let item = item(type: .intervalBegin, stats: stats)
@@ -237,7 +236,7 @@ public class LogInterval {
         return
       }
       duration = -(start?.timeIntervalSinceNow ?? 0)
-      location = LogLocation(fileID, file, function, line)
+      location = LogLocation(fileID: fileID, file: file, function: function, line: line)
       
       // Stats
       let stats = Store.shared[id]

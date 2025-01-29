@@ -103,19 +103,15 @@ public class OSLog : LogOutput {
 
       // Interval
       case let interval as LogInterval.Item:
-        guard let name = interval.staticName else {
-          break
-        }
-        
         let log = oslog(category: interval.category)
         let id = interval.signpost.id ?? OSSignpostID(log: log)
         interval.signpost.id = id
         
         if interval.type == .intervalBegin {
-          os_signpost(.begin, log: log, name: name, signpostID: id)
+          os_signpost(.begin, log: log, name: interval.name, signpostID: id)
         }
         else {
-          os_signpost(.end, log: log, name: name, signpostID: id)
+          os_signpost(.end, log: log, name: interval.name, signpostID: id)
         }
         
       // Item

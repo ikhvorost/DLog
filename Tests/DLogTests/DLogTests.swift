@@ -188,7 +188,7 @@ final class DLogTests: XCTestCase {
     let interval = logger.interval("Interval") {
       delay()
     }
-    XCTAssert(interval?.message == "Interval")
+    XCTAssert("\(interval!.name)" == "Interval")
     if let duration = interval?.duration {
       XCTAssert(duration >= 0.255)
     }
@@ -209,7 +209,7 @@ final class DLogTests: XCTestCase {
     delay()
     interval?.end()
     
-    XCTAssert(interval?.message == "Interval")
+    XCTAssert("\(interval!.name)" == "Interval")
     if let duration = interval?.duration {
       XCTAssert(duration >= 0.255)
     }

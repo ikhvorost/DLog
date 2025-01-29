@@ -96,6 +96,7 @@ public class LogScope: Log {
   public fileprivate(set) var duration: TimeInterval = 0
   
   var stack: [Bool]? {
+    // TODO: actor?
     synchronized(Stack.shared) {
       level > 0 ? Stack.shared.stack(level: level) : nil
     }
@@ -137,7 +138,7 @@ public class LogScope: Log {
       self.level = level
       start = Date()
       duration = 0
-      location = LogLocation(fileID, file, function, line)
+      location = LogLocation(fileID: fileID, file: file, function: function, line: line)
       
       let item = item(type: .scopeEnter, stack: stack)
       logger.output?.log(item: item)
@@ -168,7 +169,7 @@ public class LogScope: Log {
       
       level = 0
       duration = -(start?.timeIntervalSinceNow ?? 0)
-      location = LogLocation(fileID, file, function, line)
+      location = LogLocation(fileID: fileID, file: file, function: function, line: line)
       
       let item = item(type: .scopeLeave, stack: stack)
       logger.output?.log(item: item)
