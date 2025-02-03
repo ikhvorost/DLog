@@ -248,12 +248,12 @@ public class Log: NSObject {
   /// - Returns: An `LogScope` object for the new scope.
   ///
   @discardableResult
-  public func scope(_ name: String, metadata: Metadata? = nil, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line, closure: ((LogScope) -> Void)? = nil) -> LogScope? {
+  public func scope(_ name: String, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line, closure: ((LogScope) -> Void)? = nil) -> LogScope? {
     guard logger.output != nil else {
       return nil
     }
     let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
-    let scope = LogScope(name: name, logger: logger, category: category, config: config, metadata: metadata, location: location)
+    let scope = LogScope(name: name, logger: logger, category: category, config: config, metadata: metadata.data, location: location)
     if let closure {
       scope.enter(fileID: fileID, file: file, function: function, line: line)
       closure(scope)

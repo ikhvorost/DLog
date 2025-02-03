@@ -102,7 +102,7 @@ public struct ThreadConfig {
   public var options: ThreadOptions = .compact
 }
 
-func threadMetadata(thread: Thread, tid: UInt64, config: ThreadConfig) -> Metadata {
+func threadMetadata(thread: Thread, tid: UInt64, config: ThreadConfig) -> LogData {
   let items: [(ThreadOptions, String, Any)] = [
     (.name, "name", thread.info.name),
     (.number, "number", thread.info.number),
@@ -111,5 +111,5 @@ func threadMetadata(thread: Thread, tid: UInt64, config: ThreadConfig) -> Metada
     (.stackSize, "stackSize", "\(ByteCountFormatter.string(fromByteCount: Int64(thread.stackSize), countStyle: .memory))"),
     (.tid, "tid", tid),
   ]
-  return Metadata.metadata(from: items, options: config.options)
+  return LogData.data(from: items, options: config.options)
 }

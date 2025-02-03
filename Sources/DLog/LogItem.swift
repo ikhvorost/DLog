@@ -260,7 +260,7 @@ extension Log {
       }
     }
     
-    func data() -> Metadata? {
+    func data() -> LogData? {
       nil
     }
     
@@ -274,11 +274,11 @@ extension Log {
     
     public var description: String {
       var sign = "\(config.sign)"
-      var time = Log.Item.dateFormatter.string(from: self.time)
-      var level = String(format: "[%02d]", self.stack?.count ?? 0)
-      var category = "[\(self.category)]"
-      var location = "<\(self.location.fileName):\(self.location.line)>"
-      var metadata = self.metadata.json()
+      var time = Log.Item.dateFormatter.string(from: time)
+      var level = String(format: "[%02d]", stack?.count ?? 0)
+      var category = "[\(category)]"
+      var location = "<\(location.fileName):\(location.line)>"
+      var metadata = metadata.json()
       var data = data()?.json() ?? ""
       
       switch config.style {

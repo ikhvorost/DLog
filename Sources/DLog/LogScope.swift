@@ -77,7 +77,7 @@ public class LogScope: Log {
       return text.replacingOccurrences(of: "[SCOPE]", with: "[SCOPE:\(message)]")
     }
     
-    override func data() -> Metadata? {
+    override func data() -> LogData? {
       duration > 0 ? ["duration": stringFromTimeInterval(duration)] : nil
     }
     
@@ -102,10 +102,10 @@ public class LogScope: Log {
     }
   }
   
-  init(name: String, logger: DLog, category: String, config: LogConfig, metadata: Metadata?, location: LogLocation) {
+  init(name: String, logger: DLog, category: String, config: LogConfig, metadata: Metadata, location: LogLocation) {
     self.name = name
     self.location = location
-    super.init(logger: logger, category: category, config: config, metadata: metadata ?? logger.metadata.data)
+    super.init(logger: logger, category: category, config: config, metadata: metadata)
   }
   
   private func item(type: LogType, stack: [Bool]) -> Item {

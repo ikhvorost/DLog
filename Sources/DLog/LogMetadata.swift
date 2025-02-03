@@ -23,57 +23,16 @@
 
 import Foundation
 
-/// Metadata dictionary type
-// TODO: LogData
-public typealias Metadata = [String : Any]
 
-extension Metadata {
-  
-  static func metadata<Option: OptionSet>(from items: [(Option, String, Any)], options: Option) -> Metadata {
-    let keyValues: [(String, Any)] = items
-      .compactMap { (option: Option, key: String, value: Any) in
-        // Option
-        assert(option is Option.Element)
-        guard options.contains(option as! Option.Element) else {
-          return nil
-        }
-        
-        // Key
-        assert(key.isEmpty == false)
-        
-        // Value
-        if let text = value as? String, text.isEmpty {
-          return nil
-        }
-        else if let dict = value as? Metadata, dict.isEmpty {
-          return nil
-        }
-        
-        return (key, value)
-      }
-    return Dictionary(uniqueKeysWithValues: keyValues)
-  }
-  
-  func json(pretty: Bool = false) -> String {
-    guard count > 0 else {
-      return ""
-    }
-    let options: JSONSerialization.WritingOptions = pretty ? [.sortedKeys, .prettyPrinted] : [.sortedKeys]
-    guard self.isEmpty == false,
-          let data = try? JSONSerialization.data(withJSONObject: self, options: options),
-          let json = String(data: data, encoding: .utf8) else {
-      return ""
-    }
-    return json.replacingOccurrences(of: "\"", with: "")
-  }
-}
+public typealias Metadata = [String : Codable]
+
 
 /// Contextual metadata
 @objcMembers
 public class LogMetadata: NSObject {
-  private var _data = Metadata()
+  private var _data: Metadata
   
-  init(data: Metadata = Metadata()) {
+  init(data: Metadata) {
     _data = data
   }
   
@@ -82,7 +41,7 @@ public class LogMetadata: NSObject {
   }
   
   /// Gets and sets a value by a string key to metadata.
-  public subscript(name: String) -> Any? {
+  public subscript(name: String) -> Codable? {
     get {
       synchronized(self) { _data[name] }
     }

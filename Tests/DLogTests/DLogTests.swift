@@ -127,8 +127,8 @@ let Empty = ">$"
 final class DLogTests: XCTestCase {
   
   func test_trace() {
-    let log = DLog(metadata: ["a": 100])
-    let item = log.trace()
+    let log = DLog()
+    let item = log.trace("trace")
     XCTAssert(item?.traceInfo.queueLabel == "com.apple.main-thread")
   }
   

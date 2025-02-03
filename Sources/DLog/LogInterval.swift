@@ -135,7 +135,7 @@ public class LogInterval {
       return text.replacingOccurrences(of: "[INTERVAL]", with: "[INTERVAL:\(message)]")
     }
     
-    override func data() -> Metadata? {
+    override func data() -> LogData? {
       let items: [(IntervalOptions, String, Any)] = [
         (.duration, "duration", stringFromTimeInterval(duration)),
         (.count, "count", stats.count),
@@ -144,7 +144,7 @@ public class LogInterval {
         (.max, "max", stringFromTimeInterval(stats.max)),
         (.average, "average", stringFromTimeInterval(stats.average)),
       ]
-      return Metadata.metadata(from: items, options: config.intervalConfig.options)
+      return LogData.data(from: items, options: config.intervalConfig.options)
     }
     
     override func messageText() -> String {

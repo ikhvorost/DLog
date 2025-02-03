@@ -47,7 +47,7 @@ public class LogTrace: Log.Item {
     super.init(time: Date(), category: category, stack: stack, type: .trace, location: location, metadata: metadata, message: message, config: config)
   }
   
-  override func data() -> Metadata? {
+  override func data() -> LogData? {
     let items: [(TraceOptions, String, Any)] = [
       (.function, "func", funcInfo(function: location.function, config: config.traceConfig.funcConfig)),
       (.process, "process", processMetadata(processInfo: traceInfo.processInfo, config: config.traceConfig.processConfig)),
@@ -55,6 +55,6 @@ public class LogTrace: Log.Item {
       (.stack, "stack", stackMetadata(moduleName: location.moduleName, stackAddresses: traceInfo.stackAddresses, config: config.traceConfig.stackConfig)),
       (.thread, "thread", threadMetadata(thread: traceInfo.thread, tid: traceInfo.tid, config: config.traceConfig.threadConfig)),
     ]
-    return Metadata.metadata(from: items, options: config.traceConfig.options)
+    return LogData.data(from: items, options: config.traceConfig.options)
   }
 }
