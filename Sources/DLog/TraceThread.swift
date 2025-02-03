@@ -103,13 +103,13 @@ public struct ThreadConfig {
 }
 
 func threadMetadata(thread: Thread, tid: UInt64, config: ThreadConfig) -> Metadata {
-  let items: [(ThreadOptions, String, () -> Any)] = [
-    (.name, "name", { thread.info.name }),
-    (.number, "number", { thread.info.number }),
-    (.priority, "priority", { thread.threadPriority }),
-    (.qos, "qos", { "\(thread.qualityOfService.description)" }),
-    (.stackSize, "stackSize", { "\(ByteCountFormatter.string(fromByteCount: Int64(thread.stackSize), countStyle: .memory))" }),
-    (.tid, "tid", { tid }),
+  let items: [(ThreadOptions, String, Any)] = [
+    (.name, "name", thread.info.name),
+    (.number, "number", thread.info.number),
+    (.priority, "priority", thread.threadPriority),
+    (.qos, "qos", "\(thread.qualityOfService.description)"),
+    (.stackSize, "stackSize", "\(ByteCountFormatter.string(fromByteCount: Int64(thread.stackSize), countStyle: .memory))"),
+    (.tid, "tid", tid),
   ]
   return Metadata.metadata(from: items, options: config.options)
 }

@@ -95,15 +95,14 @@ public class Log: NSObject {
   /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   ///
   @discardableResult
-  public func trace(_ message: LogMessage = "", fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
-    // TODO: LogTrace?
-    //let traceInfo = TraceInfo()
-    // TODO: LogTrace?
-    //    let metadata: () -> [Metadata] = {[
-    //      self.metadata.data,
-    //      traceMetadata(location: location, traceInfo: traceInfo, traceConfig: config.traceConfig)
-    //    ]}
-    return logItem(message: message, type: .trace, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
+  public func trace(_ message: LogMessage = "", fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> LogTrace? {
+    guard let output = logger.output else {
+      return nil
+    }
+    let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
+    let item = LogTrace(category: category, stack: stack(), location: location, metadata: metadata.data, message: message.text, config: config)
+    output.log(item: item)
+    return item
   }
   
   /// Logs a message to help debug problems during the development of your code.

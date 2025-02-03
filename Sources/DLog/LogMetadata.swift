@@ -24,6 +24,7 @@
 import Foundation
 
 /// Metadata dictionary type
+// TODO: LogData
 public typealias Metadata = [String : Any]
 
 extension Metadata {
@@ -54,6 +55,9 @@ extension Metadata {
   }
   
   func json(pretty: Bool = false) -> String {
+    guard count > 0 else {
+      return ""
+    }
     let options: JSONSerialization.WritingOptions = pretty ? [.sortedKeys, .prettyPrinted] : [.sortedKeys]
     guard self.isEmpty == false,
           let data = try? JSONSerialization.data(withJSONObject: self, options: options),

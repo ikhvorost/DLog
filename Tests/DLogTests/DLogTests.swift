@@ -6,7 +6,6 @@ import Network
 
 // MARK: - Extensions
 
-
 // Locale: en_US
 extension NSLocale {
   @objc
@@ -127,6 +126,12 @@ let Empty = ">$"
 
 final class DLogTests: XCTestCase {
   
+  func test_trace() {
+    let log = DLog(metadata: ["a": 100])
+    let item = log.trace()
+    XCTAssert(item?.traceInfo.queueLabel == "com.apple.main-thread")
+  }
+  
   func test_scope_stack() {
     let log = DLog()
     log.debug("start")
@@ -162,7 +167,6 @@ final class DLogTests: XCTestCase {
     scope?.debug("debug")
     scope?.leave()
     scope?.log("log")
-    
   }
   
   func test_scope_concurrent() {
@@ -220,6 +224,14 @@ final class DLogTests: XCTestCase {
       XCTAssert(stats.max >= 0.255)
       XCTAssert(stats.average >= 0.255)
     }
+  }
+  
+  func test_metadata() {
+    let logger = DLog(metadata: ["value" : 200])
+    let log = logger["NET"]
+    log.metadata["key"] = "12345"
+    log.log("Hello!")
+    log.trace()
   }
   
 }

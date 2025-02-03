@@ -89,26 +89,3 @@ public struct TraceConfig {
   /// Creates default configuration.
   public init() {}
 }
-
-struct TraceInfo {
-  let processInfo = ProcessInfo.processInfo
-  let queueLabel = String(cString: __dispatch_queue_get_label(nil))
-  let stackAddresses = Thread.callStackReturnAddresses.dropFirst(2)
-  let thread = Thread.current
-  let tid: UInt64 = {
-    var value: UInt64 = 0
-    pthread_threadid_np(nil, &value)
-    return value
-  }()
-}
-
-func traceMetadata(location: LogLocation, traceInfo: TraceInfo, traceConfig: TraceConfig) -> Metadata {
-  let items: [(TraceOptions, String, () -> Any)] = [
-    (.function, "func", { funcInfo(function: location.function, config: traceConfig.funcConfig) }),
-    (.process, "process", { processMetadata(processInfo: traceInfo.processInfo, config: traceConfig.processConfig) }),
-    (.queue, "queue", { traceInfo.queueLabel }),
-    (.stack, "stack", { stackMetadata(moduleName: location.moduleName, stackAddresses: traceInfo.stackAddresses, config: traceConfig.stackConfig) }),
-    (.thread, "thread", { threadMetadata(thread: traceInfo.thread, tid: traceInfo.tid, config: traceConfig.threadConfig) }),
-  ]
-  return Metadata.metadata(from: items, options: traceConfig.options)
-}

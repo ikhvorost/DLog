@@ -30,8 +30,10 @@ import Foundation
 ///
 public class Standard: LogOutput {
   
+  private static let isTesting = NSClassFromString("XCTestCase") != nil
+  
   let stream: UnsafeMutablePointer<FILE>
-  let queue = DispatchQueue(label: "dlog.std.queue")
+  let queue = DispatchQueue(label: "com.dlog.std")
   
   /// Creates `Standard` output object.
   ///
@@ -46,15 +48,6 @@ public class Standard: LogOutput {
     self.stream = stream
   }
   
-  private func echo(_ text: @escaping @autoclosure () -> String) {
-    queue.async {
-      let text = text()
-      if !text.isEmpty {
-        fputs(text + "\n", self.stream)
-      }
-    }
-  }
-  
   // MARK: - LogOutput
   
   override func log(item: Log.Item) {
@@ -64,6 +57,19 @@ public class Standard: LogOutput {
       return
     }
     
-    echo("\(item)")
+    let task = {
+      let text = item.description
+      if !text.isEmpty {
+        fputs(text + "\n", self.stream)
+      }
+    }
+    
+    // Synchronous call while testing
+    if Self.isTesting {
+      task()
+    }
+    else {
+      queue.async(execute: task)
+    }
   }
 }
