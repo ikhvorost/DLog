@@ -39,6 +39,15 @@ fileprivate let dateComponentsFormatter: DateComponentsFormatter = {
   return formatter
 }()
 
+@discardableResult
+func synchronized<T : AnyObject, U>(_ obj: T, closure: () -> U) -> U {
+  objc_sync_enter(obj)
+  defer {
+    objc_sync_exit(obj)
+  }
+  return closure()
+}
+
 fileprivate func insertMs(time: String, sec: String, ms: String) -> String  {
   guard let range = time.range(of: sec) else {
     return "\(time) 0\(ms)\(sec)"

@@ -170,7 +170,6 @@ public class LogInterval {
   
   /// Accumulated interval statistics
   public var stats: IntervalStats {
-    // TODO: use actors
     synchronized(Store.shared) {
       Store.shared[id]
     }

@@ -96,7 +96,6 @@ public class LogScope: Log {
   public fileprivate(set) var duration: TimeInterval = 0
   
   var stack: [Bool]? {
-    // TODO: actor?
     synchronized(Stack.shared) {
       level > 0 ? Stack.shared.stack(level: level) : nil
     }

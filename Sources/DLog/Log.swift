@@ -50,7 +50,7 @@ public class Log: NSObject {
     return nil
   }
   
-  private func logItem(message: LogMessage, type: LogType, location: LogLocation) -> Log.Item? {
+  private func log(message: LogMessage, type: LogType, location: LogLocation) -> Log.Item? {
     guard let output = logger.output else {
       return nil
     }
@@ -76,7 +76,7 @@ public class Log: NSObject {
   ///
   @discardableResult
   public func log(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
-    logItem(message: message, type: .log, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
+    log(message: message, type: .log, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
   }
   
   /// Logs trace information to help debug problems during the development of your code.
@@ -122,7 +122,7 @@ public class Log: NSObject {
   ///
   @discardableResult
   public func debug(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
-    logItem(message: message, type: .debug, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
+    log(message: message, type: .debug, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
   }
   
   /// Logs a message that is helpful, but not essential, to diagnose issues with your code.
@@ -142,7 +142,7 @@ public class Log: NSObject {
   ///
   @discardableResult
   public func info(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
-    logItem(message: message, type: .info, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
+    log(message: message, type: .info, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
   }
   
   /// Logs a warning that occurred during the execution of your code.
@@ -162,7 +162,7 @@ public class Log: NSObject {
   ///
   @discardableResult
   public func warning(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
-    logItem(message: message, type: .warning, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
+    log(message: message, type: .warning, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
   }
   
   /// Logs an error that occurred during the execution of your code.
@@ -182,7 +182,7 @@ public class Log: NSObject {
   ///
   @discardableResult
   public func error(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
-    logItem(message: message, type: .error, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
+    log(message: message, type: .error, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
   }
   
   /// Logs a traditional C-style assert notice with an optional message.
@@ -206,7 +206,7 @@ public class Log: NSObject {
     guard logger.output != nil && !condition() else {
       return nil
     }
-    return logItem(message: message, type: .assert, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
+    return log(message: message, type: .assert, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
   }
   
   /// Logs a bug or fault that occurred during the execution of your code.
@@ -226,7 +226,7 @@ public class Log: NSObject {
   ///
   @discardableResult
   public func fault(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
-    logItem(message: message, type: .fault, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
+    log(message: message, type: .fault, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
   }
   
   /// Creates a scope object that can assign log messages to itself.

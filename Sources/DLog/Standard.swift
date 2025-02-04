@@ -64,7 +64,7 @@ public class Standard: LogOutput {
       }
     }
     
-    // Synchronous call while testing
+    // Testing
     if Self.isTesting {
       task()
     }
