@@ -24,6 +24,9 @@
 //
 
 import Foundation
+#if swift(>=6.0)
+@preconcurrency import Darwin.Mach
+#endif
 
 struct TaskInfo {
   

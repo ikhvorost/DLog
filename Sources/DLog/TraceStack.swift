@@ -26,7 +26,7 @@
 import Foundation
 
 /// Indicates which info from stacks should be used.
-public struct StackOptions: OptionSet {
+public struct StackOptions: OptionSet, Sendable {
   /// The corresponding value of the raw type.
   public let rawValue: Int
   
@@ -88,7 +88,7 @@ func stackMetadata(moduleName: String, stackAddresses: ArraySlice<NSNumber>, con
       var info = dl_info()
       guard dladdr(UnsafeRawPointer(bitPattern: address), &info) != 0,
             let module = NSString(utf8String: info.dli_fname)?.lastPathComponent,
-            let symbol = String(validatingUTF8: info.dli_sname)
+            let symbol = String(validatingCString: info.dli_sname)
       else {
         return nil
       }

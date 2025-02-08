@@ -26,7 +26,7 @@
 import Foundation
 
 /// Contains configuration values regarding to a process info.
-public struct ProcessOptions: OptionSet {
+public struct ProcessOptions: OptionSet, Sendable {
   
   /// The corresponding value of the raw type.
   public let rawValue: Int
@@ -62,7 +62,7 @@ public struct ProcessOptions: OptionSet {
 }
 
 /// Contains configuration values regarding to a wakeups info.
-public struct WakeupsOptions: OptionSet {
+public struct WakeupsOptions: OptionSet, Sendable {
   /// The corresponding value of the raw type.
   public let rawValue: Int
   

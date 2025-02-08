@@ -33,7 +33,7 @@ typealias Swift_Demangle = @convention(c) (_ mangledName: UnsafePointer<UInt8>?,
                                            _ outputBufferSize: UnsafeMutablePointer<Int>?,
                                            _ flags: UInt32) -> UnsafeMutablePointer<Int8>?
 /// Dynamic shared object
-class Dynamic {
+actor Dynamic {
   
   // Constants
   static let dso = UnsafeMutableRawPointer(mutating: #dsohandle)

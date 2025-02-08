@@ -61,7 +61,7 @@ fileprivate extension Thread {
 }
 
 /// Indicates which info from threads should be used.
-public struct ThreadOptions: OptionSet {
+public struct ThreadOptions: OptionSet, Sendable {
   /// The corresponding value of the raw type.
   public let rawValue: Int
   

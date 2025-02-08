@@ -28,7 +28,7 @@ import Foundation
 
 /// The central class to emit log messages to specified outputs using one of the methods corresponding to a log level.
 ///
-public class DLog: Log {
+public final class DLog: Log {
   
   let output: LogOutput?
   
@@ -38,8 +38,9 @@ public class DLog: Log {
   ///
   /// 	let logger = DLog.disabled
   ///
-  @objc
-  public static let disabled = DLog(nil)
+  // TODO: fix
+  //@objc
+  //public static let disabled = DLog(nil)
   
   /// Creates a logger object that assigns log messages to a specified category.
   ///

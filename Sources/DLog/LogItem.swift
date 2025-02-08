@@ -111,7 +111,8 @@ public enum LogType: Int {
   case scopeLeave
 }
 
-extension LogType {
+extension LogType: Sendable {
+  
   static let icons: [LogType : String] = [
     .log : "💬",
     .trace : "#️⃣",

@@ -26,7 +26,7 @@
 import Foundation
 
 /// Indicates which info from the `trace` method should be used.
-public struct TraceOptions: OptionSet {
+public struct TraceOptions: OptionSet, Sendable {
   /// The corresponding value of the raw type.
   public let rawValue: Int
   

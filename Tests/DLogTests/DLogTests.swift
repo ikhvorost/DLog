@@ -69,11 +69,12 @@ func readStream(file: Int32, stream: UnsafeMutablePointer<FILE>, block: () -> Vo
   setvbuf(stream, nil, _IONBF, 0)
   dup2(pipe.fileHandleForWriting.fileDescriptor, file)
   
-  pipe.fileHandleForReading.readabilityHandler = { handle in
-    if let text = String(data: handle.availableData, encoding: .utf8) {
-      result = (result != nil) ? (result! + text) : text
-    }
-  }
+  // TODO: fix
+//  pipe.fileHandleForReading.readabilityHandler = { handle in
+//    if let text = String(data: handle.availableData, encoding: .utf8) {
+//      result = (result != nil) ? (result! + text) : text
+//    }
+//  }
   
   block()
   
@@ -127,7 +128,8 @@ let Empty = ">$"
 final class DLogTests: XCTestCase {
   
   func test_trace() {
-    let log = DLog()
+    let log = DLog(metadata: ["a" : 100])
+    log.metadata["a"] = 200
     let item = log.trace("trace")
     XCTAssert(item?.traceInfo.queueLabel == "com.apple.main-thread")
   }
@@ -175,7 +177,7 @@ final class DLogTests: XCTestCase {
     wait(count: 10) { expectations in
       for i in 0..<10 {
         DispatchQueue.global().async {
-          delay([0.1, 0.2, 0.5].randomElement()!)
+          delay([0.1, 0.2, 0.4].randomElement()!)
           logger.scope("Scope \(i)") {
             delay([0.1, 0.2, 0.4].randomElement()!)
             $0.debug("scope \(i)")

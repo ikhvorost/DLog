@@ -29,12 +29,13 @@ import os
 import os.log
 import os.activity
 
+
 /// A target output that sends log messages to the Unified Logging System.
 ///
 /// It captures telemetry from your app for debugging and performance analysis and then you can use various tools to
 /// retrieve log information such as: `Console` and `Instruments` apps, command line tool `"log"` etc.
 ///
-public class OSLog : LogOutput {
+public class OSLog: LogOutput {
   
   private static let types: [LogType : OSLogType] = [
     .log : .default,

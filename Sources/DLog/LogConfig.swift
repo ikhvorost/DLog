@@ -37,7 +37,7 @@ extension OptionSet where RawValue == Int {
 }
 
 /// Indicates which info from the logger should be used.
-public struct LogOptions: OptionSet {
+public struct LogOptions: OptionSet, Sendable {
   /// The corresponding value of the raw type.
   public let rawValue: Int
   
