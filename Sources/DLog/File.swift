@@ -26,11 +26,13 @@
 
 import Foundation
 
+
 /// Target output for a file.
 ///
-public class File: LogOutput {
+public final class File: LogOutput {
+  private static let queue = DispatchQueue(label: "dlog.file.queue")
+  
   private let file: FileHandle?
-  private let queue = DispatchQueue(label: "dlog.file.queue")
   
   /// Initializes and returns the target file output object associated with the specified file.
   ///
@@ -65,24 +67,18 @@ public class File: LogOutput {
     }
   }
   
-  private func write(_ text: @escaping @autoclosure () -> String) {
-    queue.async {
-      let text = text()
-      if !text.isEmpty, let data = (text + "\n").data(using: .utf8) {
-        self.file?.write(data)
-      }
-    }
-  }
-  
   // MARK: - LogOutput
   
   override func log(item: Log.Item) {
     super.log(item: item)
     
-    guard item.type != .intervalBegin else {
-      return
+    if item.type != .intervalBegin, let file {
+      Self.queue.async {
+        let text = item.description
+        if !text.isEmpty, let data = "\(text)\n".data(using: .utf8) {
+          file.write(data)
+        }
+      }
     }
-    
-    write("\(item)")
   }
 }

@@ -26,14 +26,15 @@
 
 import Foundation
 
+
 /// A target output that can output text messages to POSIX streams.
 ///
-public class Standard: LogOutput {
+public final class Standard: LogOutput {
   
   private static let isTesting = NSClassFromString("XCTestCase") != nil
+  private static let queue = DispatchQueue(label: "com.dlog.std")
   
-  let stream: UnsafeMutablePointer<FILE>
-  let queue = DispatchQueue(label: "com.dlog.std")
+  private let stream: UnsafeMutablePointer<FILE>
   
   /// Creates `Standard` output object.
   ///
@@ -48,6 +49,13 @@ public class Standard: LogOutput {
     self.stream = stream
   }
   
+  private func send(_ item: Log.Item) {
+    let text = item.description
+    if !text.isEmpty {
+      fputs("\(text)\n", stream)
+    }
+  }
+  
   // MARK: - LogOutput
   
   override func log(item: Log.Item) {
@@ -57,19 +65,14 @@ public class Standard: LogOutput {
       return
     }
     
-    let task = {
-      let text = item.description
-      if !text.isEmpty {
-        fputs(text + "\n", self.stream)
-      }
-    }
-    
     // Testing
     if Self.isTesting {
-      task()
+      send(item)
     }
     else {
-      queue.async(execute: task)
+      Self.queue.async {
+        self.send(item)
+      }
     }
   }
 }

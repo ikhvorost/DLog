@@ -48,7 +48,7 @@ fileprivate extension Array where Element == String {
 }
 
 /// The location of a log message.
-public struct LogLocation {
+public struct LogLocation: Sendable {
   /// The file ID.
   public let fileID: String
   
@@ -184,7 +184,7 @@ enum ANSIEscapeCode: String {
 
 extension Log {
   
-  public class Item: CustomStringConvertible {
+  public class Item {
     struct Tag {
       let textColor: ANSIEscapeCode
       let colors: [ANSIEscapeCode]
@@ -273,44 +273,48 @@ extension Log {
       }
     }
     
-    public var description: String {
-      var sign = "\(config.sign)"
-      var time = Log.Item.dateFormatter.string(from: time)
-      var level = String(format: "[%02d]", stack?.count ?? 0)
-      var category = "[\(category)]"
-      var location = "<\(location.fileName):\(location.line)>"
-      var metadata = metadata.json()
-      var data = data()?.json() ?? ""
-      
-      switch config.style {
-        case .plain, .emoji:
-          break
-          
-        case .colored:
-          let tag = Log.Item.tags[self.type]!
-          
-          sign = sign.color(.dim)
-          time = time.color(.dim)
-          level = level.color(.dim)
-          category = category.color(.textBlue)
-          location = location.color([.dim, tag.textColor])
-          metadata = metadata.color(.dim)
-          data = data.color(.dim)
-      }
-      
-      let items: [(LogOptions, String)] = [
-        (.sign, sign),
-        (.time, time),
-        (.level, level),
-        (.category, category),
-        (.padding, padding()),
-        (.type, typeText()),
-        (.location, location),
-        (.metadata, metadata),
-        (.data, data),
-        (.message, messageText()),
-      ]
-      return Log.Item.logPrefix(items: items, options: config.options)
+  }
+}
+
+extension Log.Item: CustomStringConvertible {
+  
+  public var description: String {
+    var sign = "\(config.sign)"
+    var time = Log.Item.dateFormatter.string(from: time)
+    var level = String(format: "[%02d]", stack?.count ?? 0)
+    var category = "[\(category)]"
+    var location = "<\(location.fileName):\(location.line)>"
+    var metadata = metadata.json()
+    var data = data()?.json() ?? ""
+    
+    switch config.style {
+      case .plain, .emoji:
+        break
+        
+      case .colored:
+        let tag = Log.Item.tags[self.type]!
+        
+        sign = sign.color(.dim)
+        time = time.color(.dim)
+        level = level.color(.dim)
+        category = category.color(.textBlue)
+        location = location.color([.dim, tag.textColor])
+        metadata = metadata.color(.dim)
+        data = data.color(.dim)
     }
+    
+    let items: [(LogOptions, String)] = [
+      (.sign, sign),
+      (.time, time),
+      (.level, level),
+      (.category, category),
+      (.padding, padding()),
+      (.type, typeText()),
+      (.location, location),
+      (.metadata, metadata),
+      (.data, data),
+      (.message, messageText()),
+    ]
+    return Log.Item.logPrefix(items: items, options: config.options)
   }
 }

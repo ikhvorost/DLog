@@ -69,12 +69,12 @@ func readStream(file: Int32, stream: UnsafeMutablePointer<FILE>, block: () -> Vo
   setvbuf(stream, nil, _IONBF, 0)
   dup2(pipe.fileHandleForWriting.fileDescriptor, file)
   
-  // TODO: fix
-//  pipe.fileHandleForReading.readabilityHandler = { handle in
-//    if let text = String(data: handle.availableData, encoding: .utf8) {
-//      result = (result != nil) ? (result! + text) : text
-//    }
-//  }
+  pipe.fileHandleForReading.readabilityHandler = { handle in
+    if let text = String(data: handle.availableData, encoding: .utf8) {
+      // TODO: Mutation of captured var 'result' in concurrently-executing code
+      //result = (result != nil) ? (result! + text) : text
+    }
+  }
   
   block()
   

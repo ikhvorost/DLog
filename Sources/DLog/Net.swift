@@ -28,31 +28,73 @@ import Foundation
 
 #if !os(watchOS)
 
-private class LogBuffer {
-  private static let linesCount = 1000
+extension NetService: @unchecked @retroactive Sendable {}
+extension OutputStream: @unchecked @retroactive Sendable {}
+
+// Log debug messages
+fileprivate func _log(_ text: String, debug: Bool = false) {
+  if debug {
+    print("[NetOutput] \(text)")
+  }
+}
+
+fileprivate actor ServiceActor {
+  private var service: NetService?
+  private var outputStream: OutputStream?
+  private var buffer = [Log.Item]()
   
-  private var stack = [String]()
+  func append(_ item: Log.Item) {
+    buffer.append(item)
+  }
   
-  var text: String? {
-    synchronized(self) {
-      stack.reduce(nil) { text, line in
-        "\(text ?? "")\(line)\n"
-      }
+  func send(_ item: Log.Item) {
+    let text = item.description
+    guard !text.isEmpty else {
+      return
+    }
+      
+    if let outputStream {
+      let buffer = "\(text)\n"
+      outputStream.write(buffer, maxLength: buffer.lengthOfBytes(using: .utf8))
+    }
+    else {
+      buffer.append(item)
     }
   }
   
-  func append(text: String) {
-    synchronized(self) {
-      stack.append(text)
-      if stack.count > Self.linesCount {
-        _ = stack.removeFirst()
-      }
+  func drain() {
+    buffer.forEach {
+      send($0)
     }
+    buffer.removeAll()
   }
   
-  func clear() {
-    synchronized(self) {
-      stack.removeAll()
+  func open(service: NetService, outputStream: OutputStream) {
+    guard self.service == nil else {
+      return
+    }
+    
+    self.service = service
+    self.outputStream = outputStream
+    outputStream.open()
+    
+    _log("Connected")
+  }
+  
+  func close(service: NetService) {
+    guard self.service == service else {
+      return
+    }
+    outputStream?.close()
+    outputStream = nil
+    self.service = nil
+    
+    _log("Disconnected")
+  }
+  
+  func close() {
+    if let service {
+      close(service: service)
     }
   }
 }
@@ -61,18 +103,14 @@ private class LogBuffer {
 ///
 /// `NetConsole` service can be run from a command line on your machine and then the output connects and sends your log messages to it.
 ///
-public class Net: LogOutput {
+public final class Net: LogOutput {
   private static let type = "_dlog._tcp"
   private static let domain = "local."
+  private static let queue = DispatchQueue(label: "dlog.net.queue")
   
   private let name: String
   private let browser = NetServiceBrowser()
-  private var service: NetService?
-  private let queue = DispatchQueue(label: "dlog.net.queue")
-  private var outputStream : OutputStream?
-  private let buffer = LogBuffer()
-  
-  var debug = false
+  private let serviceActor = ServiceActor()
   
   /// Creates `Net` output object.
   ///
@@ -92,31 +130,10 @@ public class Net: LogOutput {
   }
   
   deinit {
-    outputStream?.close()
-    browser.stop()
-  }
-  
-  private func send(_ text: @escaping @autoclosure () -> String, newline: Bool = true) {
-    queue.async {
-      let text = text()
-      guard !text.isEmpty else {
-        return
-      }
-      
-      if let stream = self.outputStream {
-        let data = text + (newline ? "\n" : "")
-        stream.write(data, maxLength: data.lengthOfBytes(using: .utf8))
-      }
-      else {
-        self.buffer.append(text: text)
-      }
+    Task { [serviceActor] in
+      await serviceActor.close()
     }
-  }
-  
-  // Log debug messages
-  private func log(_ text: String) {
-    guard debug else { return }
-    print("[NetOutput] \(text)")
+    browser.stop()
   }
   
   // MARK: - LogOutput
@@ -124,76 +141,73 @@ public class Net: LogOutput {
   override func log(item: Log.Item) {
     super.log(item: item)
     
-    guard item.type != .intervalBegin else {
-      return
+    if item.type != .intervalBegin {
+      // TODO: Passing closure as a 'sending' parameter risks causing data races between code in the current task and concurrent execution of the closure
+//      Task {
+//        await serviceActor.send(item)
+//      }
     }
-    
-    send("\(item)")
   }
 }
 
-extension Net : NetServiceBrowserDelegate {
+extension Net: NetServiceBrowserDelegate {
   
   /// Tells the delegate that a search is commencing.
   public func netServiceBrowserWillSearch(_ browser: NetServiceBrowser) {
-    log("Begin search name:'\(name)', type:'\(Self.type)', domain:'\(Self.domain)'")
+    _log("Begin search name:'\(name)', type:'\(Self.type)', domain:'\(Self.domain)'")
   }
   
   /// Tells the delegate that a search was stopped.
   public func netServiceBrowserDidStopSearch(_ browser: NetServiceBrowser) {
-    log("Stop search")
+    _log("Stop search")
   }
   
   /// Tells the delegate that a search was not successful.
   public func netServiceBrowser(_ browser: NetServiceBrowser, didNotSearch errorDict: [String : NSNumber]) {
-    log("Error: \(errorDict)")
+    _log("Error: \(errorDict)")
   }
   
   /// Tells the delegate the sender found a service.
   public func netServiceBrowser(_ browser: NetServiceBrowser, didFind service: NetService, moreComing: Bool) {
-    guard service.name == self.name,
-          self.service == nil,
-          service.getInputStream(nil, outputStream: &outputStream)
-    else { return }
+    var outputStream: OutputStream?
+    guard service.name == name,
+          service.getInputStream(nil, outputStream: &outputStream), let outputStream
+    else {
+      return
+    }
     
-    log("Connected")
+    CFWriteStreamSetDispatchQueue(outputStream, Self.queue)
+    outputStream.delegate = self
     
-    self.service = service
-    
-    CFWriteStreamSetDispatchQueue(outputStream, queue)
-    outputStream?.delegate = self
-    outputStream?.open()
+    Task { [serviceActor] in
+      await serviceActor.open(service: service, outputStream: outputStream)
+    }
   }
   
   /// Tells the delegate a service has disappeared or has become unavailable.
   public func netServiceBrowser(_ browser: NetServiceBrowser, didRemove service: NetService, moreComing: Bool) {
-    guard self.service == service else { return }
-    
-    outputStream?.close()
-    outputStream = nil
-    self.service = nil
-    
-    log("Disconnected")
+    Task { [serviceActor] in
+      await serviceActor.close(service: service)
+    }
   }
 }
 
-extension Net : StreamDelegate {
+extension Net: StreamDelegate {
   
   /// The delegate receives this message when a given event has occurred on a given stream.
   public func stream(_ aStream: Stream, handle eventCode: Stream.Event) {
     switch eventCode {
       case .openCompleted:
-        log("Output stream is opened")
+        _log("Output stream is opened")
         
       case .hasSpaceAvailable:
-        if let text = buffer.text {
-          send(text, newline: false)
-          buffer.clear()
+        Task { [serviceActor] in
+          await serviceActor.drain()
         }
         
       case .errorOccurred:
         if let error = aStream.streamError {
-          log("Error: \(error.localizedDescription)")
+          _log("Error: \(error.localizedDescription)")
         }
         
       default:

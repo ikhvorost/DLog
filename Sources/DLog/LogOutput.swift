@@ -67,6 +67,8 @@ public class LogOutput: NSObject {
   public static func net(name: String) -> Net { Net(name: name) }
 #endif
   
+  private var next: LogOutput?
+  
   /// Forward pipe operator
   ///
   /// The operator allows to create a list of linked outputs.
@@ -77,8 +79,6 @@ public class LogOutput: NSObject {
     left.next = right
     return right
   }
-  
-  private var next: LogOutput?
   
   func log(item: Log.Item) {
     next?.log(item: item)

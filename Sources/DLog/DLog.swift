@@ -38,9 +38,9 @@ public final class DLog: Log {
   ///
   /// 	let logger = DLog.disabled
   ///
-  // TODO: fix
-  //@objc
-  //public static let disabled = DLog(nil)
+  // TODO: Static property 'disabled' is not concurrency-safe because non-'Sendable' type 'DLog' may have shared mutable state
+//  @objc
+//  public static let disabled = DLog(nil)
   
   /// Creates a logger object that assigns log messages to a specified category.
   ///
