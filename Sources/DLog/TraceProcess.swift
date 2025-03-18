@@ -82,7 +82,7 @@ public struct WakeupsOptions: OptionSet, Sendable {
 }
 
 /// Contains configuration values regarding to a process info.
-public struct ProcessConfig {
+public struct ProcessConfig: Sendable {
   
   /// Set which info from the current process should be used. Default value is `ProcessOptions.compact`.
   public var options: ProcessOptions = .compact

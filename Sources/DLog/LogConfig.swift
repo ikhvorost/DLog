@@ -83,7 +83,7 @@ public struct LogOptions: OptionSet, Sendable {
 }
 
 /// Style of text to output.
-public enum Style {
+public enum Style: Sendable {
   /// Universal plain text.
   case plain
   
@@ -95,7 +95,8 @@ public enum Style {
 }
 
 /// Contains configuration values regarding to the logger
-public struct LogConfig {
+public struct LogConfig: Sendable {
+  
   public var style: Style = .emoji
   
   /// Start sign of the logger

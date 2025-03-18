@@ -63,7 +63,7 @@ public struct IntervalOptions: OptionSet, Sendable {
 }
 
 /// Contains configuration values regarding to intervals.
-public struct IntervalConfig {
+public struct IntervalConfig: Sendable {
   
   /// Set which info from the intervals should be used. Default value is `IntervalOptions.compact`.
   public var options: IntervalOptions = .compact
@@ -113,16 +113,17 @@ fileprivate final class Store: @unchecked Sendable {
 ///
 /// Interval logs a point of interest in your code as running time statistics for debugging performance.
 ///
-public class LogInterval {
-  public class Signpost {
-    public var id: OSSignpostID?
+public final class LogInterval {
+  final class Signpost {
+    var id: OSSignpostID?
   }
   
-  public class Item: Log.Item {
-    public let signpost: Signpost
+  public final class Item: Log.Item, @unchecked Sendable {
     public let name: StaticString
     public let duration: TimeInterval
     public let stats: IntervalStats
+    
+    let signpost: Signpost
     
     init(time: Date, category: String, stack: [Bool]?, type: LogType, location: LogLocation, metadata: Metadata, name: StaticString, config: LogConfig, duration: TimeInterval, stats: IntervalStats, signpost: Signpost) {
       self.signpost = signpost
@@ -169,7 +170,7 @@ public class LogInterval {
   
   /// A time duration
   @Atomic
-  public var duration: TimeInterval = 0
+  public private(set) var duration: TimeInterval = 0
   
   /// Accumulated interval statistics
   public var stats: IntervalStats {

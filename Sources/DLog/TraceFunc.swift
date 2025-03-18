@@ -27,7 +27,7 @@ import Foundation
 
 
 /// Contains configuration values regarding to func info.
-public struct FuncConfig {
+public struct FuncConfig: Sendable {
   
   // Params of a function
   public var params = false

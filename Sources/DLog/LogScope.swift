@@ -78,14 +78,15 @@ fileprivate final class Stack: @unchecked Sendable {
 /// Scope provides a mechanism for grouping log messages.
 ///
 public final class LogScope: Log {
-  public class Activity {
+  final class Activity {
     public var state = os_activity_scope_state_s()
   }
   
-  public class Item: Log.Item {
-    public let activity: Activity
-    public var level: Int
-    public var duration: TimeInterval
+  public final class Item: Log.Item, @unchecked Sendable {
+    public let level: Int
+    public let duration: TimeInterval
+    
+    let activity: Activity
     
     init(time: Date, category: String, stack: [Bool], type: LogType, location: LogLocation, metadata: Metadata, message: String, config: LogConfig, activity: Activity, level: Int, duration: TimeInterval) {
       self.activity = activity
@@ -120,10 +121,10 @@ public final class LogScope: Log {
   private var start: Date?
   
   @Atomic
-  public var level: Int = 0
+  public private(set) var level: Int = 0
   
   @Atomic
-  public var duration: TimeInterval = 0
+  public private(set) var duration: TimeInterval = 0
   
   var stack: [Bool]? {
     level > 0 ? Stack.shared.stack(level: level) : nil

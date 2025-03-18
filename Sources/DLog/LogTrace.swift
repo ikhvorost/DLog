@@ -26,7 +26,9 @@
 import Foundation
 
 
-public struct TraceInfo {
+extension Thread: @retroactive @unchecked Sendable {}
+
+public struct TraceInfo: Sendable {
   public let processInfo = ProcessInfo.processInfo
   public let queueLabel = String(cString: __dispatch_queue_get_label(nil))
   public let stackAddresses = Thread.callStackReturnAddresses.dropFirst(2)
@@ -40,7 +42,7 @@ public struct TraceInfo {
   }
 }
 
-public class LogTrace: Log.Item {
+public final class LogTrace: Log.Item, @unchecked Sendable {
   public let traceInfo = TraceInfo()
   
   init(category: String, stack: [Bool]?, location: LogLocation, metadata: Metadata, message: String, config: LogConfig) {

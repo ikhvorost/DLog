@@ -96,7 +96,7 @@ public struct ThreadOptions: OptionSet, Sendable {
 }
 
 /// Contains configuration values regarding to thread info.
-public struct ThreadConfig {
+public struct ThreadConfig: Sendable {
   
   /// Set which info from threads should be used. Default value is `ThreadOptions.compact`.
   public var options: ThreadOptions = .compact

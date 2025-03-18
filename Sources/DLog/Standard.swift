@@ -26,6 +26,8 @@
 
 import Foundation
 
+extension UnsafeMutablePointer: @unchecked @retroactive Sendable {}
+
 
 /// A target output that can output text messages to POSIX streams.
 ///
@@ -35,6 +37,13 @@ public final class Standard: LogOutput {
   private static let queue = DispatchQueue(label: "com.dlog.std")
   
   private let stream: UnsafeMutablePointer<FILE>
+  
+  private static func send(item: Log.Item, stream: UnsafeMutablePointer<FILE>) {
+    let text = item.description
+    if !text.isEmpty {
+      fputs("\(text)\n", stream)
+    }
+  }
   
   /// Creates `Standard` output object.
   ///
@@ -49,13 +58,6 @@ public final class Standard: LogOutput {
     self.stream = stream
   }
   
-  private func send(_ item: Log.Item) {
-    let text = item.description
-    if !text.isEmpty {
-      fputs("\(text)\n", stream)
-    }
-  }
-  
   // MARK: - LogOutput
   
   override func log(item: Log.Item) {
@@ -67,11 +69,11 @@ public final class Standard: LogOutput {
     
     // Testing
     if Self.isTesting {
-      send(item)
+      Self.send(item: item, stream: stream)
     }
     else {
-      Self.queue.async {
-        self.send(item)
+      Self.queue.async { [stream] in
+        Self.send(item: item, stream: stream)
       }
     }
   }

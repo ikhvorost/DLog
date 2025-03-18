@@ -52,7 +52,7 @@ public struct StackOptions: OptionSet, Sendable {
 }
 
 /// Contains configuration values regarding to stack view
-public enum StackView {
+public enum StackView: Sendable {
   /// Show frames for all modules and libraries
   case all
   
@@ -61,7 +61,7 @@ public enum StackView {
 }
 
 /// Contains configuration values regarding to stack info
-public struct StackConfig {
+public struct StackConfig: Sendable {
   /// Set which info from stacks should be used. Default value is `StackOptions.symbol`.
   public var options: StackOptions = [.frame, .symbol]
   

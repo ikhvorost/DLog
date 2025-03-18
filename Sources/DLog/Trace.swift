@@ -58,7 +58,7 @@ public struct TraceOptions: OptionSet, Sendable {
 }
 
 /// Trace view style
-public enum TraceViewStyle {
+public enum TraceViewStyle: Sendable {
   /// Flat view
   case flat
   
@@ -67,7 +67,7 @@ public enum TraceViewStyle {
 }
 
 /// Contains configuration values regarding to the `trace` method.
-public struct TraceConfig {
+public struct TraceConfig: Sendable {
   /// View style
   public var style: TraceViewStyle = .flat
   

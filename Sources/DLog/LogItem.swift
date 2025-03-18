@@ -184,7 +184,7 @@ enum ANSIEscapeCode: String {
 
 extension Log {
   
-  public class Item {
+  public class Item: @unchecked Sendable {
     struct Tag {
       let textColor: ANSIEscapeCode
       let colors: [ANSIEscapeCode]
