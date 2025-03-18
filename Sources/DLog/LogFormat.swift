@@ -27,8 +27,9 @@
 import Foundation
 import Network
 
+
 #if swift(>=6.0)
-extension ByteCountFormatter: @unchecked @retroactive Sendable {}
+extension ByteCountFormatter: @retroactive @unchecked Sendable {}
 #endif
   
 // Formatters

@@ -26,8 +26,10 @@
 
 import Foundation
 
-extension UnsafeMutablePointer: @unchecked @retroactive Sendable {}
 
+#if swift(>=6.0)
+extension UnsafeMutablePointer: @retroactive @unchecked Sendable {}
+#endif
 
 /// A target output that can output text messages to POSIX streams.
 ///

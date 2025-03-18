@@ -19,10 +19,17 @@ extension NSTimeZone {
   static let defaultTimeZone = TimeZone(abbreviation: "GMT")
 }
 
-/// String errors
-extension String : LocalizedError {
+#if swift(>=6.0)
+extension String: @retroactive Error {}
+extension String: @retroactive LocalizedError {
   public var errorDescription: String? { return self }
 }
+#else
+extension String: Error {}
+extension String: LocalizedError {
+  public var errorDescription: String? { return self }
+}
+#endif
 
 extension String {
   func match(_ pattern: String) -> Bool {

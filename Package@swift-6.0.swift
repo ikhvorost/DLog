@@ -29,11 +29,11 @@ import PackageDescription
 let package = Package(
   name: "DLog",
   platforms: [
-    .iOS(.v12),
+    .iOS(.v13),
     .macOS(.v10_15),
-    .tvOS(.v12),
+    .tvOS(.v13),
     .visionOS(.v1),
-    .watchOS(.v5)
+    .watchOS(.v6)
   ],
   products: [
     .library(name: "DLog", targets: ["DLog"]),

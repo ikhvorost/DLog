@@ -26,10 +26,16 @@
 
 import Foundation
 
+
 #if !os(watchOS)
 
-extension NetService: @unchecked @retroactive Sendable {}
-extension OutputStream: @unchecked @retroactive Sendable {}
+#if swift(>=6.0)
+extension NetService: @retroactive @unchecked Sendable {}
+extension OutputStream: @retroactive @unchecked Sendable {}
+#else
+extension NetService: @unchecked Sendable {}
+extension OutputStream: @unchecked Sendable {}
+#endif
 
 // Log debug messages
 fileprivate func _log(_ text: String, debug: Bool = false) {
@@ -142,10 +148,9 @@ public final class Net: LogOutput {
     super.log(item: item)
     
     if item.type != .intervalBegin {
-      // TODO: Passing closure as a 'sending' parameter risks causing data races between code in the current task and concurrent execution of the closure
-//      Task {
-//        await serviceActor.send(item)
-//      }
+      Task { [serviceActor] in
+        await serviceActor.send(item)
+      }
     }
   }
 }

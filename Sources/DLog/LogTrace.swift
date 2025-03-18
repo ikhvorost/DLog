@@ -26,7 +26,12 @@
 import Foundation
 
 
+#if swift(>=6.0)
 extension Thread: @retroactive @unchecked Sendable {}
+#else
+extension ProcessInfo: @unchecked Sendable {}
+extension Thread: @unchecked Sendable {}
+#endif
 
 public struct TraceInfo: Sendable {
   public let processInfo = ProcessInfo.processInfo

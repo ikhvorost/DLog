@@ -87,12 +87,12 @@ func stackMetadata(moduleName: String, stackAddresses: ArraySlice<NSNumber>, con
       let address = item.uintValue
       var info = dl_info()
       guard dladdr(UnsafeRawPointer(bitPattern: address), &info) != 0,
-            let module = NSString(utf8String: info.dli_fname)?.lastPathComponent,
-            let symbol = String(validatingCString: info.dli_sname)
+            let module = NSString(utf8String: info.dli_fname)?.lastPathComponent
       else {
         return nil
       }
       
+      let symbol = String(cString: info.dli_sname)
       let offset = address - UInt(bitPattern: info.dli_saddr)
       return (address, module, offset, symbol)
     }
