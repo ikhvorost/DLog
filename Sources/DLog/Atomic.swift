@@ -26,7 +26,7 @@
 import Foundation
 
 @discardableResult
-func synchronized<T : AnyObject, U>(_ obj: T, closure: () -> U) -> U {
+func synchronized<T>(_ obj: AnyObject, closure: () -> T) -> T {
   objc_sync_enter(obj)
   defer {
     objc_sync_exit(obj)
@@ -35,7 +35,7 @@ func synchronized<T : AnyObject, U>(_ obj: T, closure: () -> U) -> U {
 }
 
 @propertyWrapper
-public final class Atomic<T> {
+public final class Atomic<T>: @unchecked Sendable {
   private var value: T
   
   public init(wrappedValue value: T) {
@@ -48,6 +48,19 @@ public final class Atomic<T> {
     }
     set {
       synchronized(self) { value = newValue }
+    }
+  }
+}
+
+extension Atomic {
+  
+  public convenience init(_ value: T) {
+    self.init(wrappedValue: value)
+  }
+  
+  public func sync<U>(_ closure: (inout T) -> U) -> U {
+    synchronized(self) {
+      closure(&value)
     }
   }
 }

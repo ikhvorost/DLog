@@ -4,6 +4,7 @@ import DLog
 import Network
 //@testable import DLog
 
+
 // MARK: - Extensions
 
 // Locale: en_US
@@ -68,7 +69,7 @@ func delay(_ sec: TimeInterval = 0.25) {
 
 /// Get text standard output
 func readStream(file: Int32, stream: UnsafeMutablePointer<FILE>, block: () -> Void) -> String? {
-  var result: String?
+  let buffer = Atomic([String]())
   
   // Set pipe
   let pipe = Pipe()
@@ -78,8 +79,9 @@ func readStream(file: Int32, stream: UnsafeMutablePointer<FILE>, block: () -> Vo
   
   pipe.fileHandleForReading.readabilityHandler = { handle in
     if let text = String(data: handle.availableData, encoding: .utf8) {
-      // TODO: Mutation of captured var 'result' in concurrently-executing code
-      //result = (result != nil) ? (result! + text) : text
+      buffer.sync {
+        $0.append(text)
+      }
     }
   }
   
@@ -93,9 +95,10 @@ func readStream(file: Int32, stream: UnsafeMutablePointer<FILE>, block: () -> Vo
   close(original)
   
   // Print
-  print(result ?? "", terminator: "")
+  let text = buffer.wrappedValue.joined()
+  print(text, terminator: "")
   
-  return result
+  return text
 }
 
 func read_stdout(_ block: () -> Void) -> String? {
