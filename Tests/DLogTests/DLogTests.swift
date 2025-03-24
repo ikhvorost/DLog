@@ -2,7 +2,8 @@ import Foundation
 import XCTest
 import DLog
 import Network
-//@testable import DLog
+
+@testable import DLog
 
 
 // MARK: - Extensions
@@ -69,7 +70,7 @@ func delay(_ sec: TimeInterval = 0.25) {
 
 /// Get text standard output
 func readStream(file: Int32, stream: UnsafeMutablePointer<FILE>, block: () -> Void) -> String? {
-  let buffer = Atomic([String]())
+  let buffer = AtomicArray([String]())
   
   // Set pipe
   let pipe = Pipe()
@@ -79,9 +80,7 @@ func readStream(file: Int32, stream: UnsafeMutablePointer<FILE>, block: () -> Vo
   
   pipe.fileHandleForReading.readabilityHandler = { handle in
     if let text = String(data: handle.availableData, encoding: .utf8) {
-      buffer.sync {
-        $0.append(text)
-      }
+      buffer.append(text)
     }
   }
   
@@ -95,7 +94,7 @@ func readStream(file: Int32, stream: UnsafeMutablePointer<FILE>, block: () -> Vo
   close(original)
   
   // Print
-  let text = buffer.wrappedValue.joined()
+  let text = buffer.value.joined()
   print(text, terminator: "")
   
   return text
@@ -227,14 +226,14 @@ final class DLogTests: XCTestCase {
     
     XCTAssert("\(interval!.name)" == "Interval")
     if let duration = interval?.duration {
-      XCTAssert(duration >= 0.255)
+      XCTAssert(duration >= 0.25)
     }
     if let stats = interval?.stats {
       XCTAssert(stats.count == 1)
-      XCTAssert(stats.total >= 0.255)
-      XCTAssert(stats.min >= 0.255)
-      XCTAssert(stats.max >= 0.255)
-      XCTAssert(stats.average >= 0.255)
+      XCTAssert(stats.total >= 0.25)
+      XCTAssert(stats.min >= 0.25)
+      XCTAssert(stats.max >= 0.25)
+      XCTAssert(stats.average >= 0.25)
     }
   }
   

@@ -29,29 +29,29 @@ public typealias Metadata = [String : Codable]
 
 /// Contextual metadata
 @objcMembers
-public class LogMetadata: NSObject {
-  private var _data: Metadata
+public final class LogMetadata: NSObject, Sendable {
+  private let _data: AtomicDictionary<String, Codable>
   
   init(data: Metadata) {
-    _data = data
+    _data = AtomicDictionary(data)
   }
   
   var data: Metadata {
-    synchronized(self) { _data }
+    _data.value
   }
   
   /// Gets and sets a value by a string key to metadata.
   public subscript(name: String) -> Codable? {
     get {
-      synchronized(self) { _data[name] }
+      _data[name]
     }
     set {
-      synchronized(self) { _data[name] = newValue }
+      _data[name] = newValue
     }
   }
   
   /// Clears metadata
   public func clear() {
-    synchronized(self) { _data.removeAll() }
+    _data.removeAll()
   }
 }

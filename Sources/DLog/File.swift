@@ -29,9 +29,8 @@ import Foundation
 
 /// Target output for a file.
 ///
-public final class File: LogOutput {
-  private static let queue = DispatchQueue(label: "dlog.file.queue")
-  
+public final class File: LogOutput, @unchecked Sendable {
+  private let queue = DispatchQueue(label: "dlog.file.queue")
   private let file: FileHandle?
   
   /// Initializes and returns the target file output object associated with the specified file.
@@ -72,8 +71,12 @@ public final class File: LogOutput {
   override func log(item: Log.Item) {
     super.log(item: item)
     
-    if item.type != .intervalBegin, let file {
-      Self.queue.async {
+    guard item.type != .intervalBegin else {
+      return
+    }
+    
+    if let file {
+      queue.async {
         let text = item.description
         if !text.isEmpty, let data = "\(text)\n".data(using: .utf8) {
           file.write(data)

@@ -37,7 +37,7 @@ infix operator => : ForwardPipe
 
 /// A base output class.
 @objcMembers
-public class LogOutput: NSObject {
+public class LogOutput: NSObject, @unchecked Sendable {
   
   /// Creates `Standard` output for `stdout` stream.
   @objc(stdOut)
@@ -54,7 +54,7 @@ public class LogOutput: NSObject {
   public static func oslog(subsystem: String) -> OSLog { OSLog(subsystem: subsystem) }
   
   /// Creates `Filter` output for log items.
-  public static func filter(handler: @escaping (Log.Item) -> Bool) -> Filter { Filter(handler: handler) }
+  public static func filter(body: @Sendable @escaping (Log.Item) -> Bool) -> Filter { Filter(body: body) }
     
   /// Creates `File` output with a file path to write.
   public static func file(path: String, append: Bool = false) -> File { File(path: path, append: append) }
@@ -67,7 +67,7 @@ public class LogOutput: NSObject {
   public static func net(name: String) -> Net { Net(name: name) }
 #endif
   
-  private var next: LogOutput?
+  private let next = Atomic<LogOutput?>(nil)
   
   /// Forward pipe operator
   ///
@@ -76,11 +76,11 @@ public class LogOutput: NSObject {
   ///   let logger = DLog(.textEmoji => .stdout => .file("dlog.txt"))
   ///
   public static func => (left: LogOutput, right: LogOutput) -> LogOutput {
-    left.next = right
+    left.next.value = right
     return right
   }
   
   func log(item: Log.Item) {
-    next?.log(item: item)
+    next.value?.log(item: item)
   }
 }

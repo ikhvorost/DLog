@@ -28,8 +28,8 @@ import Foundation
 /// Base logger class
 ///
 @objcMembers
-public class Log: NSObject {
-  weak var logger: DLog!
+public class Log: NSObject, @unchecked Sendable {
+  let logger = AtomicWeak<DLog>()
   let category: String
   let config: LogConfig
   
@@ -37,7 +37,7 @@ public class Log: NSObject {
   public let metadata: LogMetadata
   
   init(logger: DLog?, category: String, config: LogConfig, metadata: Metadata) {
-    self.logger = logger
+    self.logger.value = logger
     self.category = category
     self.config = config
     self.metadata = LogMetadata(data: metadata)
@@ -51,7 +51,7 @@ public class Log: NSObject {
   }
   
   private func log(message: LogMessage, type: LogType, location: LogLocation) -> Log.Item? {
-    guard let output = logger.output else {
+    guard let output = logger.value?.output else {
       return nil
     }
     let item = Log.Item(time: Date(), category: category, stack: stack(), type: type, location: location, metadata: metadata.data, message: message.text, config: config)
@@ -96,7 +96,7 @@ public class Log: NSObject {
   ///
   @discardableResult
   public func trace(_ message: LogMessage = "", fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> LogTrace? {
-    guard let output = logger.output else {
+    guard let output = logger.value?.output else {
       return nil
     }
     let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
@@ -203,7 +203,7 @@ public class Log: NSObject {
   ///
   @discardableResult
   public func assert(_ condition: @autoclosure () -> Bool, _ message: LogMessage = "", fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
-    guard logger.output != nil && !condition() else {
+    guard logger.value?.output != nil && !condition() else {
       return nil
     }
     return log(message: message, type: .assert, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
@@ -248,8 +248,8 @@ public class Log: NSObject {
   /// - Returns: An `LogScope` object for the new scope.
   ///
   @discardableResult
-  public func scope(_ name: String, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line, closure: ((LogScope) -> Void)? = nil) -> LogScope? {
-    guard logger.output != nil else {
+  public func scope(_ name: String, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line, closure: (@Sendable (LogScope) -> Void)? = nil) -> LogScope? {
+    guard let logger = logger.value, logger.output != nil else {
       return nil
     }
     let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
@@ -281,8 +281,8 @@ public class Log: NSObject {
   /// - Returns: An `LogInterval` object for the new interval.
   ///
   @discardableResult
-  public func interval(_ name: StaticString, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval? {
-    guard logger.output != nil else {
+  public func interval(_ name: StaticString, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line, closure: (@Sendable () -> Void)? = nil) -> LogInterval? {
+    guard let logger = logger.value, logger.output != nil else {
       return nil
     }
     let location = LogLocation(fileID: fileID, file: file, function: function, line: line)

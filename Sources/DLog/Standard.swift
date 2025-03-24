@@ -28,16 +28,16 @@ import Foundation
 
 
 #if swift(>=6.0)
-extension UnsafeMutablePointer: @retroactive @unchecked Sendable {}
+extension UnsafeMutablePointer<FILE>: @retroactive @unchecked Sendable {}
 #endif
 
 /// A target output that can output text messages to POSIX streams.
 ///
-public final class Standard: LogOutput {
+public final class Standard: LogOutput, @unchecked Sendable {
   
   private static let isTesting = NSClassFromString("XCTestCase") != nil
-  private static let queue = DispatchQueue(label: "com.dlog.std")
   
+  private let queue = DispatchQueue(label: "com.dlog.std")
   private let stream: UnsafeMutablePointer<FILE>
   
   private static func send(item: Log.Item, stream: UnsafeMutablePointer<FILE>) {
@@ -74,7 +74,7 @@ public final class Standard: LogOutput {
       Self.send(item: item, stream: stream)
     }
     else {
-      Self.queue.async { [stream] in
+      queue.async { [stream] in
         Self.send(item: item, stream: stream)
       }
     }

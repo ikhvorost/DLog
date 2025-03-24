@@ -35,7 +35,7 @@ import os.activity
 /// It captures telemetry from your app for debugging and performance analysis and then you can use various tools to
 /// retrieve log information such as: `Console` and `Instruments` apps, command line tool `"log"` etc.
 ///
-public class OSLog: LogOutput {
+public final class OSLog: LogOutput, @unchecked Sendable {
   
   private static let types: [LogType : OSLogType] = [
     .log : .default,
@@ -52,8 +52,8 @@ public class OSLog: LogOutput {
     .fault : .fault,
   ]
   
-  private var subsystem: String
-  private var logs = [String : os.OSLog]()
+  private let subsystem: String
+  private let logs = Atomic([String : os.OSLog]())
   
   /// Creates`OSlog` output object.
   ///
@@ -72,12 +72,12 @@ public class OSLog: LogOutput {
   }
   
   private func oslog(category: String) -> os.OSLog {
-    synchronized(self) {
-      if let log = logs[category] {
+    logs.sync {
+      if let log = $0[category] {
         return log
       }
       let log = os.OSLog(subsystem: subsystem, category: category)
-      logs[category] = log
+      $0[category] = log
       return log
     }
   }
@@ -94,12 +94,14 @@ public class OSLog: LogOutput {
           break
         }
           
-        if scope.type == .scopeEnter {
-          let activity = _os_activity_create(Dynamic.dso, strdup(item.message), os_activity_current, OS_ACTIVITY_FLAG_DEFAULT)
-          os_activity_scope_enter(activity, &scope.activity.state)
-        }
-        else {
-          os_activity_scope_leave(&scope.activity.state)
+        scope.activity.sync { state in
+          if scope.type == .scopeEnter {
+            let activity = _os_activity_create(Dynamic.dso, strdup(item.message), os_activity_current, OS_ACTIVITY_FLAG_DEFAULT)
+            os_activity_scope_enter(activity, &state)
+          }
+          else {
+            os_activity_scope_leave(&state)
+          }
         }
 
       // Interval

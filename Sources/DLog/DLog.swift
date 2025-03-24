@@ -28,7 +28,7 @@ import Foundation
 
 /// The central class to emit log messages to specified outputs using one of the methods corresponding to a log level.
 ///
-public final class DLog: Log {
+public final class DLog: Log, @unchecked Sendable {
   
   let output: LogOutput?
   
@@ -39,7 +39,7 @@ public final class DLog: Log {
   /// 	let logger = DLog.disabled
   ///
   @objc
-  public static var disabled: Self { Self(nil) }
+  public static let disabled = DLog(nil)
   
   /// Creates a logger object that assigns log messages to a specified category.
   ///
@@ -86,15 +86,15 @@ public final class DLog: Log {
   /// - Parameters:
   /// 	- output: A target output object. If it is omitted the logger uses `stdout` by default.
   ///
-  public init(_ output: LogOutput? = .stdout, config: LogConfig = LogConfig(), metadata: Metadata = Metadata()) {
+  public init(_ output: LogOutput? = .stdout, category: String = "DLOG", config: LogConfig = LogConfig(), metadata: Metadata = Metadata()) {
     self.output = output
-    super.init(logger: nil, category: "DLOG", config: config, metadata: metadata)
-    self.logger = self
+    super.init(logger: nil, category: category, config: config, metadata: metadata)
+    logger.value = self
   }
   
   /// Creates the default logger.
   @objc
   public convenience init() {
-    self.init(_:config:metadata:)()
+    self.init(_:category:config:metadata:)()
   }
 }

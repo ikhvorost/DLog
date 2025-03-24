@@ -27,9 +27,9 @@ import Foundation
 
 /// Middleware output for filtering
 ///
-public class Filter: LogOutput {
+public final class Filter: LogOutput, @unchecked Sendable {
   
-  private let handler: (Log.Item) -> Bool
+  private let body: @Sendable (Log.Item) -> Bool
   
   /// Initializes a filter output that evaluates using a specified block object.
   ///
@@ -41,14 +41,14 @@ public class Filter: LogOutput {
   /// - Parameters:
   /// 	- block: The block is applied to the object to be evaluated.
   ///
-  public init(handler: @escaping (Log.Item) -> Bool) {
-    self.handler = handler
+  public init(body: @Sendable @escaping (Log.Item) -> Bool) {
+    self.body = body
   }
   
   // MARK: - LogOutput
   
   override func log(item: Log.Item) {
-    if handler(item) {
+    if body(item) {
       super.log(item: item)
     }
   }

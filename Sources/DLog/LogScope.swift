@@ -77,18 +77,14 @@ fileprivate final class Stack: @unchecked Sendable {
 ///
 /// Scope provides a mechanism for grouping log messages.
 ///
-public final class LogScope: Log {
-  final class Activity {
-    public var state = os_activity_scope_state_s()
-  }
-  
+public final class LogScope: Log, @unchecked Sendable {
   public final class Item: Log.Item, @unchecked Sendable {
     public let level: Int
     public let duration: TimeInterval
     
-    let activity: Activity
+    let activity: Atomic<os_activity_scope_state_s>
     
-    init(time: Date, category: String, stack: [Bool], type: LogType, location: LogLocation, metadata: Metadata, message: String, config: LogConfig, activity: Activity, level: Int, duration: TimeInterval) {
+    init(time: Date, category: String, stack: [Bool], type: LogType, location: LogLocation, metadata: Metadata, message: String, config: LogConfig, activity: Atomic<os_activity_scope_state_s>, level: Int, duration: TimeInterval) {
       self.activity = activity
       self.level = level
       self.duration = duration
@@ -115,16 +111,20 @@ public final class LogScope: Log {
     }
   }
   
-  private let activity = Activity()
+  private let activity = Atomic(os_activity_scope_state_s())
+  private let start = Atomic<Date?>(nil)
+  
   public let name: String
   
-  private var start: Date?
+  private let _level = Atomic(0)
+  public var level: Int {
+    _level.value
+  }
   
-  @Atomic
-  public private(set) var level: Int = 0
-  
-  @Atomic
-  public private(set) var duration: TimeInterval = 0
+  private let _duration = Atomic(0.0)
+  public var duration: TimeInterval {
+    _duration.value
+  }
   
   var stack: [Bool]? {
     level > 0 ? Stack.shared.stack(level: level) : nil
@@ -155,13 +155,13 @@ public final class LogScope: Log {
   @objc
   public func enter(fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) {
     Stack.shared.add(scope: self) { level, stack in
-      self.level = level
-      start = Date()
-      self.duration = 0
+      _level.value = level
+      start.value = Date()
+      _duration.value = 0
       
       let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
       let item = item(type: .scopeEnter, location: location, stack: stack)
-      logger.output?.log(item: item)
+      logger.value?.output?.log(item: item)
     }
   }
   
@@ -181,12 +181,12 @@ public final class LogScope: Log {
   @objc
   public func leave(fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) {
     Stack.shared.remove(scope: self, level: level) { stack in
-      self.level = 0
-      self.duration = -(start?.timeIntervalSinceNow ?? 0)
+      _level.value = 0
+      _duration.value = -(start.value?.timeIntervalSinceNow ?? 0)
       
       let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
       let item = item(type: .scopeLeave, location: location, stack: stack)
-      logger.output?.log(item: item)
+      logger.value?.output?.log(item: item)
     }
   }
 }

@@ -167,10 +167,12 @@ public final class LogInterval {
   public let name: StaticString
   
   private var start: Date?
+  private let _duration = Atomic(0.0)
   
   /// A time duration
-  @Atomic
-  public private(set) var duration: TimeInterval = 0
+  public var duration: TimeInterval {
+    _duration.value
+  }
   
   /// Accumulated interval statistics
   public var stats: IntervalStats {
@@ -210,7 +212,7 @@ public final class LogInterval {
       }
       
       start = Date()
-      duration = 0
+      _duration.value = 0
       
       let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
       let stats = Store.shared[id]
@@ -236,7 +238,7 @@ public final class LogInterval {
         return
       }
       let duration = -(start?.timeIntervalSinceNow ?? 0)
-      self.duration = duration
+      _duration.value = duration
       
       let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
       

@@ -26,41 +26,88 @@
 import Foundation
 
 @discardableResult
-func synchronized<T>(_ obj: AnyObject, closure: () -> T) -> T {
+func synchronized<T>(_ obj: AnyObject, body: () -> T) -> T {
   objc_sync_enter(obj)
   defer {
     objc_sync_exit(obj)
   }
-  return closure()
+  return body()
 }
 
-@propertyWrapper
-public final class Atomic<T>: @unchecked Sendable {
-  private var value: T
+class AtomicWeak<T: AnyObject>: @unchecked Sendable {
+  private weak var _value: T? = nil
   
-  public init(wrappedValue value: T) {
-    self.value = value
-  }
-  
-  public var wrappedValue: T {
+  var value: T? {
     get {
-      synchronized(self) { value }
+      synchronized(self) { _value }
     }
     set {
-      synchronized(self) { value = newValue }
+      synchronized(self) { _value = newValue }
     }
   }
 }
 
-extension Atomic {
+class Atomic<T>: @unchecked Sendable {
+  fileprivate var _value: T
   
-  public convenience init(_ value: T) {
-    self.init(wrappedValue: value)
+  init(_ value: T) {
+    _value = value
   }
   
-  public func sync<U>(_ closure: (inout T) -> U) -> U {
-    synchronized(self) {
-      closure(&value)
+  var value: T {
+    get {
+      synchronized(self) { _value }
     }
+    set {
+      synchronized(self) { _value = newValue }
+    }
+  }
+  
+  public func sync<U>(_ body: (inout T) -> U) -> U {
+    synchronized(self) { body(&value) }
+  }
+}
+
+final class AtomicArray<U>: Atomic<Array<U>>, @unchecked Sendable {
+  
+  convenience init(repeating: U, count: Int) {
+    self.init([U](repeating: repeating, count: count))
+  }
+  
+  subscript(i: Int) -> U {
+    get {
+      synchronized(self) { _value[i] }
+    }
+    set {
+      synchronized(self) { _value[i] = newValue }
+    }
+  }
+  
+  var count: Int {
+    synchronized(self) { _value.count }
+  }
+  
+  var first: U? {
+    synchronized(self) { _value.first }
+  }
+  
+  func append(_ item: U) {
+    synchronized(self) { _value.append(item) }
+  }
+}
+
+final class AtomicDictionary<K: Hashable, V>: Atomic<Dictionary<K, V>>, @unchecked Sendable {
+  
+  subscript(key: K) -> V? {
+    get {
+      synchronized(self) { _value[key] }
+    }
+    set {
+      synchronized(self) { _value[key] = newValue }
+    }
+  }
+  
+  func removeAll() {
+    synchronized(self) { _value.removeAll() }
   }
 }

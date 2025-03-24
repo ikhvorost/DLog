@@ -32,6 +32,7 @@ import Foundation
 #if swift(>=6.0)
 extension NetService: @retroactive @unchecked Sendable {}
 extension OutputStream: @retroactive @unchecked Sendable {}
+extension NetServiceBrowser: @retroactive @unchecked Sendable {}
 #else
 extension NetService: @unchecked Sendable {}
 extension OutputStream: @unchecked Sendable {}
@@ -44,79 +45,22 @@ fileprivate func _log(_ text: String, debug: Bool = false) {
   }
 }
 
-fileprivate actor ServiceActor {
-  private var service: NetService?
-  private var outputStream: OutputStream?
-  private var buffer = [Log.Item]()
-  
-  func append(_ item: Log.Item) {
-    buffer.append(item)
-  }
-  
-  func send(_ item: Log.Item) {
-    let text = item.description
-    guard !text.isEmpty else {
-      return
-    }
-      
-    if let outputStream {
-      let buffer = "\(text)\n"
-      outputStream.write(buffer, maxLength: buffer.lengthOfBytes(using: .utf8))
-    }
-    else {
-      buffer.append(item)
-    }
-  }
-  
-  func drain() {
-    buffer.forEach {
-      send($0)
-    }
-    buffer.removeAll()
-  }
-  
-  func open(service: NetService, outputStream: OutputStream) {
-    guard self.service == nil else {
-      return
-    }
-    
-    self.service = service
-    self.outputStream = outputStream
-    outputStream.open()
-    
-    _log("Connected")
-  }
-  
-  func close(service: NetService) {
-    guard self.service == service else {
-      return
-    }
-    outputStream?.close()
-    outputStream = nil
-    self.service = nil
-    
-    _log("Disconnected")
-  }
-  
-  func close() {
-    if let service {
-      close(service: service)
-    }
-  }
-}
-
 /// A target output that sends log messages to `NetConsole` service.
 ///
 /// `NetConsole` service can be run from a command line on your machine and then the output connects and sends your log messages to it.
 ///
-public final class Net: LogOutput {
+public final class Net: LogOutput, @unchecked Sendable {
   private static let type = "_dlog._tcp"
   private static let domain = "local."
   private static let queue = DispatchQueue(label: "dlog.net.queue")
   
   private let name: String
   private let browser = NetServiceBrowser()
-  private let serviceActor = ServiceActor()
+  
+  private let service = Atomic<NetService?>(nil)
+  private let outputStream = Atomic<OutputStream?>(nil)
+  private let hasSpaceAvailable = Atomic(false)
+  private let buffer = AtomicArray([Log.Item]())
   
   /// Creates `Net` output object.
   ///
@@ -136,10 +80,20 @@ public final class Net: LogOutput {
   }
   
   deinit {
-    Task { [serviceActor] in
-      await serviceActor.close()
-    }
+    outputStream.value?.close()
     browser.stop()
+  }
+  
+  private static func send(item: Log.Item, outputStream: OutputStream) {
+    queue.async {
+      let text = item.description
+      guard !text.isEmpty else {
+        return
+      }
+      
+      let buffer = "\(text)\n"
+      outputStream.write(buffer, maxLength: buffer.lengthOfBytes(using: .utf8))
+    }
   }
   
   // MARK: - LogOutput
@@ -147,10 +101,15 @@ public final class Net: LogOutput {
   override func log(item: Log.Item) {
     super.log(item: item)
     
-    if item.type != .intervalBegin {
-      Task { [serviceActor] in
-        await serviceActor.send(item)
-      }
+    guard item.type != .intervalBegin else {
+      return
+    }
+    
+    if let outputStream = outputStream.value, hasSpaceAvailable.value {
+      Self.send(item: item, outputStream: outputStream)
+    }
+    else {
+      buffer.append(item)
     }
   }
 }
@@ -184,16 +143,20 @@ extension Net: NetServiceBrowserDelegate {
     CFWriteStreamSetDispatchQueue(outputStream, Self.queue)
     outputStream.delegate = self
     
-    Task { [serviceActor] in
-      await serviceActor.open(service: service, outputStream: outputStream)
-    }
+    self.service.value = service
+    self.outputStream.value = outputStream
+    outputStream.open()
+    
+    _log("Connected")
   }
   
   /// Tells the delegate a service has disappeared or has become unavailable.
   public func netServiceBrowser(_ browser: NetServiceBrowser, didRemove service: NetService, moreComing: Bool) {
-    Task { [serviceActor] in
-      await serviceActor.close(service: service)
-    }
+    outputStream.value?.close()
+    outputStream.value = nil
+    self.service.value = nil
+    
+    _log("Disconnected")
   }
 }
 
@@ -206,9 +169,15 @@ extension Net: StreamDelegate {
         _log("Output stream is opened")
         
       case .hasSpaceAvailable:
-        Task { [serviceActor] in
-          await serviceActor.drain()
+        if let outputStream = outputStream.value {
+          buffer.sync {
+            $0.forEach {
+              Self.send(item: $0, outputStream: outputStream)
+            }
+            $0.removeAll()
+          }
         }
+        hasSpaceAvailable.value = true
         
       case .errorOccurred:
         if let error = aStream.streamError {
