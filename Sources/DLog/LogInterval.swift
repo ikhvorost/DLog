@@ -74,6 +74,9 @@ public struct IntervalConfig: Sendable {
 
 /// Accumulated interval statistics
 public struct IntervalStats: Sendable {
+  
+  static let stats = IntervalStats(count: 0, total: 0, min: 0, max: 0, average: 0)
+  
   /// A number of total calls
   public let count: Int
   
@@ -90,43 +93,23 @@ public struct IntervalStats: Sendable {
   public let average: TimeInterval
 }
 
-fileprivate final class Store: @unchecked Sendable {
-  static let shared = Store()
-  
-  private var stats = [Int : IntervalStats]()
-  
-  subscript(id: Int) -> IntervalStats {
-    get {
-      synchronized(self) {
-        stats[id] ?? IntervalStats(count: 0, total: 0, min: 0, max: 0, average: 0)
-      }
-    }
-    set {
-      synchronized(self) {
-        stats[id] = newValue
-      }
-    }
-  }
-}
-
 /// An object that represents a time interval triggered by the user.
 ///
 /// Interval logs a point of interest in your code as running time statistics for debugging performance.
 ///
-public final class LogInterval {
-  final class Signpost {
-    var id: OSSignpostID?
-  }
+public final class LogInterval: Sendable {
+  
+  private static let store = AtomicDictionary([Int : IntervalStats]())
   
   public final class Item: Log.Item, @unchecked Sendable {
     public let name: StaticString
     public let duration: TimeInterval
     public let stats: IntervalStats
     
-    let signpost: Signpost
+    let signpostId: Atomic<OSSignpostID?>
     
-    init(time: Date, category: String, stack: [Bool]?, type: LogType, location: LogLocation, metadata: Metadata, name: StaticString, config: LogConfig, duration: TimeInterval, stats: IntervalStats, signpost: Signpost) {
-      self.signpost = signpost
+    init(time: Date, category: String, stack: [Bool]?, type: LogType, location: LogLocation, metadata: Metadata, name: StaticString, config: LogConfig, duration: TimeInterval, stats: IntervalStats, signpostId: Atomic<OSSignpostID?>) {
+      self.signpostId = signpostId
       self.name = name
       self.duration = duration
       self.stats = stats
@@ -157,7 +140,7 @@ public final class LogInterval {
   }
   
   private let logger: DLog
-  private let signpost = Signpost()
+  private let signpostId = Atomic<OSSignpostID?>(nil)
   
   private let category: String
   private let config: LogConfig
@@ -166,17 +149,17 @@ public final class LogInterval {
   private let id: Int
   public let name: StaticString
   
-  private var start: Date?
-  private let _duration = Atomic(0.0)
+  private let start = Atomic<Date?>(nil)
   
   /// A time duration
   public var duration: TimeInterval {
     _duration.value
   }
+  private let _duration = Atomic(0.0)
   
   /// Accumulated interval statistics
   public var stats: IntervalStats {
-    Store.shared[id]
+    Self.store[id] ?? .stats
   }
   
   init(logger: DLog, name: StaticString, category: String, config: LogConfig, stack: [Bool]?, metadata: Metadata, location: LogLocation) {
@@ -191,7 +174,7 @@ public final class LogInterval {
   }
   
   private func item(type: LogType, location: LogLocation, stats: IntervalStats) -> Item {
-    Item(time: Date(), category: category, stack: stack, type: type, location: location, metadata: metadata, name: name, config: config, duration: duration, stats: stats, signpost: signpost)
+    Item(time: Date(), category: category, stack: stack, type: type, location: location, metadata: metadata, name: name, config: config, duration: duration, stats: stats, signpostId: signpostId)
   }
   
   /// Start a time interval.
@@ -207,15 +190,15 @@ public final class LogInterval {
   @objc
   public func begin(fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) {
     synchronized(self) {
-      guard start == nil else {
+      guard start.value == nil else {
         return
       }
       
-      start = Date()
+      start.value = Date()
       _duration.value = 0
       
       let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
-      let stats = Store.shared[id]
+      let stats = Self.store[id] ?? .stats
       let item = item(type: .intervalBegin, location: location, stats: stats)
       logger.output?.log(item: item)
     }
@@ -234,16 +217,16 @@ public final class LogInterval {
   @objc
   public func end(fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) {
     synchronized(self) {
-      guard start != nil else {
+      guard start.value != nil else {
         return
       }
-      let duration = -(start?.timeIntervalSinceNow ?? 0)
+      let duration = -(start.value?.timeIntervalSinceNow ?? 0)
       _duration.value = duration
       
       let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
       
       // Stats
-      let stats = Store.shared[id]
+      let stats = Self.store[id] ?? .stats
       let count = stats.count + 1
       let total = stats.total + duration
       let newStats = IntervalStats(
@@ -252,7 +235,7 @@ public final class LogInterval {
         min: stats.min == 0 || stats.min > duration ? duration : stats.min,
         max: stats.max == 0 || stats.max < duration ? duration : stats.max,
         average: total / Double(count))
-      Store.shared[id] = newStats
+      Self.store[id] = newStats
       
       let item = item(type: .intervalEnd, location: location, stats: newStats)
       logger.output?.log(item: item)

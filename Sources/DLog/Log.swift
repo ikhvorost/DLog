@@ -25,6 +25,12 @@
 
 import Foundation
 
+
+public typealias MetadataKey = String
+public typealias MetadataValue = Sendable & Codable
+public typealias Metadata = [MetadataKey : MetadataValue]
+
+
 /// Base logger class
 ///
 @objcMembers
@@ -34,13 +40,13 @@ public class Log: NSObject, @unchecked Sendable {
   let config: LogConfig
   
   /// Contextual metadata
-  public let metadata: LogMetadata
+  public let metadata: AtomicDictionary<MetadataKey, MetadataValue>
   
   init(logger: DLog?, category: String, config: LogConfig, metadata: Metadata) {
     self.logger.value = logger
     self.category = category
     self.config = config
-    self.metadata = LogMetadata(data: metadata)
+    self.metadata = AtomicDictionary(metadata)
   }
   
   private func stack() -> [Bool]? {
@@ -54,7 +60,7 @@ public class Log: NSObject, @unchecked Sendable {
     guard let output = logger.value?.output else {
       return nil
     }
-    let item = Log.Item(time: Date(), category: category, stack: stack(), type: type, location: location, metadata: metadata.data, message: message.text, config: config)
+    let item = Log.Item(time: Date(), category: category, stack: stack(), type: type, location: location, metadata: metadata.value, message: message.text, config: config)
     output.log(item: item)
     return item
   }
@@ -100,7 +106,7 @@ public class Log: NSObject, @unchecked Sendable {
       return nil
     }
     let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
-    let item = LogTrace(category: category, stack: stack(), location: location, metadata: metadata.data, message: message.text, config: config)
+    let item = LogTrace(category: category, stack: stack(), location: location, metadata: metadata.value, message: message.text, config: config)
     output.log(item: item)
     return item
   }
@@ -253,7 +259,7 @@ public class Log: NSObject, @unchecked Sendable {
       return nil
     }
     let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
-    let scope = LogScope(name: name, logger: logger, category: category, config: config, metadata: metadata.data, location: location)
+    let scope = LogScope(name: name, logger: logger, category: category, config: config, metadata: metadata.value, location: location)
     if let closure {
       scope.enter(fileID: fileID, file: file, function: function, line: line)
       closure(scope)
@@ -286,7 +292,7 @@ public class Log: NSObject, @unchecked Sendable {
       return nil
     }
     let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
-    let interval = LogInterval(logger: logger, name: name, category: category, config: config, stack: stack(), metadata: metadata.data, location: location)
+    let interval = LogInterval(logger: logger, name: name, category: category, config: config, stack: stack(), metadata: metadata.value, location: location)
     if let closure {
       interval.begin(fileID: location.fileID, file: location.file, function: location.function, line: location.line)
       closure()

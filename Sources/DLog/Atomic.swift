@@ -47,14 +47,14 @@ class AtomicWeak<T: AnyObject>: @unchecked Sendable {
   }
 }
 
-class Atomic<T>: @unchecked Sendable {
+public class Atomic<T>: @unchecked Sendable {
   fileprivate var _value: T
   
-  init(_ value: T) {
+  public init(_ value: T) {
     _value = value
   }
   
-  var value: T {
+  public var value: T {
     get {
       synchronized(self) { _value }
     }
@@ -68,13 +68,13 @@ class Atomic<T>: @unchecked Sendable {
   }
 }
 
-final class AtomicArray<U>: Atomic<Array<U>>, @unchecked Sendable {
+public final class AtomicArray<U>: Atomic<Array<U>>, @unchecked Sendable {
   
-  convenience init(repeating: U, count: Int) {
+  public convenience init(repeating: U, count: Int) {
     self.init([U](repeating: repeating, count: count))
   }
   
-  subscript(i: Int) -> U {
+  public subscript(i: Int) -> U {
     get {
       synchronized(self) { _value[i] }
     }
@@ -91,14 +91,14 @@ final class AtomicArray<U>: Atomic<Array<U>>, @unchecked Sendable {
     synchronized(self) { _value.first }
   }
   
-  func append(_ item: U) {
+  public func append(_ item: U) {
     synchronized(self) { _value.append(item) }
   }
 }
 
-final class AtomicDictionary<K: Hashable, V>: Atomic<Dictionary<K, V>>, @unchecked Sendable {
+public final class AtomicDictionary<K: Hashable, V>: Atomic<Dictionary<K, V>>, @unchecked Sendable {
   
-  subscript(key: K) -> V? {
+  public subscript(key: K) -> V? {
     get {
       synchronized(self) { _value[key] }
     }

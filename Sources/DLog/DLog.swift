@@ -72,7 +72,7 @@ public final class DLog: Log, @unchecked Sendable {
   ///     - name: Name of category.
   ///     - config: Configuration of category.
   public func category(name: String, config: LogConfig? = nil, metadata: Metadata? = nil) -> Log {
-    Log(logger: self, category: name, config: config ?? self.config, metadata: metadata ?? self.metadata.data)
+    Log(logger: self, category: name, config: config ?? self.config, metadata: metadata ?? self.metadata.value)
   }
   
   /// Creates the logger instance with a target output object.

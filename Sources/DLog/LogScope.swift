@@ -78,6 +78,7 @@ fileprivate final class Stack: @unchecked Sendable {
 /// Scope provides a mechanism for grouping log messages.
 ///
 public final class LogScope: Log, @unchecked Sendable {
+  
   public final class Item: Log.Item, @unchecked Sendable {
     public let level: Int
     public let duration: TimeInterval
@@ -116,15 +117,15 @@ public final class LogScope: Log, @unchecked Sendable {
   
   public let name: String
   
-  private let _level = Atomic(0)
   public var level: Int {
     _level.value
   }
+  private let _level = Atomic(0)
   
-  private let _duration = Atomic(0.0)
   public var duration: TimeInterval {
     _duration.value
   }
+  private let _duration = Atomic(0.0)
   
   var stack: [Bool]? {
     level > 0 ? Stack.shared.stack(level: level) : nil
@@ -136,7 +137,7 @@ public final class LogScope: Log, @unchecked Sendable {
   }
   
   private func item(type: LogType, location: LogLocation, stack: [Bool]) -> Item {
-    Item(time: Date(), category: category, stack: stack, type: type, location: location, metadata: metadata.data, message: name, config: config, activity: activity, level: level, duration: duration)
+    Item(time: Date(), category: category, stack: stack, type: type, location: location, metadata: metadata.value, message: name, config: config, activity: activity, level: level, duration: duration)
   }
   
   /// Start a scope.

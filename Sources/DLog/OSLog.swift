@@ -107,8 +107,8 @@ public final class OSLog: LogOutput, @unchecked Sendable {
       // Interval
       case let interval as LogInterval.Item:
         let log = oslog(category: interval.category)
-        let id = interval.signpost.id ?? OSSignpostID(log: log)
-        interval.signpost.id = id
+        let id = interval.signpostId.value ?? OSSignpostID(log: log)
+        interval.signpostId.value = id
         
         if interval.type == .intervalBegin {
           os_signpost(.begin, log: log, name: interval.name, signpostID: id)

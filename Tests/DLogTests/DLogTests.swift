@@ -3,7 +3,7 @@ import XCTest
 import DLog
 import Network
 
-@testable import DLog
+/*@testable*/ import DLog
 
 
 // MARK: - Extensions
@@ -238,9 +238,9 @@ final class DLogTests: XCTestCase {
   }
   
   func test_metadata() {
-    let logger = DLog(metadata: ["value" : 200])
+    let logger = DLog(metadata: ["value" : 400])
     let log = logger["NET"]
-    log.metadata["key"] = "12345"
+    log.metadata["key"] = 12345
     log.log("Hello!")
     log.trace()
   }
