@@ -221,7 +221,7 @@ extension Log {
       .joinedCompact()
     }
     
-    public let time: Date
+    public let time = Date()
     public let category: String
     public let stack: [Bool]?
     public let type: LogType
@@ -230,8 +230,7 @@ extension Log {
     public let message: String
     public let config: LogConfig
     
-    init(time: Date, category: String, stack: [Bool]?, type: LogType, location: LogLocation, metadata: Metadata, message: String, config: LogConfig) {
-      self.time = time
+    init(category: String, stack: [Bool]?, type: LogType, location: LogLocation, metadata: Metadata, message: String, config: LogConfig) {
       self.category = category
       self.stack = stack
       self.type = type

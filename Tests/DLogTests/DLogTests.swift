@@ -8,6 +8,18 @@ import Network
 
 // MARK: - Extensions
 
+#if swift(>=6.0)
+extension String: @retroactive Error {}
+extension String: @retroactive LocalizedError {
+  public var errorDescription: String? { return self }
+}
+#else
+extension String: Error {}
+extension String: LocalizedError {
+  public var errorDescription: String? { return self }
+}
+#endif
+
 // Locale: en_US
 extension NSLocale {
   @objc
@@ -20,18 +32,6 @@ extension NSTimeZone {
   @objc
   static let defaultTimeZone = TimeZone(abbreviation: "GMT")
 }
-
-#if swift(>=6.0)
-extension String: @retroactive Error {}
-extension String: @retroactive LocalizedError {
-  public var errorDescription: String? { return self }
-}
-#else
-extension String: Error {}
-extension String: LocalizedError {
-  public var errorDescription: String? { return self }
-}
-#endif
 
 extension String {
   func match(_ pattern: String) -> Bool {
@@ -134,103 +134,233 @@ let Interval = #"\{average:\#(SECS),duration:\#(SECS)\}"#
 
 let Empty = ">$"
 
+
+struct TestLog {
+  let item: Log.Item?
+  let type: LogType
+}
+
+func log_all(_ log: Log, message: LogMessage) -> [TestLog] {
+  [
+    TestLog(item: log.log(message), type: .log),
+    TestLog(item: log.trace(message), type: .trace),
+    TestLog(item: log.debug(message), type: .debug),
+    TestLog(item: log.info(message), type: .info),
+    TestLog(item: log.warning(message), type: .warning),
+    TestLog(item: log.error(message), type: .error),
+    TestLog(item: log.assert(false, message), type: .assert),
+    TestLog(item: log.fault(message), type: .fault),
+  ]
+}
+
 final class DLogTests: XCTestCase {
   
-  func test_trace() {
-    let log = DLog(metadata: ["a" : 100])
-    log.metadata["a"] = 200
-    let item = log.trace("trace")
-    XCTAssert(item?.traceInfo.queueLabel == "com.apple.main-thread")
-  }
-  
-  func test_scope_stack() {
-    let log = DLog()
-    log.debug("start")
+  func test_disabled() {
+    let logger = DLog.disabled
     
-    log.scope("Scope 0") { scope in
-      scope.debug("0")
-      scope.scope("Scope 1") { scope in
-        scope.debug("1")
-        scope.scope("Scope 2") { scope in
-          scope.debug("2")
-        }
-      }
+    log_all(logger, message: "log").forEach {
+      XCTAssert($0.item == nil)
     }
     
-    log.debug("finish")
+    XCTAssert(logger.scope("scope") == nil)
+    XCTAssert(logger.interval("interval") == nil)
+  }
+  
+  func test_category() {
+    let logger = DLog()
+    
+    let net = logger["NET"]
+    var item = net.log("log")
+    XCTAssert(item?.category == "NET")
+    
+    let store = logger.category(name: "STORE")
+    item = store.log("log")
+    XCTAssert(item?.category == "STORE")
+  }
+}
+
+final class LogTests: XCTestCase {
+  
+  func test_logAll() {
+    let log = DLog(metadata: ["a" : 10])
+    log.metadata["a"] = 20
+    log.metadata["b"] = "20"
+       
+    log_all(log, message: "log").forEach {
+      XCTAssert($0.item!.time <= Date())
+      XCTAssert($0.item?.category == "DLOG")
+      XCTAssert($0.item?.stack == nil)
+      XCTAssert($0.item?.type == $0.type)
+      
+      XCTAssert($0.item?.location.fileID == "DLogTests/DLogTests.swift")
+      XCTAssert($0.item?.location.file == "DLogTests/DLogTests.swift")
+      XCTAssert($0.item?.location.function == "log_all(_:message:)")
+      XCTAssert($0.item!.location.line < #line)
+      XCTAssert($0.item?.location.moduleName == "DLogTests")
+      XCTAssert($0.item?.location.fileName == "DLogTests.swift")
+      
+      XCTAssert($0.item?.metadata.count == 2)
+      XCTAssert($0.item?.metadata["a"] as? Int == 20)
+      XCTAssert($0.item?.metadata["b"] as? String == "20")
+      
+      XCTAssert($0.item?.message == "log")
+      //XCTAssert($0.item?.config == "log")
+    }
+  }
+  
+  func test_trace() {
+    let log = DLog()
+    let item = log.trace("trace")
+    
+    XCTAssert(item?.traceInfo.processInfo == ProcessInfo.processInfo)
+    XCTAssert(item?.traceInfo.queueLabel == "com.apple.main-thread")
+    XCTAssert(item?.traceInfo.stackAddresses.count != 0)
+    XCTAssert(item?.traceInfo.thread == Thread.current)
+    XCTAssert(item?.traceInfo.tid != 0)
   }
   
   func test_scope() {
     let logger = DLog()
     
-    let scope = logger.scope("Scope") { scope in
-      delay()
-      scope.log("log")
+    let scope = logger.scope("scope") { scope in
+      XCTAssert(scope.name == "scope")
       XCTAssert(scope.level == 1)
+      XCTAssert(scope.duration == 0)
+      
+      delay()
+      
+      let item = scope.log("log")
+      XCTAssert(item?.stack?.count == 0)
     }
     XCTAssert(scope?.level == 0)
-    XCTAssert(scope?.name == "Scope")
-    XCTAssert((scope?.duration ?? 0) >= 0.255)
+    XCTAssert((scope?.duration ?? 0) >= 0.25)
     
-    scope?.log("log")
+    
     scope?.enter()
+    scope?.enter()
+    
     XCTAssert(scope?.level == 1)
-    scope?.debug("debug")
+    XCTAssert(scope?.duration == 0)
+    
+    delay()
+    
+    let item = scope?.log("log")
+    XCTAssert(item?.stack?.count == 0)
+    
     scope?.leave()
-    scope?.log("log")
+    scope?.leave()
+    
+    XCTAssert(scope?.level == 0)
+    XCTAssert((scope?.duration ?? 0) >= 0.25)
+  }
+  
+  func test_scope_stack() {
+    let log = DLog()
+    
+    log.scope("Scope0") { scope in
+      XCTAssert(scope.level == 1)
+      let item = scope.debug("debug")
+      XCTAssert(item?.stack?.count == 0)
+      
+      scope.scope("Scope1") { scope in
+        XCTAssert(scope.level == 2)
+        let item = scope.debug("debug")
+        XCTAssert(item?.stack?.count == 1)
+        
+        scope.scope("Scope2") { scope in
+          XCTAssert(scope.level == 3)
+          let item = scope.debug("debug")
+          XCTAssert(item?.stack?.count == 2)
+        }
+      }
+    }
   }
   
   func test_scope_concurrent() {
     let logger = DLog()
     
-    wait(count: 10) { expectations in
-      for i in 0..<10 {
-        DispatchQueue.global().async {
-          delay([0.1, 0.2, 0.4].randomElement()!)
-          logger.scope("Scope \(i)") {
-            delay([0.1, 0.2, 0.4].randomElement()!)
-            $0.debug("scope \(i)")
-            expectations[i].fulfill()
-          }
-        }
+    DispatchQueue.concurrentPerform(iterations: 10) { i in
+      delay([0.1, 0.2, 0.3, 0.4].randomElement()!)
+      let scope = logger.scope("Scope \(i)") {
+        delay([0.1, 0.2, 0.3, 0.4].randomElement()!)
+        $0.debug("debug \(i)")
       }
+      XCTAssert(scope?.duration ?? 0 >= 0.1)
     }
   }
   
   func test_interval() {
     let logger = DLog()
     
-    let interval = logger.interval("Interval") {
+    let int = logger.interval("interval2")
+    if let stats = int?.stats {
+      XCTAssert(stats.count == 0)
+      XCTAssert(stats.total == 0)
+      XCTAssert(stats.min == 0)
+      XCTAssert(stats.max == 0)
+      XCTAssert(stats.average == 0)
+    }
+    
+    let interval = logger.interval("interval") {
       delay()
     }
-    XCTAssert("\(interval!.name)" == "Interval")
-    if let duration = interval?.duration {
-      XCTAssert(duration >= 0.255)
-    }
-    if let stats = interval?.stats {
-      XCTAssert(stats.count == 1)
-      XCTAssert(stats.total >= 0.255)
-      XCTAssert(stats.min >= 0.255)
-      XCTAssert(stats.max >= 0.255)
-      XCTAssert(stats.average >= 0.255)
-    }
-  }
-  
-  func test_interval_begin_end() {
-    let logger = DLog()
-    
-    let interval = logger.interval("Interval")
-    interval?.begin()
-    delay()
-    interval?.end()
-    
-    XCTAssert("\(interval!.name)" == "Interval")
-    if let duration = interval?.duration {
-      XCTAssert(duration >= 0.25)
-    }
+    XCTAssert("\(interval!.name)" == "interval")
+    XCTAssert(interval?.duration ?? 0 >= 0.25)
     if let stats = interval?.stats {
       XCTAssert(stats.count == 1)
       XCTAssert(stats.total >= 0.25)
+      XCTAssert(stats.min >= 0.25)
+      XCTAssert(stats.max >= 0.25)
+      XCTAssert(stats.average >= 0.25)
+    }
+    
+    interval?.begin()
+    interval?.begin()
+    
+    delay(0.35)
+    
+    interval?.end()
+    interval?.end()
+    
+    XCTAssert(interval?.duration ?? 0 >= 0.25)
+    if let stats = interval?.stats {
+      XCTAssert(stats.count == 2)
+      XCTAssert(stats.total >= 0.6)
+      XCTAssert(stats.min >= 0.25)
+      XCTAssert(stats.max >= 0.35)
+      XCTAssert(stats.average >= 0.25)
+    }
+    
+    interval?.begin()
+    
+    delay(0.1)
+    
+    interval?.end()
+    XCTAssert(interval?.duration ?? 0 >= 0.1)
+    if let stats = interval?.stats {
+      XCTAssert(stats.count == 3)
+      XCTAssert(stats.total >= 0.7)
+      XCTAssert(stats.min >= 0.1)
+      XCTAssert(stats.max >= 0.35)
+      XCTAssert(stats.average >= 0.2)
+    }
+  }
+  
+  func test_interval_concurrent() {
+    let logger = DLog()
+    
+    let interval = Atomic<LogInterval?>(nil)
+    
+    DispatchQueue.concurrentPerform(iterations: 10) { i in
+      interval.value = logger.interval("interval") {
+        delay()
+      }
+    }
+    
+    XCTAssert(interval.value?.duration ?? 0 >= 0.25)
+    if let stats = interval.value?.stats {
+      XCTAssert(stats.count == 10)
+      XCTAssert(stats.total >= 2.5)
       XCTAssert(stats.min >= 0.25)
       XCTAssert(stats.max >= 0.25)
       XCTAssert(stats.average >= 0.25)
@@ -239,10 +369,15 @@ final class DLogTests: XCTestCase {
   
   func test_metadata() {
     let logger = DLog(metadata: ["value" : 400])
-    let log = logger["NET"]
-    log.metadata["key"] = 12345
-    log.log("Hello!")
-    log.trace()
+    
+    var item = logger.debug("Hello")
+    XCTAssert(item?.metadata["value"] as? Int == 400)
+    
+    let net = logger["NET"]
+    net.metadata["key"] = 12345
+    item = net.log("Hello")
+    XCTAssert(item?.metadata["value"] as? Int == 400)
+    XCTAssert(item?.metadata["key"] as? Int == 12345)
   }
   
 }

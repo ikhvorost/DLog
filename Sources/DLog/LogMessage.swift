@@ -95,14 +95,15 @@ public class LogStringInterpolation: StringInterpolationProtocol {
 /// - Warning: Do not explicitly refer to this type. It will be implicitly created by the compiler
 /// when you pass a string interpolation to the logger.
 ///
-public class LogMessage: NSObject,
+public final class LogMessage: NSObject,
                          ExpressibleByStringLiteral,
                          ExpressibleByIntegerLiteral,
                          ExpressibleByFloatLiteral,
                          ExpressibleByBooleanLiteral,
                          ExpressibleByArrayLiteral,
                          ExpressibleByDictionaryLiteral,
-                         ExpressibleByStringInterpolation {
+                         ExpressibleByStringInterpolation,
+                         Sendable {
   let text: String
   
   /// Creates an instance initialized to the given string value.

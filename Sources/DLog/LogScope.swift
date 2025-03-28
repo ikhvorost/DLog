@@ -85,12 +85,12 @@ public final class LogScope: Log, @unchecked Sendable {
     
     let activity: Atomic<os_activity_scope_state_s>
     
-    init(time: Date, category: String, stack: [Bool], type: LogType, location: LogLocation, metadata: Metadata, message: String, config: LogConfig, activity: Atomic<os_activity_scope_state_s>, level: Int, duration: TimeInterval) {
+    init(category: String, stack: [Bool], type: LogType, location: LogLocation, metadata: Metadata, message: String, config: LogConfig, activity: Atomic<os_activity_scope_state_s>, level: Int, duration: TimeInterval) {
       self.activity = activity
       self.level = level
       self.duration = duration
       
-      super.init(time: time, category: category, stack: stack, type: type, location: location, metadata: metadata, message: message, config: config)
+      super.init(category: category, stack: stack, type: type, location: location, metadata: metadata, message: message, config: config)
     }
     
     override func padding() -> String {
@@ -113,7 +113,11 @@ public final class LogScope: Log, @unchecked Sendable {
   }
   
   private let activity = Atomic(os_activity_scope_state_s())
-  private let start = Atomic<Date?>(nil)
+  private let start = Atomic(Date())
+  
+  var stack: [Bool]? {
+    level > 0 ? Stack.shared.stack(level: level) : nil
+  }
   
   public let name: String
   
@@ -126,18 +130,14 @@ public final class LogScope: Log, @unchecked Sendable {
     _duration.value
   }
   private let _duration = Atomic(0.0)
-  
-  var stack: [Bool]? {
-    level > 0 ? Stack.shared.stack(level: level) : nil
-  }
-  
+
   init(name: String, logger: DLog, category: String, config: LogConfig, metadata: Metadata, location: LogLocation) {
     self.name = name
     super.init(logger: logger, category: category, config: config, metadata: metadata)
   }
   
   private func item(type: LogType, location: LogLocation, stack: [Bool]) -> Item {
-    Item(time: Date(), category: category, stack: stack, type: type, location: location, metadata: metadata.value, message: name, config: config, activity: activity, level: level, duration: duration)
+    Item(category: category, stack: stack, type: type, location: location, metadata: metadata.value, message: name, config: config, activity: activity, level: level, duration: duration)
   }
   
   /// Start a scope.
@@ -183,7 +183,7 @@ public final class LogScope: Log, @unchecked Sendable {
   public func leave(fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) {
     Stack.shared.remove(scope: self, level: level) { stack in
       _level.value = 0
-      _duration.value = -(start.value?.timeIntervalSinceNow ?? 0)
+      _duration.value = -start.value.timeIntervalSinceNow
       
       let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
       let item = item(type: .scopeLeave, location: location, stack: stack)

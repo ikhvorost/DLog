@@ -51,7 +51,7 @@ public final class LogTrace: Log.Item, @unchecked Sendable {
   public let traceInfo = TraceInfo()
   
   init(category: String, stack: [Bool]?, location: LogLocation, metadata: Metadata, message: String, config: LogConfig) {
-    super.init(time: Date(), category: category, stack: stack, type: .trace, location: location, metadata: metadata, message: message, config: config)
+    super.init(category: category, stack: stack, type: .trace, location: location, metadata: metadata, message: message, config: config)
   }
   
   override func data() -> LogData? {

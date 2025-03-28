@@ -60,7 +60,7 @@ public class Log: NSObject, @unchecked Sendable {
     guard let output = logger.value?.output else {
       return nil
     }
-    let item = Log.Item(time: Date(), category: category, stack: stack(), type: type, location: location, metadata: metadata.value, message: message.text, config: config)
+    let item = Log.Item(category: category, stack: stack(), type: type, location: location, metadata: metadata.value, message: message.text, config: config)
     output.log(item: item)
     return item
   }
