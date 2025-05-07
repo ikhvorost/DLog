@@ -13,11 +13,9 @@ let package = Package(
   ],
   products: [
     .library(name: "DLog", targets: ["DLog"]),
-    .executable(name: "NetConsole", targets: ["NetConsole"])
   ],
   targets: [
     .target(name: "DLog"),
-    .target(name: "NetConsole"),
     .testTarget(name: "DLogTests", dependencies: ["DLog"])
   ],
   swiftLanguageVersions: [.v5]

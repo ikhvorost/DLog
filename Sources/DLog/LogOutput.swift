@@ -36,7 +36,7 @@ infix operator => : ForwardPipe
 
 
 /// A base output class.
-public class LogOutput: @unchecked Sendable { // 
+public class LogOutput: @unchecked Sendable {
   
   /// Creates `Standard` output for `stdout` stream.
   public static var stdout: Standard { Standard() }
@@ -55,14 +55,6 @@ public class LogOutput: @unchecked Sendable { //
     
   /// Creates `File` output with a file path to write.
   public static func file(path: String, append: Bool = false) -> File { File(path: path, append: append) }
-  
-#if !os(watchOS)
-  /// Creates `Net` output for default service name: `DLog`.
-  public static var net: Net { Net() }
-  
-  /// Creates `Net` output for a service name.
-  public static func net(name: String) -> Net { Net(name: name) }
-#endif
   
   private let next = Atomic<LogOutput?>(nil)
   
