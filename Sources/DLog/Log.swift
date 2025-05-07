@@ -32,9 +32,7 @@ public typealias Metadata = [MetadataKey : MetadataValue]
 
 
 /// Base logger class
-///
-@objcMembers
-public class Log: NSObject, @unchecked Sendable {
+public class Log: @unchecked Sendable { //
   let logger = AtomicWeak<DLog>()
   let category: String
   let config: LogConfig

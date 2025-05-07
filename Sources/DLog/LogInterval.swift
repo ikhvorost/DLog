@@ -212,7 +212,6 @@ public final class LogInterval: Sendable {
   /// 	...
   /// 	interval.end()
   ///
-  @objc
   public func begin(fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) {
     guard start.value == nil else {
       return
@@ -236,7 +235,6 @@ public final class LogInterval: Sendable {
   /// 	...
   /// 	interval.end()
   ///
-  @objc
   public func end(fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) {
     guard let duration = start.value?.timeIntervalSinceNow else {
       return

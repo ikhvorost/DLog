@@ -38,7 +38,6 @@ public final class DLog: Log, @unchecked Sendable {
   ///
   /// 	let logger = DLog.disabled
   ///
-  @objc
   public static let disabled = DLog(nil)
   
   /// Creates a logger object that assigns log messages to a specified category.
@@ -52,7 +51,6 @@ public final class DLog: Log, @unchecked Sendable {
   ///
   /// - Parameters:
   ///     - name: Name of category.
-  @objc
   public subscript(name: String) -> Log {
     category(name: name)
   }
@@ -93,7 +91,6 @@ public final class DLog: Log, @unchecked Sendable {
   }
   
   /// Creates the default logger.
-  @objc
   public convenience init() {
     self.init(_:category:config:metadata:)()
   }

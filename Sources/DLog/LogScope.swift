@@ -153,7 +153,6 @@ public final class LogScope: Log, @unchecked Sendable {
   ///
   ///     scope.leave()
   ///
-  @objc
   public func enter(fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) {
     Stack.shared.add(scope: self) { level, stack in
       _level.value = level
@@ -179,7 +178,6 @@ public final class LogScope: Log, @unchecked Sendable {
   ///
   ///     scope.leave()
   ///
-  @objc
   public func leave(fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) {
     Stack.shared.remove(scope: self, level: level) { stack in
       _level.value = 0
@@ -189,5 +187,12 @@ public final class LogScope: Log, @unchecked Sendable {
       let item = item(type: .scopeLeave, location: location, stack: stack)
       logger.value?.output?.log(item: item)
     }
+  }
+}
+
+extension LogScope: Equatable {
+  
+  public static func == (lhs: LogScope, rhs: LogScope) -> Bool {
+    lhs === rhs
   }
 }

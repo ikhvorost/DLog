@@ -36,15 +36,12 @@ infix operator => : ForwardPipe
 
 
 /// A base output class.
-@objcMembers
-public class LogOutput: NSObject, @unchecked Sendable {
+public class LogOutput: @unchecked Sendable { // 
   
   /// Creates `Standard` output for `stdout` stream.
-  @objc(stdOut)
   public static var stdout: Standard { Standard() }
   
   /// Creates `Standard` output for `stderr` stream.
-  @objc(stdErr)
   public static var stderr: Standard { Standard(stream: Darwin.stderr) }
   
   /// Creates `OSLog` output with default subsystem name: `com.dlog.logger`.

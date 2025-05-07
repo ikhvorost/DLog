@@ -37,15 +37,12 @@ let package = Package(
   ],
   products: [
     .library(name: "DLog", targets: ["DLog"]),
-    .library(name: "DLogObjC", targets: ["DLogObjC"]),
     .executable(name: "NetConsole", targets: ["NetConsole"])
   ],
   targets: [
     .target(name: "DLog"),
-    .target(name: "DLogObjC", dependencies: ["DLog"]),
     .executableTarget(name: "NetConsole"),
-    .testTarget(name: "DLogTests", dependencies: ["DLog"]),
-    .testTarget(name: "DLogTestsObjC", dependencies: ["DLogObjC"])
+    .testTarget(name: "DLogTests", dependencies: ["DLog"])
   ],
   swiftLanguageModes: [.v6]
 )

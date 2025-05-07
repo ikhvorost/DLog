@@ -22,14 +22,12 @@ extension String: LocalizedError {
 
 // Locale: en_US
 extension NSLocale {
-  @objc
   static let currentLocale = NSLocale(localeIdentifier: "en_US")
 }
 
 // Time zone: GMT
 // NSTimeZone.default = TimeZone(abbreviation: "GMT")!
 extension NSTimeZone {
-  @objc
   static let defaultTimeZone = TimeZone(abbreviation: "GMT")
 }
 
