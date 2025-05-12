@@ -252,7 +252,7 @@ public class Log: @unchecked Sendable {
   /// - Returns: An `LogScope` object for the new scope.
   ///
   @discardableResult
-  public func scope(_ name: String, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line, closure: (@Sendable (LogScope) -> Void)? = nil) -> LogScope? {
+  public func scope(_ name: String, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line, closure: ((LogScope) -> Void)? = nil) -> LogScope? {
     guard let logger = logger.value, logger.isEnabled == true else {
       return nil
     }
@@ -285,7 +285,7 @@ public class Log: @unchecked Sendable {
   /// - Returns: An `LogInterval` object for the new interval.
   ///
   @discardableResult
-  public func interval(_ name: StaticString, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line, closure: (@Sendable () -> Void)? = nil) -> LogInterval? {
+  public func interval(_ name: StaticString, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval? {
     guard let logger = logger.value, logger.isEnabled else {
       return nil
     }

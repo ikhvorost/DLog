@@ -30,7 +30,7 @@ import Foundation
 ///
 public struct Std {
   
-  private let stream: UnsafeMutablePointer<FILE>
+  private let stream: Atomic<UnsafeMutablePointer<FILE>>
   
   /// Creates `Standard` output object.
   ///
@@ -42,7 +42,7 @@ public struct Std {
   ///		- source: A source output (defaults to `.textPlain`).
   ///
   init(stream: UnsafeMutablePointer<FILE>) {
-    self.stream = stream
+    self.stream = Atomic(stream)
   }
 }
 
@@ -55,7 +55,7 @@ extension Std: Output {
     
     let text = item.description
     if !text.isEmpty {
-      fputs("\(text)\n", stream)
+      fputs("\(text)\n", stream.value)
     }
   }
 }

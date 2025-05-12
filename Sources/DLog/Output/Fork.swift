@@ -30,7 +30,7 @@ public struct Fork {
   
   let outputs: [Output]
   
-  public init(@OutputBuilder outputs: @Sendable () -> [Output]) {
+  public init(@OutputBuilder outputs: () -> [Output]) {
     self.outputs = outputs()
   }
 }
@@ -38,7 +38,7 @@ public struct Fork {
 extension Fork: Output {
   
   public func log(item: Log.Item) {
-    DispatchQueue.concurrentPerform(iterations: outputs.count) {
+    DispatchQueue.concurrentPerform(iterations: outputs.count) { [outputs] in
       outputs[$0].log(item: item)
     }
   }

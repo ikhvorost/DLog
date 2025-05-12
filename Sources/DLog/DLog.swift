@@ -38,8 +38,7 @@ public final class DLog: Log, @unchecked Sendable {
   ///
   public static let disabled = DLog(output: nil)
   
-  private let queue = DispatchQueue(label: "dlog.log.queue")
-  
+  private let queue = DispatchQueue(label: "dlog.queue")
   private let output: Output?
   
   var isEnabled: Bool { output != nil }
@@ -70,7 +69,7 @@ public final class DLog: Log, @unchecked Sendable {
   /// - Parameters:
   /// 	- output: A target output object. If it is omitted the logger uses `stdout` by default.
   ///
-  public init(category: String = "DLOG", config: LogConfig = LogConfig(), metadata: Metadata = Metadata(), output: (@Sendable () -> Output)? = { StdOut }) {
+  public init(category: String = "DLOG", config: LogConfig = LogConfig(), metadata: Metadata = Metadata(), output: (() -> Output)? = { StdOut }) {
     self.output = output?()
     super.init(logger: nil, category: category, config: config, metadata: metadata)
     logger.value = self
@@ -95,8 +94,8 @@ public final class DLog: Log, @unchecked Sendable {
   }
   
   func log(item: Log.Item) {
-    queue.async {
-      self.output?.log(item: item)
+    queue.async { [output] in
+      output?.log(item: item)
     }
   }
 }

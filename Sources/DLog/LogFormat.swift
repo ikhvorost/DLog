@@ -27,58 +27,53 @@
 import Foundation
 import Network
 
-
-#if swift(>=6.0)
-extension ByteCountFormatter: @retroactive @unchecked Sendable {}
-#endif
   
 // Formatters
 fileprivate struct Formatter {
   
-  static private let date = DateFormatter()
+  static private let date = Atomic(DateFormatter())
   static func date(value: Date, dateStyle: DateFormatter.Style, timeStyle: DateFormatter.Style, locale: Locale?) -> String {
-    synchronized(date) {
-      date.dateStyle = dateStyle
-      date.timeStyle = timeStyle
-      date.locale = locale
-      return date.string(from: value)
+    date.sync {
+      $0.dateStyle = dateStyle
+      $0.timeStyle = timeStyle
+      $0.locale = locale
+      return $0.string(from: value)
     }
   }
   static func date(value: Date, dateFormat: String) -> String {
-    synchronized(date) {
-      date.dateFormat = dateFormat
-      return date.string(from: value)
+    date.sync {
+      $0.dateFormat = dateFormat
+      return $0.string(from: value)
     }
   }
   
-  static private let byteCount = ByteCountFormatter()
+  static private let byteCount = Atomic(ByteCountFormatter())
   static func byteCount(value: Int64, countStyle: ByteCountFormatter.CountStyle, allowedUnits: ByteCountFormatter.Units) -> String {
-    synchronized(byteCount) {
-      byteCount.countStyle = countStyle
-      byteCount.allowedUnits = allowedUnits
-      return byteCount.string(fromByteCount: value)
+    byteCount.sync {
+      $0.countStyle = countStyle
+      $0.allowedUnits = allowedUnits
+      return $0.string(fromByteCount: value)
     }
   }
   
-  static private let number = NumberFormatter()
+  static private let number = Atomic(NumberFormatter())
   static func number(value: NSNumber, style: NumberFormatter.Style, locale: Locale?) -> String {
-    synchronized(number) {
-      number.locale = locale
-      number.numberStyle = style
-      return number.string(from: value)!
+    number.sync {
+      $0.locale = locale
+      $0.numberStyle = style
+      return $0.string(from: value)!
     }
   }
   
-  
-  static private let dateComponents: DateComponentsFormatter = {
+  static private let dateComponents: Atomic<DateComponentsFormatter> = {
     let formatter = DateComponentsFormatter()
     formatter.allowedUnits = [.year, .month, .weekOfMonth, .day, .hour, .minute, .second]
-    return formatter
+    return Atomic(formatter)
   }()
   static func dateComponents(timeInterval: TimeInterval, unitsStyle: DateComponentsFormatter.UnitsStyle) -> String {
-    synchronized(dateComponents) {
-      dateComponents.unitsStyle = unitsStyle
-      return dateComponents.string(from: timeInterval) ?? ""
+    dateComponents.sync {
+      $0.unitsStyle = unitsStyle
+      return $0.string(from: timeInterval) ?? ""
     }
   }
 }

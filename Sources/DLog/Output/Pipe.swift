@@ -30,7 +30,7 @@ public struct Pipe {
   
   let outputs: [Output]
   
-  public init(@OutputBuilder outputs: @Sendable () -> [Output]) {
+  public init(@OutputBuilder outputs: () -> [Output]) {
     self.outputs = outputs()
   }
 }

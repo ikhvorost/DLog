@@ -26,14 +26,7 @@
 import Foundation
 
 
-#if swift(>=6.0)
-extension Thread: @retroactive @unchecked Sendable {}
-#else
-extension ProcessInfo: @unchecked Sendable {}
-extension Thread: @unchecked Sendable {}
-#endif
-
-public struct TraceInfo: Sendable {
+public struct TraceInfo {
   public let processInfo = ProcessInfo.processInfo
   public let queueLabel = String(cString: __dispatch_queue_get_label(nil))
   public let stackAddresses = Thread.callStackReturnAddresses.dropFirst(2)

@@ -26,7 +26,7 @@
 import Foundation
 
 
-public protocol Output {
+public protocol Output: Sendable {
   func log(item: Log.Item)
   func pipe(item: Log.Item) -> Bool
 }

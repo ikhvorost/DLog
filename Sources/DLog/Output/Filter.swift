@@ -30,7 +30,7 @@ import Foundation
 ///
 public struct Filter {
   
-  private let body: @Sendable (Log.Item) -> Bool
+  private let isIncluded: @Sendable (Log.Item) -> Bool
   
   /// Initializes a filter output that evaluates using a specified block object.
   ///
@@ -42,8 +42,8 @@ public struct Filter {
   /// - Parameters:
   /// 	- body: The block is applied to the object to be evaluated.
   ///
-  public init(body: @Sendable @escaping (Log.Item) -> Bool) {
-    self.body = body
+  public init(body: @escaping @Sendable (Log.Item) -> Bool) {
+    self.isIncluded = body
   }
 }
 
@@ -51,6 +51,6 @@ extension Filter: Output {
   public func log(item: Log.Item) {}
   
   public func pipe(item: Log.Item) -> Bool {
-    body(item)
+    isIncluded(item)
   }
 }
