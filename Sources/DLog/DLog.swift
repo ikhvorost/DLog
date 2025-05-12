@@ -30,15 +30,19 @@ import Foundation
 ///
 public final class DLog: Log, @unchecked Sendable {
   
-  let output: Output? // private
-  
   /// The shared disabled logger.
   ///
   /// Using this constant prevents from logging messages.
   ///
-  /// 	let logger = DLog.disabled
+  ///   let logger = DLog.disabled
   ///
   public static let disabled = DLog(output: nil)
+  
+  private let queue = DispatchQueue(label: "dlog.log.queue")
+  
+  private let output: Output?
+  
+  var isEnabled: Bool { output != nil }
   
   /// Creates a logger object that assigns log messages to a specified category.
   ///
@@ -53,6 +57,23 @@ public final class DLog: Log, @unchecked Sendable {
   ///     - name: Name of category.
   public subscript(name: String) -> Log {
     category(name: name)
+  }
+  
+  /// Creates the logger instance with a target output object.
+  ///
+  /// Create an instance and use it to log text messages about your app’s behaviour and to help you assess the state
+  /// of your app later. You also can choose a target output and a log level to indicate the severity of that message.
+  ///
+  /// 	let logger = DLog()
+  ///     logger.log("Hello DLog!")
+  ///
+  /// - Parameters:
+  /// 	- output: A target output object. If it is omitted the logger uses `stdout` by default.
+  ///
+  public init(category: String = "DLOG", config: LogConfig = LogConfig(), metadata: Metadata = Metadata(), output: (@Sendable () -> Output)? = { StdOut }) {
+    self.output = output?()
+    super.init(logger: nil, category: category, config: config, metadata: metadata)
+    logger.value = self
   }
   
   /// Creates a logger object with a configuration that assigns log messages to a specified category.
@@ -73,20 +94,9 @@ public final class DLog: Log, @unchecked Sendable {
     Log(logger: self, category: name, config: config ?? self.config, metadata: metadata ?? self.metadata.value)
   }
   
-  /// Creates the logger instance with a target output object.
-  ///
-  /// Create an instance and use it to log text messages about your app’s behaviour and to help you assess the state
-  /// of your app later. You also can choose a target output and a log level to indicate the severity of that message.
-  ///
-  /// 	let logger = DLog()
-  ///     logger.log("Hello DLog!")
-  ///
-  /// - Parameters:
-  /// 	- output: A target output object. If it is omitted the logger uses `stdout` by default.
-  ///
-  public init(category: String = "DLOG", config: LogConfig = LogConfig(), metadata: Metadata = Metadata(), output: (@Sendable () -> Output)? = { StdOut }) {
-    self.output = output?()
-    super.init(logger: nil, category: category, config: config, metadata: metadata)
-    logger.value = self
+  func log(item: Log.Item) {
+    queue.async {
+      self.output?.log(item: item)
+    }
   }
 }

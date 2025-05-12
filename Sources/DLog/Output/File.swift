@@ -30,8 +30,7 @@ import Foundation
 /// Target output for a file.
 ///
 public struct File {
-  
-  private let queue = DispatchQueue(label: "dlog.file.queue")
+
   private let file: FileHandle?
   
   /// Initializes and returns the target file output object associated with the specified file.
@@ -71,17 +70,13 @@ public struct File {
 extension File: Output {
   
   public func log(item: Log.Item) {
-   guard item.type != .intervalBegin else {
+   guard let file, item.type != .intervalBegin else {
       return
     }
     
-    if let file {
-      queue.async {
-        let text = item.description
-        if !text.isEmpty, let data = "\(text)\n".data(using: .utf8) {
-          file.write(data)
-        }
-      }
+    let text = item.description
+    if !text.isEmpty, let data = "\(text)\n".data(using: .utf8) {
+      file.write(data)
     }
   }
 }

@@ -161,9 +161,7 @@ public final class LogScope: Log, @unchecked Sendable {
       
       let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
       let item = item(type: .scopeEnter, location: location, stack: stack)
-      Task {
-        logger.value?.output?.log(item: item)
-      }
+      logger.value?.log(item: item)
     }
   }
   
@@ -187,9 +185,7 @@ public final class LogScope: Log, @unchecked Sendable {
       
       let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
       let item = item(type: .scopeLeave, location: location, stack: stack)
-      Task {
-        logger.value?.output?.log(item: item)
-      }
+      logger.value?.log(item: item)
     }
   }
 }

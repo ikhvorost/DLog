@@ -161,8 +161,8 @@ final class DLogTests: XCTestCase {
         StdOut
       }
     }
-    logger.debug("hello")
-    logger.error("hello")
+    logger.debug("debug")
+    logger.error("error")
   }
   
   func test_disabled() {

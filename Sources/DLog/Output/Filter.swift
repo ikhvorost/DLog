@@ -49,5 +49,8 @@ public struct Filter {
 
 extension Filter: Output {
   public func log(item: Log.Item) {}
-  public func pipe(item: Log.Item) -> Bool { body(item) }
+  
+  public func pipe(item: Log.Item) -> Bool {
+    body(item)
+  }
 }

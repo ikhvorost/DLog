@@ -55,13 +55,11 @@ public class Log: @unchecked Sendable {
   }
   
   private func log(message: LogMessage, type: LogType, location: LogLocation) -> Log.Item? {
-    guard let output = logger.value?.output else {
+    guard logger.value?.isEnabled == true else {
       return nil
     }
     let item = Log.Item(category: category, stack: stack(), type: type, location: location, metadata: metadata.value, message: message.text, config: config)
-    Task {
-      output.log(item: item)
-    }
+    logger.value?.log(item: item)
     return item
   }
   
@@ -102,14 +100,12 @@ public class Log: @unchecked Sendable {
   ///
   @discardableResult
   public func trace(_ message: LogMessage = "", fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> LogTrace? {
-    guard let output = logger.value?.output else {
+    guard logger.value?.isEnabled == true else {
       return nil
     }
     let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
     let item = LogTrace(category: category, stack: stack(), location: location, metadata: metadata.value, message: message.text, config: config)
-    Task {
-      output.log(item: item)
-    }
+    logger.value?.log(item: item)
     return item
   }
   
@@ -211,7 +207,7 @@ public class Log: @unchecked Sendable {
   ///
   @discardableResult
   public func assert(_ condition: @autoclosure () -> Bool, _ message: LogMessage = "", fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
-    guard logger.value?.output != nil && !condition() else {
+    guard logger.value?.isEnabled == true && !condition() else {
       return nil
     }
     return log(message: message, type: .assert, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
@@ -257,7 +253,7 @@ public class Log: @unchecked Sendable {
   ///
   @discardableResult
   public func scope(_ name: String, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line, closure: (@Sendable (LogScope) -> Void)? = nil) -> LogScope? {
-    guard let logger = logger.value, logger.output != nil else {
+    guard let logger = logger.value, logger.isEnabled == true else {
       return nil
     }
     let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
@@ -290,7 +286,7 @@ public class Log: @unchecked Sendable {
   ///
   @discardableResult
   public func interval(_ name: StaticString, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line, closure: (@Sendable () -> Void)? = nil) -> LogInterval? {
-    guard let logger = logger.value, logger.output != nil else {
+    guard let logger = logger.value, logger.isEnabled else {
       return nil
     }
     let location = LogLocation(fileID: fileID, file: file, function: function, line: line)

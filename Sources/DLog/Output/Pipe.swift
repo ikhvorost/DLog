@@ -39,9 +39,10 @@ extension Pipe: Output {
   
   public func log(item: Log.Item) {
     for output in outputs {
-      if output.pipe(item: item) {
-        output.log(item: item)
+      guard output.pipe(item: item) else {
+        break
       }
+      output.log(item: item)
     }
   }
 }
