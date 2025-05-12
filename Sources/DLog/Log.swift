@@ -59,7 +59,9 @@ public class Log: @unchecked Sendable {
       return nil
     }
     let item = Log.Item(category: category, stack: stack(), type: type, location: location, metadata: metadata.value, message: message.text, config: config)
-    output.log(item: item)
+    Task {
+      output.log(item: item)
+    }
     return item
   }
   
@@ -105,7 +107,9 @@ public class Log: @unchecked Sendable {
     }
     let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
     let item = LogTrace(category: category, stack: stack(), location: location, metadata: metadata.value, message: message.text, config: config)
-    output.log(item: item)
+    Task {
+      output.log(item: item)
+    }
     return item
   }
   

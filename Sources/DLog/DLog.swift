@@ -30,7 +30,7 @@ import Foundation
 ///
 public final class DLog: Log, @unchecked Sendable {
   
-  let output: LogOutput?
+  let output: Output? // private
   
   /// The shared disabled logger.
   ///
@@ -38,7 +38,7 @@ public final class DLog: Log, @unchecked Sendable {
   ///
   /// 	let logger = DLog.disabled
   ///
-  public static let disabled = DLog(nil)
+  public static let disabled = DLog(output: nil)
   
   /// Creates a logger object that assigns log messages to a specified category.
   ///
@@ -84,14 +84,9 @@ public final class DLog: Log, @unchecked Sendable {
   /// - Parameters:
   /// 	- output: A target output object. If it is omitted the logger uses `stdout` by default.
   ///
-  public init(_ output: LogOutput? = .stdout, category: String = "DLOG", config: LogConfig = LogConfig(), metadata: Metadata = Metadata()) {
-    self.output = output
+  public init(category: String = "DLOG", config: LogConfig = LogConfig(), metadata: Metadata = Metadata(), output: (@Sendable () -> Output)? = { StdOut }) {
+    self.output = output?()
     super.init(logger: nil, category: category, config: config, metadata: metadata)
     logger.value = self
-  }
-  
-  /// Creates the default logger.
-  public convenience init() {
-    self.init(_:category:config:metadata:)()
   }
 }

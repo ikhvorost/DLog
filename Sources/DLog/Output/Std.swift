@@ -23,29 +23,14 @@
 //  THE SOFTWARE.
 //
 
-
 import Foundation
 
 
-#if swift(>=6.0)
-extension UnsafeMutablePointer<FILE>: @retroactive @unchecked Sendable {}
-#endif
-
 /// A target output that can output text messages to POSIX streams.
 ///
-public final class Standard: LogOutput, @unchecked Sendable {
+public struct Std {
   
-  private static let isTesting = NSClassFromString("XCTestCase") != nil
-  
-  private let queue = DispatchQueue(label: "com.dlog.std")
   private let stream: UnsafeMutablePointer<FILE>
-  
-  private static func send(item: Log.Item, stream: UnsafeMutablePointer<FILE>) {
-    let text = item.description
-    if !text.isEmpty {
-      fputs("\(text)\n", stream)
-    }
-  }
   
   /// Creates `Standard` output object.
   ///
@@ -56,27 +41,29 @@ public final class Standard: LogOutput, @unchecked Sendable {
   ///		- stream: POSIX stream: `Darwin.stdout`, `Darwin.stderr`.
   ///		- source: A source output (defaults to `.textPlain`).
   ///
-  public init(stream: UnsafeMutablePointer<FILE> = Darwin.stdout) {
+  init(stream: UnsafeMutablePointer<FILE>) {
     self.stream = stream
   }
+}
+
+extension Std: Output {
   
-  // MARK: - LogOutput
-  
-  override func log(item: Log.Item) {
-    super.log(item: item)
-    
+  public func log(item: Log.Item) {
     guard item.type != .intervalBegin else {
       return
     }
     
-    // Testing
-    if Self.isTesting {
-      Self.send(item: item, stream: stream)
-    }
-    else {
-      queue.async { [stream] in
-        Self.send(item: item, stream: stream)
-      }
+    let text = item.description
+    if !text.isEmpty {
+      fputs("\(text)\n", stream)
     }
   }
+}
+
+public var StdOut: Std {
+  Std(stream: Darwin.stdout)
+}
+
+public var StdErr: Std {
+  Std(stream: Darwin.stderr)
 }

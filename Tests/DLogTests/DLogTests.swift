@@ -153,6 +153,18 @@ func log_all(_ log: Log, message: LogMessage) -> [TestLog] {
 
 final class DLogTests: XCTestCase {
   
+  func test() {
+    let logger = DLog {
+      Pipe {
+        StdOut
+        Filter { $0.type == .error }
+        StdOut
+      }
+    }
+    logger.debug("hello")
+    logger.error("hello")
+  }
+  
   func test_disabled() {
     let logger = DLog.disabled
     

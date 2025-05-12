@@ -222,7 +222,9 @@ public final class LogInterval: Sendable {
     let stats = Stats.shared.get(id: id)
     let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
     let item = item(type: .intervalBegin, location: location, stats: stats)
-    logger.output?.log(item: item)
+    Task {
+      logger.output?.log(item: item)
+    }
   }
   
   /// Finish a time interval.
@@ -245,6 +247,8 @@ public final class LogInterval: Sendable {
     let stats = Stats.shared.update(id: id, duration: -duration)
     let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
     let item = item(type: .intervalEnd, location: location, stats: stats)
-    logger.output?.log(item: item)
+    Task {
+      logger.output?.log(item: item)
+    }
   }
 }

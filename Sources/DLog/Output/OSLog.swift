@@ -35,7 +35,7 @@ import os.activity
 /// It captures telemetry from your app for debugging and performance analysis and then you can use various tools to
 /// retrieve log information such as: `Console` and `Instruments` apps, command line tool `"log"` etc.
 ///
-public final class OSLog: LogOutput, @unchecked Sendable {
+struct OSLog {
   
   private static let types: [LogType : OSLogType] = [
     .log : .default,
@@ -81,12 +81,11 @@ public final class OSLog: LogOutput, @unchecked Sendable {
       return log
     }
   }
+}
   
-  // MARK: - LogOutput
+extension OSLog: Output {
   
-  override func log(item: Log.Item) {
-    super.log(item: item)
-    
+  public func log(item: Log.Item) {
     switch item {
       // Scope
       case let scope as LogScope.Item:

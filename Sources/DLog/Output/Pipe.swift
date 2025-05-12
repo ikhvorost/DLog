@@ -1,8 +1,8 @@
 //
-//  Filter.swift
+//  Pipe.swift
 //
-//  Created by Iurii Khvorost <iurii.khvorost@gmail.com> on 2020/08/30.
-//  Copyright © 2020 Iurii Khvorost. All rights reserved.
+//  Created by Iurii Khvorost <iurii.khvorost@gmail.com> on 2025/05/10.
+//  Copyright © 2025 Iurii Khvorost. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to deal
@@ -25,32 +25,23 @@
 
 import Foundation
 
-/// Middleware output for filtering
-///
-public final class Filter: LogOutput, @unchecked Sendable {
+
+public struct Pipe {
   
-  private let body: @Sendable (Log.Item) -> Bool
+  let outputs: [Output]
   
-  /// Initializes a filter output that evaluates using a specified block object.
-  ///
-  /// Represents a pipe middleware output that can filter log messages by available fields of an evaluated object.
-  ///
-  ///		// Logs debug messages only
-  ///		let logger = DLog(.textPlain => .filter { $0.type == .debug } => .stdout)
-  ///
-  /// - Parameters:
-  /// 	- block: The block is applied to the object to be evaluated.
-  ///
-  public init(body: @Sendable @escaping (Log.Item) -> Bool) {
-    self.body = body
+  public init(@OutputBuilder outputs: @Sendable () -> [Output]) {
+    self.outputs = outputs()
   }
+}
+
+extension Pipe: Output {
   
-  // MARK: - LogOutput
-  
-  override func log(item: Log.Item) {
-    if body(item) {
-      super.log(item: item)
+  public func log(item: Log.Item) {
+    for output in outputs {
+      if output.pipe(item: item) {
+        output.log(item: item)
+      }
     }
   }
-
 }

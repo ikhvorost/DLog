@@ -29,7 +29,8 @@ import Foundation
 
 /// Target output for a file.
 ///
-public final class File: LogOutput, @unchecked Sendable {
+public struct File {
+  
   private let queue = DispatchQueue(label: "dlog.file.queue")
   private let file: FileHandle?
   
@@ -65,13 +66,12 @@ public final class File: LogOutput, @unchecked Sendable {
       file?.seekToEndOfFile()
     }
   }
+}
+
+extension File: Output {
   
-  // MARK: - LogOutput
-  
-  override func log(item: Log.Item) {
-    super.log(item: item)
-    
-    guard item.type != .intervalBegin else {
+  public func log(item: Log.Item) {
+   guard item.type != .intervalBegin else {
       return
     }
     
