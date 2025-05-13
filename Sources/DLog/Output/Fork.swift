@@ -30,7 +30,7 @@ public struct Fork {
   
   let outputs: [Output]
   
-  public init(@OutputBuilder outputs: () -> [Output]) {
+  public init(@OutputBuilder _ outputs: () -> [Output]) {
     self.outputs = outputs()
   }
 }

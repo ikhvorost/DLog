@@ -30,19 +30,10 @@ import Foundation
 ///
 public struct Std {
   
-  private let stream: Atomic<UnsafeMutablePointer<FILE>>
-  
-  /// Creates `Standard` output object.
-  ///
-  /// 	let logger = DLog(Standard())
-  /// 	logger.info("It's standard output")
-  ///
-  /// - Parameters:
-  ///		- stream: POSIX stream: `Darwin.stdout`, `Darwin.stderr`.
-  ///		- source: A source output (defaults to `.textPlain`).
-  ///
+  private nonisolated(unsafe) let stream: UnsafeMutablePointer<FILE>
+
   init(stream: UnsafeMutablePointer<FILE>) {
-    self.stream = Atomic(stream)
+    self.stream = stream
   }
 }
 
@@ -55,7 +46,7 @@ extension Std: Output {
     
     let text = item.description
     if !text.isEmpty {
-      fputs("\(text)\n", stream.value)
+      fputs("\(text)\n", stream)
     }
   }
 }

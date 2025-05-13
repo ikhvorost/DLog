@@ -26,7 +26,7 @@
 import Foundation
 
 
-extension String {
+fileprivate extension String {
   func color(_ codes: [ANSIEscapeCode]) -> String {
     return codes.map { $0.rawValue }.joined() + self + ANSIEscapeCode.reset.rawValue
   }

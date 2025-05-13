@@ -36,27 +36,12 @@ public final class DLog: Log, @unchecked Sendable {
   ///
   ///   let logger = DLog.disabled
   ///
-  public static let disabled = DLog(output: nil)
+  public static let disabled = DLog { nil }
   
   private let queue = DispatchQueue(label: "dlog.queue")
   private let output: Output?
   
   var isEnabled: Bool { output != nil }
-  
-  /// Creates a logger object that assigns log messages to a specified category.
-  ///
-  /// You can define category name to differentiate unique areas and parts of your app and DLog uses this value
-  /// to categorize and filter related log messages.
-  ///
-  /// 	let logger = DLog()
-  ///     let netLogger = logger["NET"]
-  ///     let netLogger.log("Hello Net!")
-  ///
-  /// - Parameters:
-  ///     - name: Name of category.
-  public subscript(name: String) -> Log {
-    category(name: name)
-  }
   
   /// Creates the logger instance with a target output object.
   ///
@@ -69,8 +54,8 @@ public final class DLog: Log, @unchecked Sendable {
   /// - Parameters:
   /// 	- output: A target output object. If it is omitted the logger uses `stdout` by default.
   ///
-  public init(category: String = "DLOG", config: LogConfig = LogConfig(), metadata: Metadata = Metadata(), output: (() -> Output)? = { StdOut }) {
-    self.output = output?()
+  public init(category: String = "DLOG", config: LogConfig = LogConfig(), metadata: Metadata = Metadata(), _ output: (() -> Output?) = { StdOut }) {
+    self.output = output()
     super.init(logger: nil, category: category, config: config, metadata: metadata)
     logger.value = self
   }
@@ -91,6 +76,21 @@ public final class DLog: Log, @unchecked Sendable {
   ///     - config: Configuration of category.
   public func category(name: String, config: LogConfig? = nil, metadata: Metadata? = nil) -> Log {
     Log(logger: self, category: name, config: config ?? self.config, metadata: metadata ?? self.metadata.value)
+  }
+  
+  /// Creates a logger object that assigns log messages to a specified category.
+  ///
+  /// You can define category name to differentiate unique areas and parts of your app and DLog uses this value
+  /// to categorize and filter related log messages.
+  ///
+  ///   let logger = DLog()
+  ///     let netLogger = logger["NET"]
+  ///     let netLogger.log("Hello Net!")
+  ///
+  /// - Parameters:
+  ///     - name: Name of category.
+  public subscript(name: String) -> Log {
+    category(name: name)
   }
   
   func log(item: Log.Item) {

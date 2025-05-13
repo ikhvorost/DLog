@@ -75,7 +75,7 @@ public struct IntervalConfig: Sendable {
 /// Accumulated interval statistics
 public struct IntervalStats: Sendable {
   
-  static let stats = IntervalStats(count: 0, total: 0, min: 0, max: 0, average: 0)
+  static let empty = IntervalStats(count: 0, total: 0, min: 0, max: 0, average: 0)
   
   /// A number of total calls
   public let count: Int
@@ -93,39 +93,13 @@ public struct IntervalStats: Sendable {
   public let average: TimeInterval
 }
 
-fileprivate final class Stats: @unchecked Sendable {
-  static let shared = Stats()
-  
-  private var stats = [Int : IntervalStats]()
-  
-  func get(id: Int) -> IntervalStats {
-    synchronized(self) {
-      stats[id] ?? IntervalStats(count: 0, total: 0, min: 0, max: 0, average: 0)
-    }
-  }
-  
-  func update(id: Int, duration: Double) -> IntervalStats {
-    synchronized(self) {
-      let stats = stats[id] ?? IntervalStats(count: 0, total: 0, min: 0, max: 0, average: 0)
-      let count = stats.count + 1
-      let total = stats.total + duration
-      let newStats = IntervalStats(
-        count: count,
-        total: total,
-        min: (stats.min == 0 || stats.min > duration) ? duration : stats.min,
-        max: (stats.max == 0 || stats.max < duration) ? duration : stats.max,
-        average: total / Double(count))
-      self.stats[id] = newStats
-      return newStats
-    }
-  }
-}
-
 /// An object that represents a time interval triggered by the user.
 ///
 /// Interval logs a point of interest in your code as running time statistics for debugging performance.
 ///
-public final class LogInterval: Sendable {
+public struct LogInterval: Sendable {
+  
+  private static let stats = Atomic([Int : IntervalStats]())
 
   public final class Item: Log.Item, @unchecked Sendable {
     public let name: StaticString
@@ -184,7 +158,7 @@ public final class LogInterval: Sendable {
   
   /// Accumulated interval statistics
   public var stats: IntervalStats {
-    Stats.shared.get(id: id)
+    Self.stats.value[id] ?? .empty
   }
   
   init(logger: DLog, name: StaticString, category: String, config: LogConfig, stack: [Bool]?, metadata: Metadata, location: LogLocation) {
@@ -219,7 +193,7 @@ public final class LogInterval: Sendable {
     start.value = Date()
     _duration.value = 0
     
-    let stats = Stats.shared.get(id: id)
+    let stats = Self.stats.value[id] ?? .empty
     let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
     let item = item(type: .intervalBegin, location: location, stats: stats)
     logger.log(item: item)
@@ -236,13 +210,26 @@ public final class LogInterval: Sendable {
   /// 	interval.end()
   ///
   public func end(fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) {
-    guard let duration = start.value?.timeIntervalSinceNow else {
+    guard let interval = start.value?.timeIntervalSinceNow else {
       return
     }
-    _duration.value = -duration
+    _duration.value = -interval
     self.start.value = nil
     
-    let stats = Stats.shared.update(id: id, duration: -duration)
+    let stats = Self.stats.sync {
+      let duration = -interval
+      let stats = $0[id] ?? .empty
+      let count = stats.count + 1
+      let total = stats.total + duration
+      let newStats = IntervalStats(
+        count: count,
+        total: total,
+        min: (stats.min == 0 || stats.min > duration) ? duration : stats.min,
+        max: (stats.max == 0 || stats.max < duration) ? duration : stats.max,
+        average: total / Double(count))
+      $0[id] = newStats
+      return newStats
+    }
     let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
     let item = item(type: .intervalEnd, location: location, stats: stats)
     logger.log(item: item)

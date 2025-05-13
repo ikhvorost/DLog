@@ -42,8 +42,8 @@ public struct Filter {
   /// - Parameters:
   /// 	- body: The block is applied to the object to be evaluated.
   ///
-  public init(body: @escaping @Sendable (Log.Item) -> Bool) {
-    self.isIncluded = body
+  public init(_ isIncluded: @escaping @Sendable (Log.Item) -> Bool) {
+    self.isIncluded = isIncluded
   }
 }
 
