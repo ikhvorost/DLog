@@ -27,57 +27,13 @@ import Foundation
 import os.log
 
 
-fileprivate final class Stack: @unchecked Sendable {
-  static let shared = Stack()
-  
-  var scopes = [LogScope]()
-  
-  private func _stack(level: Int) -> [Bool] {
-    var stack = [Bool](repeating: false, count: level - 1)
-    scopes.map { $0.level }
-      .map { $0 - 1}
-      .forEach {
-        if $0 < stack.count {
-          stack[$0] = true
-        }
-      }
-    return stack
-  }
-  
-  func stack(level: Int) -> [Bool] {
-    synchronized(self) {
-      _stack(level: level)
-    }
-  }
-  
-  func add(scope: LogScope, completion: (Int, [Bool]) -> Void) {
-    synchronized(self) {
-      guard scopes.contains(scope) == false else {
-        return
-      }
-      let level = (scopes.map { $0.level }.max() ?? 0) + 1
-      let stack = _stack(level: level)
-      scopes.append(scope)
-      completion(level, stack)
-    }
-  }
-  
-  func remove(scope: LogScope, level: Int, completion: ([Bool]) -> Void) {
-    synchronized(self) {
-      guard let index = scopes.firstIndex(of: scope) else {
-        return
-      }
-      scopes.remove(at: index)
-      completion(_stack(level: level))
-    }
-  }
-}
-
 /// An object that represents a scope triggered by the user.
 ///
 /// Scope provides a mechanism for grouping log messages.
 ///
 public final class LogScope: Log, @unchecked Sendable {
+  
+  private static let scopes = Atomic([LogScope]())
   
   public final class Item: Log.Item, @unchecked Sendable {
     public let level: Int
@@ -116,7 +72,7 @@ public final class LogScope: Log, @unchecked Sendable {
   private let start = Atomic(Date())
   
   var stack: [Bool]? {
-    level > 0 ? Stack.shared.stack(level: level) : nil
+    level > 0 ? Self.stack(scopes: Self.scopes.value, level: level) : nil
   }
   
   public let name: String
@@ -130,6 +86,18 @@ public final class LogScope: Log, @unchecked Sendable {
     _duration.value
   }
   private let _duration = Atomic(0.0)
+  
+  private static func stack(scopes: [LogScope], level: Int) -> [Bool] {
+    var stack = [Bool](repeating: false, count: level - 1)
+    scopes.map { $0.level }
+      .map { $0 - 1}
+      .forEach {
+        if $0 < stack.count {
+          stack[$0] = true
+        }
+      }
+    return stack
+  }
 
   init(name: String, logger: DLog, category: String, config: LogConfig, metadata: Metadata, location: LogLocation) {
     self.name = name
@@ -154,7 +122,15 @@ public final class LogScope: Log, @unchecked Sendable {
   ///     scope.leave()
   ///
   public func enter(fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) {
-    Stack.shared.add(scope: self) { level, stack in
+    Self.scopes.sync {
+      guard $0.contains(self) == false else {
+        return
+      }
+      
+      let level = ($0.map { $0.level }.max() ?? 0) + 1
+      let stack = Self.stack(scopes: $0, level: level)
+      $0.append(self)
+      
       _level.value = level
       start.value = Date()
       _duration.value = 0
@@ -179,7 +155,13 @@ public final class LogScope: Log, @unchecked Sendable {
   ///     scope.leave()
   ///
   public func leave(fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) {
-    Stack.shared.remove(scope: self, level: level) { stack in
+    Self.scopes.sync {
+      guard let index = $0.firstIndex(of: self) else {
+        return
+      }
+      $0.remove(at: index)
+      let stack = Self.stack(scopes: $0, level: level)
+      
       _level.value = 0
       _duration.value = -start.value.timeIntervalSinceNow
       
