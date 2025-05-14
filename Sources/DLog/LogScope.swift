@@ -44,11 +44,13 @@ public final class LogScope: Log, @unchecked Sendable {
   
   public let name: String
   
+  // Level
   public var level: Int {
     _level.value
   }
   private let _level = Atomic(0)
   
+  // Duration
   public var duration: TimeInterval {
     _duration.value
   }
@@ -72,7 +74,8 @@ public final class LogScope: Log, @unchecked Sendable {
   }
   
   private func item(type: LogType, location: LogLocation, stack: [Bool]) -> LogScopeItem {
-    LogScopeItem(category: category, stack: stack, type: type, location: location, metadata: metadata.value, message: name, config: config, activity: activity, level: level, duration: duration)
+    let message = LogMessage(stringLiteral: name)
+    return LogScopeItem(category: category, stack: stack, type: type, location: location, metadata: metadata.value, message: message, config: config, activity: activity, level: level, duration: duration)
   }
   
   /// Start a scope.

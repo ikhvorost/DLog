@@ -139,7 +139,7 @@ public struct LogInterval: Sendable {
   }
   
   /// Start a time interval.
-  /// 
+  ///
   /// A time interval can be created and then used for logging running time statistics.
   ///
   /// 	let logger = DLog()

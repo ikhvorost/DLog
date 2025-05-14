@@ -1,5 +1,5 @@
 //
-//  LogScopeItem.swift
+//  LogLocation.swift
 //
 //  Created by Iurii Khvorost <iurii.khvorost@gmail.com> on 2025/05/14.
 //  Copyright © 2020 Iurii Khvorost. All rights reserved.
@@ -24,38 +24,29 @@
 //
 
 import Foundation
-import os.log
 
 
-public final class LogScopeItem: LogItem, @unchecked Sendable {
-  let activity: Atomic<os_activity_scope_state_s>
+/// The location of a log message.
+public struct LogLocation: Sendable {
+  /// The file ID.
+  public let fileID: String
   
-  public let level: Int
-  public let duration: TimeInterval
+  /// The file path.
+  public let file: String
   
-  init(category: String, stack: [Bool], type: LogType, location: LogLocation, metadata: Metadata, message: LogMessage, config: LogConfig, activity: Atomic<os_activity_scope_state_s>, level: Int, duration: TimeInterval) {
-    self.activity = activity
-    self.level = level
-    self.duration = duration
-    
-    super.init(category: category, stack: stack, type: type, location: location, metadata: metadata, message: message, config: config)
+  /// The function name.
+  public let function: String
+  
+  /// The line number.
+  public let line: UInt
+  
+  /// The module name.
+  public var moduleName: String {
+    (fileID as NSString).pathComponents.first!
   }
   
-  override func padding() -> String {
-    let text = super.padding()
-    return text.replacingOccurrences(of: "├", with: duration == 0 ? "┌" : "└")
-  }
-  
-  override func typeText() -> String {
-    let text = super.typeText()
-    return text.replacingOccurrences(of: "[SCOPE]", with: "[SCOPE:\(message)]")
-  }
-  
-  override func data() -> LogData? {
-    duration > 0 ? ["duration": stringFromTimeInterval(duration)] : nil
-  }
-  
-  override func messageText() -> String {
-    ""
+  /// The file name.
+  public var fileName: String {
+    (file as NSString).lastPathComponent
   }
 }

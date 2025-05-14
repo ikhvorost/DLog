@@ -58,7 +58,7 @@ public class Log: @unchecked Sendable {
     guard logger.value?.isEnabled == true else {
       return nil
     }
-    let item = LogItem(category: category, stack: stack(), type: type, location: location, metadata: metadata.value, message: message.text, config: config)
+    let item = LogItem(category: category, stack: stack(), type: type, location: location, metadata: metadata.value, message: message, config: config)
     logger.value?.log(item: item)
     return item
   }
@@ -104,7 +104,7 @@ public class Log: @unchecked Sendable {
       return nil
     }
     let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
-    let item = LogTraceItem(category: category, stack: stack(), location: location, metadata: metadata.value, message: message.text, config: config)
+    let item = LogTraceItem(category: category, stack: stack(), location: location, metadata: metadata.value, message: message, config: config)
     logger.value?.log(item: item)
     return item
   }

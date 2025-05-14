@@ -47,110 +47,6 @@ fileprivate extension Array where Element == String {
   }
 }
 
-/// The location of a log message.
-public struct LogLocation: Sendable {
-  /// The file ID.
-  public let fileID: String
-  
-  /// The file path.
-  public let file: String
-  
-  /// The function name.
-  public let function: String
-  
-  /// The line number.
-  public let line: UInt
-  
-  /// The module name.
-  public var moduleName: String {
-    (fileID as NSString).pathComponents.first!
-  }
-  
-  /// The file name.
-  public var fileName: String {
-    (file as NSString).lastPathComponent
-  }
-}
-
-/// Logging levels supported by the logger.
-///
-/// A log type controls the conditions under which a message should be logged.
-///
-public enum LogType: Int {
-  /// The default log level to capture non critical information.
-  case log
-  
-  /// The informational log level to capture information messages and helpful data.
-  case info
-  
-  /// The trace log level to capture the current function name to help in debugging problems during the development.
-  case trace
-  
-  /// The debug log level to capture information that may be useful during development or while troubleshooting a specific problem.
-  case debug
-  
-  /// The warning log level to capture information about things that might result in an error.
-  case warning
-  
-  /// The error log level to report errors.
-  case error
-  
-  /// The assert log level for sanity checks.
-  case assert
-  
-  /// The fault log level to capture system-level or multi-process information when reporting system errors.
-  case fault
-  
-  /// The interval log level.
-  case intervalBegin
-  case intervalEnd
-  
-  /// The scope log level.
-  case scopeEnter
-  case scopeLeave
-}
-
-extension LogType: Sendable {
-  
-  static let icons: [LogType : String] = [
-    .log : "💬",
-    .trace : "#️⃣",
-    .debug : "▶️",
-    .info : "✅",
-    .warning: "⚠️",
-    .error : "⚠️",
-    .assert : "🅰️",
-    .fault : "🆘",
-    .intervalBegin : "🕛",
-    .intervalEnd : "🕑",
-    .scopeEnter: "⬇️",
-    .scopeLeave: "⬆️",
-  ]
-  
-  var icon: String {
-    Self.icons[self]!
-  }
-  
-  static let titles: [LogType : String] = [
-    .log : "LOG",
-    .trace : "TRACE",
-    .debug : "DEBUG",
-    .info : "INFO",
-    .warning : "WARNING",
-    .error : "ERROR",
-    .assert : "ASSERT",
-    .fault : "FAULT",
-    .intervalBegin : "INTERVAL",
-    .intervalEnd : "INTERVAL",
-    .scopeEnter : "SCOPE",
-    .scopeLeave : "SCOPE",
-  ]
-  
-  var title: String {
-    Self.titles[self]!
-  }
-}
-
 fileprivate enum ANSIEscapeCode: String {
   case reset = "\u{001b}[0m"
   case clear = "\u{001b}c"
@@ -224,10 +120,10 @@ public class LogItem: @unchecked Sendable {
   public let type: LogType
   public let location: LogLocation
   public let metadata: Metadata
-  public let message: String
+  public let message: LogMessage
   public let config: LogConfig
   
-  init(category: String, stack: [Bool]?, type: LogType, location: LogLocation, metadata: Metadata, message: String, config: LogConfig) {
+  init(category: String, stack: [Bool]?, type: LogType, location: LogLocation, metadata: Metadata, message: LogMessage, config: LogConfig) {
     self.category = category
     self.stack = stack
     self.type = type
@@ -263,9 +159,10 @@ public class LogItem: @unchecked Sendable {
   
   func messageText() -> String {
     let tag = LogItem.tags[self.type]!
+    let text = message.text
     return switch config.style {
-      case .plain, .emoji: message
-      case .colored: message.color(tag.textColor)
+      case .plain, .emoji: text
+      case .colored: text.color(tag.textColor)
     }
   }
 }

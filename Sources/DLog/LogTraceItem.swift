@@ -43,7 +43,7 @@ public struct TraceInfo {
 public final class LogTraceItem: LogItem, @unchecked Sendable {
   public let traceInfo = TraceInfo()
   
-  init(category: String, stack: [Bool]?, location: LogLocation, metadata: Metadata, message: String, config: LogConfig) {
+  init(category: String, stack: [Bool]?, location: LogLocation, metadata: Metadata, message: LogMessage, config: LogConfig) {
     super.init(category: category, stack: stack, type: .trace, location: location, metadata: metadata, message: message, config: config)
   }
   
