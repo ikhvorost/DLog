@@ -26,7 +26,6 @@
 
 import Foundation
 import os
-import os.log
 import os.activity
 
 
@@ -85,10 +84,10 @@ struct OSLog {
   
 extension OSLog: Output {
   
-  public func log(item: Log.Item) {
+  public func log(item: LogItem) {
     switch item {
       // Scope
-      case let scope as LogScope.Item:
+      case let scope as LogScopeItem:
         guard let os_activity_current = Dynamic.OS_ACTIVITY_CURRENT else {
           break
         }
@@ -104,7 +103,7 @@ extension OSLog: Output {
         }
 
       // Interval
-      case let interval as LogInterval.Item:
+      case let interval as LogIntervalItem:
         let log = oslog(category: interval.category)
         let id = interval.signpostId.value ?? OSSignpostID(log: log)
         interval.signpostId.value = id

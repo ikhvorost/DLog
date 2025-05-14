@@ -40,7 +40,7 @@ public struct TraceInfo {
   }
 }
 
-public final class LogTrace: Log.Item, @unchecked Sendable {
+public final class LogTraceItem: LogItem, @unchecked Sendable {
   public let traceInfo = TraceInfo()
   
   init(category: String, stack: [Bool]?, location: LogLocation, metadata: Metadata, message: String, config: LogConfig) {

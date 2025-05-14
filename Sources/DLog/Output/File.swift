@@ -69,7 +69,7 @@ public struct File {
 
 extension File: Output {
   
-  public func log(item: Log.Item) {
+  public func log(item: LogItem) {
    guard let file, item.type != .intervalBegin else {
       return
     }

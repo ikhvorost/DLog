@@ -35,39 +35,6 @@ public final class LogScope: Log, @unchecked Sendable {
   
   private static let scopes = Atomic([LogScope]())
   
-  public final class Item: Log.Item, @unchecked Sendable {
-    public let level: Int
-    public let duration: TimeInterval
-    
-    let activity: Atomic<os_activity_scope_state_s>
-    
-    init(category: String, stack: [Bool], type: LogType, location: LogLocation, metadata: Metadata, message: String, config: LogConfig, activity: Atomic<os_activity_scope_state_s>, level: Int, duration: TimeInterval) {
-      self.activity = activity
-      self.level = level
-      self.duration = duration
-      
-      super.init(category: category, stack: stack, type: type, location: location, metadata: metadata, message: message, config: config)
-    }
-    
-    override func padding() -> String {
-      let text = super.padding()
-      return text.replacingOccurrences(of: "├", with: duration == 0 ? "┌" : "└")
-    }
-    
-    override func typeText() -> String {
-      let text = super.typeText()
-      return text.replacingOccurrences(of: "[SCOPE]", with: "[SCOPE:\(message)]")
-    }
-    
-    override func data() -> LogData? {
-      duration > 0 ? ["duration": stringFromTimeInterval(duration)] : nil
-    }
-    
-    override func messageText() -> String {
-      ""
-    }
-  }
-  
   private let activity = Atomic(os_activity_scope_state_s())
   private let start = Atomic(Date())
   
@@ -104,8 +71,8 @@ public final class LogScope: Log, @unchecked Sendable {
     super.init(logger: logger, category: category, config: config, metadata: metadata)
   }
   
-  private func item(type: LogType, location: LogLocation, stack: [Bool]) -> Item {
-    Item(category: category, stack: stack, type: type, location: location, metadata: metadata.value, message: name, config: config, activity: activity, level: level, duration: duration)
+  private func item(type: LogType, location: LogLocation, stack: [Bool]) -> LogScopeItem {
+    LogScopeItem(category: category, stack: stack, type: type, location: location, metadata: metadata.value, message: name, config: config, activity: activity, level: level, duration: duration)
   }
   
   /// Start a scope.

@@ -39,7 +39,7 @@ public struct Std {
 
 extension Std: Output {
   
-  public func log(item: Log.Item) {
+  public func log(item: LogItem) {
     guard item.type != .intervalBegin else {
       return
     }

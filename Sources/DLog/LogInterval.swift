@@ -100,44 +100,6 @@ public struct IntervalStats: Sendable {
 public struct LogInterval: Sendable {
   
   private static let stats = Atomic([Int : IntervalStats]())
-
-  public final class Item: Log.Item, @unchecked Sendable {
-    public let name: StaticString
-    public let duration: TimeInterval
-    public let stats: IntervalStats
-    
-    let signpostId: Atomic<OSSignpostID?>
-    
-    init(category: String, stack: [Bool]?, type: LogType, location: LogLocation, metadata: Metadata, name: StaticString, config: LogConfig, duration: TimeInterval, stats: IntervalStats, signpostId: Atomic<OSSignpostID?>) {
-      self.signpostId = signpostId
-      self.name = name
-      self.duration = duration
-      self.stats = stats
-      
-      super.init(category: category, stack: stack, type: type, location: location, metadata: metadata, message: "\(name)", config: config)
-    }
-    
-    override func typeText() -> String {
-      let text = super.typeText()
-      return text.replacingOccurrences(of: "[INTERVAL]", with: "[INTERVAL:\(message)]")
-    }
-    
-    override func data() -> LogData? {
-      let items: [(IntervalOptions, String, Any)] = [
-        (.duration, "duration", stringFromTimeInterval(duration)),
-        (.count, "count", stats.count),
-        (.total, "total", stringFromTimeInterval(stats.total)),
-        (.min, "min", stringFromTimeInterval(stats.min)),
-        (.max, "max", stringFromTimeInterval(stats.max)),
-        (.average, "average", stringFromTimeInterval(stats.average)),
-      ]
-      return LogData.data(from: items, options: config.intervalConfig.options)
-    }
-    
-    override func messageText() -> String {
-      ""
-    }
-  }
   
   private let logger: DLog
   private let signpostId = Atomic<OSSignpostID?>(nil)
@@ -172,12 +134,12 @@ public struct LogInterval: Sendable {
     self.id = "\(name):\(location.file):\(location.function):\(location.line)".hash
   }
   
-  private func item(type: LogType, location: LogLocation, stats: IntervalStats) -> Item {
-    Item(category: category, stack: stack, type: type, location: location, metadata: metadata, name: name, config: config, duration: duration, stats: stats, signpostId: signpostId)
+  private func item(type: LogType, location: LogLocation, stats: IntervalStats) -> LogIntervalItem {
+    LogIntervalItem(category: category, stack: stack, type: type, location: location, metadata: metadata, name: name, config: config, duration: duration, stats: stats, signpostId: signpostId)
   }
   
   /// Start a time interval.
-  ///
+  /// 
   /// A time interval can be created and then used for logging running time statistics.
   ///
   /// 	let logger = DLog()

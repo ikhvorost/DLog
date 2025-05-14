@@ -54,11 +54,11 @@ public class Log: @unchecked Sendable {
     return nil
   }
   
-  private func log(message: LogMessage, type: LogType, location: LogLocation) -> Log.Item? {
+  private func log(message: LogMessage, type: LogType, location: LogLocation) -> LogItem? {
     guard logger.value?.isEnabled == true else {
       return nil
     }
-    let item = Log.Item(category: category, stack: stack(), type: type, location: location, metadata: metadata.value, message: message.text, config: config)
+    let item = LogItem(category: category, stack: stack(), type: type, location: location, metadata: metadata.value, message: message.text, config: config)
     logger.value?.log(item: item)
     return item
   }
@@ -79,7 +79,7 @@ public class Log: @unchecked Sendable {
   /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   ///
   @discardableResult
-  public func log(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
+  public func log(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> LogItem? {
     log(message: message, type: .log, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
   }
   
@@ -99,12 +99,12 @@ public class Log: @unchecked Sendable {
   /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   ///
   @discardableResult
-  public func trace(_ message: LogMessage = "", fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> LogTrace? {
+  public func trace(_ message: LogMessage = "", fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> LogTraceItem? {
     guard logger.value?.isEnabled == true else {
       return nil
     }
     let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
-    let item = LogTrace(category: category, stack: stack(), location: location, metadata: metadata.value, message: message.text, config: config)
+    let item = LogTraceItem(category: category, stack: stack(), location: location, metadata: metadata.value, message: message.text, config: config)
     logger.value?.log(item: item)
     return item
   }
@@ -125,7 +125,7 @@ public class Log: @unchecked Sendable {
   /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   ///
   @discardableResult
-  public func debug(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
+  public func debug(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> LogItem? {
     log(message: message, type: .debug, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
   }
   
@@ -145,7 +145,7 @@ public class Log: @unchecked Sendable {
   /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   ///
   @discardableResult
-  public func info(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
+  public func info(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> LogItem? {
     log(message: message, type: .info, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
   }
   
@@ -165,7 +165,7 @@ public class Log: @unchecked Sendable {
   /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   ///
   @discardableResult
-  public func warning(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
+  public func warning(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> LogItem? {
     log(message: message, type: .warning, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
   }
   
@@ -185,7 +185,7 @@ public class Log: @unchecked Sendable {
   /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   ///
   @discardableResult
-  public func error(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
+  public func error(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> LogItem? {
     log(message: message, type: .error, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
   }
   
@@ -206,7 +206,7 @@ public class Log: @unchecked Sendable {
   /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   ///
   @discardableResult
-  public func assert(_ condition: @autoclosure () -> Bool, _ message: LogMessage = "", fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
+  public func assert(_ condition: @autoclosure () -> Bool, _ message: LogMessage = "", fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> LogItem? {
     guard logger.value?.isEnabled == true && !condition() else {
       return nil
     }
@@ -229,7 +229,7 @@ public class Log: @unchecked Sendable {
   /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   ///
   @discardableResult
-  public func fault(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> Log.Item? {
+  public func fault(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> LogItem? {
     log(message: message, type: .fault, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
   }
   

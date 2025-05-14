@@ -93,7 +93,7 @@ public final class DLog: Log, @unchecked Sendable {
     category(name: name)
   }
   
-  func log(item: Log.Item) {
+  func log(item: LogItem) {
     queue.async { [output] in
       output?.log(item: item)
     }

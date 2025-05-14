@@ -37,7 +37,7 @@ public struct Pipe {
 
 extension Pipe: Output {
   
-  public func log(item: Log.Item) {
+  public func log(item: LogItem) {
     for output in outputs {
       guard output.pipe(item: item) else {
         break

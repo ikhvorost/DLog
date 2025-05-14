@@ -27,11 +27,11 @@ import Foundation
 
 
 public protocol Output: Sendable {
-  func log(item: Log.Item)
-  func pipe(item: Log.Item) -> Bool
+  func log(item: LogItem)
+  func pipe(item: LogItem) -> Bool
 }
 
 public extension Output {
-  func log(item: Log.Item) {}
-  func pipe(item: Log.Item) -> Bool { true }
+  func log(item: LogItem) {}
+  func pipe(item: LogItem) -> Bool { true }
 }

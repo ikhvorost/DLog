@@ -134,7 +134,7 @@ let Empty = ">$"
 
 
 struct TestLog {
-  let item: Log.Item?
+  let item: LogItem?
   let type: LogType
 }
 
@@ -161,8 +161,13 @@ final class DLogTests: XCTestCase {
         StdOut
       }
     }
-    logger.debug("debug")
-    logger.error("error")
+    let interval = logger.interval("dd")
+    interval?.begin()
+    DispatchQueue.global().async {
+      logger.debug("debug")
+      logger.error("error")
+      interval?.end()
+    }
   }
   
   func test_disabled() {
@@ -315,7 +320,7 @@ final class LogTests: XCTestCase {
       delay()
     }
     XCTAssert("\(interval!.name)" == "interval")
-    XCTAssert(interval?.duration ?? 0 >= 0.25)
+    XCTAssert((interval?.duration ?? 0) >= 0.25)
     if let stats = interval?.stats {
       XCTAssert(stats.count == 1)
       XCTAssert(stats.total >= 0.25)

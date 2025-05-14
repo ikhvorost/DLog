@@ -151,7 +151,7 @@ extension LogType: Sendable {
   }
 }
 
-enum ANSIEscapeCode: String {
+fileprivate enum ANSIEscapeCode: String {
   case reset = "\u{001b}[0m"
   case clear = "\u{001b}c"
   
@@ -180,105 +180,101 @@ enum ANSIEscapeCode: String {
   case backgroundCyan = "\u{001b}[46m"
   case backgroundWhite = "\u{001b}[47m"
 }
-
-extension Log {
   
-  public class Item: @unchecked Sendable {
-    struct Tag {
-      let textColor: ANSIEscapeCode
-      let colors: [ANSIEscapeCode]
-    }
-    
-    static let tags: [LogType : Tag] = [
-      .log : Tag(textColor: .textWhite, colors: [.backgroundWhite, .textBlack]),
-      .info : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textWhite]),
-      .trace : Tag(textColor: .textCyan, colors: [.backgroundCyan, .textBlack]),
-      .debug : Tag(textColor: .textCyan, colors: [.backgroundCyan, .textBlack]),
-      .warning : Tag(textColor: .textYellow, colors: [.backgroundYellow, .textBlack]),
-      .error : Tag(textColor: .textYellow, colors: [.backgroundYellow, .textBlack]),
-      .fault : Tag(textColor: .textRed, colors: [.backgroundRed, .textWhite, .blink]),
-      .assert : Tag(textColor: .textRed, colors: [.backgroundRed, .textWhite]),
-      .intervalBegin : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textBlack]),
-      .intervalEnd : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textBlack]),
-      .scopeEnter : Tag(textColor: .textMagenta, colors: [.backgroundMagenta, .textBlack]),
-      .scopeLeave : Tag(textColor: .textMagenta, colors: [.backgroundMagenta, .textBlack]),
-    ]
-    
-    static let dateFormatter: DateFormatter = {
-      let dateFormatter = DateFormatter()
-      dateFormatter.dateFormat = "HH:mm:ss.SSS"
-      return dateFormatter
-    }()
-    
-    static func logPrefix(items: [(type: LogOptions, text: String)], options: LogOptions) -> String {
-      items.compactMap {
-        guard !$0.text.isEmpty && ($0.type == .message || options.contains($0.type)) else {
-          return nil
-        }
-        return $0.text.trimTrailingWhitespace()
+public class LogItem: @unchecked Sendable {
+  fileprivate struct Tag {
+    let textColor: ANSIEscapeCode
+    let colors: [ANSIEscapeCode]
+  }
+  
+  fileprivate static let tags: [LogType : Tag] = [
+    .log : Tag(textColor: .textWhite, colors: [.backgroundWhite, .textBlack]),
+    .info : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textWhite]),
+    .trace : Tag(textColor: .textCyan, colors: [.backgroundCyan, .textBlack]),
+    .debug : Tag(textColor: .textCyan, colors: [.backgroundCyan, .textBlack]),
+    .warning : Tag(textColor: .textYellow, colors: [.backgroundYellow, .textBlack]),
+    .error : Tag(textColor: .textYellow, colors: [.backgroundYellow, .textBlack]),
+    .fault : Tag(textColor: .textRed, colors: [.backgroundRed, .textWhite, .blink]),
+    .assert : Tag(textColor: .textRed, colors: [.backgroundRed, .textWhite]),
+    .intervalBegin : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textBlack]),
+    .intervalEnd : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textBlack]),
+    .scopeEnter : Tag(textColor: .textMagenta, colors: [.backgroundMagenta, .textBlack]),
+    .scopeLeave : Tag(textColor: .textMagenta, colors: [.backgroundMagenta, .textBlack]),
+  ]
+  
+  static let dateFormatter: DateFormatter = {
+    let dateFormatter = DateFormatter()
+    dateFormatter.dateFormat = "HH:mm:ss.SSS"
+    return dateFormatter
+  }()
+  
+  static func logPrefix(items: [(type: LogOptions, text: String)], options: LogOptions) -> String {
+    items.compactMap {
+      guard !$0.text.isEmpty && ($0.type == .message || options.contains($0.type)) else {
+        return nil
       }
-      .joinedCompact()
+      return $0.text.trimTrailingWhitespace()
     }
-    
-    public let time = Date()
-    public let category: String
-    public let stack: [Bool]?
-    public let type: LogType
-    public let location: LogLocation
-    public let metadata: Metadata
-    public let message: String
-    public let config: LogConfig
-    
-    init(category: String, stack: [Bool]?, type: LogType, location: LogLocation, metadata: Metadata, message: String, config: LogConfig) {
-      self.category = category
-      self.stack = stack
-      self.type = type
-      self.location = location
-      self.metadata = metadata
-      self.message = message
-      self.config = config
+    .joinedCompact()
+  }
+  
+  public let time = Date()
+  public let category: String
+  public let stack: [Bool]?
+  public let type: LogType
+  public let location: LogLocation
+  public let metadata: Metadata
+  public let message: String
+  public let config: LogConfig
+  
+  init(category: String, stack: [Bool]?, type: LogType, location: LogLocation, metadata: Metadata, message: String, config: LogConfig) {
+    self.category = category
+    self.stack = stack
+    self.type = type
+    self.location = location
+    self.metadata = metadata
+    self.message = message
+    self.config = config
+  }
+  
+  func padding() -> String {
+    guard let stack else {
+      return ""
     }
-    
-    func padding() -> String {
-      guard let stack else {
-        return ""
-      }
-      return stack
-        .map { $0 ? "| " : "  " }
-        .joined()
-        .appending("├")
+    return stack
+      .map { $0 ? "| " : "  " }
+      .joined()
+      .appending("├")
+  }
+  
+  func typeText() -> String {
+    let tag = LogItem.tags[self.type]!
+    let text = "[\(type.title)]"
+    return switch config.style {
+      case .plain: text
+      case .colored: text.color(tag.colors)
+      case .emoji: "\(type.icon) \(text)"
     }
-    
-    func typeText() -> String {
-      let tag = Log.Item.tags[self.type]!
-      let text = "[\(type.title)]"
-      return switch config.style {
-        case .plain: text
-        case .colored: text.color(tag.colors)
-        case .emoji: "\(type.icon) \(text)"
-      }
+  }
+  
+  func data() -> LogData? {
+    nil
+  }
+  
+  func messageText() -> String {
+    let tag = LogItem.tags[self.type]!
+    return switch config.style {
+      case .plain, .emoji: message
+      case .colored: message.color(tag.textColor)
     }
-    
-    func data() -> LogData? {
-      nil
-    }
-    
-    func messageText() -> String {
-      let tag = Log.Item.tags[self.type]!
-      return switch config.style {
-        case .plain, .emoji: message
-        case .colored: message.color(tag.textColor)
-      }
-    }
-    
   }
 }
 
-extension Log.Item: CustomStringConvertible {
+extension LogItem: CustomStringConvertible {
   
   public var description: String {
     var sign = "\(config.sign)"
-    var time = Log.Item.dateFormatter.string(from: time)
+    var time = Self.dateFormatter.string(from: time)
     var level = String(format: "[%02d]", stack?.count ?? 0)
     var category = "[\(category)]"
     var location = "<\(location.fileName):\(location.line)>"
@@ -290,7 +286,7 @@ extension Log.Item: CustomStringConvertible {
         break
         
       case .colored:
-        let tag = Log.Item.tags[self.type]!
+        let tag = LogItem.tags[self.type]!
         
         sign = sign.color(.dim)
         time = time.color(.dim)
@@ -313,6 +309,6 @@ extension Log.Item: CustomStringConvertible {
       (.data, data),
       (.message, messageText()),
     ]
-    return Log.Item.logPrefix(items: items, options: config.options)
+    return LogItem.logPrefix(items: items, options: config.options)
   }
 }

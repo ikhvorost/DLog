@@ -35,7 +35,7 @@ typealias Swift_Demangle = @convention(c) (_ mangledName: UnsafePointer<UInt8>?,
 /// Dynamic shared object
 struct Dynamic {
   
-  private static nonisolated(unsafe) var RTLD_DEFAULT = UnsafeMutableRawPointer(bitPattern: -2)
+  private static nonisolated(unsafe) let RTLD_DEFAULT = UnsafeMutableRawPointer(bitPattern: -2)
   static nonisolated(unsafe) let dso = UnsafeMutableRawPointer(mutating: #dsohandle)
   
   private static func dynamic<T>(symbol: String) -> T? {

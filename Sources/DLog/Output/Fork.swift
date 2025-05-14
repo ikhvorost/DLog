@@ -37,7 +37,7 @@ public struct Fork {
 
 extension Fork: Output {
   
-  public func log(item: Log.Item) {
+  public func log(item: LogItem) {
     DispatchQueue.concurrentPerform(iterations: outputs.count) { [outputs] in
       outputs[$0].log(item: item)
     }
