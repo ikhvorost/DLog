@@ -32,58 +32,58 @@ import Foundation
 /// a value of generic type in the string interpolations passed to the logger.
 ///
 public struct LogStringInterpolation: StringInterpolationProtocol {
-  fileprivate var output = ""
+  var value = ""
   
   /// Creates an empty instance ready to be filled with string literal content.
   public init(literalCapacity: Int, interpolationCount: Int) {
-    output.reserveCapacity(literalCapacity * 2)
+    value.reserveCapacity(literalCapacity)
   }
   
   /// Appends a literal segment to the interpolation.
   public mutating func appendLiteral(_ literal: String) {
-    output.append(literal)
+    value.append(literal)
   }
   
   /// Defines interpolation for expressions of Any type.
-  public mutating func appendInterpolation(_ value: @autoclosure @escaping () -> Any, privacy: LogPrivacy = .public) {
+  public mutating func appendInterpolation(_ value: @autoclosure () -> Any, privacy: LogPrivacy = .public) {
     let text = String(describing: value())
     let masked = privacy.mask(text)
-    output.append(masked)
+    self.value.append(masked)
   }
   
   /// Defines interpolation for expressions of date type.
-  public mutating func appendInterpolation(_ value: @autoclosure @escaping () -> Date, format: LogDateFormatting, privacy: LogPrivacy = .public) {
+  public mutating func appendInterpolation(_ value: @autoclosure () -> Date, format: LogDateFormatting, privacy: LogPrivacy = .public) {
     let text = format.string(from: value())
     let masked = privacy.mask(text)
-    output.append(masked)
+    self.value.append(masked)
   }
   
   /// Defines interpolation for expressions of integer values.
-  public mutating func appendInterpolation<T: BinaryInteger>(_ value: @autoclosure @escaping () -> T, format: LogIntFormatting, privacy: LogPrivacy = .public) {
+  public mutating func appendInterpolation<T: BinaryInteger>(_ value: @autoclosure () -> T, format: LogIntFormatting, privacy: LogPrivacy = .public) {
     let text = format.string(from: value())
     let masked = privacy.mask(text)
-    output.append(masked)
+    self.value.append(masked)
   }
   
   /// Defines interpolation for expressions of floating-point values.
-  public mutating func appendInterpolation<T: BinaryFloatingPoint>(_ value: @autoclosure @escaping () -> T, format: LogFloatFormatting, privacy: LogPrivacy = .public) {
+  public mutating func appendInterpolation<T: BinaryFloatingPoint>(_ value: @autoclosure () -> T, format: LogFloatFormatting, privacy: LogPrivacy = .public) {
     let text = format.string(from: value())
     let masked = privacy.mask(text)
-    output.append(masked)
+    self.value.append(masked)
   }
   
   /// Defines interpolation for expressions of boolean values.
-  public mutating func appendInterpolation(_ value: @autoclosure @escaping () -> Bool, format: LogBoolFormatting, privacy: LogPrivacy = .public) {
+  public mutating func appendInterpolation(_ value: @autoclosure () -> Bool, format: LogBoolFormatting, privacy: LogPrivacy = .public) {
     let text = format.string(from: value())
     let masked = privacy.mask(text)
-    output.append(masked)
+    self.value.append(masked)
   }
   
   /// Defines interpolation for expressions of Data.
-  public mutating func appendInterpolation(_ value: @autoclosure @escaping () -> Data, format: LogDataFormatting, privacy: LogPrivacy = .public) {
+  public mutating func appendInterpolation(_ value: @autoclosure () -> Data, format: LogDataFormatting, privacy: LogPrivacy = .public) {
     let text = format.string(from: value())
     let masked = privacy.mask(text)
-    output.append(masked)
+    self.value.append(masked)
   }
 }
 
@@ -95,49 +95,22 @@ public struct LogStringInterpolation: StringInterpolationProtocol {
 /// - Warning: Do not explicitly refer to this type. It will be implicitly created by the compiler
 /// when you pass a string interpolation to the logger.
 ///
-public struct LogMessage: ExpressibleByStringLiteral,
-                          ExpressibleByIntegerLiteral,
-                          ExpressibleByFloatLiteral,
-                          ExpressibleByBooleanLiteral,
-                          ExpressibleByArrayLiteral,
-                          ExpressibleByDictionaryLiteral,
-                          ExpressibleByStringInterpolation,
-                          Sendable
-{
-  public let text: String
+public struct LogMessage: ExpressibleByStringInterpolation, Sendable {
+  let text: String
+  
+  init(items: [Any]) {
+    text = items
+      .map { "\($0)" }
+      .joined(separator: " ")
+  }
   
   /// Creates an instance initialized to the given string value.
   public init(stringLiteral value: String) {
     text = value
   }
-  
-  /// Creates an instance initialized to the given integer value.
-  public init(integerLiteral value: Int) {
-    text = "\(value)"
-  }
-  
-  /// Creates an instance initialized to the given float value.
-  public init(floatLiteral value: Float) {
-    text = "\(value)"
-  }
-  
-  /// Creates an instance initialized to the given bool value.
-  public init(booleanLiteral value: Bool) {
-    text = "\(value)"
-  }
-  
-  /// Creates an instance initialized to the given array.
-  public init(arrayLiteral elements: Any...) {
-    text = "\(elements)"
-  }
-  
-  /// Creates an instance initialized to the given dictionary.
-  public init(dictionaryLiteral elements: (Any, Any)...) {
-    text = "\(elements)"
-  }
-  
+
   /// Creates an instance of a log message from a string interpolation.
   public init(stringInterpolation: LogStringInterpolation) {
-    text = stringInterpolation.output
+    text = stringInterpolation.value
   }
 }

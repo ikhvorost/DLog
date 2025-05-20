@@ -33,7 +33,7 @@ public final class LogScopeItem: LogItem, @unchecked Sendable {
   public let level: Int
   public let duration: TimeInterval
   
-  init(category: String, stack: [Bool], type: LogType, location: LogLocation, metadata: Metadata, message: LogMessage, config: LogConfig, activity: Atomic<os_activity_scope_state_s>, level: Int, duration: TimeInterval) {
+  init(category: String, stack: [Bool], type: LogType, location: LogLocation, metadata: Metadata, message: String, config: LogConfig, activity: Atomic<os_activity_scope_state_s>, level: Int, duration: TimeInterval) {
     self.activity = activity
     self.level = level
     self.duration = duration

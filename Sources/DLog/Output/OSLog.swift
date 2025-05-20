@@ -94,7 +94,7 @@ extension OSLog: Output {
           
         scope.activity.sync { state in
           if scope.type == .scopeEnter {
-            let activity = _os_activity_create(Dynamic.dso, strdup(item.message.text), os_activity_current, OS_ACTIVITY_FLAG_DEFAULT)
+            let activity = _os_activity_create(Dynamic.dso, strdup(item.message), os_activity_current, OS_ACTIVITY_FLAG_DEFAULT)
             os_activity_scope_enter(activity, &state)
           }
           else {
@@ -121,7 +121,7 @@ extension OSLog: Output {
         let location = "<\(item.location.fileName):\(item.location.line)>"
         assert(Self.types[item.type] != nil)
         let type = Self.types[item.type]!
-        os_log("%{public}@ %{public}@", dso: Dynamic.dso, log: log, type: type, location, item.message.text)
+        os_log("%{public}@ %{public}@", dso: Dynamic.dso, log: log, type: type, location, item.message)
     }
   }
 }

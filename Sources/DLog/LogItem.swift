@@ -120,10 +120,10 @@ public class LogItem: @unchecked Sendable {
   public let type: LogType
   public let location: LogLocation
   public let metadata: Metadata
-  public let message: LogMessage
+  public let message: String
   public let config: LogConfig
   
-  init(category: String, stack: [Bool]?, type: LogType, location: LogLocation, metadata: Metadata, message: LogMessage, config: LogConfig) {
+  init(category: String, stack: [Bool]?, type: LogType, location: LogLocation, metadata: Metadata, message: String, config: LogConfig) {
     self.category = category
     self.stack = stack
     self.type = type
@@ -159,10 +159,12 @@ public class LogItem: @unchecked Sendable {
   
   func messageText() -> String {
     let tag = LogItem.tags[self.type]!
-    let text = message.text
+    let text = message
     return switch config.style {
-      case .plain, .emoji: text
-      case .colored: text.color(tag.textColor)
+      case .plain, .emoji:
+        text
+      case .colored:
+        text.color(tag.textColor)
     }
   }
 }

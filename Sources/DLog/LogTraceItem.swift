@@ -43,13 +43,13 @@ public struct TraceInfo {
 public final class LogTraceItem: LogItem, @unchecked Sendable {
   public let traceInfo = TraceInfo()
   
-  init(category: String, stack: [Bool]?, location: LogLocation, metadata: Metadata, message: LogMessage, config: LogConfig) {
+  init(category: String, stack: [Bool]?, location: LogLocation, metadata: Metadata, message: String, config: LogConfig) {
     super.init(category: category, stack: stack, type: .trace, location: location, metadata: metadata, message: message, config: config)
   }
   
   override func data() -> LogData? {
     let items: [(TraceOptions, String, Any)] = [
-      (.function, "func", funcInfo(function: location.function, config: config.traceConfig.funcConfig)),
+      (.function, "func", funcInfo(function: "\(location.function)", config: config.traceConfig.funcConfig)),
       (.process, "process", processMetadata(processInfo: traceInfo.processInfo, config: config.traceConfig.processConfig)),
       (.queue, "queue", traceInfo.queueLabel),
       (.stack, "stack", stackMetadata(moduleName: location.moduleName, stackAddresses: traceInfo.stackAddresses, config: config.traceConfig.stackConfig)),

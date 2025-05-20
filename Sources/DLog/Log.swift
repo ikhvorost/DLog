@@ -58,7 +58,7 @@ public class Log: @unchecked Sendable {
     guard logger.value?.isEnabled == true else {
       return nil
     }
-    let item = LogItem(category: category, stack: stack(), type: type, location: location, metadata: metadata.value, message: message, config: config)
+    let item = LogItem(category: category, stack: stack(), type: type, location: location, metadata: metadata.value, message: message.text, config: config)
     logger.value?.log(item: item)
     return item
   }
@@ -79,8 +79,13 @@ public class Log: @unchecked Sendable {
   /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   ///
   @discardableResult
-  public func log(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> LogItem? {
+  public func log(_ message: LogMessage, fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogItem? {
     log(message: message, type: .log, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
+  }
+  
+  @discardableResult
+  public func log(_ items: Any..., fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogItem? {
+    log(message: LogMessage(items: items), type: .log, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
   }
   
   /// Logs trace information to help debug problems during the development of your code.
@@ -99,14 +104,19 @@ public class Log: @unchecked Sendable {
   /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   ///
   @discardableResult
-  public func trace(_ message: LogMessage = "", fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> LogTraceItem? {
+  public func trace(_ message: LogMessage = "", fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogTraceItem? {
     guard logger.value?.isEnabled == true else {
       return nil
     }
     let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
-    let item = LogTraceItem(category: category, stack: stack(), location: location, metadata: metadata.value, message: message, config: config)
+    let item = LogTraceItem(category: category, stack: stack(), location: location, metadata: metadata.value, message: message.text, config: config)
     logger.value?.log(item: item)
     return item
+  }
+  
+  @discardableResult
+  public func trace(_ items: Any..., fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogTraceItem? {
+    trace(LogMessage(items: items), fileID: fileID, file: file, function: function, line: line)
   }
   
   /// Logs a message to help debug problems during the development of your code.
@@ -125,8 +135,13 @@ public class Log: @unchecked Sendable {
   /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   ///
   @discardableResult
-  public func debug(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> LogItem? {
+  public func debug(_ message: LogMessage, fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogItem? {
     log(message: message, type: .debug, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
+  }
+  
+  @discardableResult
+  public func debug(_ items: Any..., fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogItem? {
+    debug(LogMessage(items: items), fileID: fileID, file: file, function: function, line: line)
   }
   
   /// Logs a message that is helpful, but not essential, to diagnose issues with your code.
@@ -145,8 +160,13 @@ public class Log: @unchecked Sendable {
   /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   ///
   @discardableResult
-  public func info(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> LogItem? {
+  public func info(_ message: LogMessage, fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogItem? {
     log(message: message, type: .info, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
+  }
+  
+  @discardableResult
+  public func info(_ items: Any..., fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogItem? {
+    info(LogMessage(items: items), fileID: fileID, file: file, function: function, line: line)
   }
   
   /// Logs a warning that occurred during the execution of your code.
@@ -165,8 +185,13 @@ public class Log: @unchecked Sendable {
   /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   ///
   @discardableResult
-  public func warning(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> LogItem? {
+  public func warning(_ message: LogMessage, fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogItem? {
     log(message: message, type: .warning, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
+  }
+  
+  @discardableResult
+  public func warning(_ items: Any..., fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogItem? {
+    warning(LogMessage(items: items), fileID: fileID, file: file, function: function, line: line)
   }
   
   /// Logs an error that occurred during the execution of your code.
@@ -185,8 +210,20 @@ public class Log: @unchecked Sendable {
   /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   ///
   @discardableResult
-  public func error(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> LogItem? {
+  public func error(_ message: LogMessage, fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogItem? {
     log(message: message, type: .error, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
+  }
+  
+  @discardableResult
+  public func error(_ items: Any..., fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogItem? {
+    error(LogMessage(items: items), fileID: fileID, file: file, function: function, line: line)
+  }
+  
+  private func assert(_ condition: () -> Bool, message: LogMessage, fileID: StaticString, file: StaticString, function: StaticString, line: UInt) -> LogItem? {
+    guard logger.value?.isEnabled == true && !condition() else {
+      return nil
+    }
+    return log(message: message, type: .assert, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
   }
   
   /// Logs a traditional C-style assert notice with an optional message.
@@ -206,11 +243,13 @@ public class Log: @unchecked Sendable {
   /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   ///
   @discardableResult
-  public func assert(_ condition: @autoclosure () -> Bool, _ message: LogMessage = "", fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> LogItem? {
-    guard logger.value?.isEnabled == true && !condition() else {
-      return nil
-    }
-    return log(message: message, type: .assert, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
+  public func assert(_ condition: @autoclosure () -> Bool, _ message: LogMessage = "", fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogItem? {
+    assert(condition, message: message, fileID: fileID, file: file, function: function, line: line)
+  }
+  
+  @discardableResult
+  public func assert(_ condition: @autoclosure () -> Bool, _ items: Any..., fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogItem? {
+    assert(condition, message: LogMessage(items: items), fileID: fileID, file: file, function: function, line: line)
   }
   
   /// Logs a bug or fault that occurred during the execution of your code.
@@ -229,8 +268,13 @@ public class Log: @unchecked Sendable {
   /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   ///
   @discardableResult
-  public func fault(_ message: LogMessage, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) -> LogItem? {
+  public func fault(_ message: LogMessage, fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogItem? {
     log(message: message, type: .fault, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
+  }
+  
+  @discardableResult
+  public func fault(_ items: Any..., fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogItem? {
+    fault(LogMessage(items: items), fileID: fileID, file: file, function: function, line: line)
   }
   
   /// Creates a scope object that can assign log messages to itself.
@@ -252,7 +296,7 @@ public class Log: @unchecked Sendable {
   /// - Returns: An `LogScope` object for the new scope.
   ///
   @discardableResult
-  public func scope(_ name: String, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line, closure: ((LogScope) -> Void)? = nil) -> LogScope? {
+  public func scope(_ name: String, fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line, closure: ((LogScope) -> Void)? = nil) -> LogScope? {
     guard let logger = logger.value, logger.isEnabled == true else {
       return nil
     }
@@ -285,7 +329,7 @@ public class Log: @unchecked Sendable {
   /// - Returns: An `LogInterval` object for the new interval.
   ///
   @discardableResult
-  public func interval(_ name: StaticString, fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval? {
+  public func interval(_ name: StaticString, fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval? {
     guard let logger = logger.value, logger.isEnabled else {
       return nil
     }

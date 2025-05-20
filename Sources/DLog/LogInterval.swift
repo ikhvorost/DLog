@@ -148,7 +148,7 @@ public struct LogInterval: Sendable {
   /// 	...
   /// 	interval.end()
   ///
-  public func begin(fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) {
+  public func begin(fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
     guard start.value == nil else {
       return
     }
@@ -171,7 +171,7 @@ public struct LogInterval: Sendable {
   /// 	...
   /// 	interval.end()
   ///
-  public func end(fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) {
+  public func end(fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
     guard let interval = start.value?.timeIntervalSinceNow else {
       return
     }

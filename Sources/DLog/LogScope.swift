@@ -74,8 +74,7 @@ public final class LogScope: Log, @unchecked Sendable {
   }
   
   private func item(type: LogType, location: LogLocation, stack: [Bool]) -> LogScopeItem {
-    let message = LogMessage(stringLiteral: name)
-    return LogScopeItem(category: category, stack: stack, type: type, location: location, metadata: metadata.value, message: message, config: config, activity: activity, level: level, duration: duration)
+    return LogScopeItem(category: category, stack: stack, type: type, location: location, metadata: metadata.value, message: name, config: config, activity: activity, level: level, duration: duration)
   }
   
   /// Start a scope.
@@ -91,7 +90,7 @@ public final class LogScope: Log, @unchecked Sendable {
   ///
   ///     scope.leave()
   ///
-  public func enter(fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) {
+  public func enter(fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
     Self.scopes.sync {
       guard $0.contains(self) == false else {
         return
@@ -124,7 +123,7 @@ public final class LogScope: Log, @unchecked Sendable {
   ///
   ///     scope.leave()
   ///
-  public func leave(fileID: String = #fileID, file: String = #file, function: String = #function, line: UInt = #line) {
+  public func leave(fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
     Self.scopes.sync {
       guard let index = $0.firstIndex(of: self) else {
         return

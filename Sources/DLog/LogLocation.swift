@@ -29,24 +29,24 @@ import Foundation
 /// The location of a log message.
 public struct LogLocation: Sendable {
   /// The file ID.
-  public let fileID: String
+  public let fileID: StaticString
   
   /// The file path.
-  public let file: String
+  public let file: StaticString
   
   /// The function name.
-  public let function: String
+  public let function: StaticString
   
   /// The line number.
   public let line: UInt
   
   /// The module name.
   public var moduleName: String {
-    (fileID as NSString).pathComponents.first!
+    NSString(stringLiteral: fileID).pathComponents.first!
   }
   
   /// The file name.
   public var fileName: String {
-    (file as NSString).lastPathComponent
+    NSString(stringLiteral: file).lastPathComponent
   }
 }
