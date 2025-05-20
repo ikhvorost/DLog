@@ -1,7 +1,6 @@
 import Foundation
 import XCTest
 import DLog
-import Network
 
 /*@testable*/ import DLog
 
@@ -36,6 +35,11 @@ extension String {
     self.range(of: pattern, options: [.regularExpression]) != nil
   }
 }
+
+extension StaticString {
+  var string: String { "\(self)" }
+}
+
 
 extension XCTestCase {
   
@@ -132,7 +136,6 @@ let Interval = #"\{average:\#(SECS),duration:\#(SECS)\}"#
 
 let Empty = ">$"
 
-
 struct TestLog {
   let item: LogItem?
   let type: LogType
@@ -151,22 +154,25 @@ func log_all(_ log: Log, message: LogMessage) -> [TestLog] {
   ]
 }
 
+func log(_ message: LogMessage, file: StaticString = #file) {
+  print(message)
+}
+
 final class DLogTests: XCTestCase {
   
-  func test() {
-    let logger = DLog {
-      Pipe {
-        StdOut
-        Filter { $0.type == .error }
-        StdOut
-      }
-    }
-    let interval = logger.interval("dd")
-    interval?.begin()
+  func test_sendable() {
+    let logger = DLog()
+    let interval = logger.interval("interval")
+    let scope = logger.scope("scope")
+    
     DispatchQueue.global().async {
-      logger.debug("debug")
-      logger.error("error")
+      let item = logger.log("log")
+      
+      interval?.begin()
       interval?.end()
+      
+      scope?.enter()
+      scope?.leave()
     }
   }
   
@@ -192,9 +198,6 @@ final class DLogTests: XCTestCase {
     item = store.log("log")
     XCTAssert(item?.category == "STORE")
   }
-}
-
-final class LogTests: XCTestCase {
   
   func test_logAll() {
     let log = DLog(metadata: ["a" : 10])
@@ -207,9 +210,9 @@ final class LogTests: XCTestCase {
       XCTAssert($0.item?.stack == nil)
       XCTAssert($0.item?.type == $0.type)
       
-      XCTAssert($0.item?.location.fileID == "DLogTests/DLogTests.swift")
-      XCTAssert($0.item?.location.file == "DLogTests/DLogTests.swift")
-      XCTAssert($0.item?.location.function == "log_all(_:message:)")
+      XCTAssert($0.item?.location.fileID.string == "DLogTests/DLogTests.swift")
+      XCTAssert($0.item?.location.file.string == "DLogTests/DLogTests.swift")
+      XCTAssert($0.item?.location.function.string == "log_all(_:message:)")
       XCTAssert($0.item!.location.line < #line)
       XCTAssert($0.item?.location.moduleName == "DLogTests")
       XCTAssert($0.item?.location.fileName == "DLogTests.swift")
@@ -393,6 +396,39 @@ final class LogTests: XCTestCase {
     item = net.log("Hello")
     XCTAssert(item?.metadata["value"] as? Int == 400)
     XCTAssert(item?.metadata["key"] as? Int == 12345)
+  }
+  
+  func test_file() {
+    let filePath = "dlog.txt"
+    
+    do {
+      // Recreate file
+      let logger = DLog { File(path: filePath) }
+      
+      logger.trace()
+      delay(0.1)
+      var text = try String(contentsOfFile: filePath)
+      XCTAssert(text.split(separator: "\n").count == 1)
+      XCTAssert(text.match(#"\#(TraceTag) \#(Location) \{func:\#(#function)"#))
+      
+      // Append
+      let logger2 = DLog { File(path: filePath, append: true) }
+      
+      logger2.debug("debug")
+      delay(0.1)
+      text = try String(contentsOfFile: filePath)
+      XCTAssert(text.split(separator: "\n").count == 2)
+      XCTAssert(text.match(#"\#(DebugTag) \#(Location) debug$"#))
+      
+      logger2.interval("interval") { delay(0.1) }
+      delay(0.1)
+      text = try String(contentsOfFile: filePath)
+      XCTAssert(text.split(separator: "\n").count == 3)
+      XCTAssert(text.match(#"\[INTERVAL:interval\] \#(Location) \#(Interval)"#))
+    }
+    catch {
+      XCTFail(error.localizedDescription)
+    }
   }
   
 }

@@ -91,6 +91,9 @@ public final class LogScope: Log, @unchecked Sendable {
   ///     scope.leave()
   ///
   public func enter(fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+    guard logger.value?.isEnabled == true else {
+      return
+    }
     Self.scopes.sync {
       guard $0.contains(self) == false else {
         return
@@ -124,6 +127,9 @@ public final class LogScope: Log, @unchecked Sendable {
   ///     scope.leave()
   ///
   public func leave(fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) {
+    guard logger.value?.isEnabled == true else {
+      return
+    }
     Self.scopes.sync {
       guard let index = $0.firstIndex(of: self) else {
         return
