@@ -66,7 +66,7 @@ extension XCTestCase {
 
 // MARK: - Utils
 
-func delay(_ sec: TimeInterval = 0.25) {
+func delay(_ sec: TimeInterval = 0.1) {
   Thread.sleep(forTimeInterval: sec)
 }
 
@@ -166,7 +166,7 @@ final class DLogTests: XCTestCase {
     let scope = logger.scope("scope")
     
     DispatchQueue.global().async {
-      let item = logger.log("log")
+      logger.log("log")
       
       interval?.begin()
       interval?.end()
@@ -251,7 +251,7 @@ final class DLogTests: XCTestCase {
       XCTAssert(item?.stack?.count == 0)
     }
     XCTAssert(scope?.level == 0)
-    XCTAssert((scope?.duration ?? 0) >= 0.25)
+    XCTAssert((scope?.duration ?? 0) >= 0.1)
     
     
     scope?.enter()
@@ -269,7 +269,7 @@ final class DLogTests: XCTestCase {
     scope?.leave()
     
     XCTAssert(scope?.level == 0)
-    XCTAssert((scope?.duration ?? 0) >= 0.25)
+    XCTAssert((scope?.duration ?? 0) >= 0.1)
   }
   
   func test_scope_stack() {
@@ -323,43 +323,43 @@ final class DLogTests: XCTestCase {
       delay()
     }
     XCTAssert("\(interval!.name)" == "interval")
-    XCTAssert((interval?.duration ?? 0) >= 0.25)
+    XCTAssert((interval?.duration ?? 0) >= 0.1)
     if let stats = interval?.stats {
       XCTAssert(stats.count == 1)
-      XCTAssert(stats.total >= 0.25)
-      XCTAssert(stats.min >= 0.25)
-      XCTAssert(stats.max >= 0.25)
-      XCTAssert(stats.average >= 0.25)
+      XCTAssert(stats.total >= 0.1)
+      XCTAssert(stats.min >= 0.1)
+      XCTAssert(stats.max >= 0.1)
+      XCTAssert(stats.average >= 0.1)
     }
     
     interval?.begin()
     interval?.begin()
     
-    delay(0.35)
+    delay(0.3)
     
     interval?.end()
     interval?.end()
     
-    XCTAssert(interval?.duration ?? 0 >= 0.25)
+    XCTAssert(interval?.duration ?? 0 >= 0.1)
     if let stats = interval?.stats {
       XCTAssert(stats.count == 2)
-      XCTAssert(stats.total >= 0.6)
-      XCTAssert(stats.min >= 0.25)
-      XCTAssert(stats.max >= 0.35)
-      XCTAssert(stats.average >= 0.25)
+      XCTAssert(stats.total >= 0.2)
+      XCTAssert(stats.min >= 0.1)
+      XCTAssert(stats.max >= 0.3)
+      XCTAssert(stats.average >= 0.2)
     }
     
     interval?.begin()
     
-    delay(0.1)
+    delay(0.2)
     
     interval?.end()
     XCTAssert(interval?.duration ?? 0 >= 0.1)
     if let stats = interval?.stats {
       XCTAssert(stats.count == 3)
-      XCTAssert(stats.total >= 0.7)
+      XCTAssert(stats.total >= 0.5)
       XCTAssert(stats.min >= 0.1)
-      XCTAssert(stats.max >= 0.35)
+      XCTAssert(stats.max >= 0.3)
       XCTAssert(stats.average >= 0.2)
     }
   }
@@ -375,13 +375,13 @@ final class DLogTests: XCTestCase {
       }
     }
     
-    XCTAssert(interval.value?.duration ?? 0 >= 0.25)
+    XCTAssert(interval.value?.duration ?? 0 >= 0.1)
     if let stats = interval.value?.stats {
       XCTAssert(stats.count == 10)
-      XCTAssert(stats.total >= 2.5)
-      XCTAssert(stats.min >= 0.25)
-      XCTAssert(stats.max >= 0.25)
-      XCTAssert(stats.average >= 0.25)
+      XCTAssert(stats.total >= 1.0)
+      XCTAssert(stats.min >= 0.1)
+      XCTAssert(stats.max >= 0.1)
+      XCTAssert(stats.average >= 0.1)
     }
   }
   
@@ -406,7 +406,7 @@ final class DLogTests: XCTestCase {
       let logger = DLog { File(path: filePath) }
       
       logger.trace()
-      delay(0.1)
+      delay()
       var text = try String(contentsOfFile: filePath)
       XCTAssert(text.split(separator: "\n").count == 1)
       XCTAssert(text.match(#"\#(TraceTag) \#(Location) \{func:\#(#function)"#))
@@ -415,13 +415,13 @@ final class DLogTests: XCTestCase {
       let logger2 = DLog { File(path: filePath, append: true) }
       
       logger2.debug("debug")
-      delay(0.1)
+      delay()
       text = try String(contentsOfFile: filePath)
       XCTAssert(text.split(separator: "\n").count == 2)
       XCTAssert(text.match(#"\#(DebugTag) \#(Location) debug$"#))
       
-      logger2.interval("interval") { delay(0.1) }
-      delay(0.1)
+      logger2.interval("interval") { delay() }
+      delay()
       text = try String(contentsOfFile: filePath)
       XCTAssert(text.split(separator: "\n").count == 3)
       XCTAssert(text.match(#"\[INTERVAL:interval\] \#(Location) \#(Interval)"#))
@@ -431,6 +431,32 @@ final class DLogTests: XCTestCase {
     }
   }
   
+  func test_pipe_fork_filter() {
+    let logger = DLog {
+      Pipe {
+        Fork {
+          Filter { $0.type == .debug } // Doesn't apply
+          StdOut
+        }
+        Filter { $0.type == .debug }
+        Filter {
+          XCTAssert($0.type == .debug)
+          return true
+        }
+        StdOut
+      }
+    }
+    logger.trace()
+    logger.info()
+    logger.debug()
+    logger.warning()
+    logger.error()
+    logger.assert(true)
+    logger.fault()
+    logger.scope("scope") { _ in }
+    logger.interval("interval") { }
+    delay()
+  }
 }
 
 /*

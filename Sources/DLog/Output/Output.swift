@@ -28,10 +28,5 @@ import Foundation
 
 public protocol Output: Sendable {
   func log(item: LogItem)
-  func pipe(item: LogItem) -> Bool
 }
 
-public extension Output {
-  func log(item: LogItem) {}
-  func pipe(item: LogItem) -> Bool { true }
-}

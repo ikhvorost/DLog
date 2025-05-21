@@ -39,7 +39,7 @@ extension Pipe: Output {
   
   public func log(item: LogItem) {
     for output in outputs {
-      guard output.pipe(item: item) else {
+      if let filter = output as? Filter, filter.isPipeable(item) == false {
         break
       }
       output.log(item: item)
