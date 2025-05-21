@@ -142,31 +142,49 @@ struct TestLog {
 }
 
 func log_all(_ log: Log, message: LogMessage) -> [TestLog] {
-  [
+  return [
     TestLog(item: log.log(message), type: .log),
+    TestLog(item: log.log("\(message)"), type: .log),
+    
     TestLog(item: log.trace(message), type: .trace),
+    TestLog(item: log.trace("\(message)"), type: .trace),
+    
     TestLog(item: log.debug(message), type: .debug),
+    TestLog(item: log.debug("\(message)"), type: .debug),
+    
     TestLog(item: log.info(message), type: .info),
+    TestLog(item: log.info("\(message)"), type: .info),
+    
     TestLog(item: log.warning(message), type: .warning),
+    TestLog(item: log.warning("\(message)"), type: .warning),
+    
     TestLog(item: log.error(message), type: .error),
+    TestLog(item: log.error("\(message)"), type: .error),
+    
     TestLog(item: log.assert(false, message), type: .assert),
+    TestLog(item: log.assert(false, "\(message)"), type: .assert),
+    
     TestLog(item: log.fault(message), type: .fault),
+    TestLog(item: log.fault("\(message)"), type: .fault),
   ]
-}
-
-func log(_ message: LogMessage, file: StaticString = #file) {
-  print(message)
 }
 
 final class DLogTests: XCTestCase {
   
+//  func test() {
+//    let m: LogMessage = "hello"
+//    print(m)
+//  }
+  
   func test_sendable() {
     let logger = DLog()
+    let net = logger["NET"]
     let interval = logger.interval("interval")
     let scope = logger.scope("scope")
     
     DispatchQueue.global().async {
       logger.log("log")
+      net.info("info")
       
       interval?.begin()
       interval?.end()
@@ -199,6 +217,33 @@ final class DLogTests: XCTestCase {
     XCTAssert(item?.category == "STORE")
   }
   
+  func test_log_params() {
+    let log = DLog()
+    
+    let i = 10
+    let f = 1.1
+    let b = true
+    let item = log.log("trace", i, f, b)
+    XCTAssert(item?.message == "trace 10 1.1 true")
+  }
+  
+  func test_trace() {
+    let log = DLog()
+    let item = log.trace("trace")
+    
+    XCTAssert(item?.traceInfo.processInfo == ProcessInfo.processInfo)
+    XCTAssert(item?.traceInfo.queueLabel == "com.apple.main-thread")
+    XCTAssert(item?.traceInfo.stackAddresses.count != 0)
+    XCTAssert(item?.traceInfo.thread == Thread.current)
+    XCTAssert(item?.traceInfo.tid != 0)
+  }
+  
+  func test_assert() {
+    let log = DLog()
+    let item = log.assert(true, "assert")
+    XCTAssert(item == nil)
+  }
+  
   func test_logAll() {
     let log = DLog(metadata: ["a" : 10])
     log.metadata["a"] = 20
@@ -222,19 +267,7 @@ final class DLogTests: XCTestCase {
       XCTAssert($0.item?.metadata["b"] as? String == "20")
       
       XCTAssert($0.item?.message == "log")
-      //XCTAssert($0.item?.config == "log")
     }
-  }
-  
-  func test_trace() {
-    let log = DLog()
-    let item = log.trace("trace")
-    
-    XCTAssert(item?.traceInfo.processInfo == ProcessInfo.processInfo)
-    XCTAssert(item?.traceInfo.queueLabel == "com.apple.main-thread")
-    XCTAssert(item?.traceInfo.stackAddresses.count != 0)
-    XCTAssert(item?.traceInfo.thread == Thread.current)
-    XCTAssert(item?.traceInfo.tid != 0)
   }
   
   func test_scope() {

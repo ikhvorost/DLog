@@ -31,9 +31,11 @@ import Foundation
 public struct Std {
   
   private nonisolated(unsafe) let stream: UnsafeMutablePointer<FILE>
+  private let terminator: String
 
-  init(stream: UnsafeMutablePointer<FILE>) {
+  public init(stream: UnsafeMutablePointer<FILE>, terminator: String = "\n") {
     self.stream = stream
+    self.terminator = terminator
   }
 }
 
@@ -46,7 +48,7 @@ extension Std: Output {
     
     let text = item.description
     if !text.isEmpty {
-      fputs("\(text)\n", stream)
+      fputs("\(text)\(terminator)", stream)
     }
   }
 }

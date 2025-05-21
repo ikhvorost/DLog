@@ -96,21 +96,25 @@ public struct LogStringInterpolation: StringInterpolationProtocol {
 /// when you pass a string interpolation to the logger.
 ///
 public struct LogMessage: ExpressibleByStringInterpolation, Sendable {
-  let text: String
+  private let value: String
   
   init(items: [Any]) {
-    text = items
+    value = items
       .map { "\($0)" }
       .joined(separator: " ")
   }
   
   /// Creates an instance initialized to the given string value.
   public init(stringLiteral value: String) {
-    text = value
+    self.value = value
   }
 
   /// Creates an instance of a log message from a string interpolation.
   public init(stringInterpolation: LogStringInterpolation) {
-    text = stringInterpolation.value
+    value = stringInterpolation.value
   }
+}
+
+extension LogMessage: CustomStringConvertible {
+  public var description: String { value }
 }
