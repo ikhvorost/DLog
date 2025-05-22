@@ -49,13 +49,13 @@ public final class LogIntervalItem: LogItem, @unchecked Sendable {
   }
   
   override func data() -> LogData? {
-    let items: [(IntervalOptions, String, Any)] = [
-      (.duration, "duration", stringFromTimeInterval(duration)),
-      (.count, "count", stats.count),
-      (.total, "total", stringFromTimeInterval(stats.total)),
-      (.min, "min", stringFromTimeInterval(stats.min)),
-      (.max, "max", stringFromTimeInterval(stats.max)),
-      (.average, "average", stringFromTimeInterval(stats.average)),
+    let items: [(IntervalOptions, String, () -> Any)] = [
+      (.duration, "duration", { stringFromTimeInterval(self.duration) }),
+      (.count, "count", { self.stats.count }),
+      (.total, "total", { stringFromTimeInterval(self.stats.total) }),
+      (.min, "min", { stringFromTimeInterval(self.stats.min) }),
+      (.max, "max", { stringFromTimeInterval(self.stats.max) }),
+      (.average, "average", { stringFromTimeInterval(self.stats.average) }),
     ]
     return LogData.data(from: items, options: config.intervalConfig.options)
   }

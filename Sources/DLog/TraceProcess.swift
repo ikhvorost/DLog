@@ -93,23 +93,23 @@ public struct ProcessConfig: Sendable {
 
 func wakeupsMetadata(options: WakeupsOptions) -> LogData {
   let power = TaskInfo.power
-  let items: [(WakeupsOptions, String, Any)] = [
-    (.interrupt, "interrupt", power.task_interrupt_wakeups),
-    (.idle, "idle", power.task_platform_idle_wakeups),
-    (.timer, "timer", power.task_timer_wakeups_bin_1 + power.task_timer_wakeups_bin_2)
+  let items: [(WakeupsOptions, String, () -> Any)] = [
+    (.interrupt, "interrupt", { power.task_interrupt_wakeups }),
+    (.idle, "idle", { power.task_platform_idle_wakeups }),
+    (.timer, "timer", { power.task_timer_wakeups_bin_1 + power.task_timer_wakeups_bin_2 })
   ]
   return LogData.data(from: items, options: options)
 }
 
 func processMetadata(processInfo: ProcessInfo, config: ProcessConfig) -> LogData {
-  let items: [(ProcessOptions, String, Any)] = [
-    (.cpu, "cpu", "\(threadsInfo().cpuUsage)%"),
-    (.guid, "guid", processInfo.globallyUniqueString),
-    (.memory, "memory", "\(TaskInfo.vm.phys_footprint / (1024 * 1024))MB"),
-    (.name, "name", processInfo.processName),
-    (.pid, "pid", processInfo.processIdentifier),
-    (.threads, "threads", threadsInfo().threadsCount),
-    (.wakeups, "wakeups", wakeupsMetadata(options: config.wakeupsOptions)),
+  let items: [(ProcessOptions, String, () -> Any)] = [
+    (.cpu, "cpu", { "\(threadsInfo().cpuUsage)%" }),
+    (.guid, "guid", { processInfo.globallyUniqueString }),
+    (.memory, "memory", { "\(TaskInfo.vm.phys_footprint / (1024 * 1024))MB" }),
+    (.name, "name", { processInfo.processName }),
+    (.pid, "pid", { processInfo.processIdentifier }),
+    (.threads, "threads", { threadsInfo().threadsCount }),
+    (.wakeups, "wakeups", { wakeupsMetadata(options: config.wakeupsOptions) }),
   ]
   return LogData.data(from: items, options: config.options)
 }

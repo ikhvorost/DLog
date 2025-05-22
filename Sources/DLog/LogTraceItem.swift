@@ -48,12 +48,12 @@ public final class LogTraceItem: LogItem, @unchecked Sendable {
   }
   
   override func data() -> LogData? {
-    let items: [(TraceOptions, String, Any)] = [
-      (.function, "func", funcInfo(function: "\(location.function)", config: config.traceConfig.funcConfig)),
-      (.process, "process", processMetadata(processInfo: traceInfo.processInfo, config: config.traceConfig.processConfig)),
-      (.queue, "queue", traceInfo.queueLabel),
-      (.stack, "stack", stackMetadata(moduleName: location.moduleName, stackAddresses: traceInfo.stackAddresses, config: config.traceConfig.stackConfig)),
-      (.thread, "thread", threadMetadata(thread: traceInfo.thread, tid: traceInfo.tid, config: config.traceConfig.threadConfig)),
+    let items: [(TraceOptions, String, () -> Any)] = [
+      (.function, "func", { funcInfo(function: "\(self.location.function)", config: self.config.traceConfig.funcConfig) }),
+      (.process, "process", { processMetadata(processInfo: self.traceInfo.processInfo, config: self.config.traceConfig.processConfig) }),
+      (.queue, "queue", { self.traceInfo.queueLabel }),
+      (.stack, "stack", { stackMetadata(moduleName: self.location.moduleName, stackAddresses: self.traceInfo.stackAddresses, config: self.config.traceConfig.stackConfig) }),
+      (.thread, "thread", { threadMetadata(thread: self.traceInfo.thread, tid: self.traceInfo.tid, config: self.config.traceConfig.threadConfig) }),
     ]
     return LogData.data(from: items, options: config.traceConfig.options)
   }

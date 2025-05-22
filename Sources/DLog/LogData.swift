@@ -27,9 +27,9 @@ typealias LogData = [String : Any]
 
 extension LogData {
   
-  static func data<Option: OptionSet>(from items: [(Option, String, Any)], options: Option) -> LogData {
+  static func data<Option: OptionSet>(from items: [(Option, String, () -> Any)], options: Option) -> LogData {
     let keyValues: [(String, Any)] = items
-      .compactMap { (option: Option, key: String, value: Any) in
+      .compactMap { (option: Option, key: String, value: () -> Any) in
         // Option
         assert(option is Option.Element)
         guard options.contains(option as! Option.Element) else {
@@ -40,6 +40,7 @@ extension LogData {
         assert(key.isEmpty == false)
         
         // Value
+        let value = value()
         if let text = value as? String, text.isEmpty {
           return nil
         }

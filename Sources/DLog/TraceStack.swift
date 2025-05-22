@@ -110,12 +110,12 @@ func stackMetadata(moduleName: String, stackAddresses: ArraySlice<NSNumber>, con
         : module.replacingOccurrences(of: "Package", with: "") == moduleName // Fix: swift test
     }
     .map { item in
-      let items: [(StackOptions, String, Any)] = [
-        (.address, "address", String(format:"0x%llx", item.element.address)),
-        (.frame, "frame", item.offset),
-        (.module, "module", item.element.module),
-        (.offset, "offset", item.element.offset),
-        (.symbol, "symbol", swift_demangle(item.element.symbol) ?? item.element.symbol),
+      let items: [(StackOptions, String, () -> Any)] = [
+        (.address, "address", { String(format:"0x%llx", item.element.address) }),
+        (.frame, "frame", { item.offset }),
+        (.module, "module", { item.element.module }),
+        (.offset, "offset", { item.element.offset }),
+        (.symbol, "symbol", { swift_demangle(item.element.symbol) ?? item.element.symbol }),
       ]
       return LogData.data(from: items, options: config.options)
     }
