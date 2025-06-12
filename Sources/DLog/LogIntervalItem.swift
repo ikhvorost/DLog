@@ -48,7 +48,7 @@ public final class LogIntervalItem: LogItem, @unchecked Sendable {
     return text.replacingOccurrences(of: "[INTERVAL]", with: "[INTERVAL:\(message)]")
   }
   
-  override func data() -> LogData? {
+  override func data() -> String? {
     let items: [(IntervalOptions, String, () -> Any)] = [
       (.duration, "duration", { stringFromTimeInterval(self.duration) }),
       (.count, "count", { self.stats.count }),
@@ -57,7 +57,8 @@ public final class LogIntervalItem: LogItem, @unchecked Sendable {
       (.max, "max", { stringFromTimeInterval(self.stats.max) }),
       (.average, "average", { stringFromTimeInterval(self.stats.average) }),
     ]
-    return LogData.data(from: items, options: config.intervalConfig.options)
+    let data = LogData.data(from: items, options: config.intervalConfig.options)
+    return data.json()
   }
   
   override func messageText() -> String {

@@ -51,8 +51,10 @@ public final class LogScopeItem: LogItem, @unchecked Sendable {
     return text.replacingOccurrences(of: "[SCOPE]", with: "[SCOPE:\(message)]")
   }
   
-  override func data() -> LogData? {
-    duration > 0 ? ["duration": stringFromTimeInterval(duration)] : nil
+  override func data() -> String? {
+    duration > 0
+      ? ["duration": stringFromTimeInterval(duration)].json()
+      : nil
   }
   
   override func messageText() -> String {

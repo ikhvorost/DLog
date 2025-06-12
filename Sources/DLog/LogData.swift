@@ -57,12 +57,11 @@ extension LogData {
 extension Dictionary {
   
   func json(pretty: Bool = false) -> String {
-    guard count > 0 else {
+    guard !isEmpty else {
       return ""
     }
     let options: JSONSerialization.WritingOptions = pretty ? [.sortedKeys, .prettyPrinted] : [.sortedKeys]
-    guard self.isEmpty == false,
-          let data = try? JSONSerialization.data(withJSONObject: self, options: options),
+    guard let data = try? JSONSerialization.data(withJSONObject: self, options: options),
           let json = String(data: data, encoding: .utf8) else {
       return ""
     }

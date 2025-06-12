@@ -153,18 +153,17 @@ public class LogItem: @unchecked Sendable {
     }
   }
   
-  func data() -> LogData? {
+  func data() -> String? {
     nil
   }
   
   func messageText() -> String {
     let tag = LogItem.tags[self.type]!
-    let text = message
     return switch config.style {
       case .plain, .emoji:
-        text
+        message
       case .colored:
-        text.color(tag.textColor)
+        message.color(tag.textColor)
     }
   }
 }
@@ -178,7 +177,7 @@ extension LogItem: CustomStringConvertible {
     var category = "[\(category)]"
     var location = "<\(location.fileName):\(location.line)>"
     var metadata = metadata.json()
-    var data = data()?.json() ?? ""
+    var data = data() ?? ""
     
     switch config.style {
       case .plain, .emoji:

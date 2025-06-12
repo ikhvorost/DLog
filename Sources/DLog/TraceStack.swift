@@ -82,6 +82,7 @@ fileprivate func swift_demangle(_ mangled: String) -> String? {
 
 func stackMetadata(moduleName: String, stackAddresses: ArraySlice<NSNumber>, config: StackConfig) -> [LogData] {
   stackAddresses
+    .prefix(config.depth > 0 ? config.depth : stackAddresses.count)
     .compactMap { item -> (address: UInt, module: String, offset: UInt, symbol: String)? in
       let address = item.uintValue
       var info = dl_info()
@@ -95,7 +96,6 @@ func stackMetadata(moduleName: String, stackAddresses: ArraySlice<NSNumber>, con
       let offset = address - UInt(bitPattern: info.dli_saddr)
       return (address, module, offset, symbol)
     }
-    .prefix(config.depth > 0 ? config.depth : stackAddresses.count)
     .enumerated()
     .filter {
       guard config.view == .module else {

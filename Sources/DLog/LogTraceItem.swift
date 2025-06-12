@@ -29,11 +29,13 @@ import Foundation
 public struct TraceInfo {
   public let processInfo = ProcessInfo.processInfo
   public let queueLabel = String(cString: __dispatch_queue_get_label(nil))
-  public let stackAddresses = Thread.callStackReturnAddresses.dropFirst(2)
+  public let stackAddresses: ArraySlice<NSNumber>
   public let thread = Thread.current
   public let tid: UInt64
   
-  init() {
+  init(stackAddresses: ArraySlice<NSNumber>) {
+    self.stackAddresses = stackAddresses
+    
     var value: UInt64 = 0
     pthread_threadid_np(nil, &value)
     tid = value
@@ -41,13 +43,14 @@ public struct TraceInfo {
 }
 
 public final class LogTraceItem: LogItem, @unchecked Sendable {
-  public let traceInfo = TraceInfo()
+  public let traceInfo: TraceInfo
   
-  init(category: String, stack: [Bool]?, location: LogLocation, metadata: Metadata, message: String, config: LogConfig) {
+  init(category: String, stack: [Bool]?, location: LogLocation, metadata: Metadata, message: String, config: LogConfig, stackAddresses: ArraySlice<NSNumber>) {
+    self.traceInfo = TraceInfo(stackAddresses: stackAddresses)
     super.init(category: category, stack: stack, type: .trace, location: location, metadata: metadata, message: message, config: config)
   }
   
-  override func data() -> LogData? {
+  override func data() -> String? {
     let items: [(TraceOptions, String, () -> Any)] = [
       (.function, "func", { funcInfo(function: "\(self.location.function)", config: self.config.traceConfig.funcConfig) }),
       (.process, "process", { processMetadata(processInfo: self.traceInfo.processInfo, config: self.config.traceConfig.processConfig) }),
@@ -55,6 +58,8 @@ public final class LogTraceItem: LogItem, @unchecked Sendable {
       (.stack, "stack", { stackMetadata(moduleName: self.location.moduleName, stackAddresses: self.traceInfo.stackAddresses, config: self.config.traceConfig.stackConfig) }),
       (.thread, "thread", { threadMetadata(thread: self.traceInfo.thread, tid: self.traceInfo.tid, config: self.config.traceConfig.threadConfig) }),
     ]
-    return LogData.data(from: items, options: config.traceConfig.options)
+    let data = LogData.data(from: items, options: config.traceConfig.options)
+    let pretty = self.config.traceConfig.style == .pretty
+    return data.json(pretty: pretty)
   }
 }

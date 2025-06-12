@@ -223,14 +223,18 @@ final class DLogTests: XCTestCase {
     let i = 10
     let f = 1.1
     let b = true
-    let item = log.log("trace", i, f, b)
-    XCTAssert(item?.message == "trace 10 1.1 true")
+    let item = log.log("Hello", i, f, b)
+    XCTAssert(item?.message == "Hello 10 1.1 true")
   }
   
   func test_trace() {
-    let log = DLog()
-    let item = log.trace("trace")
+    var config = LogConfig()
+    config.traceConfig.options = .all
+    config.traceConfig.threadConfig.options = []
+    config.traceConfig.style = .pretty
+    let log = DLog(config: config)
     
+    let item = log.trace("trace")
     XCTAssert(item?.traceInfo.processInfo == ProcessInfo.processInfo)
     XCTAssert(item?.traceInfo.queueLabel == "com.apple.main-thread")
     XCTAssert(item?.traceInfo.stackAddresses.count != 0)

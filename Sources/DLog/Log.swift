@@ -109,7 +109,8 @@ public class Log: @unchecked Sendable {
       return nil
     }
     let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
-    let item = LogTraceItem(category: category, stack: stack(), location: location, metadata: metadata.value, message: "\(message)", config: config)
+    let stackAddresses = Thread.callStackReturnAddresses.dropFirst(2)
+    let item = LogTraceItem(category: category, stack: stack(), location: location, metadata: metadata.value, message: "\(message)", config: config, stackAddresses: stackAddresses)
     logger.value?.log(item: item)
     return item
   }
