@@ -88,13 +88,9 @@ extension OSLog: Output {
     switch item {
       // Scope
       case let scope as LogScopeItem:
-        guard let os_activity_current = Dynamic.OS_ACTIVITY_CURRENT else {
-          break
-        }
-          
         scope.activity.sync { state in
           if scope.type == .scopeEnter {
-            let activity = _os_activity_create(Dynamic.dso, strdup(item.message), os_activity_current, OS_ACTIVITY_FLAG_DEFAULT)
+            let activity = _os_activity_create(Dynamic.dso, strdup(item.message), Dynamic.OS_ACTIVITY_CURRENT, OS_ACTIVITY_FLAG_DEFAULT)
             os_activity_scope_enter(activity, &state)
           }
           else {

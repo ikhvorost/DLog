@@ -73,10 +73,9 @@ public struct StackConfig: Sendable {
 }
 
 fileprivate func swift_demangle(_ mangled: String) -> String? {
-  guard mangled.hasPrefix("$s"), let cString = Dynamic.swift_demangle?(mangled, mangled.count, nil, nil, 0) else {
+  guard mangled.hasPrefix("$s"), let cString = Dynamic.swift_demangle(mangled, mangled.count, nil, nil, 0) else {
     return nil
   }
-  
   defer { cString.deallocate() }
   return String(cString: cString)
 }
