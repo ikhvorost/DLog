@@ -1,7 +1,7 @@
 import Foundation
 import XCTest
 import DLog
-
+import Network
 /*@testable*/ import DLog
 
 
@@ -21,18 +21,21 @@ extension String: LocalizedError {
 
 // Locale: en_US
 extension NSLocale {
+  @objc
   static let currentLocale = NSLocale(localeIdentifier: "en_US")
 }
 
 // Time zone: GMT
 // NSTimeZone.default = TimeZone(abbreviation: "GMT")!
 extension NSTimeZone {
+  @objc
   static let defaultTimeZone = TimeZone(abbreviation: "GMT")
 }
 
 extension String {
   func match(_ pattern: String) -> Bool {
-    self.range(of: pattern, options: [.regularExpression]) != nil
+    let range = self.range(of: pattern, options: [.regularExpression])
+    return range != nil
   }
 }
 
@@ -40,8 +43,7 @@ extension StaticString {
   var string: String { "\(self)" }
 }
 
-
-extension XCTestCase {
+fileprivate extension XCTestCase {
   
   func wait(count: Int, timeout: TimeInterval = 1, repeat r: Int = 1, name: String = #function, closure: ([XCTestExpectation]) -> Void) {
     guard count > 0, r > 0 else { return }
@@ -66,12 +68,13 @@ extension XCTestCase {
 
 // MARK: - Utils
 
-func delay(_ sec: TimeInterval = 0.1) {
+fileprivate func delay(_ secs: [TimeInterval] = [0.1]) {
+  let sec = secs.randomElement()!
   Thread.sleep(forTimeInterval: sec)
 }
 
 /// Get text standard output
-func readStream(file: Int32, stream: UnsafeMutablePointer<FILE>, block: () -> Void) -> String? {
+fileprivate func readStream(file: Int32, stream: UnsafeMutablePointer<FILE>, block: () -> Void) -> String? {
   let buffer = AtomicArray([String]())
   
   // Set pipe
@@ -102,11 +105,11 @@ func readStream(file: Int32, stream: UnsafeMutablePointer<FILE>, block: () -> Vo
   return text
 }
 
-func read_stdout(_ block: () -> Void) -> String? {
+fileprivate func read_stdout(_ block: () -> Void) -> String? {
   readStream(file: STDOUT_FILENO, stream: stdout, block: block)
 }
 
-func read_stderr(_ block: () -> Void) -> String? {
+fileprivate func read_stderr(_ block: () -> Void) -> String? {
   readStream(file: STDERR_FILENO, stream: stderr, block: block)
 }
 
@@ -136,12 +139,12 @@ let Interval = #"\{average:\#(SECS),duration:\#(SECS)\}"#
 
 let Empty = ">$"
 
-struct TestLog {
+fileprivate struct TestLog {
   let item: LogItem?
   let type: LogType
 }
 
-func log_all(_ log: Log, message: LogMessage) -> [TestLog] {
+fileprivate func log_all(_ log: Log, message: LogMessage) -> [TestLog] {
   return [
     TestLog(item: log.log(message), type: .log),
     TestLog(item: log.log("\(message)"), type: .log),
@@ -170,11 +173,6 @@ func log_all(_ log: Log, message: LogMessage) -> [TestLog] {
 }
 
 final class DLogTests: XCTestCase {
-  
-//  func test() {
-//    let m: LogMessage = "hello"
-//    print(m)
-//  }
   
   func test_sendable() {
     let logger = DLog()
@@ -335,9 +333,9 @@ final class DLogTests: XCTestCase {
     let logger = DLog()
     
     DispatchQueue.concurrentPerform(iterations: 10) { i in
-      delay([0.1, 0.2, 0.3, 0.4].randomElement()!)
+      delay([0.1, 0.2, 0.3, 0.4])
       let scope = logger.scope("Scope \(i)") {
-        delay([0.1, 0.2, 0.3, 0.4].randomElement()!)
+        delay([0.1, 0.2, 0.3, 0.4])
         $0.debug("debug \(i)")
       }
       XCTAssert(scope?.duration ?? 0 >= 0.1)
@@ -372,7 +370,7 @@ final class DLogTests: XCTestCase {
     interval?.begin()
     interval?.begin()
     
-    delay(0.3)
+    delay([0.3])
     
     interval?.end()
     interval?.end()
@@ -388,7 +386,7 @@ final class DLogTests: XCTestCase {
     
     interval?.begin()
     
-    delay(0.2)
+    delay([0.2])
     
     interval?.end()
     XCTAssert(interval?.duration ?? 0 >= 0.1)
@@ -493,6 +491,319 @@ final class DLogTests: XCTestCase {
     logger.scope("scope") { _ in }
     logger.interval("interval") { }
     delay()
+  }
+}
+
+final class FormatTests: XCTestCase {
+  
+  func test_privacy() {
+    let logger = DLog()
+    
+    let empty = ""
+    let cardNumber = "1234 5678 9012 3456"
+    let greeting = "Hello World!"
+    let number = 1234567890
+    
+    XCTAssert(logger.log("Default: \(cardNumber)")?.description.match(cardNumber) == true)
+    XCTAssert(logger.log("Public: \(cardNumber, privacy: .public)")?.description.match(cardNumber) == true)
+    
+    XCTAssert(logger.log("Private: \(cardNumber, privacy: .private)")?.description.match("<private>") == true)
+    
+    XCTAssert(logger.log("Private hash: \(cardNumber, privacy: .private(mask: .hash))")?.description.match("[0-9a-fA-F]+") == true)
+    
+    XCTAssert(logger.log("Private random: \(empty, privacy: .private(mask: .random))")?.description.match("Private random:$") == true)
+    XCTAssert(logger.log("Private random: \(cardNumber, privacy: .private(mask: .random))")?.description.match(cardNumber) == false)
+    XCTAssert(logger.log("Private random: \(greeting, privacy: .private(mask: .random))")?.description.match(greeting) == false)
+    
+    XCTAssert(logger.log("Private redact: \(empty, privacy: .private(mask: .redact))")?.description.match("Private redact:$") == true)
+    XCTAssert(logger.log("Private redact: \(cardNumber, privacy: .private(mask: .redact))")?.description.match("0000 0000 0000 0000") == true)
+    XCTAssert(logger.log("Private redact: \(greeting, privacy: .private(mask: .redact))")?.description.match("XXXXX XXXXX!") == true)
+    
+    XCTAssert(logger.log("Private shuffle: \("1 2 3", privacy: .private(mask: .shuffle))")?.description.match("1 2 3") == true)
+    XCTAssert(logger.log("Private shuffle: \(cardNumber, privacy: .private(mask: .shuffle))")?.description.match(cardNumber) == false)
+    XCTAssert(logger.log("Private shuffle: \(greeting, privacy: .private(mask: .shuffle))")?.description.match(greeting) == false)
+    
+    XCTAssert(logger.log("Private custom: \(cardNumber, privacy: .private(mask: .custom(value: "<null>")))")?.description.match("<null>") == true)
+    
+    XCTAssert(logger.log("Private partial: \(empty, privacy: .private(mask: .partial(first: -1, last: -2)))")?.description.match("Private partial:$") == true)
+    XCTAssert(logger.log("Private partial: \(cardNumber, privacy: .private(mask: .partial(first: -1, last: -2)))")?.description.match("[\\*]{19}") == true)
+    XCTAssert(logger.log("Private partial: \(cardNumber, privacy: .private(mask: .partial(first: 0, last: 0)))")?.description.match("[\\*]{19}") == true)
+    XCTAssert(logger.log("Private partial: \(cardNumber, privacy: .private(mask: .partial(first: 1, last: 4)))")?.description.match("1[\\*]{14}3456") == true)
+    XCTAssert(logger.log("Private partial: \(cardNumber, privacy: .private(mask: .partial(first: 10, last: 10)))")?.description.match(cardNumber) == true)
+    
+    XCTAssert(logger.log("Private reduce: \(cardNumber, privacy: .private(mask: .reduce(length: -3)))")?.description.match("...") == true)
+    XCTAssert(logger.log("Private reduce: \(cardNumber, privacy: .private(mask: .reduce(length: 0)))")?.description.match("...") == true)
+    XCTAssert(logger.log("Private reduce: \(cardNumber, privacy: .private(mask: .reduce(length: 1)))")?.description.match("...6") == true)
+    XCTAssert(logger.log("Private reduce: \(cardNumber, privacy: .private(mask: .reduce(length: 2)))")?.description.match("1...6") == true)
+    XCTAssert(logger.log("Private reduce: \(cardNumber, privacy: .private(mask: .reduce(length: 7)))")?.description.match("123...3456") == true)
+    XCTAssert(logger.log("Private reduce: \(cardNumber, privacy: .private(mask: .reduce(length: 100)))")?.description.match(cardNumber) == true)
+    XCTAssert(logger.log("Private reduce: \(greeting, privacy: .private(mask: .reduce(length: 6)))")?.description.match("Hel...ld!") == true)
+    
+    XCTAssert(logger.log("Private reduce: \(number, privacy: .private(mask: .reduce(length: 6)))")?.description.match("123...890") == true)
+  }
+  
+  func test_date() {
+    let logger = DLog()
+    
+    let date = Date(timeIntervalSince1970: 1645026131) // 2022-02-16 15:42:11 +0000
+    
+    // Default
+    XCTAssert(logger.log("\(date)")?.description.match("2022-02-16 15:42:11 \\+0000") == true)
+    
+    // Date only
+    XCTAssert(logger.log("\(date, format: .date(dateStyle: .short))")?.description.match("2/16/22") == true)
+    XCTAssert(logger.log("\(date, format: .date(dateStyle: .medium))")?.description.match("Feb 16, 2022") == true)
+    XCTAssert(logger.log("\(date, format: .date(dateStyle: .long))")?.description.match("February 16, 2022") == true)
+    XCTAssert(logger.log("\(date, format: .date(dateStyle: .full))")?.description.match("Wednesday, February 16, 2022") == true)
+    
+    // Time only
+    XCTAssert(logger.log("\(date, format: .date(timeStyle: .short))")?.description.match("3:42 PM") == true)
+    XCTAssert(logger.log("\(date, format: .date(timeStyle: .medium))")?.description.match("3:42:11 PM") == true)
+    XCTAssert(logger.log("\(date, format: .date(timeStyle: .long))")?.description.match("3:42:11 PM GMT") == true)
+    XCTAssert(logger.log("\(date, format: .date(timeStyle: .full))")?.description.match("3:42:11 PM Greenwich Mean Time") == true)
+    
+    // Both
+    XCTAssert(logger.log("\(date, format: .date())")?.description.match(Empty) == true) // Empty
+    XCTAssert(logger.log("\(date, format: .date(dateStyle: .medium, timeStyle: .short))")?.description.match("Feb 16, 2022 at 3:42 PM") == true)
+    
+    // Custom
+    XCTAssert(logger.log("\(date, format: .dateCustom(format: "dd-MM-yyyy"))")?.description.match("16-02-2022") == true)
+    
+    // Privacy
+    XCTAssert(logger.log("\(date, format: .date(dateStyle: .short), privacy: .private(mask: .redact))")?.description.match("0/00/00") == true)
+    
+    // Locale
+    let locale = Locale(identifier: "en_GB")
+    XCTAssert(logger.log("\(date, format: .date(dateStyle: .medium, timeStyle: .short, locale: locale))")?.description.match("16 Feb 2022 at 15:42") == true)
+  }
+  
+  func test_int() {
+    let logger = DLog()
+    
+    let value = 20_234_557
+    
+    // Default
+    XCTAssert(logger.log("\(value)")?.description.match("20234557") == true)
+    
+    // Binary
+    XCTAssert(logger.log("\(8, format: .binary)")?.description.match("1000") == true)
+    
+    // Octal
+    XCTAssert(logger.log("\(10, format: .octal)")?.description.match("12") == true)
+    XCTAssert(logger.log("\(10, format: .octal(includePrefix: true))")?.description.match("0o12") == true)
+    
+    // Hex
+    XCTAssert(logger.log("\(value, format: .hex)")?.description.match("134c13d") == true)
+    XCTAssert(logger.log("\(value, format: .hex(includePrefix: true))")?.description.match("0x134c13d") == true)
+    XCTAssert(logger.log("\(value, format: .hex(uppercase: true))")?.description.match("134C13D") == true)
+    XCTAssert(logger.log("\(value, format: .hex(includePrefix: true, uppercase: true))")?.description.match("0x134C13D") == true)
+    
+    // Byte count
+    
+    // Count style
+    XCTAssert(logger.log("\(1000, format: .byteCount)")?.description.match("1 KB") == true)
+    
+    XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .file))")?.description.match("20.2 MB") == true)
+    XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .memory))")?.description.match("19.3 MB") == true)
+    XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .decimal))")?.description.match("20.2 MB") == true)
+    XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .binary))")?.description.match("19.3 MB") == true)
+    
+    // Allowed Units
+    XCTAssert(logger.log("\(value, format: .byteCount(allowedUnits: .useBytes))")?.description.match("20,234,557 bytes") == true)
+    XCTAssert(logger.log("\(value, format: .byteCount(allowedUnits: .useKB))")?.description.match("20,235 KB") == true)
+    XCTAssert(logger.log("\(value, format: .byteCount(allowedUnits: .useGB))")?.description.match("0.02 GB") == true)
+    
+    // Both
+    XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .memory, allowedUnits: .useGB))")?.description.match("0.02 GB") == true)
+    
+    // Privacy
+    XCTAssert(logger.log("\(value, format: .byteCount(allowedUnits: .useMB), privacy: .private(mask: .redact))")?.description.match("00.0 XX") == true)
+    
+    // Number
+    let number = 1_234
+    XCTAssert(logger.log("\(number)")?.description.match("\(number)") == true)
+    XCTAssert(logger.log("\(number, format: .number)")?.description.match("1,234") == true)
+    XCTAssert(logger.log("\(number, format: .number(style: .none))")?.description.match("\(number)") == true)
+    XCTAssert(logger.log("\(number, format: .number(style: .decimal))")?.description.match("1,234") == true)
+    XCTAssert(logger.log("\(number, format: .number(style: .currency))")?.description.match("\\$1,234\\.00") == true)
+    XCTAssert(logger.log("\(number, format: .number(style: .percent))")?.description.match("123,400%") == true)
+    XCTAssert(logger.log("\(number, format: .number(style: .scientific))")?.description.match("1.234E3") == true)
+    XCTAssert(logger.log("\(number, format: .number(style: .spellOut))")?.description.match("one thousand two hundred thirty-four") == true)
+    
+    // Privacy
+    XCTAssert(logger.log("\(number, format: .number(style: .decimal), privacy: .private(mask: .redact))")?.description.match("0,000") == true)
+    
+    // Locale
+    let locale = Locale(identifier: "en_GB")
+    XCTAssert(logger.log("\(number, format: .number(style: .currency, locale: locale))")?.description.match("\\£1,234\\.00") == true)
+    // Number
+    
+    // HTTP
+    XCTAssert(logger.log("\(200, format: .httpStatusCode)")?.description.match("HTTP 200 no error") == true)
+    XCTAssert(logger.log("\(400, format: .httpStatusCode)")?.description.match("HTTP 400 bad request") == true)
+    XCTAssert(logger.log("\(404, format: .httpStatusCode)")?.description.match("HTTP 404 not found") == true)
+    XCTAssert(logger.log("\(500, format: .httpStatusCode)")?.description.match("HTTP 500 internal server error") == true)
+    
+    // IPv4
+    let ip4 = 0x0100007f // 16777343
+    XCTAssert(logger.log("\(0, format: .ipv4Address)")?.description.match("0.0.0.0") == true)
+    XCTAssert(logger.log("\(ip4, format: .ipv4Address)")?.description.match("127.0.0.1") == true)
+    XCTAssert(logger.log("\(-ip4, format: .ipv4Address)")?.description.match("127.0.0.1") == false)
+    XCTAssert(logger.log("\(0x0101a8c0, format: .ipv4Address)")?.description.match("192.168.1.1") == true)
+    
+    // Time
+    let time = 60 * 60 + 23 * 60 + 15
+    XCTAssert(logger.log("\(time, format: .time)")?.description.match("1h 23m 15s") == true)
+    XCTAssert(logger.log("\(time, format: .time(unitsStyle: .positional))")?.description.match("1:23:15") == true)
+    XCTAssert(logger.log("\(time, format: .time(unitsStyle: .short))")?.description.match("1 hr, 23 min, 15 sec") == true)
+    XCTAssert(logger.log("\(time, format: .time(unitsStyle: .full))")?.description.match("1 hour, 23 minutes, 15 seconds") == true)
+    XCTAssert(logger.log("\(time, format: .time(unitsStyle: .spellOut))")?.description.match("one hour, twenty-three minutes, fifteen seconds") == true)
+    
+    // Date
+    let timeIntervalSince1970 = 1645026131 // 2022-02-16 15:42:11 +0000
+    XCTAssert(logger.log("\(timeIntervalSince1970, format: .date)")?.description.match("2/16/22, 3:42 PM$") == true)
+    XCTAssert(logger.log("\(timeIntervalSince1970, format: .date(dateStyle: .short))")?.description.match("2/16/22$") == true)
+    XCTAssert(logger.log("\(timeIntervalSince1970, format: .date(timeStyle: .medium))")?.description.match("3:42:11 PM$") == true)
+    XCTAssert(logger.log("\(timeIntervalSince1970, format: .date(dateStyle: .short, timeStyle: .short, locale: locale))")?.description.match("16/02/2022, 15:42$") == true)
+  }
+  
+  func test_double() {
+    let logger = DLog()
+    
+    let value = 12.345
+    
+    // Default
+    XCTAssert(logger.log("\(value)")?.description.match("12.345") == true)
+    
+    // Fixed
+    XCTAssert(logger.log("\(value, format: .fixed)")?.description.match("12.345000") == true)
+    XCTAssert(logger.log("\(value, format: .fixed(precision: 2))")?.description.match("12.35") == true)
+    
+    // Hex
+    XCTAssert(logger.log("\(value, format: .hex)")?.description.match("1\\.8b0a3d70a3d71p\\+3") == true)
+    XCTAssert(logger.log("\(value, format: .hex(includePrefix: true))")?.description.match("0x1\\.8b0a3d70a3d71p\\+3") == true)
+    XCTAssert(logger.log("\(value, format: .hex(uppercase: true))")?.description.match("1\\.8B0A3D70A3D71P\\+3") == true)
+    XCTAssert(logger.log("\(value, format: .hex(includePrefix: true, uppercase: true))")?.description.match("0x1\\.8B0A3D70A3D71P\\+3") == true)
+    
+    // Exponential
+    XCTAssert(logger.log("\(value, format: .exponential)")?.description.match("1\\.234500e\\+01") == true)
+    XCTAssert(logger.log("\(value, format: .exponential(precision: 2))")?.description.match("1\\.23e\\+01") == true)
+    
+    // Hybrid
+    XCTAssert(logger.log("\(value, format: .hybrid)")?.description.match("12.345") == true)
+    XCTAssert(logger.log("\(value, format: .hybrid(precision: 1))")?.description.match("1e\\+01") == true)
+    
+    // Privacy
+    XCTAssert(logger.log("\(value, format: .hybrid(precision: 1), privacy: .private(mask: .redact))")?.description.match("0X\\+00") == true)
+    
+    // Number
+    let number = 1_234.56
+    XCTAssert(logger.log("\(number)")?.description.match("\(number)") == true)
+    
+    XCTAssert(logger.log("\(number, format: .number(style: .none))")?.description.match("1235") == true)
+    XCTAssert(logger.log("\(number, format: .number(style: .decimal))")?.description.match("1,234.56") == true)
+    XCTAssert(logger.log("\(number, format: .number(style: .currency))")?.description.match("\\$1,234\\.56") == true)
+    XCTAssert(logger.log("\(number, format: .number(style: .percent))")?.description.match("123,456%") == true)
+    XCTAssert(logger.log("\(number, format: .number(style: .scientific))")?.description.match("1.23456E3") == true)
+    XCTAssert(logger.log("\(number, format: .number(style: .spellOut))")?.description.match("one thousand two hundred thirty-four point five six") == true)
+    
+    // Privacy
+    XCTAssert(logger.log("\(number, format: .number(style: .decimal), privacy: .private(mask: .redact))")?.description.match("0,000.00") == true)
+    
+    // Locale
+    let locale = Locale(identifier: "en_GB")
+    XCTAssert(logger.log("\(number, format: .number(style: .currency, locale: locale))")?.description.match("\\£1,234\\.56") == true)
+    // Number
+    
+    // Time
+    let durationWithSecs = 60 * 60 + 23 * 60 + 1.25
+    XCTAssert(logger.log("\(durationWithSecs, format: .time)")?.description.match("1h 23m 1.250s$") == true)
+    XCTAssert(logger.log("\(durationWithSecs, format: .time(unitsStyle: .positional))")?.description.match("1:23:01.250$") == true)
+    XCTAssert(logger.log("\(durationWithSecs, format: .time(unitsStyle: .short))")?.description.match("1 hr, 23 min, 1.250 sec$") == true)
+    XCTAssert(logger.log("\(durationWithSecs, format: .time(unitsStyle: .full))")?.description.match("1 hour, 23 minutes, 1.250 second$") == true)
+    XCTAssert(logger.log("\(durationWithSecs, format: .time(unitsStyle: .spellOut))")?.description.match("one hour, twenty-three minutes, one second, two hundred fifty milliseconds$") == true)
+    XCTAssert(logger.log("\(durationWithSecs, format: .time(unitsStyle: .brief))")?.description.match("1hr 23min 1.250sec$") == true)
+    
+    let durationNoSecs = 60 * 60 + 23 * 60
+    let durationWithMs = 60 * 60 + 23 * 60 + 0.45
+    XCTAssert(logger.log("\(durationNoSecs, format: .time)")?.description.match("1h 23m$") == true)
+    XCTAssert(logger.log("\(durationWithMs, format: .time)")?.description.match("1h 23m 0.450s$") == true)
+    
+    // Date
+    let dateWithMin = 1645026131.45 // 2022-02-16 15:42:11 +0000
+    XCTAssert(logger.log("\(dateWithMin, format: .date)")?.description.match("2/16/22, 3:42 PM$") == true)
+    XCTAssert(logger.log("\(dateWithMin, format: .date(dateStyle: .short))")?.description.match("2/16/22$") == true)
+    XCTAssert(logger.log("\(dateWithMin, format: .date(timeStyle: .medium))")?.description.match("3:42:11 PM$") == true)
+    XCTAssert(logger.log("\(dateWithMin, format: .date(dateStyle: .short, timeStyle: .short, locale: locale))")?.description.match("16/02/2022, 15:42$") == true)
+  }
+
+  func test_bool() {
+    let logger = DLog()
+    
+    let value = true
+    
+    // Default
+    XCTAssert(logger.log("\(value)")?.description.match("true") == true)
+    
+    // Binary
+    XCTAssert(logger.log("\(value, format: .binary)")?.description.match("1") == true)
+    XCTAssert(logger.log("\(!value, format: .binary)")?.description.match("0") == true)
+    
+    // Answer
+    XCTAssert(logger.log("\(value, format: .answer)")?.description.match("yes") == true)
+    XCTAssert(logger.log("\(!value, format: .answer)")?.description.match("no") == true)
+    
+    // Toggle
+    XCTAssert(logger.log("\(value, format: .toggle)")?.description.match("on") == true)
+    XCTAssert(logger.log("\(!value, format: .toggle)")?.description.match("off") == true)
+  }
+
+  func test_data() {
+    let logger = DLog()
+    
+    // IPv6
+    let ipString = "2001:0b28:f23f:f005:0000:0000:0000:000a"
+    let ipv6 = IPv6Address(ipString)!
+    XCTAssert(logger.log("\(ipv6.rawValue, format: .ipv6Address)")?.description.match("2001:b28:f23f:f005::a$") == true)
+    XCTAssert(logger.log("\(Data([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]), format: .ipv6Address)")?.description.match(Empty) == true)
+    
+    // Text
+    let text = "Hello DLog!"
+    var data = text.data(using: .utf8)!
+    XCTAssert(logger.log("\(data, format: .text)")?.description.match(text) == true)
+    XCTAssert(logger.log("\(Data([255, 2, 3, 4, 5, 6, 7, 8, 9]), format: .text)")?.description.match(Empty) == true)
+    
+    // UUID
+    let uuid = UUID()
+    var tuple = uuid.uuid
+    data = withUnsafeBytes(of: &tuple) { Data($0) }
+    XCTAssert(logger.log("\(data, format: .uuid)")?.description.match(uuid.uuidString) == true)
+    XCTAssert(logger.log("\(Data([0, 1, 2, 3]), format: .uuid)")?.description.match(Empty) == true)
+    
+    // Raw
+    data = Data([0xab, 0xcd, 0xef])
+    XCTAssert(logger.log("\(data, format: .raw)")?.description.match("ABCDEF") == true)
+  }
+
+  func test_concurrent() {
+    let logger = DLog()
+    
+    DispatchQueue.concurrentPerform(iterations: 10) { _ in
+      delay([0.1, 0.2, 0.3])
+      
+      let date = Date(timeIntervalSince1970: 1645026131) // 2022-02-16 15:42:11 +0000
+      XCTAssert(logger.log("\(date, format: .date(dateStyle: .short))")?.description.match("2/16/22") == true)
+      
+      delay([0.1, 0.2, 0.3])
+      
+      let number = 1_234_567_890
+      XCTAssert(logger.log("\(number, format: .number(style: .none))")?.description.match("\(number)") == true)
+      
+      delay([0.1, 0.2, 0.3])
+      
+      let value: Int64 = 20_234_557
+      XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .file))")?.description.match("20.2 MB") == true)
+    }
   }
 }
 
@@ -989,313 +1300,6 @@ final class FormatTests: XCTestCase {
     // Array
     let array = [1, 2, 3]
     XCTAssert(logger.debug("\(array)")?.match("\\[1, 2, 3\\]") == true)
-  }
-  
-  func test_Privacy() {
-    let logger = DLog()
-    
-    let empty = ""
-    let cardNumber = "1234 5678 9012 3456"
-    let greeting = "Hello World!"
-    let number = 1234567890
-    
-    XCTAssert(logger.log("Default: \(cardNumber)")?.match(cardNumber) == true)
-    XCTAssert(logger.log("Public: \(cardNumber, privacy: .public)")?.match(cardNumber) == true)
-    
-    XCTAssert(logger.log("Private: \(cardNumber, privacy: .private)")?.match("<private>") == true)
-    
-    XCTAssert(logger.log("Private hash: \(cardNumber, privacy: .private(mask: .hash))")?.match("[0-9a-fA-F]+") == true)
-    
-    XCTAssert(logger.log("Private random: \(empty, privacy: .private(mask: .random))")?.match(": $") == true)
-    XCTAssert(logger.log("Private random: \(cardNumber, privacy: .private(mask: .random))")?.match(cardNumber) == false)
-    XCTAssert(logger.log("Private random: \(greeting, privacy: .private(mask: .random))")?.match(greeting) == false)
-    
-    XCTAssert(logger.log("Private redact: \(empty, privacy: .private(mask: .redact))")?.match(": $") == true)
-    XCTAssert(logger.log("Private redact: \(cardNumber, privacy: .private(mask: .redact))")?.match("0000 0000 0000 0000") == true)
-    XCTAssert(logger.log("Private redact: \(greeting, privacy: .private(mask: .redact))")?.match("XXXXX XXXXX!") == true)
-    
-    XCTAssert(logger.log("Private shuffle: \("1 2 3", privacy: .private(mask: .shuffle))")?.match("1 2 3") == true)
-    XCTAssert(logger.log("Private shuffle: \(cardNumber, privacy: .private(mask: .shuffle))")?.match(cardNumber) == false)
-    XCTAssert(logger.log("Private shuffle: \(greeting, privacy: .private(mask: .shuffle))")?.match(greeting) == false)
-    
-    XCTAssert(logger.log("Private custom: \(cardNumber, privacy: .private(mask: .custom(value: "<null>")))")?.match("<null>") == true)
-    
-    XCTAssert(logger.log("Private partial: \(empty, privacy: .private(mask: .partial(first: -1, last: -2)))")?.match(": $") == true)
-    XCTAssert(logger.log("Private partial: \(cardNumber, privacy: .private(mask: .partial(first: -1, last: -2)))")?.match("[\\*]{19}") == true)
-    XCTAssert(logger.log("Private partial: \(cardNumber, privacy: .private(mask: .partial(first: 0, last: 0)))")?.match("[\\*]{19}") == true)
-    XCTAssert(logger.log("Private partial: \(cardNumber, privacy: .private(mask: .partial(first: 1, last: 4)))")?.match("1[\\*]{14}3456") == true)
-    XCTAssert(logger.log("Private partial: \(cardNumber, privacy: .private(mask: .partial(first: 10, last: 10)))")?.match(cardNumber) == true)
-    
-    XCTAssert(logger.log("Private reduce: \(cardNumber, privacy: .private(mask: .reduce(length: -3)))")?.match("...") == true)
-    XCTAssert(logger.log("Private reduce: \(cardNumber, privacy: .private(mask: .reduce(length: 0)))")?.match("...") == true)
-    XCTAssert(logger.log("Private reduce: \(cardNumber, privacy: .private(mask: .reduce(length: 1)))")?.match("...6") == true)
-    XCTAssert(logger.log("Private reduce: \(cardNumber, privacy: .private(mask: .reduce(length: 2)))")?.match("1...6") == true)
-    XCTAssert(logger.log("Private reduce: \(cardNumber, privacy: .private(mask: .reduce(length: 7)))")?.match("123...3456") == true)
-    XCTAssert(logger.log("Private reduce: \(cardNumber, privacy: .private(mask: .reduce(length: 100)))")?.match(cardNumber) == true)
-    XCTAssert(logger.log("Private reduce: \(greeting, privacy: .private(mask: .reduce(length: 6)))")?.match("Hel...ld!") == true)
-    
-    XCTAssert(logger.log("Private reduce: \(number, privacy: .private(mask: .reduce(length: 6)))")?.match("123...890") == true)
-  }
-  
-  func test_DateFormat() {
-    let logger = DLog()
-    
-    let date = Date(timeIntervalSince1970: 1645026131) // 2022-02-16 15:42:11 +0000
-    
-    // Default
-    XCTAssert(logger.log("\(date)")?.match("2022-02-16 15:42:11 \\+0000") == true)
-    
-    // Date only
-    XCTAssert(logger.log("\(date, format: .date(dateStyle: .short))")?.match("2/16/22") == true)
-    XCTAssert(logger.log("\(date, format: .date(dateStyle: .medium))")?.match("Feb 16, 2022") == true)
-    XCTAssert(logger.log("\(date, format: .date(dateStyle: .long))")?.match("February 16, 2022") == true)
-    XCTAssert(logger.log("\(date, format: .date(dateStyle: .full))")?.match("Wednesday, February 16, 2022") == true)
-    
-    // Time only
-    XCTAssert(logger.log("\(date, format: .date(timeStyle: .short))")?.match("3:42 PM") == true)
-    XCTAssert(logger.log("\(date, format: .date(timeStyle: .medium))")?.match("3:42:11 PM") == true)
-    XCTAssert(logger.log("\(date, format: .date(timeStyle: .long))")?.match("3:42:11 PM GMT") == true)
-    XCTAssert(logger.log("\(date, format: .date(timeStyle: .full))")?.match("3:42:11 PM Greenwich Mean Time") == true)
-    
-    // Both
-    XCTAssert(logger.log("\(date, format: .date())")?.match(Empty) == true) // Empty
-    XCTAssert(logger.log("\(date, format: .date(dateStyle: .medium, timeStyle: .short))")?.match("Feb 16, 2022 at 3:42 PM") == true)
-    
-    // Custom
-    XCTAssert(logger.log("\(date, format: .dateCustom(format: "dd-MM-yyyy"))")?.match("16-02-2022") == true)
-    
-    // Privacy
-    XCTAssert(logger.log("\(date, format: .date(dateStyle: .short), privacy: .private(mask: .redact))")?.match("0/00/00") == true)
-    
-    // Locale
-    let locale = Locale(identifier: "en_GB")
-    XCTAssert(logger.log("\(date, format: .date(dateStyle: .medium, timeStyle: .short, locale: locale))")?.match("16 Feb 2022 at 15:42") == true)
-  }
-  
-  func test_IntFormat() {
-    let logger = DLog()
-    
-    let value = 20_234_557
-    
-    // Default
-    XCTAssert(logger.log("\(value)")?.match("20234557") == true)
-    
-    // Binary
-    XCTAssert(logger.log("\(8, format: .binary)")?.match("1000") == true)
-    
-    // Octal
-    XCTAssert(logger.log("\(10, format: .octal)")?.match("12") == true)
-    XCTAssert(logger.log("\(10, format: .octal(includePrefix: true))")?.match("0o12") == true)
-    
-    // Hex
-    XCTAssert(logger.log("\(value, format: .hex)")?.match("134c13d") == true)
-    XCTAssert(logger.log("\(value, format: .hex(includePrefix: true))")?.match("0x134c13d") == true)
-    XCTAssert(logger.log("\(value, format: .hex(uppercase: true))")?.match("134C13D") == true)
-    XCTAssert(logger.log("\(value, format: .hex(includePrefix: true, uppercase: true))")?.match("0x134C13D") == true)
-    
-    // Byte count
-    
-    // Count style
-    XCTAssert(logger.log("\(1000, format: .byteCount)")?.match("1 KB") == true)
-    
-    XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .file))")?.match("20.2 MB") == true)
-    XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .memory))")?.match("19.3 MB") == true)
-    XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .decimal))")?.match("20.2 MB") == true)
-    XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .binary))")?.match("19.3 MB") == true)
-    
-    // Allowed Units
-    XCTAssert(logger.log("\(value, format: .byteCount(allowedUnits: .useBytes))")?.match("20,234,557 bytes") == true)
-    XCTAssert(logger.log("\(value, format: .byteCount(allowedUnits: .useKB))")?.match("20,235 KB") == true)
-    XCTAssert(logger.log("\(value, format: .byteCount(allowedUnits: .useGB))")?.match("0.02 GB") == true)
-    
-    // Both
-    XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .memory, allowedUnits: .useGB))")?.match("0.02 GB") == true)
-    
-    // Privacy
-    XCTAssert(logger.log("\(value, format: .byteCount(allowedUnits: .useMB), privacy: .private(mask: .redact))")?.match("00.0 XX") == true)
-    
-    // Number
-    let number = 1_234
-    XCTAssert(logger.log("\(number)")?.match("\(number)") == true)
-    XCTAssert(logger.log("\(number, format: .number)")?.match("1,234") == true)
-    XCTAssert(logger.log("\(number, format: .number(style: .none))")?.match("\(number)") == true)
-    XCTAssert(logger.log("\(number, format: .number(style: .decimal))")?.match("1,234") == true)
-    XCTAssert(logger.log("\(number, format: .number(style: .currency))")?.match("\\$1,234\\.00") == true)
-    XCTAssert(logger.log("\(number, format: .number(style: .percent))")?.match("123,400%") == true)
-    XCTAssert(logger.log("\(number, format: .number(style: .scientific))")?.match("1.234E3") == true)
-    XCTAssert(logger.log("\(number, format: .number(style: .spellOut))")?.match("one thousand two hundred thirty-four") == true)
-    
-    // Privacy
-    XCTAssert(logger.log("\(number, format: .number(style: .decimal), privacy: .private(mask: .redact))")?.match("0,000") == true)
-    
-    // Locale
-    let locale = Locale(identifier: "en_GB")
-    XCTAssert(logger.log("\(number, format: .number(style: .currency, locale: locale))")?.match("\\£1,234\\.00") == true)
-    // Number
-    
-    // HTTP
-    XCTAssert(logger.log("\(200, format: .httpStatusCode)")?.match("HTTP 200 no error") == true)
-    XCTAssert(logger.log("\(400, format: .httpStatusCode)")?.match("HTTP 400 bad request") == true)
-    XCTAssert(logger.log("\(404, format: .httpStatusCode)")?.match("HTTP 404 not found") == true)
-    XCTAssert(logger.log("\(500, format: .httpStatusCode)")?.match("HTTP 500 internal server error") == true)
-    
-    // IPv4
-    let ip4 = 0x0100007f // 16777343
-    XCTAssert(logger.log("\(0, format: .ipv4Address)")?.match("0.0.0.0") == true)
-    XCTAssert(logger.log("\(ip4, format: .ipv4Address)")?.match("127.0.0.1") == true)
-    XCTAssert(logger.log("\(-ip4, format: .ipv4Address)")?.match("127.0.0.1") == false)
-    XCTAssert(logger.log("\(0x0101a8c0, format: .ipv4Address)")?.match("192.168.1.1") == true)
-    
-    // Time
-    let time = 60 * 60 + 23 * 60 + 15
-    XCTAssert(logger.log("\(time, format: .time)")?.match("1h 23m 15s") == true)
-    XCTAssert(logger.log("\(time, format: .time(unitsStyle: .positional))")?.match("1:23:15") == true)
-    XCTAssert(logger.log("\(time, format: .time(unitsStyle: .short))")?.match("1 hr, 23 min, 15 sec") == true)
-    XCTAssert(logger.log("\(time, format: .time(unitsStyle: .full))")?.match("1 hour, 23 minutes, 15 seconds") == true)
-    XCTAssert(logger.log("\(time, format: .time(unitsStyle: .spellOut))")?.match("one hour, twenty-three minutes, fifteen seconds") == true)
-    
-    // Date
-    let timeIntervalSince1970 = 1645026131 // 2022-02-16 15:42:11 +0000
-    XCTAssert(logger.log("\(timeIntervalSince1970, format: .date)")?.match("2/16/22, 3:42 PM$") == true)
-    XCTAssert(logger.log("\(timeIntervalSince1970, format: .date(dateStyle: .short))")?.match("2/16/22$") == true)
-    XCTAssert(logger.log("\(timeIntervalSince1970, format: .date(timeStyle: .medium))")?.match("3:42:11 PM$") == true)
-    XCTAssert(logger.log("\(timeIntervalSince1970, format: .date(dateStyle: .short, timeStyle: .short, locale: locale))")?.match("16/02/2022, 15:42$") == true)
-  }
-  
-  func test_DoubleFormat() {
-    let logger = DLog()
-    
-    let value = 12.345
-    
-    // Default
-    XCTAssert(logger.log("\(value)")?.match("12.345") == true)
-    
-    // Fixed
-    XCTAssert(logger.log("\(value, format: .fixed)")?.match("12.345000") == true)
-    XCTAssert(logger.log("\(value, format: .fixed(precision: 2))")?.match("12.35") == true)
-    
-    // Hex
-    XCTAssert(logger.log("\(value, format: .hex)")?.match("1\\.8b0a3d70a3d71p\\+3") == true)
-    XCTAssert(logger.log("\(value, format: .hex(includePrefix: true))")?.match("0x1\\.8b0a3d70a3d71p\\+3") == true)
-    XCTAssert(logger.log("\(value, format: .hex(uppercase: true))")?.match("1\\.8B0A3D70A3D71P\\+3") == true)
-    XCTAssert(logger.log("\(value, format: .hex(includePrefix: true, uppercase: true))")?.match("0x1\\.8B0A3D70A3D71P\\+3") == true)
-    
-    // Exponential
-    XCTAssert(logger.log("\(value, format: .exponential)")?.match("1\\.234500e\\+01") == true)
-    XCTAssert(logger.log("\(value, format: .exponential(precision: 2))")?.match("1\\.23e\\+01") == true)
-    
-    // Hybrid
-    XCTAssert(logger.log("\(value, format: .hybrid)")?.match("12.345") == true)
-    XCTAssert(logger.log("\(value, format: .hybrid(precision: 1))")?.match("1e\\+01") == true)
-    
-    // Privacy
-    XCTAssert(logger.log("\(value, format: .hybrid(precision: 1), privacy: .private(mask: .redact))")?.match("0X\\+00") == true)
-    
-    // Number
-    let number = 1_234.56
-    XCTAssert(logger.log("\(number)")?.match("\(number)") == true)
-    
-    XCTAssert(logger.log("\(number, format: .number(style: .none))")?.match("1235") == true)
-    XCTAssert(logger.log("\(number, format: .number(style: .decimal))")?.match("1,234.56") == true)
-    XCTAssert(logger.log("\(number, format: .number(style: .currency))")?.match("\\$1,234\\.56") == true)
-    XCTAssert(logger.log("\(number, format: .number(style: .percent))")?.match("123,456%") == true)
-    XCTAssert(logger.log("\(number, format: .number(style: .scientific))")?.match("1.23456E3") == true)
-    XCTAssert(logger.log("\(number, format: .number(style: .spellOut))")?.match("one thousand two hundred thirty-four point five six") == true)
-    
-    // Privacy
-    XCTAssert(logger.log("\(number, format: .number(style: .decimal), privacy: .private(mask: .redact))")?.match("0,000.00") == true)
-    
-    // Locale
-    let locale = Locale(identifier: "en_GB")
-    XCTAssert(logger.log("\(number, format: .number(style: .currency, locale: locale))")?.match("\\£1,234\\.56") == true)
-    // Number
-    
-    // Time
-    let durationWithSecs = 60 * 60 + 23 * 60 + 1.25
-    XCTAssert(logger.log("\(durationWithSecs, format: .time)")?.match("1h 23m 1.250s$") == true)
-    XCTAssert(logger.log("\(durationWithSecs, format: .time(unitsStyle: .positional))")?.match("1:23:01.250$") == true)
-    XCTAssert(logger.log("\(durationWithSecs, format: .time(unitsStyle: .short))")?.match("1 hr, 23 min, 1.250 sec$") == true)
-    XCTAssert(logger.log("\(durationWithSecs, format: .time(unitsStyle: .full))")?.match("1 hour, 23 minutes, 1.250 second$") == true)
-    XCTAssert(logger.log("\(durationWithSecs, format: .time(unitsStyle: .spellOut))")?.match("one hour, twenty-three minutes, one second, two hundred fifty milliseconds$") == true)
-    XCTAssert(logger.log("\(durationWithSecs, format: .time(unitsStyle: .brief))")?.match("1hr 23min 1.250sec$") == true)
-    
-    let durationNoSecs = 60 * 60 + 23 * 60
-    let durationWithMs = 60 * 60 + 23 * 60 + 0.45
-    XCTAssert(logger.log("\(durationNoSecs, format: .time)")?.match("1h 23m$") == true)
-    XCTAssert(logger.log("\(durationWithMs, format: .time)")?.match("1h 23m 0.450s$") == true)
-    
-    // Date
-    let dateWithMin = 1645026131.45 // 2022-02-16 15:42:11 +0000
-    XCTAssert(logger.log("\(dateWithMin, format: .date)")?.match("2/16/22, 3:42 PM$") == true)
-    XCTAssert(logger.log("\(dateWithMin, format: .date(dateStyle: .short))")?.match("2/16/22$") == true)
-    XCTAssert(logger.log("\(dateWithMin, format: .date(timeStyle: .medium))")?.match("3:42:11 PM$") == true)
-    XCTAssert(logger.log("\(dateWithMin, format: .date(dateStyle: .short, timeStyle: .short, locale: locale))")?.match("16/02/2022, 15:42$") == true)
-  }
-  
-  func test_BoolFormat() {
-    
-    let logger = DLog()
-    
-    let value = true
-    
-    // Default
-    XCTAssert(logger.log("\(value)")?.match("true") == true)
-    
-    // Binary
-    XCTAssert(logger.log("\(value, format: .binary)")?.match("1") == true)
-    XCTAssert(logger.log("\(!value, format: .binary)")?.match("0") == true)
-    
-    // Answer
-    XCTAssert(logger.log("\(value, format: .answer)")?.match("yes") == true)
-    XCTAssert(logger.log("\(!value, format: .answer)")?.match("no") == true)
-    
-    // Toggle
-    XCTAssert(logger.log("\(value, format: .toggle)")?.match("on") == true)
-    XCTAssert(logger.log("\(!value, format: .toggle)")?.match("off") == true)
-  }
-  
-  func test_DataFormat() {
-    let logger = DLog()
-    
-    // IPv6
-    let ipString = "2001:0b28:f23f:f005:0000:0000:0000:000a"
-    let ipv6 = IPv6Address(ipString)!
-    XCTAssert(logger.log("\(ipv6.rawValue, format: .ipv6Address)")?.match("2001:b28:f23f:f005::a$") == true)
-    XCTAssert(logger.log("\(Data([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]), format: .ipv6Address)")?.match(Empty) == true)
-    
-    // Text
-    let text = "Hello DLog!"
-    var data = text.data(using: .utf8)!
-    XCTAssert(logger.log("\(data, format: .text)")?.match(text) == true)
-    XCTAssert(logger.log("\(Data([255, 2, 3, 4, 5, 6, 7, 8, 9]), format: .text)")?.match(Empty) == true)
-    
-    // UUID
-    let uuid = UUID()
-    var tuple = uuid.uuid
-    data = withUnsafeBytes(of: &tuple) { Data($0) }
-    XCTAssert(logger.log("\(data, format: .uuid)")?.match(uuid.uuidString) == true)
-    XCTAssert(logger.log("\(Data([0, 1, 2, 3]), format: .uuid)")?.match(Empty) == true)
-    
-    // Raw
-    data = Data([0xab, 0xcd, 0xef])
-    XCTAssert(logger.log("\(data, format: .raw)")?.match("ABCDEF") == true)
-  }
-  
-  func test_FormatConcurent() {
-    let logger = DLog()
-    
-    for _ in 0...20 {
-      DispatchQueue.global().async {
-        let date = Date(timeIntervalSince1970: 1645026131) // 2022-02-16 15:42:11 +0000
-        XCTAssert(logger.log("\(date, format: .date(dateStyle: .short))")?.match("2/16/22") == true)
-        
-        let number = 1_234_567_890
-        XCTAssert(logger.log("\(number, format: .number(style: .none))")?.match("\(number)") == true)
-        
-        let value: Int64 = 20_234_557
-        XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .file))")?.match("20.2 MB") == true)
-      }
-    }
   }
 }
 
