@@ -134,41 +134,37 @@ let FaultTag = #"\[FAULT\]"#
 let IntervalTag = #"\[INTERVAL\]"#
 
 let Location = "<DLogTests.swift:[0-9]+>"
-let SECS = #"[0-9]+\.[0-9]{3}s"#
+let SECS = #"[0-9]+(\.[0-9]{3})?s"#
 let Interval = #"\{average:\#(SECS),duration:\#(SECS)\}"#
 
 let Empty = ">$"
 
-fileprivate struct TestLog {
-  let item: LogItem?
-  let type: LogType
-}
 
-fileprivate func log_all(_ log: Log, message: LogMessage) -> [TestLog] {
+fileprivate func log_all(_ log: Log, message: LogMessage) -> [LogItem?] {
   return [
-    TestLog(item: log.log(message), type: .log),
-    TestLog(item: log.log("\(message)"), type: .log),
+    log.log(message),
+    log.log("\(message)"),
     
-    TestLog(item: log.trace(message), type: .trace),
-    TestLog(item: log.trace("\(message)"), type: .trace),
+    log.trace(message),
+    log.trace("\(message)"),
     
-    TestLog(item: log.debug(message), type: .debug),
-    TestLog(item: log.debug("\(message)"), type: .debug),
+    log.debug(message),
+    log.debug("\(message)"),
     
-    TestLog(item: log.info(message), type: .info),
-    TestLog(item: log.info("\(message)"), type: .info),
+    log.info(message),
+    log.info("\(message)"),
     
-    TestLog(item: log.warning(message), type: .warning),
-    TestLog(item: log.warning("\(message)"), type: .warning),
+    log.warning(message),
+    log.warning("\(message)"),
     
-    TestLog(item: log.error(message), type: .error),
-    TestLog(item: log.error("\(message)"), type: .error),
+    log.error(message),
+    log.error("\(message)"),
     
-    TestLog(item: log.assert(false, message), type: .assert),
-    TestLog(item: log.assert(false, "\(message)"), type: .assert),
+    log.assert(false, message),
+    log.assert(false, "\(message)"),
     
-    TestLog(item: log.fault(message), type: .fault),
-    TestLog(item: log.fault("\(message)"), type: .fault),
+    log.fault(message),
+    log.fault("\(message)"),
   ]
 }
 
@@ -196,7 +192,7 @@ final class DLogTests: XCTestCase {
     let logger = DLog.disabled
     
     log_all(logger, message: "log").forEach {
-      XCTAssert($0.item == nil)
+      XCTAssert($0 == nil)
     }
     
     XCTAssert(logger.scope("scope") == nil)
@@ -226,11 +222,7 @@ final class DLogTests: XCTestCase {
   }
   
   func test_trace() {
-    var config = LogConfig()
-    config.traceConfig.options = .all
-    config.traceConfig.threadConfig.options = []
-    config.traceConfig.style = .pretty
-    let log = DLog(config: config)
+    let log = DLog()
     
     let item = log.trace("trace")
     XCTAssert(item?.traceInfo.processInfo == ProcessInfo.processInfo)
@@ -246,29 +238,36 @@ final class DLogTests: XCTestCase {
     XCTAssert(item == nil)
   }
   
-  func test_logAll() {
+  func test_log_all() {
     let log = DLog(metadata: ["a" : 10])
     log.metadata["a"] = 20
     log.metadata["b"] = "20"
-       
+    
     log_all(log, message: "log").forEach {
-      XCTAssert($0.item!.time <= Date())
-      XCTAssert($0.item?.category == "DLOG")
-      XCTAssert($0.item?.stack == nil)
-      XCTAssert($0.item?.type == $0.type)
+      guard let item = $0 else {
+        XCTFail()
+        return
+      }
       
-      XCTAssert($0.item?.location.fileID.string == "DLogTests/DLogTests.swift")
-      XCTAssert($0.item?.location.file.string == "DLogTests/DLogTests.swift")
-      XCTAssert($0.item?.location.function.string == "log_all(_:message:)")
-      XCTAssert($0.item!.location.line < #line)
-      XCTAssert($0.item?.location.moduleName == "DLogTests")
-      XCTAssert($0.item?.location.fileName == "DLogTests.swift")
+      XCTAssert(item.time <= Date())
+      XCTAssert(item.category == "DLOG")
+      XCTAssert(item.stack == nil)
       
-      XCTAssert($0.item?.metadata.count == 2)
-      XCTAssert($0.item?.metadata["a"] as? Int == 20)
-      XCTAssert($0.item?.metadata["b"] as? String == "20")
+      XCTAssert(item.location.fileID.string == "DLogTests/DLogTests.swift")
+      XCTAssert(item.location.file.string == "DLogTests/DLogTests.swift")
+      XCTAssert(item.location.function.string == "log_all(_:message:)")
+      XCTAssert(item.location.line < #line)
+      XCTAssert(item.location.moduleName == "DLogTests")
+      XCTAssert(item.location.fileName == "DLogTests.swift")
       
-      XCTAssert($0.item?.message == "log")
+      XCTAssert(item.metadata.count == 2)
+      XCTAssert(item.metadata["a"] as? Int == 20)
+      XCTAssert(item.metadata["b"] as? String == "20")
+      
+      XCTAssert(item.message == "log")
+      
+      let pattern = #"• \d{2}:\d{2}:\d{2}\.\d{3} \[DLOG\] \#(item.type.icon) \[\#(item.type.title)\] <DLogTests.swift:\d+> \{a:20,b:20\}"#
+      XCTAssert(item.description.match(pattern) == true)
     }
   }
   
@@ -433,65 +432,6 @@ final class DLogTests: XCTestCase {
     XCTAssert(item?.metadata["key"] as? Int == 12345)
   }
   
-  func test_file() {
-    let filePath = "dlog.txt"
-    
-    do {
-      // Recreate file
-      let logger = DLog { File(path: filePath) }
-      
-      logger.trace()
-      delay()
-      var text = try String(contentsOfFile: filePath)
-      XCTAssert(text.split(separator: "\n").count == 1)
-      XCTAssert(text.match(#"\#(TraceTag) \#(Location) \{func:\#(#function)"#))
-      
-      // Append
-      let logger2 = DLog { File(path: filePath, append: true) }
-      
-      logger2.debug("debug")
-      delay()
-      text = try String(contentsOfFile: filePath)
-      XCTAssert(text.split(separator: "\n").count == 2)
-      XCTAssert(text.match(#"\#(DebugTag) \#(Location) debug$"#))
-      
-      logger2.interval("interval") { delay() }
-      delay()
-      text = try String(contentsOfFile: filePath)
-      XCTAssert(text.split(separator: "\n").count == 3)
-      XCTAssert(text.match(#"\[INTERVAL:interval\] \#(Location) \#(Interval)"#))
-    }
-    catch {
-      XCTFail(error.localizedDescription)
-    }
-  }
-  
-  func test_pipe_fork_filter() {
-    let logger = DLog {
-      Pipe {
-        Fork {
-          Filter { $0.type == .debug } // Doesn't apply
-          StdOut
-        }
-        Filter { $0.type == .debug }
-        Filter {
-          XCTAssert($0.type == .debug)
-          return true
-        }
-        StdOut
-      }
-    }
-    logger.trace()
-    logger.info()
-    logger.debug()
-    logger.warning()
-    logger.error()
-    logger.assert(true)
-    logger.fault()
-    logger.scope("scope") { _ in }
-    logger.interval("interval") { }
-    delay()
-  }
 }
 
 final class FormatTests: XCTestCase {
@@ -804,6 +744,117 @@ final class FormatTests: XCTestCase {
       let value: Int64 = 20_234_557
       XCTAssert(logger.log("\(value, format: .byteCount(countStyle: .file))")?.description.match("20.2 MB") == true)
     }
+  }
+}
+
+final class OutputTests: XCTestCase {
+  
+  func test_plain() {
+    var config = LogConfig()
+    config.style = .plain
+    let logger = DLog(config: config)
+    
+    log_all(logger, message: "log").forEach {
+      guard let item = $0 else {
+        XCTFail()
+        return
+      }
+      
+      let pattern = #"• \d{2}:\d{2}:\d{2}\.\d{3} \[DLOG\] \[\#(item.type.title)\] <DLogTests.swift:\d+>"#
+      XCTAssert(item.description.match(pattern) == true)
+    }
+  }
+  
+  func test_colored() {
+    var config = LogConfig()
+    config.style = .colored
+    let logger = DLog(config: config) {
+      Output {
+        print($0.description)
+        XCTAssert($0.description.match(#"\u{001b}"#) == true)
+      }
+    }
+    
+    _ = log_all(logger, message: "log")
+    
+    logger.scope("scope") { _ in
+      delay()
+    }
+    logger.interval("interval") {
+      delay()
+    }
+  }
+  
+  func test_interval_all() {
+    var config = LogConfig()
+    config.intervalConfig.options = [.all]
+    let logger = DLog(config: config) {
+      Output {
+        XCTAssert($0.description.match(#"{average:\#(SECS),count:\d+,duration:\#(SECS),max:\#(SECS),min:\#(SECS),total:\#(SECS)}$"#) == true)
+      }
+    }
+    logger.interval("interval") {
+      delay()
+    }
+  }
+  
+  func test_file() {
+    let filePath = "dlog.txt"
+    
+    do {
+      // Recreate file
+      let logger = DLog { File(path: filePath) }
+      
+      logger.trace()
+      delay()
+      var text = try String(contentsOfFile: filePath)
+      XCTAssert(text.split(separator: "\n").count == 1)
+      XCTAssert(text.match(#"\#(TraceTag) \#(Location) \{func:\#(#function)"#))
+      
+      // Append
+      let logger2 = DLog { File(path: filePath, append: true) }
+      
+      logger2.debug("debug")
+      delay()
+      text = try String(contentsOfFile: filePath)
+      XCTAssert(text.split(separator: "\n").count == 2)
+      XCTAssert(text.match(#"\#(DebugTag) \#(Location) debug$"#))
+      
+      logger2.interval("interval") { delay() }
+      delay()
+      text = try String(contentsOfFile: filePath)
+      XCTAssert(text.split(separator: "\n").count == 3)
+      XCTAssert(text.match(#"\[INTERVAL:interval\] \#(Location) \#(Interval)"#))
+    }
+    catch {
+      XCTFail(error.localizedDescription)
+    }
+  }
+  
+  func test_pipe_fork_filter() {
+    let logger = DLog {
+      Pipe {
+        Fork {
+          Filter { $0.type == .debug } // Doesn't apply
+          StdOut
+        }
+        Filter { $0.type == .debug }
+        Output {
+          XCTAssert($0.type == .debug)
+        }
+        StdOut
+      }
+    }
+    logger.trace()
+    logger.info()
+    logger.debug()
+    logger.warning()
+    logger.error()
+    logger.assert(true)
+    logger.fault()
+    logger.scope("scope") { _ in }
+    logger.interval("interval") { }
+    delay()
   }
 }
 

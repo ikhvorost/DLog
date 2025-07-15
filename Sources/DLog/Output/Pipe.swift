@@ -28,14 +28,14 @@ import Foundation
 
 public struct Pipe {
   
-  let outputs: [Output]
+  let outputs: [OutputProtocol]
   
-  public init(@OutputBuilder _ outputs: () -> [Output]) {
+  public init(@OutputBuilder _ outputs: () -> [OutputProtocol]) {
     self.outputs = outputs()
   }
 }
 
-extension Pipe: Output {
+extension Pipe: OutputProtocol {
   
   public func log(item: LogItem) {
     for output in outputs {

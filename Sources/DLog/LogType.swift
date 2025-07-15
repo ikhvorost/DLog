@@ -81,7 +81,7 @@ extension LogType: Sendable {
     .scopeLeave: "⬆️",
   ]
   
-  var icon: String {
+  public var icon: String {
     Self.icons[self]!
   }
   
@@ -100,7 +100,7 @@ extension LogType: Sendable {
     .scopeLeave : "SCOPE",
   ]
   
-  var title: String {
+  public var title: String {
     Self.titles[self]!
   }
 }

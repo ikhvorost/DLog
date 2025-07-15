@@ -39,7 +39,7 @@ public final class DLog: Log, @unchecked Sendable {
   public static let disabled = DLog { nil }
   
   private let queue = DispatchQueue(label: "dlog.queue")
-  private let output: Output?
+  private let output: OutputProtocol?
   
   var isEnabled: Bool { output != nil }
   
@@ -54,7 +54,7 @@ public final class DLog: Log, @unchecked Sendable {
   /// - Parameters:
   /// 	- output: A target output object. If it is omitted the logger uses `stdout` by default.
   ///
-  public init(category: String = "DLOG", config: LogConfig = LogConfig(), metadata: Metadata = Metadata(), _ output: (() -> Output?) = { StdOut }) {
+  public init(category: String = "DLOG", config: LogConfig = LogConfig(), metadata: Metadata = Metadata(), _ output: (() -> OutputProtocol?) = { StdOut }) {
     self.output = output()
     super.init(logger: nil, category: category, config: config, metadata: metadata)
     logger.value = self

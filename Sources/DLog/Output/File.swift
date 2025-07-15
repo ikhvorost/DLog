@@ -67,7 +67,7 @@ public struct File {
   }
 }
 
-extension File: Output {
+extension File: OutputProtocol {
   
   public func log(item: LogItem) {
    guard let file, item.type != .intervalBegin else {

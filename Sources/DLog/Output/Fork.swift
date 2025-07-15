@@ -28,14 +28,14 @@ import Foundation
 
 public struct Fork {
   
-  let outputs: [Output]
+  let outputs: [OutputProtocol]
   
-  public init(@OutputBuilder _ outputs: () -> [Output]) {
+  public init(@OutputBuilder _ outputs: () -> [OutputProtocol]) {
     self.outputs = outputs()
   }
 }
 
-extension Fork: Output {
+extension Fork: OutputProtocol {
   
   public func log(item: LogItem) {
     DispatchQueue.concurrentPerform(iterations: outputs.count) { [outputs] in

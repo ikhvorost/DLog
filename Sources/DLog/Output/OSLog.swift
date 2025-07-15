@@ -82,7 +82,7 @@ struct OSLog {
   }
 }
   
-extension OSLog: Output {
+extension OSLog: OutputProtocol {
   
   public func log(item: LogItem) {
     switch item {

@@ -47,6 +47,6 @@ public struct Filter {
   }
 }
 
-extension Filter: Output {
+extension Filter: OutputProtocol {
   public func log(item: LogItem) {}
 }

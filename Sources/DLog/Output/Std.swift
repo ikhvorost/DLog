@@ -39,7 +39,7 @@ public struct Std {
   }
 }
 
-extension Std: Output {
+extension Std: OutputProtocol {
   
   public func log(item: LogItem) {
     guard item.type != .intervalBegin else {

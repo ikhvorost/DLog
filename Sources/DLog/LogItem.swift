@@ -28,7 +28,7 @@ import Foundation
 
 fileprivate extension String {
   func color(_ codes: [ANSIEscapeCode]) -> String {
-    return codes.map { $0.rawValue }.joined() + self + ANSIEscapeCode.reset.rawValue
+    "\(codes.map { $0.rawValue }.joined())\(self)\(ANSIEscapeCode.reset.rawValue)"
   }
   
   func color(_ code: ANSIEscapeCode) -> String {
@@ -49,32 +49,42 @@ fileprivate extension Array where Element == String {
 
 fileprivate enum ANSIEscapeCode: String {
   case reset = "\u{001b}[0m"
-  case clear = "\u{001b}c"
-  
-  case bold = "\u{001b}[1m"
   case dim = "\u{001b}[2m"
-  case underline = "\u{001b}[4m"
   case blink = "\u{001b}[5m"
-  case reversed = "\u{001b}[7m"
   
-  // 8 colors
-  case textBlack = "\u{001B}[30m"
-  case textRed = "\u{001B}[31m"
-  case textGreen = "\u{001B}[32m"
-  case textYellow = "\u{001B}[33m"
-  case textBlue = "\u{001B}[34m"
-  case textMagenta = "\u{001B}[35m"
-  case textCyan = "\u{001B}[36m"
-  case textWhite = "\u{001B}[37m"
+  case textBlack = "\u{001b}[30m"
+  case textBrightBlack = "\u{001b}[90m"
+  case textRed = "\u{001b}[31m"
+  case textBrightRed = "\u{001b}[91m"
+  case textGreen = "\u{001b}[32m"
+  case textBrightGreen = "\u{001b}[92m"
+  case textYellow = "\u{001b}[33m"
+  case textBrightYellow = "\u{001b}[93m"
+  case textBlue = "\u{001b}[34m"
+  case textBrightBlue = "\u{001b}[94m"
+  case textMagenta = "\u{001b}[35m"
+  case textBrightMagenta = "\u{001b}[95m"
+  case textCyan = "\u{001b}[36m"
+  case textBrightCyan = "\u{001b}[96m"
+  case textWhite = "\u{001b}[37m"
+  case textBrightWhite = "\u{001b}[97m"
   
   case backgroundBlack = "\u{001b}[40m"
+  case backgroundBrightBlack = "\u{001b}[100m"
   case backgroundRed = "\u{001b}[41m"
+  case backgroundBrightRed = "\u{001b}[101m"
   case backgroundGreen = "\u{001b}[42m"
+  case backgroundBrightGreen = "\u{001b}[102m"
   case backgroundYellow = "\u{001b}[43m"
+  case backgroundBrightYellow = "\u{001b}[103m"
   case backgroundBlue = "\u{001b}[44m"
+  case backgroundBrightBlue = "\u{001b}[104m"
   case backgroundMagenta = "\u{001b}[45m"
+  case backgroundBrightMagenta = "\u{001b}[105m"
   case backgroundCyan = "\u{001b}[46m"
+  case backgroundBrightCyan = "\u{001b}[106m"
   case backgroundWhite = "\u{001b}[47m"
+  case backgroundBrightWhite = "\u{001b}[107m"
 }
   
 public class LogItem: @unchecked Sendable {
@@ -85,26 +95,26 @@ public class LogItem: @unchecked Sendable {
   
   fileprivate static let tags: [LogType : Tag] = [
     .log : Tag(textColor: .textWhite, colors: [.backgroundWhite, .textBlack]),
-    .info : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textWhite]),
+    .info : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textBlack]),
     .trace : Tag(textColor: .textCyan, colors: [.backgroundCyan, .textBlack]),
-    .debug : Tag(textColor: .textCyan, colors: [.backgroundCyan, .textBlack]),
+    .debug : Tag(textColor: .textBrightCyan, colors: [.backgroundBrightCyan, .textBlack]),
     .warning : Tag(textColor: .textYellow, colors: [.backgroundYellow, .textBlack]),
-    .error : Tag(textColor: .textYellow, colors: [.backgroundYellow, .textBlack]),
-    .fault : Tag(textColor: .textRed, colors: [.backgroundRed, .textWhite, .blink]),
+    .error : Tag(textColor: .textBrightYellow, colors: [.backgroundBrightYellow, .textBlack]),
+    .fault : Tag(textColor: .textBrightRed, colors: [.backgroundBrightRed, .textBrightWhite, .blink]),
     .assert : Tag(textColor: .textRed, colors: [.backgroundRed, .textWhite]),
     .intervalBegin : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textBlack]),
     .intervalEnd : Tag(textColor: .textGreen, colors: [.backgroundGreen, .textBlack]),
-    .scopeEnter : Tag(textColor: .textMagenta, colors: [.backgroundMagenta, .textBlack]),
-    .scopeLeave : Tag(textColor: .textMagenta, colors: [.backgroundMagenta, .textBlack]),
+    .scopeEnter : Tag(textColor: .textMagenta, colors: [.backgroundMagenta, .textWhite]),
+    .scopeLeave : Tag(textColor: .textMagenta, colors: [.backgroundMagenta, .textWhite]),
   ]
   
-  static let dateFormatter: DateFormatter = {
+  fileprivate static let dateFormatter: DateFormatter = {
     let dateFormatter = DateFormatter()
     dateFormatter.dateFormat = "HH:mm:ss.SSS"
     return dateFormatter
   }()
   
-  static func logPrefix(items: [(type: LogOptions, text: String)], options: LogOptions) -> String {
+  fileprivate static func logPrefix(items: [(type: LogOptions, text: String)], options: LogOptions) -> String {
     items.compactMap {
       guard !$0.text.isEmpty && ($0.type == .message || options.contains($0.type)) else {
         return nil
@@ -184,15 +194,13 @@ extension LogItem: CustomStringConvertible {
         break
         
       case .colored:
-        let tag = LogItem.tags[self.type]!
-        
         sign = sign.color(.dim)
         time = time.color(.dim)
         level = level.color(.dim)
         category = category.color(.textBlue)
-        location = location.color([.dim, tag.textColor])
-        metadata = metadata.color(.dim)
-        data = data.color(.dim)
+        location = location.color(.dim)
+        metadata = !metadata.isEmpty ? metadata.color(.dim) : ""
+        data = !data.isEmpty ? data.color(.dim) : ""
     }
     
     let items: [(LogOptions, String)] = [

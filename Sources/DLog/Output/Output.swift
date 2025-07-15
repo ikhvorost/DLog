@@ -26,7 +26,22 @@
 import Foundation
 
 
-public protocol Output: Sendable {
+public protocol OutputProtocol: Sendable {
   func log(item: LogItem)
+}
+
+public struct Output {
+  private let f: @Sendable (LogItem) -> Void
+  
+  public init(_ f: @escaping @Sendable (LogItem) -> Void) {
+    self.f = f
+  }
+}
+
+extension Output: OutputProtocol {
+  
+  public func log(item: LogItem) {
+    f(item)
+  }
 }
 
