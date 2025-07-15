@@ -265,9 +265,6 @@ final class DLogTests: XCTestCase {
       XCTAssert(item.metadata["b"] as? String == "20")
       
       XCTAssert(item.message == "log")
-      
-      let pattern = #"• \d{2}:\d{2}:\d{2}\.\d{3} \[DLOG\] \#(item.type.icon) \[\#(item.type.title)\] <DLogTests.swift:\d+> \{a:20,b:20\}"#
-      XCTAssert(item.description.match(pattern) == true)
     }
   }
   
@@ -752,37 +749,62 @@ final class OutputTests: XCTestCase {
   func test_plain() {
     var config = LogConfig()
     config.style = .plain
-    let logger = DLog(config: config)
-    
-    log_all(logger, message: "log").forEach {
-      guard let item = $0 else {
-        XCTFail()
-        return
+    config.options = .all
+    let logger = DLog(config: config, metadata: ["a" : 10]) {
+      Output {
+        let pattern = #"^• \d{2}:\d{2}:\d{2}\.\d{3} \[\d{2}\] \[DLOG\] \[\#($0.type.title)\] <DLogTests.swift:\d+> \{a:10\}"#
+        XCTAssert($0.description.match(pattern) == true, $0.description)
+        print($0)
       }
-      
-      let pattern = #"• \d{2}:\d{2}:\d{2}\.\d{3} \[DLOG\] \[\#(item.type.title)\] <DLogTests.swift:\d+>"#
-      XCTAssert(item.description.match(pattern) == true)
     }
+    _ = log_all(logger, message: "log")
+    delay()
   }
   
   func test_colored() {
     var config = LogConfig()
     config.style = .colored
-    let logger = DLog(config: config) {
+    config.options = .all
+    let logger = DLog(config: config, metadata: ["a" : 10]) {
       Output {
         print($0.description)
-        XCTAssert($0.description.match(#"\u{001b}"#) == true)
+        XCTAssert($0.description.match(#"^\u{001b}"#) == true)
       }
     }
     
     _ = log_all(logger, message: "log")
-    
-    logger.scope("scope") { _ in
-      delay()
+    logger.scope("scope") { _ in delay() }
+    logger.interval("interval") { delay() }
+    delay()
+  }
+  
+  func test_emoji() {
+    var config = LogConfig()
+    config.style = .emoji
+    config.options = .all
+    let log = DLog(config: config, metadata: ["a" : 10]) {
+      Output {
+        let pattern = #"^• \d{2}:\d{2}:\d{2}\.\d{3} \[\d{2}\] \[DLOG\] \#($0.type.icon) \[\#($0.type.title)\] <DLogTests.swift:\d+> \{a:10\}"#
+        XCTAssert($0.description.match(pattern) == true, $0.description)
+        print($0)
+      }
     }
-    logger.interval("interval") {
-      delay()
+    _ = log_all(log, message: "log")
+    delay()
+  }
+  
+  func test_trace_all() {
+    var config = LogConfig()
+    config.traceConfig.options = .all
+    let logger = DLog(config: config) {
+      Output {
+        let pattern = #"\{func:test_trace_all,process:\{cpu:\d+%,memory:\d+MB,pid:\d+,threads:\d+\},queue:com.apple.main-thread,stack:\[\{frame:0,symbol:@objc DLogTests.OutputTests.test_trace_all\(\) -> \(\)\}\],thread:\{number:1\}\}$"#
+        XCTAssert($0.description.match(pattern) == true)
+        print($0)
+      }
     }
+    logger.trace()
+    delay()
   }
   
   func test_interval_all() {
@@ -790,7 +812,9 @@ final class OutputTests: XCTestCase {
     config.intervalConfig.options = [.all]
     let logger = DLog(config: config) {
       Output {
-        XCTAssert($0.description.match(#"{average:\#(SECS),count:\d+,duration:\#(SECS),max:\#(SECS),min:\#(SECS),total:\#(SECS)}$"#) == true)
+        let pattern = #"{average:\#(SECS),count:\d+,duration:\#(SECS),max:\#(SECS),min:\#(SECS),total:\#(SECS)}$"#
+        XCTAssert($0.description.match(pattern) == true)
+        print($0)
       }
     }
     logger.interval("interval") {
