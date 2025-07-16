@@ -34,23 +34,10 @@ public struct FuncConfig: Sendable {
 }
 
 func funcInfo(function: String, config: FuncConfig) -> String {
-  let isObjC = function.hasPrefix("-[")
-  if isObjC {
-    var funcName = function
-    if let range = funcName.range(of: #"[^\s]+\]"#, options: [.regularExpression]) {
-      funcName = String(function[range].dropLast())
-    }
-    if config.params == false, let index = funcName.firstIndex(of: ":") {
-      funcName = String(funcName[funcName.startIndex..<index])
-    }
-    return funcName
-  }
-  else {
-    if config.params == false {
-      if let range = function.range(of: #"^[^\(]+"#, options: [.regularExpression]) {
-        return String(function[range])
-      }
-    }
+  if config.params == false,
+     let range = function.range(of: #"^[^\(]+"#, options: [.regularExpression])
+  {
+    return String(function[range])
   }
   return function
 }

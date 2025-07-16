@@ -807,9 +807,74 @@ final class OutputTests: XCTestCase {
     delay()
   }
   
+  func trace(logger: DLog) {
+    logger.trace()
+  }
+  
+  func test_trace_function() {
+    var config = LogConfig()
+    config.traceConfig.funcConfig.params = true
+    let logger = DLog(config: config) {
+      Output {
+        let pattern = #"\{func:trace\(logger:\)"#
+        XCTAssert($0.description.match(pattern) == true)
+        print($0)
+      }
+    }
+    trace(logger: logger)
+    delay()
+  }
+  
+  func test_trace_process_all() {
+    var config = LogConfig()
+    config.traceConfig.options = .process
+    config.traceConfig.processConfig.options = .all
+    let logger = DLog(config: config) {
+      Output {
+        let pattern = #"\{process:\{cpu:\d+%,guid:[^,]+,memory:\d+MB,name:xctest,pid:\d+,threads:\d+,wakeups:\{idle:\d+,interrupt:\d+,timer:\d+\}\}\}$"#
+        XCTAssert($0.description.match(pattern) == true)
+        print($0)
+      }
+    }
+    logger.trace()
+    delay()
+  }
+  
+  func test_trace_stack_all() {
+    var config = LogConfig()
+    config.traceConfig.options = .stack
+    config.traceConfig.stackConfig.options = .all
+    config.traceConfig.stackConfig.view = .all
+    config.traceConfig.stackConfig.depth = 3
+    let logger = DLog(config: config) {
+      Output {
+        let pattern = #"\{stack:\[\{address:[^,]+,frame:\d+,module:DLogTests,offset:\d+,symbol:@objc DLogTests\.OutputTests\.test_trace_stack_all\(\) -> \(\)\},\{address:[^,]+,frame:\d+,module:CoreFoundation,offset:\d+,symbol:__invoking___\}"#
+        XCTAssert($0.description.match(pattern) == true)
+        print($0)
+      }
+    }
+    logger.trace()
+    delay()
+  }
+  
+  func test_trace_thread_all() {
+    var config = LogConfig()
+    config.traceConfig.options = .thread
+    config.traceConfig.threadConfig.options = .all
+    let logger = DLog(config: config) {
+      Output {
+        let pattern = #"\{thread:\{number:\d+,priority:0\.5,qos:userInteractive,stackSize:512 KB,tid:\d+\}\}$"#
+        XCTAssert($0.description.match(pattern) == true)
+        print($0)
+      }
+    }
+    logger.trace()
+    delay()
+  }
+  
   func test_interval_all() {
     var config = LogConfig()
-    config.intervalConfig.options = [.all]
+    config.intervalConfig.options = .all
     let logger = DLog(config: config) {
       Output {
         let pattern = #"{average:\#(SECS),count:\d+,duration:\#(SECS),max:\#(SECS),min:\#(SECS),total:\#(SECS)}$"#
