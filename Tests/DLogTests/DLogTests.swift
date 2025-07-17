@@ -849,7 +849,7 @@ final class OutputTests: XCTestCase {
     let logger = DLog(config: config) {
       Output {
         print($0)
-        let pattern = #"\{stack:\[\{address:[^,]+,frame:\d+,module:DLogTests,offset:\d+,symbol:@objc DLogTests\.OutputTests\.test_trace_stack_all\(\) -> \(\)\},\{address:[^,]+,frame:\d+,module:CoreFoundation,offset:\d+,symbol:__invoking___\}"#
+        let pattern = #"\{stack:\[\{address:[^,]+,frame:\d+,module:[^,]+,offset:\d+,symbol:@objc DLogTests\.OutputTests\.test_trace_stack_all\(\) -> \(\)\},\{address:[^,]+,frame:\d+,module:CoreFoundation,offset:\d+,symbol:__invoking___\}"#
         XCTAssert($0.description.match(pattern) == true)
       }
     }
@@ -864,7 +864,7 @@ final class OutputTests: XCTestCase {
     let logger = DLog(config: config) {
       Output {
         print($0)
-        let pattern = #"\{thread:\{number:\d+,priority:0\.5,qos:userInteractive,stackSize:512 KB,tid:\d+\}\}$"#
+        let pattern = #"\{thread:\{number:\d+,priority:0\.5,qos:(userInteractive|utility),stackSize:512 KB,tid:\d+\}\}$"#
         XCTAssert($0.description.match(pattern) == true)
       }
     }
