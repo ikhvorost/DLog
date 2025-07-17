@@ -752,9 +752,9 @@ final class OutputTests: XCTestCase {
     config.options = .all
     let logger = DLog(config: config, metadata: ["a" : 10]) {
       Output {
+        print($0)
         let pattern = #"^• \d{2}:\d{2}:\d{2}\.\d{3} \[\d{2}\] \[DLOG\] \[\#($0.type.title)\] <DLogTests.swift:\d+> \{a:10\}"#
         XCTAssert($0.description.match(pattern) == true, $0.description)
-        print($0)
       }
     }
     _ = log_all(logger, message: "log")
@@ -784,9 +784,9 @@ final class OutputTests: XCTestCase {
     config.options = .all
     let log = DLog(config: config, metadata: ["a" : 10]) {
       Output {
+        print($0)
         let pattern = #"^• \d{2}:\d{2}:\d{2}\.\d{3} \[\d{2}\] \[DLOG\] \#($0.type.icon) \[\#($0.type.title)\] <DLogTests.swift:\d+> \{a:10\}"#
         XCTAssert($0.description.match(pattern) == true, $0.description)
-        print($0)
       }
     }
     _ = log_all(log, message: "log")
@@ -798,9 +798,9 @@ final class OutputTests: XCTestCase {
     config.traceConfig.options = .all
     let logger = DLog(config: config) {
       Output {
+        print($0)
         let pattern = #"\{func:test_trace_all,process:\{cpu:\d+%,memory:\d+MB,pid:\d+,threads:\d+\},queue:com.apple.main-thread,stack:\[\{frame:0,symbol:@objc DLogTests.OutputTests.test_trace_all\(\) -> \(\)\}\],thread:\{number:1\}\}$"#
         XCTAssert($0.description.match(pattern) == true)
-        print($0)
       }
     }
     logger.trace()
@@ -816,9 +816,9 @@ final class OutputTests: XCTestCase {
     config.traceConfig.funcConfig.params = true
     let logger = DLog(config: config) {
       Output {
+        print($0)
         let pattern = #"\{func:trace\(logger:\)"#
         XCTAssert($0.description.match(pattern) == true)
-        print($0)
       }
     }
     trace(logger: logger)
@@ -831,9 +831,9 @@ final class OutputTests: XCTestCase {
     config.traceConfig.processConfig.options = .all
     let logger = DLog(config: config) {
       Output {
+        print($0)
         let pattern = #"\{process:\{cpu:\d+%,guid:[^,]+,memory:\d+MB,name:xctest,pid:\d+,threads:\d+,wakeups:\{idle:\d+,interrupt:\d+,timer:\d+\}\}\}$"#
         XCTAssert($0.description.match(pattern) == true)
-        print($0)
       }
     }
     logger.trace()
@@ -848,9 +848,9 @@ final class OutputTests: XCTestCase {
     config.traceConfig.stackConfig.depth = 3
     let logger = DLog(config: config) {
       Output {
+        print($0)
         let pattern = #"\{stack:\[\{address:[^,]+,frame:\d+,module:DLogTests,offset:\d+,symbol:@objc DLogTests\.OutputTests\.test_trace_stack_all\(\) -> \(\)\},\{address:[^,]+,frame:\d+,module:CoreFoundation,offset:\d+,symbol:__invoking___\}"#
         XCTAssert($0.description.match(pattern) == true)
-        print($0)
       }
     }
     logger.trace()
@@ -863,9 +863,9 @@ final class OutputTests: XCTestCase {
     config.traceConfig.threadConfig.options = .all
     let logger = DLog(config: config) {
       Output {
+        print($0)
         let pattern = #"\{thread:\{number:\d+,priority:0\.5,qos:userInteractive,stackSize:512 KB,tid:\d+\}\}$"#
         XCTAssert($0.description.match(pattern) == true)
-        print($0)
       }
     }
     logger.trace()
@@ -877,9 +877,9 @@ final class OutputTests: XCTestCase {
     config.intervalConfig.options = .all
     let logger = DLog(config: config) {
       Output {
+        print($0)
         let pattern = #"{average:\#(SECS),count:\d+,duration:\#(SECS),max:\#(SECS),min:\#(SECS),total:\#(SECS)}$"#
         XCTAssert($0.description.match(pattern) == true)
-        print($0)
       }
     }
     logger.interval("interval") {
