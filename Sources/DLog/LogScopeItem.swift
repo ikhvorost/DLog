@@ -24,21 +24,18 @@
 //
 
 import Foundation
-import os.log
+import os
 
 
 public final class LogScopeItem: LogItem, @unchecked Sendable {
-  let activity: Atomic<os_activity_scope_state_s>
   
   public let level: Int
   public let duration: TimeInterval
   
-  init(category: String, stack: [Bool], type: LogType, location: LogLocation, metadata: Metadata, message: String, config: LogConfig, activity: Atomic<os_activity_scope_state_s>, level: Int, duration: TimeInterval) {
-    self.activity = activity
+  init(category: String, stack: [Bool], type: LogType, location: LogLocation, metadata: Metadata, message: String, config: LogConfig, activity: os_activity_t, level: Int, duration: TimeInterval) {
     self.level = level
     self.duration = duration
-    
-    super.init(category: category, stack: stack, type: type, location: location, metadata: metadata, message: message, config: config)
+    super.init(category: category, stack: stack, type: type, location: location, metadata: metadata, message: message, config: config, activity: activity)
   }
   
   override func padding() -> String {

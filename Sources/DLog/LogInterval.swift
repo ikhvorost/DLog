@@ -24,7 +24,7 @@
 //
 
 import Foundation
-import os.log
+import os
 
 
 /// Indicates which info from intervals should be used.

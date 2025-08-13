@@ -24,7 +24,7 @@
 //
 
 import Foundation
-import os.log
+import os
 
 
 /// An object that represents a scope triggered by the user.
@@ -34,13 +34,13 @@ import os.log
 public final class LogScope: Log, @unchecked Sendable {
   
   private static let scopes = Atomic([LogScope]())
-  
-  private let activity = Atomic(os_activity_scope_state_s())
   private let start = Atomic(Date())
   
   var stack: [Bool]? {
     level > 0 ? Self.stack(scopes: Self.scopes.value, level: level) : nil
   }
+  
+  let activity: os_activity_t
   
   public let name: String
   
@@ -68,8 +68,9 @@ public final class LogScope: Log, @unchecked Sendable {
     return stack
   }
 
-  init(name: String, logger: DLog, category: String, config: LogConfig, metadata: Metadata, location: LogLocation) {
+  init(name: String, logger: DLog, category: String, config: LogConfig, metadata: Metadata, activity: os_activity_t?) {
     self.name = name
+    self.activity = _os_activity_create(UnsafeMutableRawPointer(mutating: #dsohandle), name, activity ?? Dynamic.OS_ACTIVITY_CURRENT, OS_ACTIVITY_FLAG_DEFAULT)
     super.init(logger: logger, category: category, config: config, metadata: metadata)
   }
   

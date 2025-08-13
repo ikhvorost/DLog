@@ -47,18 +47,15 @@ public class Log: @unchecked Sendable {
     self.metadata = AtomicDictionary(metadata)
   }
   
-  private func stack() -> [Bool]? {
-    if let scope = self as? LogScope {
-      return scope.stack
-    }
-    return nil
+  var scope: LogScope? {
+    self as? LogScope
   }
   
   private func log(message: LogMessage, type: LogType, location: LogLocation) -> LogItem? {
     guard logger.value?.isEnabled == true else {
       return nil
     }
-    let item = LogItem(category: category, stack: stack(), type: type, location: location, metadata: metadata.value, message: "\(message)", config: config)
+    let item = LogItem(category: category, stack: scope?.stack, type: type, location: location, metadata: metadata.value, message: "\(message)", config: config, activity: scope?.activity)
     logger.value?.log(item: item)
     return item
   }
@@ -110,7 +107,7 @@ public class Log: @unchecked Sendable {
     }
     let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
     let stackAddresses = Thread.callStackReturnAddresses.dropFirst(2)
-    let item = LogTraceItem(category: category, stack: stack(), location: location, metadata: metadata.value, message: "\(message)", config: config, stackAddresses: stackAddresses)
+    let item = LogTraceItem(category: category, stack: scope?.stack, location: location, metadata: metadata.value, message: "\(message)", config: config, activity: scope?.activity, stackAddresses: stackAddresses)
     logger.value?.log(item: item)
     return item
   }
@@ -301,8 +298,7 @@ public class Log: @unchecked Sendable {
     guard let logger = logger.value, logger.isEnabled == true else {
       return nil
     }
-    let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
-    let scope = LogScope(name: name, logger: logger, category: category, config: config, metadata: metadata.value, location: location)
+    let scope = LogScope(name: name, logger: logger, category: category, config: config, metadata: metadata.value, activity: scope?.activity)
     if let closure {
       scope.enter(fileID: fileID, file: file, function: function, line: line)
       closure(scope)
@@ -335,7 +331,7 @@ public class Log: @unchecked Sendable {
       return nil
     }
     let location = LogLocation(fileID: fileID, file: file, function: function, line: line)
-    let interval = LogInterval(logger: logger, name: name, category: category, config: config, stack: stack(), metadata: metadata.value, location: location)
+    let interval = LogInterval(logger: logger, name: name, category: category, config: config, stack: scope?.stack, metadata: metadata.value, location: location)
     if let closure {
       interval.begin(fileID: location.fileID, file: location.file, function: location.function, line: location.line)
       closure()

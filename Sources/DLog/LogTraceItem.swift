@@ -24,6 +24,7 @@
 //
 
 import Foundation
+import os
 
 
 public struct TraceInfo {
@@ -45,9 +46,9 @@ public struct TraceInfo {
 public final class LogTraceItem: LogItem, @unchecked Sendable {
   public let traceInfo: TraceInfo
   
-  init(category: String, stack: [Bool]?, location: LogLocation, metadata: Metadata, message: String, config: LogConfig, stackAddresses: ArraySlice<NSNumber>) {
+  init(category: String, stack: [Bool]?, location: LogLocation, metadata: Metadata, message: String, config: LogConfig, activity: os_activity_t?, stackAddresses: ArraySlice<NSNumber>) {
     self.traceInfo = TraceInfo(stackAddresses: stackAddresses)
-    super.init(category: category, stack: stack, type: .trace, location: location, metadata: metadata, message: message, config: config)
+    super.init(category: category, stack: stack, type: .trace, location: location, metadata: metadata, message: message, config: config, activity: activity)
   }
   
   override func data() -> String? {

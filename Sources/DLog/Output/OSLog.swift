@@ -34,7 +34,7 @@ import os.activity
 /// It captures telemetry from your app for debugging and performance analysis and then you can use various tools to
 /// retrieve log information such as: `Console` and `Instruments` apps, command line tool `"log"` etc.
 ///
-struct OSLog {
+public struct OSLog {
   
   private static let types: [LogType : OSLogType] = [
     .log : .default,
@@ -87,37 +87,40 @@ extension OSLog: OutputProtocol {
   public func log(item: LogItem) {
     switch item {
       // Scope
-      case let scope as LogScopeItem:
-        scope.activity.sync { state in
-          if scope.type == .scopeEnter {
-            let activity = _os_activity_create(Dynamic.dso, strdup(item.message), Dynamic.OS_ACTIVITY_CURRENT, OS_ACTIVITY_FLAG_DEFAULT)
-            os_activity_scope_enter(activity, &state)
-          }
-          else {
-            os_activity_scope_leave(&state)
-          }
-        }
+      case _ as LogScopeItem:
+        break
 
       // Interval
       case let interval as LogIntervalItem:
         let log = oslog(category: interval.category)
-        let id = interval.signpostId.value ?? OSSignpostID(log: log)
-        interval.signpostId.value = id
+        let signpostID = interval.signpostId.sync { value in
+          if value == nil {
+            value = OSSignpostID(log: log)
+          }
+          return value!
+        }
         
         if interval.type == .intervalBegin {
-          os_signpost(.begin, log: log, name: interval.name, signpostID: id)
+          os_signpost(.begin, log: log, name: interval.name, signpostID: signpostID)
         }
         else {
-          os_signpost(.end, log: log, name: interval.name, signpostID: id)
+          os_signpost(.end, log: log, name: interval.name, signpostID: signpostID)
         }
         
       // Item
       default:
         let log = oslog(category: item.category)
-        let location = "<\(item.location.fileName):\(item.location.line)>"
         assert(Self.types[item.type] != nil)
         let type = Self.types[item.type]!
-        os_log("%{public}@ %{public}@", dso: Dynamic.dso, log: log, type: type, location, item.message)
+        
+        let send = { os_log("%{public}@", log: log, type: type, item.description) }
+        
+        if let activity = item.activity {
+          os_activity_apply(activity, send)
+        }
+        else {
+          send()
+        }
     }
   }
 }

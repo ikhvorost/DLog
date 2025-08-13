@@ -24,7 +24,7 @@
 //
 
 import Foundation
-import os.log
+import os
 
 
 public final class LogIntervalItem: LogItem, @unchecked Sendable {
@@ -40,7 +40,7 @@ public final class LogIntervalItem: LogItem, @unchecked Sendable {
     self.duration = duration
     self.stats = stats
     
-    super.init(category: category, stack: stack, type: type, location: location, metadata: metadata, message: "\(name)", config: config)
+    super.init(category: category, stack: stack, type: type, location: location, metadata: metadata, message: "\(name)", config: config, activity: nil)
   }
   
   override func typeText() -> String {

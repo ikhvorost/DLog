@@ -24,7 +24,7 @@
 //
 
 import Foundation
-@preconcurrency import os
+import os
 
 
 typealias Swift_Demangle = @convention(c) (_ mangledName: UnsafePointer<UInt8>?,
@@ -32,18 +32,15 @@ typealias Swift_Demangle = @convention(c) (_ mangledName: UnsafePointer<UInt8>?,
                                            _ outputBuffer: UnsafeMutablePointer<UInt8>?,
                                            _ outputBufferSize: UnsafeMutablePointer<Int>?,
                                            _ flags: UInt32) -> UnsafeMutablePointer<Int8>?
-/// Dynamic shared object
 struct Dynamic {
   
-  private static nonisolated(unsafe) let RTLD_DEFAULT = UnsafeMutableRawPointer(bitPattern: -2)
-  static nonisolated(unsafe) let dso = UnsafeMutableRawPointer(mutating: #dsohandle)
-  
   private static func dynamic<T>(symbol: String) -> T {
+    let RTLD_DEFAULT = UnsafeMutableRawPointer(bitPattern: -2)
     let address = dlsym(RTLD_DEFAULT, symbol)!
     return unsafeBitCast(address, to: T.self)
   }
   
   // Functions
-  static let OS_ACTIVITY_CURRENT: os_activity_t = dynamic(symbol: "_os_activity_current")
+  static nonisolated(unsafe) let OS_ACTIVITY_CURRENT: os_activity_t = dynamic(symbol: "_os_activity_current")
   static let swift_demangle: Swift_Demangle = dynamic(symbol: "swift_demangle")
 }

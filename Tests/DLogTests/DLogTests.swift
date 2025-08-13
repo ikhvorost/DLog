@@ -74,7 +74,7 @@ fileprivate func delay(_ secs: [TimeInterval] = [0.1]) {
 }
 
 /// Get text standard output
-fileprivate func readStream(file: Int32, stream: UnsafeMutablePointer<FILE>, block: () -> Void) -> String? {
+fileprivate func readStream(file: Int32, stream: UnsafeMutablePointer<FILE>, block: () -> Void) -> String {
   let buffer = AtomicArray([String]())
   
   // Set pipe
@@ -111,6 +111,34 @@ fileprivate func read_stdout(_ block: () -> Void) -> String? {
 
 fileprivate func read_stderr(_ block: () -> Void) -> String? {
   readStream(file: STDERR_FILENO, stream: stderr, block: block)
+}
+
+//  log stream --debug --info --predicate 'subsystem == "com.dlog.logger"'
+fileprivate func read_oslog_stream(subsystem: String = "com.dlog.logger", block: () -> Void) -> String {
+  let process = Process()
+  process.executableURL = URL(fileURLWithPath: "/usr/bin/log")
+  process.arguments = ["stream", "--debug", "--info", "--predicate", "subsystem == \"\(subsystem)\""]
+  let pipe = Pipe()
+  process.standardOutput = pipe
+  do {
+    try process.run()
+  }
+  catch {
+    print("Error running process: \(error.localizedDescription)")
+  }
+  delay()
+  
+  let buffer = AtomicArray([String]())
+  pipe.fileHandleForReading.readabilityHandler = { handle in
+    if let text = String(data: handle.availableData, encoding: .utf8) {
+      buffer.append(text)
+    }
+  }
+  
+  block()
+  delay()
+  
+  return buffer.value.joined()
 }
 
 
@@ -887,6 +915,20 @@ final class OutputTests: XCTestCase {
     }
   }
   
+  func test_std() {
+    let logger = DLog {
+      Fork {
+        StdOut
+        StdErr
+      }
+    }
+    let out = read_stdout { logger.trace() }
+    XCTAssert(out?.match(#function) == true)
+    
+    let err = read_stderr { logger.trace() }
+    XCTAssert(err?.match(#function) == true)
+  }
+  
   func test_file() {
     let filePath = "dlog.txt"
     
@@ -920,18 +962,43 @@ final class OutputTests: XCTestCase {
     }
   }
   
+  func test_oslog() {
+    let logger = DLog { OSLog() }
+    
+    let text = read_oslog_stream() {
+      logger.trace()
+      logger.scope("scope") { $0.debug("debug") }
+      logger.interval("interval") { }
+    }
+    XCTAssert(text.match(#function) == true )
+  }
+  
+  func test_output() {
+    let enable = true
+    let logger = DLog {
+      if enable {
+        StdOut
+      }
+      else {
+        StdOut
+      }
+    }
+    logger.trace()
+  }
+  
   func test_pipe_fork_filter() {
     let logger = DLog {
       Pipe {
         Fork {
           Filter { $0.type == .debug } // Doesn't apply
-          StdOut
+          Output {
+            print($0)
+          }
         }
         Filter { $0.type == .debug }
         Output {
           XCTAssert($0.type == .debug)
         }
-        StdOut
       }
     }
     logger.trace()

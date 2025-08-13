@@ -24,6 +24,7 @@
 //
 
 import Foundation
+import os
 
 
 fileprivate extension String {
@@ -124,6 +125,8 @@ public class LogItem: @unchecked Sendable {
     .joinedCompact()
   }
   
+  let activity: os_activity_t?
+  
   public let time = Date()
   public let category: String
   public let stack: [Bool]?
@@ -133,7 +136,7 @@ public class LogItem: @unchecked Sendable {
   public let message: String
   public let config: LogConfig
   
-  init(category: String, stack: [Bool]?, type: LogType, location: LogLocation, metadata: Metadata, message: String, config: LogConfig) {
+  init(category: String, stack:[Bool]?, type: LogType, location: LogLocation, metadata: Metadata, message: String, config: LogConfig, activity: os_activity_t?) {
     self.category = category
     self.stack = stack
     self.type = type
@@ -141,6 +144,7 @@ public class LogItem: @unchecked Sendable {
     self.metadata = metadata
     self.message = message
     self.config = config
+    self.activity = activity
   }
   
   func padding() -> String {
