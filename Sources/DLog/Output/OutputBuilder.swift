@@ -29,29 +29,30 @@ import Foundation
 @resultBuilder
 public struct OutputBuilder {
   
+  /// Required by every result builder to build combined results from statement blocks.
   public static func buildBlock(_ outputs: [OutputProtocol]...) -> [OutputProtocol] {
     outputs.flatMap { $0 }
   }
   
-  /// Add support for both single and collections of constraints.
+  /// If declared, provides contextual type information for statement
+  /// expressions to translate them into partial results.
   public static func buildExpression(_ output: OutputProtocol) -> [OutputProtocol] {
     [output]
   }
   
-  public static func buildExpression(_ output: [OutputProtocol]) -> [OutputProtocol] {
-    output
-  }
-  
-  /// Add support for optionals.
+  /// Enables support for `if` statements that do not have an `else`.
   public static func buildOptional(_ outputs: [OutputProtocol]?) -> [OutputProtocol] {
     outputs ?? []
   }
   
-  /// Add support for if statements.
+  /// With buildEither(second:), enables support for `if-else` and `switch`
+  /// statements by folding conditional results into a single result.
   public static func buildEither(first outputs: [OutputProtocol]) -> [OutputProtocol] {
     outputs
   }
   
+  /// With buildEither(first:), enables support for 'if-else' and 'switch'
+  /// statements by folding conditional results into a single result.
   public static func buildEither(second outputs: [OutputProtocol]) -> [OutputProtocol] {
     outputs
   }

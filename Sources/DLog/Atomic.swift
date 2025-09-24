@@ -34,19 +34,6 @@ func synchronized<T>(_ obj: AnyObject, body: () -> T) -> T {
   return body()
 }
 
-class AtomicWeak<T: AnyObject>: @unchecked Sendable {
-  private weak var _value: T? = nil
-  
-  var value: T? {
-    get {
-      synchronized(self) { _value }
-    }
-    set {
-      synchronized(self) { _value = newValue }
-    }
-  }
-}
-
 public class Atomic<T>: @unchecked Sendable {
   fileprivate var _value: T
   
@@ -64,35 +51,7 @@ public class Atomic<T>: @unchecked Sendable {
   }
   
   public func sync<U>(_ body: (inout T) -> U) -> U {
-    synchronized(self) { body(&value) }
-  }
-}
-
-public final class AtomicArray<U>: Atomic<Array<U>>, @unchecked Sendable {
-  
-  public convenience init(repeating: U, count: Int) {
-    self.init([U](repeating: repeating, count: count))
-  }
-  
-  public subscript(i: Int) -> U {
-    get {
-      synchronized(self) { _value[i] }
-    }
-    set {
-      synchronized(self) { _value[i] = newValue }
-    }
-  }
-  
-  var count: Int {
-    synchronized(self) { _value.count }
-  }
-  
-  var first: U? {
-    synchronized(self) { _value.first }
-  }
-  
-  public func append(_ item: U) {
-    synchronized(self) { _value.append(item) }
+    synchronized(self) { body(&_value) }
   }
 }
 
@@ -100,14 +59,15 @@ public final class AtomicDictionary<K: Hashable, V>: Atomic<Dictionary<K, V>>, @
   
   public subscript(key: K) -> V? {
     get {
-      synchronized(self) { _value[key] }
+      sync { $0[key] }
     }
     set {
-      synchronized(self) { _value[key] = newValue }
+      sync { $0[key] = newValue }
     }
   }
   
-  func removeAll() {
-    synchronized(self) { _value.removeAll() }
+  public func removeAll() {
+    sync { $0.removeAll() }
   }
 }
+

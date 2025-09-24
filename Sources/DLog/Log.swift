@@ -33,7 +33,7 @@ public typealias Metadata = [MetadataKey : MetadataValue]
 
 /// Base logger class
 public class Log: @unchecked Sendable {
-  let logger = AtomicWeak<DLog>()
+  let logger = Atomic<DLog?>(nil)
   let category: String
   let config: LogConfig
   
