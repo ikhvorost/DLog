@@ -26,27 +26,32 @@
 import Foundation
 
 
-/// Middleware output for filtering
-///
+/// The middleware output for filtering the `Pipe`.
 public struct Filter {
   
-  let isPipeable: @Sendable (LogItem) -> Bool
+  let isIncluded: @Sendable (LogItem) -> Bool
   
-  /// Initializes a filter output that evaluates using a specified block object.
+  /// Creates the filter output that evaluates using a specified closure on `Pipe`.
   ///
-  /// Represents a pipe middleware output that can filter log messages by available fields of an evaluated object.
+  /// Represents a pipe middleware output that can filter the log messages.
   ///
-  ///		// Logs debug messages only
-  ///		let logger = DLog(.textPlain => .filter { $0.type == .debug } => .stdout)
+  ///     // Prints debug messages only
+  ///     let logger = DLog {
+  ///       Pipe {
+  ///         Filter { $0.type == .debug }
+  ///         StdOut
+  ///       }
+  ///     }
+  ///     logger.debug("message")
   ///
-  /// - Parameters:
-  /// 	- body: The block is applied to the object to be evaluated.
-  ///
-  public init(_ isPipeable: @escaping @Sendable (LogItem) -> Bool) {
-    self.isPipeable = isPipeable
+  ///   - Parameters:
+  /// 	  - isIncluded: The filtering closure.
+  public init(_ isIncluded: @escaping @Sendable (LogItem) -> Bool) {
+    self.isIncluded = isIncluded
   }
 }
 
 extension Filter: OutputProtocol {
+  /// Logs the log item
   public func log(item: LogItem) {}
 }

@@ -25,10 +25,11 @@
 
 import Foundation
 
-
-public typealias MetadataKey = String
+/// Metadata value type
 public typealias MetadataValue = Sendable & Codable
-public typealias Metadata = [MetadataKey : MetadataValue]
+
+/// Metadata type
+public typealias Metadata = [String : MetadataValue]
 
 
 /// Base logger class
@@ -38,7 +39,7 @@ public class Log: @unchecked Sendable {
   let config: LogConfig
   
   /// Contextual metadata
-  public let metadata: AtomicDictionary<MetadataKey, MetadataValue>
+  public let metadata: AtomicDictionary<String, MetadataValue>
   
   init(logger: DLog?, category: String, config: LogConfig, metadata: Metadata) {
     self.logger.value = logger
@@ -64,22 +65,32 @@ public class Log: @unchecked Sendable {
   ///
   /// This method logs the message using the default log level.
   ///
-  ///		let logger = DLog()
-  ///		logger.log("message")
+  ///   - Parameters:
+  ///     - message: The message to be logged that can be used with any string interpolation literal.
+  ///     - fileID: The file ID of the source file (defaults to `#fileID`).
+  ///     - file: The file this log message originates from (defaults to `#file`).
+  ///     - function: The function this log message originates from (defaults to `#function`).
+  ///     - line: The line this log message originates (defaults to `#line`).
   ///
-  /// - Parameters:
-  /// 	- message: The message to be logged that can be used with any string interpolation literal.
-  /// 	- file: The file this log message originates from (defaults to `#file`).
-  /// 	- function: The function this log message originates from (defaults to `#function`).
-  /// 	- line: The line this log message originates (defaults to `#line`).
-  ///
-  /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
-  ///
+  ///   - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   @discardableResult
   public func log(_ message: LogMessage, fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogItem? {
     log(message: message, type: .log, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
   }
   
+  /// Logs a message that is essential to troubleshoot problems later.
+  ///
+  /// You can pass zero or more items to the function. The textual representation for each item is the same as that
+  /// obtained by calling `String(describing: item)`.
+  ///
+  ///   - Parameters:
+  ///     - items: Zero or more items to print.
+  ///     - fileID: The file ID of the source file (defaults to `#fileID`).
+  ///     - file: The file this log message originates from (defaults to `#file`).
+  ///     - function: The function this log message originates from (defaults to `#function`).
+  ///     - line: The line this log message originates (defaults to `#line`).
+  ///
+  ///   - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   @discardableResult
   public func log(_ items: Any..., fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogItem? {
     log(message: LogMessage(items: items), type: .log, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
@@ -89,17 +100,14 @@ public class Log: @unchecked Sendable {
   ///
   /// Use it during development to record information that might aid you in debugging problems later.
   ///
-  ///		let logger = DLog()
-  ///		logger.trace("message")
+  ///   - Parameters:
+  ///     - message: The message to be logged that can be used with any string interpolation literal.
+  ///     - fileID: The file ID of the source file (defaults to `#fileID`).
+  ///     - file: The file this log message originates from (defaults to `#file`).
+  ///     - function: The function this log message originates from (defaults to `#function`).
+  ///     - line: The line this log message originates (defaults to `#line`).
   ///
-  /// - Parameters:
-  /// 	- message: The message to be logged that can be used with any string interpolation literal.
-  /// 	- file: The file this log message originates from (defaults to `#file`).
-  /// 	- function: The function this log message originates from (defaults to `#function`).
-  /// 	- line: The line this log message originates (defaults to `#line`).
-  ///
-  /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
-  ///
+  ///   - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   @discardableResult
   public func trace(_ message: LogMessage = "", fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogTraceItem? {
     guard logger.value?.isEnabled == true else {
@@ -112,6 +120,19 @@ public class Log: @unchecked Sendable {
     return item
   }
   
+  /// Logs trace information to help debug problems during the development of your code.
+  ///
+  /// You can pass zero or more items to the function. The textual representation for each item is the same as that
+  /// obtained by calling `String(describing: item)`.
+  ///
+  ///   - Parameters:
+  ///     - items: Zero or more items to print.
+  ///     - fileID: The file ID of the source file (defaults to `#fileID`).
+  ///     - file: The file this log message originates from (defaults to `#file`).
+  ///     - function: The function this log message originates from (defaults to `#function`).
+  ///     - line: The line this log message originates (defaults to `#line`).
+  ///
+  ///   - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   @discardableResult
   public func trace(_ items: Any..., fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogTraceItem? {
     trace(LogMessage(items: items), fileID: fileID, file: file, function: function, line: line)
@@ -121,22 +142,32 @@ public class Log: @unchecked Sendable {
   ///
   /// Use this method during development to record information that might aid you in debugging problems later.
   ///
-  ///		let logger = DLog()
-  ///		logger.debug("message")
+  ///   - Parameters:
+  ///     - message: The message to be logged that can be used with any string interpolation literal.
+  ///     - fileID: The file ID of the source file (defaults to `#fileID`).
+  ///     - file: The file this log message originates from (defaults to `#file`).
+  ///     - function: The function this log message originates from (defaults to `#function`).
+  ///     - line: The line this log message originates (defaults to `#line`).
   ///
-  /// - Parameters:
-  /// 	- message: The message to be logged that can be used with any string interpolation literal.
-  /// 	- file: The file this log message originates from (defaults to `#file`).
-  /// 	- function: The function this log message originates from (defaults to `#function`).
-  /// 	- line: The line this log message originates (defaults to `#line`).
-  ///
-  /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
-  ///
+  ///   - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   @discardableResult
   public func debug(_ message: LogMessage, fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogItem? {
     log(message: message, type: .debug, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
   }
   
+  /// Logs a message to help debug problems during the development of your code.
+  ///
+  /// You can pass zero or more items to the function. The textual representation for each item is the same as that
+  /// obtained by calling `String(describing: item)`.
+  ///
+  /// - Parameters:
+  ///   - items: Zero or more items to print.
+  ///   - fileID: The file ID of the source file (defaults to `#fileID`).
+  ///   - file: The file this log message originates from (defaults to `#file`).
+  ///   - function: The function this log message originates from (defaults to `#function`).
+  ///   - line: The line this log message originates (defaults to `#line`).
+  ///
+  /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   @discardableResult
   public func debug(_ items: Any..., fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogItem? {
     debug(LogMessage(items: items), fileID: fileID, file: file, function: function, line: line)
@@ -146,22 +177,32 @@ public class Log: @unchecked Sendable {
   ///
   /// Use this method to capture information messages and helpful data.
   ///
-  ///		let logger = DLog()
-  ///		logger.info("message")
+  ///   - Parameters:
+  ///     - message: The message to be logged that can be used with any string interpolation literal.
+  ///     - fileID: The file ID of the source file (defaults to `#fileID`).
+  ///     - file: The file this log message originates from (defaults to `#file`).
+  ///     - function: The function this log message originates from (defaults to `#function`).
+  ///     - line: The line this log message originates (defaults to `#line`).
   ///
-  /// - Parameters:
-  /// 	- message: The message to be logged that can be used with any string interpolation literal.
-  /// 	- file: The file this log message originates from (defaults to `#file`).
-  /// 	- function: The function this log message originates from (defaults to `#function`).
-  /// 	- line: The line this log message originates (defaults to `#line`).
-  ///
-  /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
-  ///
+  ///   - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   @discardableResult
   public func info(_ message: LogMessage, fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogItem? {
     log(message: message, type: .info, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
   }
   
+  /// Logs a message that is helpful, but not essential, to diagnose issues with your code.
+  ///
+  /// You can pass zero or more items to the function. The textual representation for each item is the same as that
+  /// obtained by calling `String(describing: item)`.
+  ///
+  /// - Parameters:
+  ///   - items: Zero or more items to print.
+  ///   - fileID: The file ID of the source file (defaults to `#fileID`).
+  ///   - file: The file this log message originates from (defaults to `#file`).
+  ///   - function: The function this log message originates from (defaults to `#function`).
+  ///   - line: The line this log message originates (defaults to `#line`).
+  ///
+  /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   @discardableResult
   public func info(_ items: Any..., fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogItem? {
     info(LogMessage(items: items), fileID: fileID, file: file, function: function, line: line)
@@ -171,22 +212,32 @@ public class Log: @unchecked Sendable {
   ///
   /// Use this method to capture information about things that might result in an error.
   ///
-  ///		let logger = DLog()
-  ///		logger.warning("message")
+  ///   - Parameters:
+  ///     - message: The message to be logged that can be used with any string interpolation literal.
+  ///     - fileID: The file ID of the source file (defaults to `#fileID`).
+  ///     - file: The file this log message originates from (defaults to `#file`).
+  ///     - function: The function this log message originates from (defaults to `#function`).
+  ///     - line: The line this log message originates (defaults to `#line`).
   ///
-  /// - Parameters:
-  /// 	- message: The message to be logged that can be used with any string interpolation literal.
-  /// 	- file: The file this log message originates from (defaults to `#file`).
-  /// 	- function: The function this log message originates from (defaults to `#function`).
-  /// 	- line: The line this log message originates (defaults to `#line`).
-  ///
-  /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
-  ///
+  ///   - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   @discardableResult
   public func warning(_ message: LogMessage, fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogItem? {
     log(message: message, type: .warning, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
   }
   
+  /// Logs a warning that occurred during the execution of your code.
+  ///
+  /// You can pass zero or more items to the function. The textual representation for each item is the same as that
+  /// obtained by calling `String(describing: item)`.
+  ///
+  /// - Parameters:
+  ///   - items: Zero or more items to print.
+  ///   - fileID: The file ID of the source file (defaults to `#fileID`).
+  ///   - file: The file this log message originates from (defaults to `#file`).
+  ///   - function: The function this log message originates from (defaults to `#function`).
+  ///   - line: The line this log message originates (defaults to `#line`).
+  ///
+  /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   @discardableResult
   public func warning(_ items: Any..., fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogItem? {
     warning(LogMessage(items: items), fileID: fileID, file: file, function: function, line: line)
@@ -196,22 +247,32 @@ public class Log: @unchecked Sendable {
   ///
   /// Use this method to report errors.
   ///
-  ///		let logger = DLog()
-  ///		logger.error("message")
+  ///   - Parameters:
+  ///     - message: The message to be logged that can be used with any string interpolation literal.
+  ///     - fileID: The file ID of the source file (defaults to `#fileID`).
+  ///     - file: The file this log message originates from (defaults to `#file`).
+  ///     - function: The function this log message originates from (defaults to `#function`).
+  ///     - line: The line this log message originates (defaults to `#line`).
   ///
-  /// - Parameters:
-  /// 	- message: The message to be logged that can be used with any string interpolation literal.
-  /// 	- file: The file this log message originates from (defaults to `#file`).
-  /// 	- function: The function this log message originates from (defaults to `#function`).
-  /// 	- line: The line this log message originates (defaults to `#line`).
-  ///
-  /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
-  ///
+  ///   - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   @discardableResult
   public func error(_ message: LogMessage, fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogItem? {
     log(message: message, type: .error, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
   }
   
+  /// Logs an error that occurred during the execution of your code.
+  ///
+  /// You can pass zero or more items to the function. The textual representation for each item is the same as that
+  /// obtained by calling `String(describing: item)`.
+  ///
+  /// - Parameters:
+  ///   - items: Zero or more items to print.
+  ///   - fileID: The file ID of the source file (defaults to `#fileID`).
+  ///   - file: The file this log message originates from (defaults to `#file`).
+  ///   - function: The function this log message originates from (defaults to `#function`).
+  ///   - line: The line this log message originates (defaults to `#line`).
+  ///
+  /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   @discardableResult
   public func error(_ items: Any..., fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogItem? {
     error(LogMessage(items: items), fileID: fileID, file: file, function: function, line: line)
@@ -228,23 +289,34 @@ public class Log: @unchecked Sendable {
   ///
   /// Use this function for internal sanity checks.
   ///
-  ///		let logger = DLog()
-  ///		logger.assert(condition, "message")
-  ///
-  /// - Parameters:
-  /// 	- condition: The condition to test.
-  /// 	- message: A string to print if `condition` is evaluated to `false`. The default is an empty string.
-  /// 	- file: The file this log message originates from (defaults to `#file`).
-  /// 	- function: The function this log message originates from (defaults to `#function`).
-  /// 	- line: The line this log message originates (defaults to `#line`).
+  ///   - Parameters:
+  ///     - condition: The condition to test.
+  ///     - message: A string to print if `condition` is evaluated to `false`. The default is an empty string.
+  ///     - fileID: The file ID of the source file (defaults to `#fileID`).
+  ///     - file: The file this log message originates from (defaults to `#file`).
+  ///     - function: The function this log message originates from (defaults to `#function`).
+  ///     - line: The line this log message originates (defaults to `#line`).
   ///
   /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
-  ///
   @discardableResult
   public func assert(_ condition: @autoclosure () -> Bool, _ message: LogMessage = "", fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogItem? {
     assert(condition, message: message, fileID: fileID, file: file, function: function, line: line)
   }
   
+  /// Logs a traditional C-style assert notice with an optional message.
+  ///
+  /// You can pass zero or more items to the function. The textual representation for each item is the same as that
+  /// obtained by calling `String(describing: item)`.
+  ///
+  /// - Parameters:
+  ///   - condition: The condition to test.
+  ///   - items: Zero or more items to print.
+  ///   - fileID: The file ID of the source file (defaults to `#fileID`).
+  ///   - file: The file this log message originates from (defaults to `#file`).
+  ///   - function: The function this log message originates from (defaults to `#function`).
+  ///   - line: The line this log message originates (defaults to `#line`).
+  ///
+  /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   @discardableResult
   public func assert(_ condition: @autoclosure () -> Bool, _ items: Any..., fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogItem? {
     assert(condition, message: LogMessage(items: items), fileID: fileID, file: file, function: function, line: line)
@@ -254,22 +326,32 @@ public class Log: @unchecked Sendable {
   ///
   /// Use this method to capture critical errors that occurred during the execution of your code.
   ///
-  ///		let logger = DLog()
-  ///		logger.fault("message")
+  ///   - Parameters:
+  ///     - message: The message to be logged that can be used with any string interpolation literal.
+  ///     - fileID: The file ID of the source file (defaults to `#fileID`).
+  ///     - file: The file this log message originates from (defaults to `#file`).
+  ///     - function: The function this log message originates from (defaults to `#function`).
+  ///     - line: The line this log message originates (defaults to `#line`).
   ///
-  /// - Parameters:
-  /// 	- message: The message to be logged that can be used with any string interpolation literal.
-  /// 	- file: The file this log message originates from (defaults to `#file`).
-  /// 	- function: The function this log message originates from (defaults to `#function`).
-  /// 	- line: The line this log message originates (defaults to `#line`).
-  ///
-  /// - Returns: Returns an optional string value indicating whether a log message is generated and processed.
-  ///
+  ///   - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   @discardableResult
   public func fault(_ message: LogMessage, fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogItem? {
     log(message: message, type: .fault, location: LogLocation(fileID: fileID, file: file, function: function, line: line))
   }
   
+  /// Logs a bug or fault that occurred during the execution of your code.
+  ///
+  /// You can pass zero or more items to the function. The textual representation for each item is the same as that
+  /// obtained by calling `String(describing: item)`.
+  ///
+  ///   - Parameters:
+  ///     - items: Zero or more items to print.
+  ///     - fileID: The file ID of the source file (defaults to `#fileID`).
+  ///     - file: The file this log message originates from (defaults to `#file`).
+  ///     - function: The function this log message originates from (defaults to `#function`).
+  ///     - line: The line this log message originates (defaults to `#line`).
+  ///
+  ///   - Returns: Returns an optional string value indicating whether a log message is generated and processed.
   @discardableResult
   public func fault(_ items: Any..., fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line) -> LogItem? {
     fault(LogMessage(items: items), fileID: fileID, file: file, function: function, line: line)
@@ -279,20 +361,21 @@ public class Log: @unchecked Sendable {
   ///
   /// Scope provides a mechanism for grouping log messages in your program.
   ///
-  ///		let logger = DLog()
-  ///		logger.scope("Auth") { scope in
-  ///			scope.log("message")
-  ///		}
+  ///		  let logger = DLog()
+  ///		  logger.scope("Auth") { scope in
+  ///		    scope.log("message")
+  ///       ...
+  ///	      }
   ///
-  /// - Parameters:
-  /// 	- name: The name of new scope object.
-  /// 	- file: The file this log message originates from (defaults to `#file`).
-  /// 	- function: The function this log message originates from (defaults to `#function`).
-  /// 	- line: The line this log message originates (defaults to `#line`).
-  /// 	- closure: A closure to be executed with the scope. The block takes a single `LogScope` parameter and has no return value.
+  ///   - Parameters:
+  /// 	  - name: The name of new scope object.
+  ///     - fileID: The file ID of the source file (defaults to `#fileID`).
+  /// 	  - file: The file this log message originates from (defaults to `#file`).
+  /// 	  - function: The function this log message originates from (defaults to `#function`).
+  /// 	  - line: The line this log message originates (defaults to `#line`).
+  /// 	  - closure: A closure to be executed with the scope. The block takes a single `LogScope` parameter and has no return value.
   ///
   /// - Returns: An `LogScope` object for the new scope.
-  ///
   @discardableResult
   public func scope(_ name: String, fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line, closure: ((LogScope) -> Void)? = nil) -> LogScope? {
     guard let logger = logger.value, logger.isEnabled == true else {
@@ -316,15 +399,15 @@ public class Log: @unchecked Sendable {
   ///      ...
   ///    }
   ///
-  /// - Parameters:
-  ///   - name: The name of new interval object.
-  ///   - file: The file this log message originates from (defaults to `#file`).
-  ///   - function: The function this log message originates from (defaults to `#function`).
-  ///   - line: The line this log message originates (defaults to `#line`).
-  ///   - closure: A closure to be executed with the interval.
+  ///   - Parameters:
+  ///     - name: The name of new interval object.
+  ///     - fileID: The file ID of the source file (defaults to `#fileID`).
+  ///     - file: The file this log message originates from (defaults to `#file`).
+  ///     - function: The function this log message originates from (defaults to `#function`).
+  ///     - line: The line this log message originates (defaults to `#line`).
+  ///     - closure: A closure to be executed with the interval.
   ///
-  /// - Returns: An `LogInterval` object for the new interval.
-  ///
+  ///   - Returns: An `LogInterval` object for the new interval.
   @discardableResult
   public func interval(_ name: StaticString, fileID: StaticString = #fileID, file: StaticString = #file, function: StaticString = #function, line: UInt = #line, closure: (() -> Void)? = nil) -> LogInterval? {
     guard let logger = logger.value, logger.isEnabled else {

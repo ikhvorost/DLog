@@ -27,20 +27,19 @@ import Foundation
 
 
 /// A target output that can output text messages to POSIX streams.
-///
 public struct Std {
   
   private nonisolated(unsafe) let stream: UnsafeMutablePointer<FILE>
   private let terminator: String
 
-  public init(stream: UnsafeMutablePointer<FILE>, terminator: String = "\n") {
+  fileprivate init(stream: UnsafeMutablePointer<FILE>, terminator: String = "\n") {
     self.stream = stream
     self.terminator = terminator
   }
 }
 
 extension Std: OutputProtocol {
-  
+  /// Logs the log item
   public func log(item: LogItem) {
     guard item.type != .intervalBegin else {
       return
@@ -53,10 +52,18 @@ extension Std: OutputProtocol {
   }
 }
 
+/// Creates `stdout` output.
+///
+///     let logger = DLog { StdOut }
+///     logger.log("message")
 public var StdOut: Std {
   Std(stream: Darwin.stdout)
 }
 
+/// Creates `stderr` output.
+///
+///     let logger = DLog { StdErr }
+///     logger.log("message")
 public var StdErr: Std {
   Std(stream: Darwin.stderr)
 }

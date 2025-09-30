@@ -87,7 +87,8 @@ fileprivate enum ANSIEscapeCode: String {
   case backgroundWhite = "\u{001b}[47m"
   case backgroundBrightWhite = "\u{001b}[107m"
 }
-  
+
+/// Represents a generic logging object passed to the outputs.
 public class LogItem: @unchecked Sendable {
   fileprivate struct Tag {
     let textColor: ANSIEscapeCode

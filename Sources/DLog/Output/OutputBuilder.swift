@@ -25,7 +25,7 @@
 
 import Foundation
 
-
+/// A custom parameter attribute that constructs outputs from closures.
 @resultBuilder
 public struct OutputBuilder {
   

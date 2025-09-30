@@ -25,21 +25,33 @@
 
 import Foundation
 
-
+/// Represents the pipe output that allows for chaining multiple outputs one by one.
 public struct Pipe {
   
-  let outputs: [OutputProtocol]
+  private let outputs: [OutputProtocol]
   
+  /// Creates instance of the pipe output.
+  ///
+  ///     let logger = DLog {
+  ///       Pipe {
+  ///         StdOut
+  ///         File(path: "test.log")
+  ///       }
+  ///     }
+  ///     logger.log("message")
+  ///
+  ///   - Parameters:
+  ///     - outputs: The list of the outputs to chain one by one.
   public init(@OutputBuilder _ outputs: () -> [OutputProtocol]) {
     self.outputs = outputs()
   }
 }
 
 extension Pipe: OutputProtocol {
-  
+  /// Logs the log item
   public func log(item: LogItem) {
     for output in outputs {
-      if let filter = output as? Filter, filter.isPipeable(item) == false {
+      if let filter = output as? Filter, filter.isIncluded(item) == false {
         break
       }
       output.log(item: item)

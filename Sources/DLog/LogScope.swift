@@ -42,15 +42,16 @@ public final class LogScope: Log, @unchecked Sendable {
   
   let activity: os_activity_t
   
+  /// The name of the scope
   public let name: String
   
-  // Level
+  /// The level of the scope in the stack
   public var level: Int {
     _level.value
   }
   private let _level = Atomic(0)
   
-  // Duration
+  /// Duration of the scope in secs
   public var duration: TimeInterval {
     _duration.value
   }
@@ -144,6 +145,7 @@ public final class LogScope: Log, @unchecked Sendable {
 
 extension LogScope: Equatable {
   
+  /// Returns a Boolean value indicating whether two values are equal.
   public static func == (lhs: LogScope, rhs: LogScope) -> Bool {
     lhs === rhs
   }

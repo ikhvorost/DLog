@@ -116,5 +116,6 @@ public struct LogMessage: ExpressibleByStringInterpolation, Sendable {
 }
 
 extension LogMessage: CustomStringConvertible {
+  /// A textual representation of this instance.
   public var description: String { value }
 }

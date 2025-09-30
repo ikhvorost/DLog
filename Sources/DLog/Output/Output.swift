@@ -25,23 +25,38 @@
 
 import Foundation
 
-
+/// A type that can output the log items.
 public protocol OutputProtocol: Sendable {
+  
+  /// Logs the log item
   func log(item: LogItem)
 }
 
+/// The custom output that receives the log items.
 public struct Output {
-  private let f: @Sendable (LogItem) -> Void
+  private let callback: @Sendable (LogItem) -> Void
   
-  public init(_ f: @escaping @Sendable (LogItem) -> Void) {
-    self.f = f
+  ///  Creates the custom output instance with a callback closure.
+  ///
+  ///     let logger = DLog {
+  ///       Output {
+  ///         print($0)
+  ///       }
+  ///     }
+  ///     logger.log("message")
+  ///
+  ///   - Parameters:
+  ///     - callback: The closure with the log item input parameter.
+  public init(_ callback: @escaping @Sendable (LogItem) -> Void) {
+    self.callback = callback
   }
 }
 
 extension Output: OutputProtocol {
   
+  /// Logs the log item
   public func log(item: LogItem) {
-    f(item)
+    callback(item)
   }
 }
 

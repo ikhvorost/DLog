@@ -72,7 +72,7 @@ public struct LogOptions: OptionSet, Sendable {
   /// Metadata
   public static let metadata = Self(7)
   
-  // Data
+  /// Data
   public static let data = Self(8)
   
   /// Compact: `.sign` and `.time`
@@ -97,6 +97,7 @@ public enum Style: Sendable {
 /// Contains configuration values regarding to the logger
 public struct LogConfig: Sendable {
   
+  /// Style of text to output.
   public var style: Style = .emoji
   
   /// Start sign of the logger

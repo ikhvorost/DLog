@@ -110,15 +110,16 @@ public struct LogInterval: Sendable {
   private let id: Int
   private let start = Atomic<Date?>(nil)
   
+  /// The name of the interval
   public let name: StaticString
   
-  /// A time duration
+  /// The time duration
   public var duration: TimeInterval {
     _duration.value
   }
   private let _duration = Atomic(0.0)
   
-  /// Accumulated interval statistics
+  /// The accumulated interval statistics
   public var stats: IntervalStats {
     Self.stats.value[id] ?? .empty
   }

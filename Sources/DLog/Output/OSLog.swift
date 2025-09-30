@@ -29,11 +29,10 @@ import os
 import os.activity
 
 
-/// A target output that sends log messages to the Unified Logging System.
+/// Represents OSLog output that sends log messages to the Unified Logging System.
 ///
 /// It captures telemetry from your app for debugging and performance analysis and then you can use various tools to
 /// retrieve log information such as: `Console` and `Instruments` apps, command line tool `"log"` etc.
-///
 public struct OSLog {
   
   private static let types: [LogType : OSLogType] = [
@@ -59,13 +58,14 @@ public struct OSLog {
   /// To create OSLog you can use subsystem strings that identify major functional areas of your app, and you specify
   /// them in reverse DNS notation—for example, com.your_company.your_subsystem_name.
   ///
-  /// 	let logger = DLog(OSLog(subsystem: "com.myapp.logger"))
+  ///     let logger = DLog {
+  ///       OSLog(subsystem: "com.myapp.logger")
+  ///     }
+  ///     logger.debug("message")
   ///
-  /// - Parameters:
-  ///		- subsystem: An identifier string, in reverse DNS notation, that represents the subsystem that’s performing
-  ///		logging (defaults to `"com.dlog.logger"`).
-  ///		- source: A source output (defaults to `.textPlain`)
-  ///
+  ///   - Parameters:
+  ///		  - subsystem: An identifier string, in reverse DNS notation, that represents the subsystem that’s performing logging (defaults to `"com.dlog.logger"`).
+  ///	    - source: A source output (defaults to `.textPlain`)
   public init(subsystem: String = "com.dlog.logger") {
     self.subsystem = subsystem
   }
@@ -84,6 +84,7 @@ public struct OSLog {
   
 extension OSLog: OutputProtocol {
   
+  /// Logs the log item
   public func log(item: LogItem) {
     switch item {
       // Scope

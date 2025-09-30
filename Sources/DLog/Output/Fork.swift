@@ -25,11 +25,23 @@
 
 import Foundation
 
-
+/// Represents the fork output that allows for running multiple outputs in parallel.
 public struct Fork {
   
-  let outputs: [OutputProtocol]
+  private let outputs: [OutputProtocol]
   
+  /// Creates instance of the fork output.
+  ///
+  ///     let logger = DLog {
+  ///       Fork {
+  ///         StdOut
+  ///         File(path: "test.log")
+  ///       }
+  ///     }
+  ///     logger.log("message")
+  ///
+  ///   - Parameters:
+  ///     - outputs: The list of the outputs to run in parallel.
   public init(@OutputBuilder _ outputs: () -> [OutputProtocol]) {
     self.outputs = outputs()
   }
@@ -37,6 +49,7 @@ public struct Fork {
 
 extension Fork: OutputProtocol {
   
+  /// Logs the log item
   public func log(item: LogItem) {
     DispatchQueue.concurrentPerform(iterations: outputs.count) { [outputs] in
       outputs[$0].log(item: item)

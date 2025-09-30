@@ -34,7 +34,7 @@ public final class DLog: Log, @unchecked Sendable {
   ///
   /// Using this constant prevents from logging messages.
   ///
-  ///   let logger = DLog.disabled
+  ///     let logger = DLog.disabled
   ///
   public static let disabled = DLog { nil }
   
@@ -48,12 +48,11 @@ public final class DLog: Log, @unchecked Sendable {
   /// Create an instance and use it to log text messages about your app’s behaviour and to help you assess the state
   /// of your app later. You also can choose a target output and a log level to indicate the severity of that message.
   ///
-  /// 	let logger = DLog()
+  /// 	  let logger = DLog()
   ///     logger.log("Hello DLog!")
   ///
-  /// - Parameters:
-  /// 	- output: A target output object. If it is omitted the logger uses `stdout` by default.
-  ///
+  ///   - Parameters:
+  /// 	  - output: A target output object. If it is omitted the logger uses `stdout` by default.
   public init(category: String = "DLOG", config: LogConfig = LogConfig(), metadata: Metadata = Metadata(), _ output: (() -> OutputProtocol?) = { StdOut }) {
     self.output = output()
     super.init(logger: nil, category: category, config: config, metadata: metadata)
@@ -71,7 +70,7 @@ public final class DLog: Log, @unchecked Sendable {
   ///     let logger = DLog()
   ///     let netLogger = logger.category(name: "NET", config: config)
   ///
-  /// - Parameters:
+  ///   - Parameters:
   ///     - name: Name of category.
   ///     - config: Configuration of category.
   public func category(name: String, config: LogConfig? = nil, metadata: Metadata? = nil) -> Log {
@@ -83,11 +82,11 @@ public final class DLog: Log, @unchecked Sendable {
   /// You can define category name to differentiate unique areas and parts of your app and DLog uses this value
   /// to categorize and filter related log messages.
   ///
-  ///   let logger = DLog()
+  ///     let logger = DLog()
   ///     let netLogger = logger["NET"]
   ///     let netLogger.log("Hello Net!")
   ///
-  /// - Parameters:
+  ///   - Parameters:
   ///     - name: Name of category.
   public subscript(name: String) -> Log {
     category(name: name)

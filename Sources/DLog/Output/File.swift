@@ -27,25 +27,24 @@
 import Foundation
 
 
-/// Target output for a file.
-///
+/// Represents the file output that allows for writing in a file.
 public struct File {
 
   private let file: FileHandle?
   
-  /// Initializes and returns the target file output object associated with the specified file.
+  /// Creates the target file output object associated with the specified file.
   ///
   /// You can use the file output to write text messages to a file by a provided path.
   ///
-  ///		let file = File(path: "/users/user/dlog.txt")
-  /// 	let logger = DLog(file)
-  ///		logger.info("It's a file")
+  ///     let logger = DLog {
+  ///       File(path: "log.txt")
+  ///     }
+  ///     logger.log("message")
   ///
-  /// - Parameters:
-  /// 	- path: The path to the file to access.
-  /// 	- append: `true` if the file output object should append log messages to the end of an existing file or `false` if you want to clear one.
-  /// 	- source: A source output object, if it is omitted, the file output takes `Text` plain output as a source output.
-  ///
+  ///   - Parameters:
+  /// 	  - path: The path to the file to access.
+  /// 	  - append: `true` if the file output object should append log messages to the end of an existing file or `false`
+  ///     if you want to clear one.
   public init(path: String, append: Bool = false) {
     let fileManager = FileManager.default
     if append == false {
@@ -68,9 +67,9 @@ public struct File {
 }
 
 extension File: OutputProtocol {
-  
+  /// Logs the log item
   public func log(item: LogItem) {
-   guard let file, item.type != .intervalBegin else {
+    guard let file, item.type != .intervalBegin else {
       return
     }
     

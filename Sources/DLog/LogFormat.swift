@@ -127,16 +127,16 @@ public enum LogDateFormatting {
   
   /// Displays a date value with the specified parameters.
   ///
-  /// - Parameters:
-  ///    - dateStyle: Format style for date. The default is `none`.
-  ///    - timeStyle: Format style for time. The default is `none`.
-  ///    - locale: The locale for the receiver. The default is `nil`.
+  ///   - Parameters:
+  ///     - dateStyle: Format style for date. The default is `none`.
+  ///     - timeStyle: Format style for time. The default is `none`.
+  ///     - locale: The locale for the receiver. The default is `nil`.
   case date(dateStyle: DateFormatter.Style = .none, timeStyle: DateFormatter.Style = .none, locale: Locale? = nil)
   
   /// Displays a date value with the specified format.
   ///
-  /// - Parameters:
-  ///    - format: Custom format string.
+  ///   - Parameters:
+  ///     - format: Custom format string.
   case dateCustom(format: String)
   
   func string(from value: Date) -> String {
@@ -157,8 +157,8 @@ public enum LogIntFormatting: Sendable {
   
   /// Displays an integer value in octal format with the specified parameters.
   ///
-  /// - Parameters:
-  ///   - includePrefix: Pass `true` to add a prefix 0o. The default is `false`.
+  ///   - Parameters:
+  ///     - includePrefix: Pass `true` to add a prefix 0o. The default is `false`.
   case octal(includePrefix: Bool = false)
   
   /// Displays an integer value in octal format.
@@ -167,10 +167,9 @@ public enum LogIntFormatting: Sendable {
   /// Displays an integer value in hexadecimal format with the specified
   /// parameters.
   ///
-  /// - Parameters:
-  ///   - includePrefix: Pass `true` to add a prefix 0x. The default is `false`.
-  ///   - uppercase: Pass `true` to use uppercase letters
-  ///   or `false` to use lowercase letters. The default is `false`.
+  ///   - Parameters:
+  ///     - includePrefix: Pass `true` to add a prefix 0x. The default is `false`.
+  ///     - uppercase: Pass `true` to use uppercase letters or `false` to use lowercase letters. The default is `false`.
   case hex(includePrefix: Bool = false, uppercase: Bool = false)
   
   /// Displays an integer value in hexadecimal format.
@@ -178,9 +177,9 @@ public enum LogIntFormatting: Sendable {
   
   /// Displays an integer value in byte count format with the specified parameters.
   ///
-  /// - Parameters:
-  ///  - countStyle: Style of counts. The default is `file`.
-  ///  - allowedUnits: Units to display. The default is `useMB`.
+  ///   - Parameters:
+  ///     - countStyle: Style of counts. The default is `file`.
+  ///     - allowedUnits: Units to display. The default is `useMB`.
   case byteCount(countStyle: ByteCountFormatter.CountStyle = .file, allowedUnits: ByteCountFormatter.Units = .useMB)
   
   /// Displays an integer value in byte count format.

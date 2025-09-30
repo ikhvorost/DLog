@@ -27,11 +27,17 @@ import Foundation
 import os
 
 
+/// Represents a collection of information about the current process and stack.
 public struct TraceInfo {
+  /// Shared process information agent for the process.
   public let processInfo = ProcessInfo.processInfo
+  /// The label of the queue.
   public let queueLabel = String(cString: __dispatch_queue_get_label(nil))
+  /// The array containing the call stack return addresses.
   public let stackAddresses: ArraySlice<NSNumber>
+  /// A thread object representing the current thread of execution.
   public let thread = Thread.current
+  /// The thread id.
   public let tid: UInt64
   
   init(stackAddresses: ArraySlice<NSNumber>) {
@@ -43,7 +49,10 @@ public struct TraceInfo {
   }
 }
 
+/// Represents a trace object passed to the outputs.
 public final class LogTraceItem: LogItem, @unchecked Sendable {
+  
+  /// The process and stack information.
   public let traceInfo: TraceInfo
   
   init(category: String, stack: [Bool]?, location: LogLocation, metadata: Metadata, message: String, config: LogConfig, activity: os_activity_t?, stackAddresses: ArraySlice<NSNumber>) {
