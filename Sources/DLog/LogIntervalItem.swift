@@ -26,14 +26,14 @@
 import Foundation
 import os
 
-/// The interval's logging object passed to the outputs.
+/// Represents a interval logging object passed to the outputs.
 public final class LogIntervalItem: LogItem, @unchecked Sendable {
   let signpostId: Atomic<OSSignpostID?>
   
   /// The name of the interval
   public let name: StaticString
   
-  /// The duration of the interval in secs
+  /// The time duration of the interval in secs
   public let duration: TimeInterval
   
   /// The interval's accumulated statistics

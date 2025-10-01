@@ -128,13 +128,21 @@ public class LogItem: @unchecked Sendable {
   
   let activity: os_activity_t?
   
+  /// The time of the log message
   public let time = Date()
+  /// The category of the log message
   public let category: String
+  /// The stack of scopes
   public let stack: [Bool]?
+  /// The type of the log message
   public let type: LogType
+  /// The location of a log message.
   public let location: LogLocation
+  /// The metadata that is attached to the log messages
   public let metadata: Metadata
+  /// The text message
   public let message: String
+  /// Configuration of a textual representation of the log message
   public let config: LogConfig
   
   init(category: String, stack:[Bool]?, type: LogType, location: LogLocation, metadata: Metadata, message: String, config: LogConfig, activity: os_activity_t?) {
@@ -185,6 +193,7 @@ public class LogItem: @unchecked Sendable {
 
 extension LogItem: CustomStringConvertible {
   
+  /// A textual representation of this instance.
   public var description: String {
     var sign = "\(config.sign)"
     var time = Self.dateFormatter.string(from: time)

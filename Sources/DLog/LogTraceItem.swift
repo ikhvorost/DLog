@@ -49,7 +49,7 @@ public struct TraceInfo {
   }
 }
 
-/// Represents a trace object passed to the outputs.
+/// Represents a trace logging object passed to the outputs.
 public final class LogTraceItem: LogItem, @unchecked Sendable {
   
   /// The process and stack information.

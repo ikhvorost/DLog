@@ -27,9 +27,12 @@ import Foundation
 import os
 
 
+/// Represents a scope logging object passed to the outputs.
 public final class LogScopeItem: LogItem, @unchecked Sendable {
   
+  /// The depth level in the scope stack
   public let level: Int
+  /// The time duration of the scope in secs
   public let duration: TimeInterval
   
   init(category: String, stack: [Bool], type: LogType, location: LogLocation, metadata: Metadata, message: String, config: LogConfig, activity: os_activity_t, level: Int, duration: TimeInterval) {

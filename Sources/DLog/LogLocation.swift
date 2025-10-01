@@ -26,7 +26,7 @@
 import Foundation
 
 
-/// The location of a log message.
+/// The location of the log message.
 public struct LogLocation: Sendable {
   /// The file ID.
   public let fileID: StaticString

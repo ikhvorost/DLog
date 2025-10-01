@@ -55,12 +55,14 @@ public enum LogType: Int {
   /// The fault log level to capture system-level or multi-process information when reporting system errors.
   case fault
   
-  /// The interval log level.
+  /// The interval begin log level.
   case intervalBegin
+  /// The interval end log level.
   case intervalEnd
   
-  /// The scope log level.
+  /// The scope enter log level.
   case scopeEnter
+  /// The scope leave log level.
   case scopeLeave
 }
 
@@ -81,6 +83,7 @@ extension LogType: Sendable {
     .scopeLeave: "⬆️",
   ]
   
+  /// The emoji symbol
   public var icon: String {
     Self.icons[self]!
   }
@@ -100,6 +103,7 @@ extension LogType: Sendable {
     .scopeLeave : "SCOPE",
   ]
   
+  /// The title
   public var title: String {
     Self.titles[self]!
   }

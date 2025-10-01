@@ -94,7 +94,7 @@ public enum Style: Sendable {
   case colored
 }
 
-/// Contains configuration values regarding to the logger
+/// Contains configuration values regarding to a textual representation
 public struct LogConfig: Sendable {
   
   /// Style of text to output.
