@@ -1,8 +1,8 @@
 //
-//  Atomic.swift
+//  LogMetadata.swift
 //
-//  Created by Iurii Khvorost <iurii.khvorost@gmail.com> on 2021/02/04.
-//  Copyright © 2021 Iurii Khvorost. All rights reserved.
+//  Created by Iurii Khvorost <iurii.khvorost@gmail.com> on 2025/10/01.
+//  Copyright © 2025 Iurii Khvorost. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to deal
@@ -25,32 +25,37 @@
 
 import Foundation
 
-@discardableResult
-func synchronized<T>(_ obj: AnyObject, body: () -> T) -> T {
-  objc_sync_enter(obj)
-  defer {
-    objc_sync_exit(obj)
-  }
-  return body()
-}
+/// Metadata value type
+public typealias MetadataValue = Sendable & Codable
 
-class Atomic<T>: @unchecked Sendable {
-  fileprivate var _value: T
+/// Metadata type
+public typealias Metadata = [String : MetadataValue]
+
+/// The type that represents a metadata you attach to the log messages.
+public final class LogMetadata {
+  private let data: Atomic<Metadata>
   
-  init(_ value: T) {
-    _value = value
+  init(data: Metadata) {
+    self.data = Atomic(data)
   }
   
-  var value: T {
-    get {
-      synchronized(self) { _value }
-    }
+  /// The metadata dictionary
+  public var value: Metadata {
+    data.value
+  }
+  
+  /// Accesses the metadata value for a custom key.
+  public subscript(key: String) -> MetadataValue? {
     set {
-      synchronized(self) { _value = newValue }
+      data.sync { $0[key] = newValue }
+    }
+    get {
+      data.sync { $0[key] }
     }
   }
   
-  func sync<U>(_ body: (inout T) -> U) -> U {
-    synchronized(self) { body(&_value) }
+  /// Clear the metadata
+  public func removeAll() {
+    data.sync { $0.removeAll() }
   }
 }

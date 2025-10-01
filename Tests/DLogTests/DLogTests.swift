@@ -10,6 +10,37 @@ let SECS = #"[0-9]+(\.[0-9]{3})?s"#
 let Interval = #"\{average:\#(SECS),duration:\#(SECS)\}"#
 let Empty = ">$"
 
+// MARK: - Atomic
+
+@discardableResult
+func synchronized<T>(_ obj: AnyObject, body: () -> T) -> T {
+  objc_sync_enter(obj)
+  defer {
+    objc_sync_exit(obj)
+  }
+  return body()
+}
+
+class Atomic<T>: @unchecked Sendable {
+  fileprivate var _value: T
+  
+  init(_ value: T) {
+    _value = value
+  }
+  
+  var value: T {
+    get {
+      synchronized(self) { _value }
+    }
+    set {
+      synchronized(self) { _value = newValue }
+    }
+  }
+  
+  func sync<U>(_ body: (inout T) -> U) -> U {
+    synchronized(self) { body(&_value) }
+  }
+}
 
 // MARK: - Extensions
 
@@ -227,19 +258,22 @@ final class DLogTests: XCTestCase {
   }
   
   func test_log_params() {
-    let log = DLog()
+    let logger = DLog()
     
-    var item = log.log(10)
+    var item = logger.log()
+    XCTAssert(item?.message == "")
+    
+    item = logger.log(10)
     XCTAssert(item?.message == "10")
     
     let name = "Bob"
-    item = log.log(name)
+    item = logger.log(name)
     XCTAssert(item?.message == "Bob")
     
-    let i = 10
-    let f = 1.1
-    item = log.log("Hello", i, f, true)
-    XCTAssert(item?.message == "Hello 10 1.1 true")
+    let a = 1
+    let b = 3.0
+    item = logger.log(a, "two", b, true)
+    XCTAssert(item?.message == "1 two 3.0 true")
   }
   
   func test_trace() {
@@ -291,9 +325,7 @@ final class DLogTests: XCTestCase {
     }
     
     log.metadata.removeAll()
-    log.metadata.sync {
-      XCTAssert($0.isEmpty)
-    }
+    XCTAssert(log.metadata.value.isEmpty)
   }
   
   func test_scope() {
@@ -1044,5 +1076,12 @@ final class OutputTests: XCTestCase {
     logger.scope("scope") { _ in }
     logger.interval("interval") { }
     delay()
+  }
+  
+  func test() {
+    let logger = DLog {
+      OSLog(subsystem: "com.myapp.logger")
+    }
+    logger.debug("message")
   }
 }

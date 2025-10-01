@@ -25,12 +25,6 @@
 
 import Foundation
 
-/// Metadata value type
-public typealias MetadataValue = Sendable & Codable
-
-/// Metadata type
-public typealias Metadata = [String : MetadataValue]
-
 
 /// Base logger class
 public class Log: @unchecked Sendable {
@@ -38,14 +32,14 @@ public class Log: @unchecked Sendable {
   let category: String
   let config: LogConfig
   
-  /// Contextual metadata
-  public let metadata: AtomicDictionary<String, MetadataValue>
+  /// The metadata to attach to the log messages.
+  public let metadata: LogMetadata
   
   init(logger: DLog?, category: String, config: LogConfig, metadata: Metadata) {
     self.logger.value = logger
     self.category = category
     self.config = config
-    self.metadata = AtomicDictionary(metadata)
+    self.metadata = LogMetadata(data: metadata)
   }
   
   var scope: LogScope? {
