@@ -1,6 +1,6 @@
 # DLog
 
-[![Swift: 5.9, 5.8, 5.7, 5.6](https://img.shields.io/badge/Swift-5.9%20|%205.8%20|%205.7%20|%205.6-de5d43.svg?style=flat&logo=swift)](https://developer.apple.com/swift)
+[![Swift: 6.2, 6.1, 6.0, 5.10](https://img.shields.io/badge/Swift-6.2%20|%206.1%20|%206.0%20|%205.10-de5d43.svg?style=flat&logo=swift)](https://developer.apple.com/swift)
 ![Platforms: iOS, macOS, tvOS, visionOS, watchOS](https://img.shields.io/badge/Platforms-iOS%20|%20macOS%20|%20tvOS%20|%20visionOS%20|%20watchOS-blue.svg?style=flat&logo=apple)
 [![Swift Package Manager: compatible](https://img.shields.io/badge/Swift%20Package%20Manager-compatible-4BC51D.svg?style=flat&logo=apple)](https://swift.org/package-manager/)
 ![Build: status](https://github.com/ikhvorost/DLog/actions/workflows/swift.yml/badge.svg?branch=master)
@@ -9,7 +9,6 @@
 [![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/donate/?hosted_button_id=TSPDD3ZAAH24C)
 
 <p align="center">
-<img src="Images/dlog.png" alt="DLog: Modern logger with pipelines for Swift">
 <img src="Images/dlog-xcode-console.png" alt="DLog: Xcode Console">
 </p>
 
@@ -50,15 +49,16 @@ logger.log("Hello DLog!")
 Outputs:
 
 ```
-• 23:59:11.710 [DLOG] [LOG] <DLog.swift:12> Hello DLog!
+• 20:26:01.760 [DLOG] 💬 [LOG] <DLogTests.swift:1083> Hello DLog!
 ```
 
 Where:
 - `•` - start sign (useful for filtering)
-- `23:59:11.710` - timestamp (HH:mm:ss.SSS)
+- `20:26:01.760` - timestamp (HH:mm:ss.SSS)
 - `[DLOG]` - category tag ('DLOG' by default)
+- `💬` - log type icon
 - `[LOG]` - log type tag ('LOG', 'TRACE', 'DEBUG' etc.)
-- `<DLog.swift:12>` - location (file:line)
+- `<DLogTests.swift:1083>` - location (file:line)
 - `Hello DLog!` - message
 
 You can apply privacy and format options to your logged values:
@@ -1354,90 +1354,6 @@ Instruments.app with signposts:
 
 <img src="Images/dlog-oslog-instruments-signpost.png" alt="DLog: Signposts in Instruments.app"><br>
 
-
-### Net
-
-`Net` is a target output that sends log messages to `NetConsole` service that can be run from a command line on your machine. The service is provided as executable inside DLog package and to start it you should run `sh NetConsole.command` (or just click on `NetConsole.command` file) inside the package's folder and then the service starts listening for incoming messages:
-
-```sh
-$ sh NetConsole.command # or 'xcrun --sdk macosx swift run'
-> [39/39] Linking NetConsole
-> NetConsole for DLog v.1.0
-```
-
-Then the output connects and sends your log messages to `NetConsole`:
-
-```swift
-let logger = DLog(Net())
-
-logger.scope("Main") { scope1 in
-    scope1.trace("Start")
-    logger.scope("Subtask") { scope2 in
-        scope2.info("Validation")
-        scope2.error("Token is invalid")
-        scope2.debug("Retry")
-    }
-    scope1.info("Close connection")
-}
-```
-
-> **iOS 14**: Don't forget to make next changes in your Info.plist to support Bonjour:
-> ```xml
-> <key>NSLocalNetworkUsageDescription</key>
-> <string>Looking for local tcp Bonjour  service</string>
-> <key>NSBonjourServices</key>
-> <array>
->     <string>_dlog._tcp</string>
-> </array>
-> ```
-
-Terminal:
-<p><img src="Images/dlog-net-console.png" alt="DLog: Colored text log in NetConsole"></p>
-
-
-By default `Net` uses `Text(style: .colored)` output as a source but you can set other:
-
-```swift
-let logger = DLog(Net(source: .textEmoji))
-```
-
-And you can also use `.net` shortcut to create the output for the logger.
-
-```swift
-let logger = DLog(.net)
-```
-
-To connect to a specific instance of the service in your network you should provide an unique name to both `NetConsole` and `Net` output ("DLog" name is used by default).
-
-To run the `NetConsole` with a specific name run next command:
-
-```sh
-sh NetConsole.command -n "MyLogger" # or 'xcrun --sdk macosx swift run NetConsole -n "MyLogger"'
-```
-
-In swift code you should set the same name:
-
-```swift
-let logger = DLog(.net("MyLogger"))
-```
-
-More params of `NetConsole` you can look at help:
-
-```sh
-sh NetConsole.command --help  # or 'xcrun --sdk macosx swift run NetConsole --help'
-OVERVIEW: NetConsole for DLog v.1.0
-
-USAGE: net-console [--name <name>] [--auto-clear] [--debug]
-
-OPTIONS:
-  -n, --name <name>       The name by which the service is identified to the network. The name must be unique and by default it equals
-                          "DLog". If you pass the empty string (""), the system automatically advertises your service using the computer
-                          name as the service name.
-  -a, --auto-clear        Clear a terminal on new connection.
-  -d, --debug             Enable debug messages.
-  -h, --help              Show help information.
-```
-
 ## Pipeline
 
 As described above `File`, `Net` and `Standard` outputs have `source` parameter in their initializers to set a source output that is very useful if we want to change an output by default:
@@ -1808,114 +1724,6 @@ Outputs:
 
 ```
 • 10:21:47.407 [DLOG] [INTERVAL] <DLogTests.swift:178> {average:3.005s,count:1,duration:3.005s,max:3.005s,min:3.005s,total:3.005s} signpost
-```
-
-## Objective-C
-
-DLog exposes all functionality to Objective-C via `DLogObjC` library and it's very useful in projects with mixed code so you can log messages, create scopes and intervals, share global loggers etc.
-
-**Log levels**
-
-``` objective-c
-@import DLogObjC;
-
-DLog* logger = [DLog new];
-
-logger.log(@"log");
-logger.trace(@"trace");
-logger.debug(@"debug");
-logger.info(@"info");
-logger.warning(@"warning");
-logger.error(@"error");
-logger.assert(NO, @"assert");
-logger.fault(@"fault");
-```
-
-Also you can format log messages:
-
-``` objective-c
-logger.info(@"Version: %@, build: %d", @"1.2.0", 123);
-```
-
-Output:
-
-``` sh
-• 20:54:48.348 [DLOG] [INFO] <Test.m:16> Version: 1.2.0, build: 123
-```
-
-**Scope**
-
-``` objective-c
-LogScope* scope = logger.scope(@"Scope1", ^(LogScope* scope) {
-    scope.debug(@"debug1");
-});
-
-// OR
-
-scope = logger.scope(@"Scope2");
-[scope enter];
-scope.debug(@"debug2");
-[scope leave];
-```
-
-**Interval**
-
-``` objective-c
-LogInterval* interval = logger.interval(@"interval", ^{
-    [NSThread sleepForTimeInterval:0.25];
-});
-
-// OR
-
-[interval begin];
-[NSThread sleepForTimeInterval:0.25];
-[interval end];
-```
-
-**Category**
-
-``` objective-c
-Log* netLogger = logger[@"NET"];
-netLogger.log(@"net logger");
-```
-
-**Pipeline**
-
-``` objective-c
-DLog* logger = [[DLog alloc] initWithOutputs:@[LogOutput.textEmoji, LogOutput.stdOut]];
-logger.info(@"info");
-```
-
-Outputs:
-
-```
-• 14:17:07.306 [DLOG] ✅ [INFO] <Test.m:15> info
-```
-
-**Filter**
-
-``` objective-c
-// Debug messages only
-LogOutput* filter = [LogOutput filterWithItem:^BOOL(LogItem* logItem) {
-    return logItem.type == LogTypeDebug;
-}];
-
-DLog* logger = [[DLog alloc] initWithOutputs:@[LogOutput.textPlain, filter, LogOutput.stdOut]];
-logger.log(@"log");
-logger.info(@"info");
-logger.debug(@"debug");
-```
-
-Outputs:
-
-```
-• 14:19:50.212 [DLOG] [DEBUG] <Test.m:21> debug
-```
-
-**Disabled**
-
-``` objective-c
-DLog* logger = DLog.disabled;
 ```
 
 ## Installation
