@@ -172,7 +172,6 @@ public class LogItem: @unchecked Sendable {
     return switch config.style {
       case .plain: text
       case .colored: text.color(tag.colors)
-      case .emoji: "\(type.icon) \(text)"
     }
   }
   
@@ -183,7 +182,7 @@ public class LogItem: @unchecked Sendable {
   func messageText() -> String {
     let tag = LogItem.tags[self.type]!
     return switch config.style {
-      case .plain, .emoji:
+      case .plain:
         message
       case .colored:
         message.color(tag.textColor)
@@ -204,7 +203,7 @@ extension LogItem: CustomStringConvertible {
     var data = data() ?? ""
     
     switch config.style {
-      case .plain, .emoji:
+      case .plain:
         break
         
       case .colored:
@@ -223,6 +222,7 @@ extension LogItem: CustomStringConvertible {
       (.level, level),
       (.category, category),
       (.padding, padding()),
+      (.icon, type.icon),
       (.type, typeText()),
       (.location, location),
       (.metadata, metadata),

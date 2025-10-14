@@ -813,7 +813,7 @@ final class OutputTests: XCTestCase {
     let logger = DLog(config: config, metadata: ["a" : 10]) {
       Output {
         print($0)
-        let pattern = #"^• \d{2}:\d{2}:\d{2}\.\d{3} \[\d{2}\] \[DLOG\] \[\#($0.type.title)\] <DLogTests.swift:\d+> \{a:10\}"#
+        let pattern = #"^• \d{2}:\d{2}:\d{2}\.\d{3} \[\d{2}\] \[DLOG\] \#($0.type.icon) \[\#($0.type.title)\] <DLogTests.swift:\d+> \{a:10\}"#
         XCTAssert($0.description.match(pattern) == true, $0.description)
       }
     }
@@ -835,21 +835,6 @@ final class OutputTests: XCTestCase {
     _ = log_all(logger, message: "log")
     logger.scope("scope") { _ in delay() }
     logger.interval("interval") { delay() }
-    delay()
-  }
-  
-  func test_emoji() {
-    var config = LogConfig()
-    config.style = .emoji
-    config.options = .all
-    let log = DLog(config: config, metadata: ["a" : 10]) {
-      Output {
-        print($0)
-        let pattern = #"^• \d{2}:\d{2}:\d{2}\.\d{3} \[\d{2}\] \[DLOG\] \#($0.type.icon) \[\#($0.type.title)\] <DLogTests.swift:\d+> \{a:10\}"#
-        XCTAssert($0.description.match(pattern) == true, $0.description)
-      }
-    }
-    _ = log_all(log, message: "log")
     delay()
   }
   
@@ -1079,9 +1064,13 @@ final class OutputTests: XCTestCase {
   }
   
   func test() {
+    //let logger = DLog()
+    //let logger = DLog { File(path: "") }
     let logger = DLog {
-      OSLog(subsystem: "com.myapp.logger")
+      Output {
+        print($0.message)
+      }
     }
-    logger.debug("message")
+    logger.log("log")
   }
 }

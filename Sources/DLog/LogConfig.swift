@@ -63,32 +63,32 @@ public struct LogOptions: OptionSet, Sendable {
   /// The current scope padding
   public static let padding = Self(4)
   
+  /// Log type icon
+  public static let icon = Self(5)
+  
   /// Log type
-  public static let type = Self(5)
+  public static let type = Self(6)
   
   /// Location
-  public static let location = Self(6)
+  public static let location = Self(7)
   
   /// Metadata
-  public static let metadata = Self(7)
+  public static let metadata = Self(8)
   
   /// Data
-  public static let data = Self(8)
+  public static let data = Self(9)
   
   /// Compact: `.sign` and `.time`
   public static let compact: Self = [.sign, .time]
   
   /// Regular: `.sign`, `.time`, `.category`, `.padding`, `.type`, `.location`, `.metadata` and `.data`
-  public static let regular: Self = [.sign, .time, .category, .padding, .type, .location, .metadata, .data]
+  public static let regular: Self = [.sign, .time, .category, .padding, .icon, .type, .location, .metadata, .data]
 }
 
 /// Style of text to output.
 public enum Style: Sendable {
   /// Universal plain text.
   case plain
-  
-  /// Text with type icons for info, debug etc. (useful for XCode console).
-  case emoji
   
   /// Colored text with ANSI escape codes (useful for Terminal and files).
   case colored
@@ -98,7 +98,7 @@ public enum Style: Sendable {
 public struct LogConfig: Sendable {
   
   /// Style of text to output.
-  public var style: Style = .emoji
+  public var style: Style = .plain
   
   /// Start sign of the logger
   public var sign: Character = "•"
