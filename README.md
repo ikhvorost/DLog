@@ -15,25 +15,26 @@
 DLog is the development logger for Swift that supports emoji and colored text output, format and privacy options, pipelines, filtering, scopes, intervals, stack backtrace and more.
 
 - [Getting started](#getting-started)
-- [Log levels](#log-levels): [log](#log), [info](#info), [trace](#trace), [debug](#debug), [warning](#warning), [error](#error), [assert](#assert), [fault](#fault)
-- [Privacy](#privacy): [public](#public), [private](#private)
-- [Formatters](#formatters): [Date](#date), [Integer](#integer), [Float](#float), [Bool](#bool), [Data](#data)
+- [Log levels](#log-levels)
+- [Privacy](#privacy)
+- [Formatters](#formatters)
 - [Scope](#scope)
 - [Interval](#interval)
 - [Category](#category)
 - [Metadata](#metadata)
-- [Outputs](#outputs): [Text](#text), [Standard](#standard), [File](#file), [OSLog](#oslog), [Net](#net)
+- [Outputs](#outputs)
 - [Pipeline](#pipeline)
 - [Filter](#filter)
 - [.disabled](#disabled)
-- [Configuration](#configuration): [TraceConfig](#traceconfig), [ThreadConfig](#threadconfig), [StackConfig](#stackconfig), [IntervalConfig](#intervalconfig)
-- [Objective-C](#objective-c)
+- [Configuration](#configuration)
 - [Installation](#installation)
 - [License](#license)
 
 ## Getting started
 
-By default `DLog` provides basic text console output:
+### Basics
+
+`DLog` provides basic text console output by default:
 
 ```swift
 // Import DLog package
@@ -44,11 +45,8 @@ let logger = DLog()
 
 // Log a message
 logger.log("Hello DLog!")
-```
 
-Outputs:
-
-```
+// Outputs:
 • 20:26:01.760 [DLOG] 💬 [LOG] <DLogTests.swift:1083> Hello DLog!
 ```
 
@@ -61,7 +59,21 @@ Where:
 - `<DLogTests.swift:1083>` - location (file:line)
 - `Hello DLog!` - message
 
-You can apply privacy and format options to your logged values:
+You can customize this view with the configuration:
+
+``` swift
+var config = LogConfig()
+config.options = [.time, .type]
+let logger = DLog(config: config)
+logger.log("message")
+
+// Outputs:
+14:20:14.033 [LOG] message
+```
+
+### Formatting
+
+You can apply privacy and format options to your log values:
 
 ```swift
 let cardNumber = "1234 5678 9012 3456"
@@ -69,52 +81,56 @@ logger.debug("\(cardNumber, privacy: .private(mask: .redact))")
 
 let salary = 10_123
 logger.debug("\(salary, format: .number(style: .currency))")
+
+// Outputs:
+• 14:41:13.441 [DLOG] ▶️ [DEBUG] <DLogTests.swift:1069> 0000 0000 0000 0000
+• 14:41:13.442 [DLOG] ▶️ [DEBUG] <DLogTests.swift:1072> $10,123.00
 ```
 
-Outputs:
+### Outputs
 
-```
-• 12:20:29.462 [DLOG] [DEBUG] <DLogTests.swift:539> 0000 0000 0000 0000
-• 12:20:29.464 [DLOG] [DEBUG] <DLogTests.swift:542> $10,123.00
-```
-
-`DLog` outputs text logs to `stdout` by default but you can use the other outputs such as: `stderr`, filter, file, OSLog, Net. For instance:
+`DLog` prints text logs to `StdOut` by default but you can use the other outputs such as: `StdErr`, `File`, `OSLog` etc. For instance:
 
 ```swift
-let logger = DLog(.file("path/dlog.txt"))
+let logger = DLog { File(path: "path/dlog.txt") }
 logger.debug("It's a file log!")
 ```
 
-`Dlog` supports plain (by default), emoji and colored styles for text messages and you can set a needed one:
+Even more you can log the messages manually with `Output`:
 
 ```swift
-let logger = DLog(.textEmoji => .stdout)
+let logger = DLog {
+  Output {
+    print($0.message)
+  }
+}
+logger.log("log")
 
-logger.info("Info message")
-logger.log("Log message")
-logger.assert(false, "Assert message")
+// Outputs: 
+log
 ```
 
-Outputs:
+### Pipelines
 
-```
-• 00:03:07.179 [DLOG] ✅ [INFO] <DLog.swift:6> Info message
-• 00:03:07.181 [DLOG] 💬 [LOG] <DLog.swift:7> Log message
-• 00:03:07.181 [DLOG] 🅰️ [ASSERT] <DLog.swift:8> Assert message
-```
-
-Where `=>` is pipeline operator and it can be used for creating a list of outputs:
+You can manage your outputs with `Pipe`, `Fork` and `Filter` to make your logging flow flexible and conditional:
 
 ```swift
-let logger = DLog(.textEmoji
-    => .stdout
-    => .filter { $0.type == .error }
-    => .file("path/error.log"))
+let logger = DLog {
+  Pipe {
+    StdOut
+    Filter {
+      $0.type == .error
+    }
+    File(path: "path/error.log")
+  }
+}
 ```
 
-All log messages will be written to `stdout` first and the the error messages only to the file.
+All log messages are being sending to `StdOut` first then filtering by `error` type so the error messages only will be printed to the file.
 
 ## Log levels
+
+There are eight log levels: `log`, `trace`, `debug`, `info`, `warning`, `error`, `assert`, `fault`.
 
 ### `log`
 
@@ -122,12 +138,9 @@ Log a message:
 
 ```swift
 logger.log("App start")
-```
 
-Outputs:
-
-```
-• 23:40:23.545 [DLOG] [LOG] <DLog.swift:12> App start
+// Outputs
+• 14:42:07.029 [DLOG] 💬 [LOG] <DLogTests.swift:1069> App start
 ```
 
 ### `info`
@@ -137,12 +150,9 @@ Log an information message and helpful data:
 ```swift
 let uuid = UUID().uuidString
 logger.info("uuid: \(uuid)")
-```
 
-Outputs:
-
-```
-• 23:44:30.702 [DLOG] [INFO] <DLog.swift:13> uuid: 8A71D2B9-29F1-4330-A4C2-69988E3FE172
+// Outputs:
+• 14:43:14.461 [DLOG] ✅ [INFO] <DLogTests.swift:1070> uuid: ADA326A9-1245-4207-89AA-2C27D8AB684C
 ```
 
 ### `trace`
@@ -157,13 +167,10 @@ func startup() {
     logger.trace("start")
 }
 startup()
-```
 
-Outputs:
-
-```
-• 10:09:08.343 [DLOG] [TRACE] <DLogTests.swift:174> {func:startup,thread:{name:main,number:1}}
-• 10:09:08.345 [DLOG] [TRACE] <DLogTests.swift:175> {func:startup,thread:{name:main,number:1}} start
+// Outputs:
+• 14:44:28.455 [DLOG] #️⃣ [TRACE] <DLogTests.swift:1071> {func:startup,thread:{number:1}}
+• 14:44:28.455 [DLOG] #️⃣ [TRACE] <DLogTests.swift:1072> {func:startup,thread:{number:1}} start
 ```
 
 ### `debug`
@@ -171,20 +178,13 @@ Outputs:
 Log a debug message to help debug problems during the development:
 
 ```swift
-let session = URLSession(configuration: .default)
-session.dataTask(with: URL(string: "https://apple.com")!) { data, response, error in
-    guard let http = response as? HTTPURLResponse else { return }
+let (_, response) = try await URLSession.shared.data(from: URL(string: "https://apple.com")!)
+let http = response as! HTTPURLResponse
+let text = HTTPURLResponse.localizedString(forStatusCode: http.statusCode)
+logger.debug("\(http.url!.absoluteString): \(http.statusCode) - \(text)")
 
-    let text = HTTPURLResponse.localizedString(forStatusCode: http.statusCode)
-    logger.debug("\(http.url!.absoluteString): \(http.statusCode) - \(text)")
-}
-.resume()
-```
-
-Outputs:
-
-```
-• 23:49:16.562 [DLOG] [DEBUG] <DLog.swift:17> https://www.apple.com/: 200 - no error
+// Outputs:
+• 14:50:20.165 [DLOG] ▶️ [DEBUG] <DLogTests.swift:1074> https://www.apple.com/: 200 - no error
 ```
 
 ### `warning`
@@ -193,12 +193,9 @@ Log a warning message that occurred during the execution of your code.
 
 ```swift
 logger.warning("No Internet connection.")
-```
 
-Outputs:
-
-```
-• 23:49:55.757 [DLOG] [WARNING] <DLog.swift:12> No Internet connection.
+// Outputs:
+• 14:51:22.983 [DLOG] ⚠️ [WARNING] <DLogTests.swift:1070> No Internet connection.
 ```
 
 ### `error`
@@ -214,12 +211,9 @@ do {
 catch {
     logger.error("\(error.localizedDescription)")
 }
-```
 
-Outputs:
-
-```
-• 23:50:39.560 [DLOG] [ERROR] <DLog.swift:18> “source.txt” couldn’t be moved to “Macintosh HD” because either the former doesn’t exist, or the folder containing the latter doesn’t exist.
+// Outputs:
+• 14:52:06.412 [DLOG] ⚠️ [ERROR] <DLogTests.swift:1076> “source.txt” couldn’t be moved to “tmp” because either the former doesn’t exist, or the folder containing the latter doesn’t exist
 ```
 
 ### `assert`
@@ -233,14 +227,10 @@ let password = ""
 logger.assert(user.isEmpty == false, "User is empty")
 logger.assert(password.isEmpty == false)
 logger.assert(password.isEmpty == false, "Password is empty")
-```
 
-Outputs:
-
-```
-• 23:54:19.420 [DLOG] [ASSERT] <DLog.swift:16>
-• 23:54:19.422 [DLOG] [ASSERT] <DLog.swift:17> Password is empty
-
+// Outputs:
+• 14:53:15.388 [DLOG] 🅰️ [ASSERT] <DLogTests.swift:1074>
+• 14:53:15.388 [DLOG] 🅰️ [ASSERT] <DLogTests.swift:1075> Password is empty
 ```
 
 ### `fault`
@@ -252,12 +242,9 @@ guard let modelURL = Bundle.main.url(forResource: "DataModel", withExtension:"mo
     logger.fault("Error loading model from bundle")
     abort()
 }
-```
 
-Outputs:
-
-```
-• 23:55:07.445 [DLOG] [FAULT] <DLog.swift:13> Error loading model from bundle
+// Outputs:
+• 14:54:56.724 [DLOG] 🆘 [FAULT] <DLogTests.swift:1071> Error loading model from bundle
 ```
 
 ## Privacy
@@ -270,15 +257,12 @@ It applies to all values in log messages by default and the values will be visib
 
 ```swift
 let phoneNumber = "+11234567890"
-logger.log("\(phoneNumber)") // public by default
-logger.log("\(phoneNumber, privacy: .public)")
-```
+logger.info("\(phoneNumber)") // public by default
+logger.info("\(phoneNumber, privacy: .public)")
 
-Outputs:
-
-```
-• 20:16:18.628 [DLOG] [LOG] <DLogTests.swift:481> +11234567890
-• 20:16:18.629 [DLOG] [LOG] <DLogTests.swift:482> +11234567890
+// Outputs:
+• 14:56:49.430 [DLOG] ✅ [INFO] <DLogTests.swift:1071> +11234567890
+• 14:56:49.430 [DLOG] ✅ [INFO] <DLogTests.swift:1072> +11234567890
 ```
 
 ### `private`
@@ -289,13 +273,10 @@ The standard `private` option redacts a value with the generic string.
 
 ```swift
 let phoneNumber = "+11234567890"
-logger.log("\(phoneNumber, privacy: .private)")
-```
+logger.info("\(phoneNumber, privacy: .private)")
 
-Outputs:
-
-```
-• 12:04:29.758 [DLOG] [LOG] <DLogTests.swift:508> <private>
+// Outputs:
+• 14:57:58.247 [DLOG] ✅ [INFO] <DLogTests.swift:1071> <private>
 ```
 
 #### `private(mask: .hash)`
@@ -303,13 +284,10 @@ Outputs:
 The mask option to redact a value with its hash value in the logs.
 
 ```swift
-logger.log("\(phoneNumber, privacy: .private(mask: .hash))")
-```
+logger.info("\(phoneNumber, privacy: .private(mask: .hash))")
 
-Outputs:
-
-```
-• 12:09:14.892 [DLOG] [LOG] <DLogTests.swift:508> ECD0ACC2
+// Outputs:
+• 14:58:59.191 [DLOG] ✅ [INFO] <DLogTests.swift:1071> ED6FAF03
 ```
 
 #### `private(mask: .random)`
@@ -317,13 +295,10 @@ Outputs:
 The mask option to redact a value with a random values for each symbol in the logs.
 
 ```swift
-logger.log("\(phoneNumber, privacy: .private(mask: .random))")
-```
+logger.info("\(phoneNumber, privacy: .private(mask: .random))")
 
-Outputs:
-
-```
-• 12:16:19.109 [DLOG] [LOG] <DLogTests.swift:508> =15277829896
+// Outputs:
+• 14:59:47.006 [DLOG] ✅ [INFO] <DLogTests.swift:1071> \26608492764
 ```
 
 #### `private(mask: .redact)`
@@ -331,13 +306,10 @@ Outputs:
 The mask option to redact a value with a generic values for each symbol in the logs.
 
 ```swift
-logger.log("\(phoneNumber, privacy: .private(mask: .redact))")
-```
+logger.info("\(phoneNumber, privacy: .private(mask: .redact))")
 
-Outputs:
-
-```
-• 12:20:02.217 [DLOG] [LOG] <DLogTests.swift:508> +00000000000
+// Outputs:
+• 15:00:44.132 [DLOG] ✅ [INFO] <DLogTests.swift:1071> +00000000000
 ```
 
 #### `private(mask: .shuffle)`
@@ -345,13 +317,10 @@ Outputs:
 The mask option to redact a value with a shuffled value from all symbols in the logs.
 
 ```swift
-logger.log("\(phoneNumber, privacy: .private(mask: .shuffle))")
-```
+logger.info("\(phoneNumber, privacy: .private(mask: .shuffle))")
 
-Outputs:
-
-```
-• 12:23:01.864 [DLOG] [LOG] <DLogTests.swift:508> 47681901+352
+// Outputs:
+• 15:01:43.417 [DLOG] ✅ [INFO] <DLogTests.swift:1071> 7568014+9132
 ```
 
 #### `private(mask: .custom(value:))`
@@ -359,13 +328,10 @@ Outputs:
 The mask option to redact a value with a custom string value in the logs.
 
 ```swift
-logger.log("\(phoneNumber, privacy: .private(mask: .custom(value: "<phone>")))")
-```
+logger.info("\(phoneNumber, privacy: .private(mask: .custom(value: "<phone>")))")
 
-Outputs:
-
-```
-• 12:28:55.105 [DLOG] [LOG] <DLogTests.swift:508> <phone>
+// Outputs:
+• 15:02:32.202 [DLOG] ✅ [INFO] <DLogTests.swift:1071> <phone>
 ```
 
 #### `private(mask: .reduce(length:))`
@@ -373,13 +339,10 @@ Outputs:
 The mask option to redact a value with its reduced value of a provided length in the logs.
 
 ```swift
-logger.log("\(phoneNumber, privacy: .private(mask: .reduce(length: 5)))")
-```
+logger.info("\(phoneNumber, privacy: .private(mask: .reduce(length: 5)))")
 
-Outputs:
-
-```
-• 12:30:48.076 [DLOG] [LOG] <DLogTests.swift:508> +1...890
+// Outputs:
+• 15:03:18.213 [DLOG] ✅ [INFO] <DLogTests.swift:1071> +1...890
 ```
 
 #### `private(mask: .partial(first:, last:))`
@@ -387,13 +350,10 @@ Outputs:
 The mask option to redact a value with its parts from start and end of provided lengths in the logs.
 
 ```swift
-logger.log("\(phoneNumber, privacy: .private(mask: .partial(first: 2, last: 1)))")
-```
+logger.info("\(phoneNumber, privacy: .private(mask: .partial(first: 2, last: 1)))")
 
-Outputs:
-
-```
-• 12:36:58.950 [DLOG] [LOG] <DLogTests.swift:508> +1*********0
+// Outputs:
+• 15:04:01.569 [DLOG] ✅ [INFO] <DLogTests.swift:1071> +1*********0
 ```
 
 ## Formatters
@@ -410,19 +370,16 @@ The formatting options for Date values.
 
 ```swift
 let date = Date()
-logger.log("\(date, format: .date(dateStyle: .medium))")
-logger.log("\(date, format: .date(timeStyle: .short))")
-logger.log("\(date, format: .date(dateStyle: .medium, timeStyle: .short))")
-logger.log("\(date, format: .date(dateStyle: .medium, timeStyle: .short, locale: Locale(identifier: "en_GB")))")
-```
+logger.info("\(date, format: .date(dateStyle: .medium))")
+logger.info("\(date, format: .date(timeStyle: .short))")
+logger.info("\(date, format: .date(dateStyle: .medium, timeStyle: .short))")
+logger.info("\(date, format: .date(dateStyle: .medium, timeStyle: .short, locale: Locale(identifier: "en_GB")))")
 
-Outputs:
-
-```
-• 18:12:52.604 [DLOG] [LOG] <DLogTests.swift:555> Mar 30, 2022
-• 18:12:52.605 [DLOG] [LOG] <DLogTests.swift:556> 6:12 PM
-• 18:12:52.606 [DLOG] [LOG] <DLogTests.swift:557> Mar 30, 2022 at 6:12 PM
-• 18:12:52.606 [DLOG] [LOG] <DLogTests.swift:559> 30 Mar 2022 at 18:12
+// Outputs:
+• 15:06:46.634 [DLOG] ✅ [INFO] <DLogTests.swift:1071> Oct 14, 2025
+• 15:06:46.634 [DLOG] ✅ [INFO] <DLogTests.swift:1072> 3:06 PM
+• 15:06:46.634 [DLOG] ✅ [INFO] <DLogTests.swift:1073> Oct 14, 2025 at 3:06 PM
+• 15:06:46.634 [DLOG] ✅ [INFO] <DLogTests.swift:1074> 14 Oct 2025 at 15:06
 ```
 
 #### `dateCustom(format: String)`
@@ -431,13 +388,10 @@ Format date with a custom format string.
 
 ```swift
 let date = Date()
-logger.log("\(date, format: .dateCustom(format: "dd-MM-yyyy"))")
-```
+logger.info("\(date, format: .dateCustom(format: "dd-MM-yyyy"))")
 
-Outputs:
-
-```
-• 18:12:52.606 [DLOG] [LOG] <DLogTests.swift:558> 30-03-2022
+// Outputs:
+• 15:07:41.345 [DLOG] ✅ [INFO] <DLogTests.swift:1071> 14-10-2025
 ```
 
 ### Integer
@@ -450,13 +404,10 @@ Displays an integer value in binary format.
 
 ```swift
 let value = 12345
-logger.log("\(value, format: .binary)")
-```
+logger.info("\(value, format: .binary)")
 
-Outputs:
-
-```
-• 18:58:29.085 [DLOG] [LOG] <DLogTests.swift:621> 11000000111001
+// Outputs:
+• 15:08:25.704 [DLOG] ✅ [INFO] <DLogTests.swift:1071> 11000000111001
 ```
 
 #### `octal(includePrefix: Bool)`
@@ -465,15 +416,12 @@ Displays an integer value in octal format with the specified parameters.
 
 ```swift
 let value = 12345
-logger.log("\(value, format: .octal)")
-logger.log("\(value, format: .octal(includePrefix: true))")
-```
+logger.info("\(value, format: .octal)")
+logger.info("\(value, format: .octal(includePrefix: true))")
 
-Outputs:
-
-```
-• 19:01:33.019 [DLOG] [LOG] <DLogTests.swift:624> 30071
-• 19:01:33.020 [DLOG] [LOG] <DLogTests.swift:625> 0o30071
+// Outputs:
+• 15:09:10.222 [DLOG] ✅ [INFO] <DLogTests.swift:1071> 30071
+• 15:09:10.222 [DLOG] ✅ [INFO] <DLogTests.swift:1072> 0o30071
 ```
 
 #### `hex(includePrefix: Bool, uppercase: Bool)`
@@ -482,19 +430,16 @@ Displays an integer value in hexadecimal format with the specified parameters.
 
 ```swift
 let value = 1234567
-logger.log("\(value, format: .hex)")
-logger.log("\(value, format: .hex(includePrefix: true))")
-logger.log("\(value, format: .hex(uppercase: true))")
-logger.log("\(value, format: .hex(includePrefix: true, uppercase: true))")
-```
+logger.info("\(value, format: .hex)")
+logger.info("\(value, format: .hex(includePrefix: true))")
+logger.info("\(value, format: .hex(uppercase: true))")
+logger.info("\(value, format: .hex(includePrefix: true, uppercase: true))")
 
-Outputs:
-
-```
-• 19:06:30.463 [DLOG] [LOG] <DLogTests.swift:621> 12d687
-• 19:06:30.464 [DLOG] [LOG] <DLogTests.swift:622> 0x12d687
-• 19:06:30.464 [DLOG] [LOG] <DLogTests.swift:623> 12D687
-• 19:06:30.464 [DLOG] [LOG] <DLogTests.swift:624> 0x12D687
+// Outputs:
+• 15:09:58.655 [DLOG] ✅ [INFO] <DLogTests.swift:1071> 12d687
+• 15:09:58.655 [DLOG] ✅ [INFO] <DLogTests.swift:1072> 0x12d687
+• 15:09:58.655 [DLOG] ✅ [INFO] <DLogTests.swift:1073> 12D687
+• 15:09:58.655 [DLOG] ✅ [INFO] <DLogTests.swift:1074> 0x12D687
 ```
 
 #### `byteCount(countStyle: ByteCountFormatter.CountStyle, allowedUnits: ByteCountFormatter.Units)`
@@ -503,19 +448,16 @@ Format byte count with style and unit.
 
 ```swift
 let value = 20_234_557
-logger.log("\(value, format: .byteCount)")
-logger.log("\(value, format: .byteCount(countStyle: .memory))")
-logger.log("\(value, format: .byteCount(allowedUnits: .useBytes))")
-logger.log("\(value, format: .byteCount(countStyle: .memory, allowedUnits: .useGB))")
-```
+logger.info("\(value, format: .byteCount)")
+logger.info("\(value, format: .byteCount(countStyle: .memory))")
+logger.info("\(value, format: .byteCount(allowedUnits: .useBytes))")
+logger.info("\(value, format: .byteCount(countStyle: .memory, allowedUnits: .useGB))")
 
-Outputs:
-
-```
-• 19:36:49.454 [DLOG] [LOG] <DLogTests.swift:621> 20.2 MB
-• 19:36:49.458 [DLOG] [LOG] <DLogTests.swift:622> 19.3 MB
-• 19:36:49.458 [DLOG] [LOG] <DLogTests.swift:623> 20,234,557 bytes
-• 19:36:49.458 [DLOG] [LOG] <DLogTests.swift:624> 0.02 GB
+// Outputs:
+• 15:11:08.904 [DLOG] ✅ [INFO] <DLogTests.swift:1071> 20.2 MB
+• 15:11:08.905 [DLOG] ✅ [INFO] <DLogTests.swift:1072> 19.3 MB
+• 15:11:08.905 [DLOG] ✅ [INFO] <DLogTests.swift:1073> 20,234,557 bytes
+• 15:11:08.905 [DLOG] ✅ [INFO] <DLogTests.swift:1074> 0.02 GB
 ```
 
 #### `number(style: NumberFormatter.Style, locale: Locale?)`
@@ -524,19 +466,16 @@ Displays an integer value in number format with the specified parameters.
 
 ```swift
 let number = 1_234
-logger.log("\(number, format: .number)")
-logger.log("\(number, format: .number(style: .currency))")
-logger.log("\(number, format: .number(style: .spellOut))")
-logger.log("\(number, format: .number(style: .currency, locale: Locale(identifier: "en_GB")))")
-```
+logger.info("\(number, format: .number)")
+logger.info("\(number, format: .number(style: .currency))")
+logger.info("\(number, format: .number(style: .spellOut))")
+logger.info("\(number, format: .number(style: .currency, locale: Locale(identifier: "en_GB")))")
 
-Outputs:
-
-```
-• 19:42:40.938 [DLOG] [LOG] <DLogTests.swift:621> 1,234
-• 19:42:40.939 [DLOG] [LOG] <DLogTests.swift:622> $1,234.00
-• 19:42:40.939 [DLOG] [LOG] <DLogTests.swift:623> one thousand two hundred thirty-four
-• 19:42:40.939 [DLOG] [LOG] <DLogTests.swift:624> £1,234.00
+// Outputs:
+• 15:12:45.615 [DLOG] ✅ [INFO] <DLogTests.swift:1071> 1,234
+• 15:12:45.615 [DLOG] ✅ [INFO] <DLogTests.swift:1072> $1,234.00
+• 15:12:45.618 [DLOG] ✅ [INFO] <DLogTests.swift:1073> one thousand two hundred thirty-four
+• 15:12:45.618 [DLOG] ✅ [INFO] <DLogTests.swift:1074> £1,234.00
 ```
 
 #### `httpStatusCode`
@@ -544,17 +483,14 @@ Outputs:
 Displays a localized string corresponding to a specified HTTP status code.
 
 ```swift
-logger.log("\(200, format: .httpStatusCode)")
-logger.log("\(404, format: .httpStatusCode)")
-logger.log("\(500, format: .httpStatusCode)")
-```
+logger.info("\(200, format: .httpStatusCode)")
+logger.info("\(404, format: .httpStatusCode)")
+logger.info("\(500, format: .httpStatusCode)")
 
-Outputs:
-
-```
-• 19:51:14.297 [DLOG] [LOG] <DLogTests.swift:620> HTTP 200 no error
-• 19:51:14.298 [DLOG] [LOG] <DLogTests.swift:621> HTTP 404 not found
-• 19:51:14.298 [DLOG] [LOG] <DLogTests.swift:622> HTTP 500 internal server error
+// Outputs:
+• 15:13:26.717 [DLOG] ✅ [INFO] <DLogTests.swift:1070> HTTP 200 no error
+• 15:13:26.717 [DLOG] ✅ [INFO] <DLogTests.swift:1071> HTTP 404 not found
+• 15:13:26.717 [DLOG] ✅ [INFO] <DLogTests.swift:1072> HTTP 500 internal server error
 ```
 
 #### `ipv4Address`
@@ -563,13 +499,10 @@ Displays an integer value (Int32) as IPv4 address.
 
 ```swift
 let ip4 = 0x0100007f
-logger.log("\(ip4, format: .ipv4Address)")
-```
+logger.info("\(ip4, format: .ipv4Address)")
 
-Outputs:
-
-```
-• 19:53:18.141 [DLOG] [LOG] <DLogTests.swift:621> 127.0.0.1
+// Outputs:
+• 15:14:51.842 [DLOG] ✅ [INFO] <DLogTests.swift:1071> 127.0.0.1
 ```
 
 #### time(unitsStyle: DateComponentsFormatter.UnitsStyle)
@@ -578,17 +511,14 @@ Displays a time duration from seconds.
 
 ```swift
 let time = 60 * 60 + 23 * 60 + 15 // 1h 23m 15s
-logger.log("\(time, format: .time)")
-logger.log("\(time, format: .time(unitsStyle: .positional))")
-logger.log("\(time, format: .time(unitsStyle: .short))")
-```
+logger.info("\(time, format: .time)")
+logger.info("\(time, format: .time(unitsStyle: .positional))")
+logger.info("\(time, format: .time(unitsStyle: .short))")
 
-Outputs:
-
-```
-• 12:56:39.655 [DLOG] [LOG] <DLogTests.swift:624> 1h 23m 15s
-• 12:56:39.657 [DLOG] [LOG] <DLogTests.swift:625> 1:23:15
-• 12:56:39.657 [DLOG] [LOG] <DLogTests.swift:626> 1 hr, 23 min, 15 secs
+// Outputs:
+• 15:15:34.947 [DLOG] ✅ [INFO] <DLogTests.swift:1071> 1h 23m 15s
+• 15:15:34.947 [DLOG] ✅ [INFO] <DLogTests.swift:1072> 1:23:15
+• 15:15:34.947 [DLOG] ✅ [INFO] <DLogTests.swift:1073> 1 hr, 23 min, 15 secs
 ```
 
 #### date(dateStyle: DateFormatter.Style, timeStyle: DateFormatter.Style, locale: Locale?)
@@ -597,17 +527,14 @@ Displays date from seconds since 1970.
 
 ```swift
 let timeIntervalSince1970 = 1645026131 // 2022-02-16 15:42:11 +0000
-logger.log("\(timeIntervalSince1970, format: .date)")
-logger.log("\(timeIntervalSince1970, format: .date(dateStyle: .short))")
-logger.log("\(timeIntervalSince1970, format: .date(timeStyle: .medium))")
-```
+logger.info("\(timeIntervalSince1970, format: .date)")
+logger.info("\(timeIntervalSince1970, format: .date(dateStyle: .short))")
+logger.info("\(timeIntervalSince1970, format: .date(timeStyle: .medium))")
 
-Outputs:
-
-```
-• 13:00:33.964 [DLOG] [LOG] <DLogTests.swift:624> 2/16/22, 3:42 PM
-• 13:00:33.965 [DLOG] [LOG] <DLogTests.swift:625> 2/16/22
-• 13:00:33.966 [DLOG] [LOG] <DLogTests.swift:626> 3:42:11 PM
+// Outputs:
+• 15:16:23.214 [DLOG] ✅ [INFO] <DLogTests.swift:1071> 2/16/22, 3:42 PM
+• 15:16:23.215 [DLOG] ✅ [INFO] <DLogTests.swift:1072> 2/16/22
+• 15:16:23.215 [DLOG] ✅ [INFO] <DLogTests.swift:1073> 3:42:11 PM
 ```
 
 ### Float
@@ -620,15 +547,12 @@ Displays a floating-point value in fprintf's `%f` format with specified precisio
 
 ```swift
 let value = 12.345
-logger.log("\(value, format: .fixed)")
-logger.log("\(value, format: .fixed(precision: 2))")
-```
+logger.info("\(value, format: .fixed)")
+logger.info("\(value, format: .fixed(precision: 2))")
 
-Outputs:
-
-```
-• 08:49:35.800 [DLOG] [LOG] <DLogTests.swift:696> 12.345000
-• 08:49:35.802 [DLOG] [LOG] <DLogTests.swift:697> 12.35
+// Outputs:
+• 15:17:22.227 [DLOG] ✅ [INFO] <DLogTests.swift:1071> 12.345000
+• 15:17:22.227 [DLOG] ✅ [INFO] <DLogTests.swift:1072> 12.35
 ```
 
 #### `hex(includePrefix: Bool, uppercase: Bool)`
@@ -637,19 +561,16 @@ Displays a floating-point value in hexadecimal format with the specified paramet
 
 ```swift
 let value = 12.345
-logger.log("\(value, format: .hex)")
-logger.log("\(value, format: .hex(includePrefix: true))")
-logger.log("\(value, format: .hex(uppercase: true))")
-logger.log("\(value, format: .hex(includePrefix: true, uppercase: true))")
-```
+logger.info("\(value, format: .hex)")
+logger.info("\(value, format: .hex(includePrefix: true))")
+logger.info("\(value, format: .hex(uppercase: true))")
+logger.info("\(value, format: .hex(includePrefix: true, uppercase: true))")
 
-Outputs:
-
-```
-• 09:25:46.834 [DLOG] [LOG] <DLogTests.swift:697> 1.8b0a3d70a3d71p+3
-• 09:25:46.836 [DLOG] [LOG] <DLogTests.swift:698> 0x1.8b0a3d70a3d71p+3
-• 09:25:46.836 [DLOG] [LOG] <DLogTests.swift:699> 1.8B0A3D70A3D71P+3
-• 09:25:46.836 [DLOG] [LOG] <DLogTests.swift:700> 0x1.8B0A3D70A3D71P+3
+// Outputs:
+• 15:18:10.113 [DLOG] ✅ [INFO] <DLogTests.swift:1071> 1.8b0a3d70a3d71p+3
+• 15:18:10.113 [DLOG] ✅ [INFO] <DLogTests.swift:1072> 0x1.8b0a3d70a3d71p+3
+• 15:18:10.113 [DLOG] ✅ [INFO] <DLogTests.swift:1073> 1.8B0A3D70A3D71P+3
+• 15:18:10.113 [DLOG] ✅ [INFO] <DLogTests.swift:1074> 0x1.8B0A3D70A3D71P+3
 ```
 
 #### `exponential(precision: Int)`
@@ -658,15 +579,12 @@ Displays a floating-point value in fprintf's `%e` format with specified precisio
 
 ```swift
 let value = 12.345
-logger.log("\(value, format: .exponential)")
-logger.log("\(value, format: .exponential(precision: 2))")
-```
+logger.info("\(value, format: .exponential)")
+logger.info("\(value, format: .exponential(precision: 2))")
 
-Outputs:
-
-```
-• 09:28:51.684 [DLOG] [LOG] <DLogTests.swift:696> 1.234500e+01
-• 09:28:51.686 [DLOG] [LOG] <DLogTests.swift:697> 1.23e+01
+// Outputs:
+• 15:19:22.472 [DLOG] ✅ [INFO] <DLogTests.swift:1071> 1.234500e+01
+• 15:19:22.472 [DLOG] ✅ [INFO] <DLogTests.swift:1072> 1.23e+01
 ```
 
 #### `hybrid(precision: Int)`
@@ -675,15 +593,12 @@ Displays a floating-point value in fprintf's `%g` format with the specified prec
 
 ```swift
 let value = 12.345
-logger.log("\(value, format: .hybrid)")
-logger.log("\(value, format: .hybrid(precision: 1))")
-```
+logger.info("\(value, format: .hybrid)")
+logger.info("\(value, format: .hybrid(precision: 1))")
 
-Outputs:
-
-```
-• 09:31:02.301 [DLOG] [LOG] <DLogTests.swift:696> 12.345
-• 09:31:02.303 [DLOG] [LOG] <DLogTests.swift:697> 1e+01
+// Outputs:
+• 15:20:01.274 [DLOG] ✅ [INFO] <DLogTests.swift:1071> 12.345
+• 15:20:01.274 [DLOG] ✅ [INFO] <DLogTests.swift:1072> 1e+01
 ```
 
 #### `number(style: NumberFormatter.Style, locale: Locale?)`
@@ -692,19 +607,16 @@ Displays a floating-point value in number format with the specified parameters.
 
 ```swift
 let value = 12.345
-logger.log("\(value, format: .number)")
-logger.log("\(value, format: .number(style: .currency))")
-logger.log("\(value, format: .number(style: .spellOut))")
-logger.log("\(value, format: .number(style: .currency, locale: Locale(identifier: "en_GB")))")
-```
+logger.info("\(value, format: .number)")
+logger.info("\(value, format: .number(style: .currency))")
+logger.info("\(value, format: .number(style: .spellOut))")
+logger.info("\(value, format: .number(style: .currency, locale: Locale(identifier: "en_GB")))")
 
-Outputs:
-
-```
-• 09:35:00.740 [DLOG] [LOG] <DLogTests.swift:696> 12.345
-• 09:35:00.741 [DLOG] [LOG] <DLogTests.swift:697> $12.34
-• 09:35:00.741 [DLOG] [LOG] <DLogTests.swift:698> twelve point three four five
-• 09:35:00.744 [DLOG] [LOG] <DLogTests.swift:699> £12.34
+// Outputs:
+• 15:20:54.000 [DLOG] ✅ [INFO] <DLogTests.swift:1071> 12.345
+• 15:20:54.001 [DLOG] ✅ [INFO] <DLogTests.swift:1072> $12.34
+• 15:20:54.003 [DLOG] ✅ [INFO] <DLogTests.swift:1073> twelve point three four five
+• 15:20:54.003 [DLOG] ✅ [INFO] <DLogTests.swift:1074> £12.34
 ```
 
 #### time(unitsStyle: DateComponentsFormatter.UnitsStyle)
@@ -713,17 +625,14 @@ Displays a time duration from seconds.
 
 ```swift
 let time = 60 * 60 + 23 * 60 + 1.25 // 1m 23m 1.25s
-logger.log("\(time, format: .time)")
-logger.log("\(time, format: .time(unitsStyle: .positional))")
-logger.log("\(time, format: .time(unitsStyle: .short))")
-```
+logger.info("\(time, format: .time)")
+logger.info("\(time, format: .time(unitsStyle: .positional))")
+logger.info("\(time, format: .time(unitsStyle: .short))")
 
-Outputs:
-
-```
-• 13:06:29.874 [DLOG] [LOG] <DLogTests.swift:714> 1h 23m 1.250s
-• 13:06:29.877 [DLOG] [LOG] <DLogTests.swift:715> 1:23:01.250
-• 13:06:29.878 [DLOG] [LOG] <DLogTests.swift:716> 1 hr, 23 min, 1.250 sec
+// Outputs:
+• 15:21:51.711 [DLOG] ✅ [INFO] <DLogTests.swift:1071> 1h 23m 1.250s
+• 15:21:51.711 [DLOG] ✅ [INFO] <DLogTests.swift:1072> 1:23:01.250
+• 15:21:51.712 [DLOG] ✅ [INFO] <DLogTests.swift:1073> 1 hr, 23 min, 1.250 sec
 ```
 
 #### date(dateStyle: DateFormatter.Style, timeStyle: DateFormatter.Style, locale: Locale?)
@@ -732,17 +641,14 @@ Displays date from seconds since 1970.
 
 ```swift
 let timeIntervalSince1970 = 1645026131.45 // 2022-02-16 15:42:11 +0000
-logger.log("\(timeIntervalSince1970, format: .date)")
-logger.log("\(timeIntervalSince1970, format: .date(dateStyle: .short))")
-logger.log("\(timeIntervalSince1970, format: .date(timeStyle: .medium))")
-```
+logger.info("\(timeIntervalSince1970, format: .date)")
+logger.info("\(timeIntervalSince1970, format: .date(dateStyle: .short))")
+logger.info("\(timeIntervalSince1970, format: .date(timeStyle: .medium))")
 
-Outputs:
-
-```
-• 13:09:51.299 [DLOG] [LOG] <DLogTests.swift:714> 2/16/22, 3:42 PM
-• 13:09:51.300 [DLOG] [LOG] <DLogTests.swift:715> 2/16/22
-• 13:09:51.301 [DLOG] [LOG] <DLogTests.swift:716> 3:42:11 PM
+// Outputs:
+• 15:22:37.132 [DLOG] ✅ [INFO] <DLogTests.swift:1071> 2/16/22, 3:42 PM
+• 15:22:37.132 [DLOG] ✅ [INFO] <DLogTests.swift:1072> 2/16/22
+• 15:22:37.132 [DLOG] ✅ [INFO] <DLogTests.swift:1073> 3:42:11 PM
 ```
 
 ### Bool
@@ -755,15 +661,12 @@ Displays a boolean value as 1 or 0.
 
 ```swift
 let value = true
-logger.log("\(value, format: .binary)")
-logger.log("\(!value, format: .binary)")
-```
+logger.info("\(value, format: .binary)")
+logger.info("\(!value, format: .binary)")
 
-Outputs:
-
-```
-• 09:41:38.368 [DLOG] [LOG] <DLogTests.swift:746> 1
-• 09:41:38.370 [DLOG] [LOG] <DLogTests.swift:747> 0
+// Outputs:
+• 15:23:39.862 [DLOG] ✅ [INFO] <DLogTests.swift:1071> 1
+• 15:23:39.862 [DLOG] ✅ [INFO] <DLogTests.swift:1072> 0
 ```
 
 #### `answer`
@@ -772,15 +675,12 @@ Displays a boolean value as yes or no.
 
 ```swift
 let value = true
-logger.log("\(value, format: .answer)")
-logger.log("\(!value, format: .answer)")
-```
+logger.info("\(value, format: .answer)")
+logger.info("\(!value, format: .answer)")
 
-Outputs:
-
-```
-• 09:42:57.414 [DLOG] [LOG] <DLogTests.swift:746> yes
-• 09:42:57.415 [DLOG] [LOG] <DLogTests.swift:747> no
+// Outputs:
+• 15:24:14.821 [DLOG] ✅ [INFO] <DLogTests.swift:1071> yes
+• 15:24:14.821 [DLOG] ✅ [INFO] <DLogTests.swift:1072> no
 ```
 
 #### `toggle`
@@ -789,15 +689,12 @@ Displays a boolean value as on or off.
 
 ```swift
 let value = true
-logger.log("\(value, format: .toggle)")
-logger.log("\(!value, format: .toggle)")
-```
+logger.info("\(value, format: .toggle)")
+logger.info("\(!value, format: .toggle)")
 
-Outputs:
-
-```
-• 09:43:46.202 [DLOG] [LOG] <DLogTests.swift:746> on
-• 09:43:46.203 [DLOG] [LOG] <DLogTests.swift:747> off
+// Outputs:
+• 15:24:52.474 [DLOG] ✅ [INFO] <DLogTests.swift:1071> on
+• 15:24:52.474 [DLOG] ✅ [INFO] <DLogTests.swift:1072> off
 ```
 
 ### Data
@@ -810,13 +707,10 @@ Pretty prints an IPv6 address from data.
 
 ```swift
 let data = Data([0x20, 0x01, 0x0b, 0x28, 0xf2, 0x3f, 0xf0, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0a])
-logger.log("\(data, format: .ipv6Address)")
-```
+logger.info("\(data, format: .ipv6Address)")
 
-Outputs:
-
-```
-• 13:24:50.534 [DLOG] [LOG] <DLogTests.swift:813> 2001:b28:f23f:f005::a
+// Outputs:
+• 15:25:27.249 [DLOG] ✅ [INFO] <DLogTests.swift:1071> 2001:b28:f23f:f005::a
 ```
 
 #### text
@@ -825,13 +719,10 @@ Pretty prints text from data.
 
 ```swift
 let data = Data([0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x44, 0x4c, 0x6f, 0x67, 0x21])
-logger.log("\(data, format: .text)")
-```
+logger.info("\(data, format: .text)")
 
-Outputs:
-
-```
-• 13:31:37.596 [DLOG] [LOG] <DLogTests.swift:813> Hello DLog!
+// Outputs:
+• 15:26:03.164 [DLOG] ✅ [INFO] <DLogTests.swift:1071> Hello DLog!
 ```
 
 #### uuid
@@ -840,13 +731,10 @@ Pretty prints uuid from data.
 
 ```swift
 let data = Data([0xca, 0xcd, 0x1b, 0x9d, 0x56, 0xaa, 0x41, 0xf0, 0xbd, 0xe3, 0x45, 0x7d, 0xda, 0x30, 0xa8, 0xd4])
-logger.log("\(data, format: .uuid)")
-```
+logger.info("\(data, format: .uuid)")
 
-Outputs:
-
-```
-• 14:41:26.818 [DLOG] [LOG] <DLogTests.swift:815> CACD1B9D-56AA-41F0-BDE3-457DDA30A8D4
+// Outputs:
+• 15:26:49.189 [DLOG] ✅ [INFO] <DLogTests.swift:1071> CACD1B9D-56AA-41F0-BDE3-457DDA30A8D4
 ```
 
 #### raw
@@ -855,13 +743,10 @@ Pretty prints raw bytes from data.
 
 ```swift
 let data = Data([0xab, 0xcd, 0xef])
-logger.log("\(data, format: .raw)")
-```
+logger.info("\(data, format: .raw)")
 
-Outputs:
-
-```
-• 14:42:52.795 [DLOG] [LOG] <DLogTests.swift:815> ABCDEF
+// Outputs:
+• 15:27:23.903 [DLOG] ✅ [INFO] <DLogTests.swift:1071> ABCDEF
 ```
 
 ## Scope
@@ -870,101 +755,90 @@ Outputs:
 
 ```swift
 logger.scope("Loading") { scope in
-    if let path = Bundle.main.path(forResource: "data", ofType: "json") {
-        scope.info("File: \(path)")
-        if let data = try? String(contentsOfFile: path) {
-            scope.debug("Loaded \(data.count) bytes")
-        }
+  if let url = Bundle.module.url(forResource: "data", withExtension: "json") {
+    scope.info("File: \(url.path())")
+    if let data = try? String(contentsOf: url) {
+      scope.debug("Loaded \(data.count) bytes")
     }
+  }
 }
+
+// Outputs:
+• 15:45:46.504 [DLOG] ┌ ⬇️ [SCOPE:Loading] <DLogTests.swift:1070>
+• 15:45:46.505 [DLOG] ├ ✅ [INFO] <DLogTests.swift:1072> File: /path/Resources/data.json
+• 15:45:46.681 [DLOG] ├ ▶️ [DEBUG] <DLogTests.swift:1074> Loaded 1359467 bytes
+• 15:45:46.681 [DLOG] └ ⬆️ [SCOPE:Loading] <DLogTests.swift:1070> {duration:0.178s}
 ```
 
 > NOTE: To pin your messages to a scope you should use the provided scope instance to call `log`, `trace`, etc.
 
-Outputs:
-
-```
-• 23:57:13.410 [DLOG] ┌ [Loading]
-• 23:57:13.427 [DLOG] ├ [INFO] <DLog.swift:14> File: path/data.json
-• 23:57:13.443 [DLOG] ├ [DEBUG] <DLog.swift:16> Loaded 121 bytes
-• 23:57:13.443 [DLOG] └ [Loading] (0.330s)
-```
-
 Where:
- - `[Loading]` - Name of the scope.
- - `(0.330s)` - Time duration of the scope in secs.
+ - `[SCOPE:Loading]` - Name of the scope.
+ - `{duration:0.178s}` - Time duration of the scope in secs.
 
-You can get duration value of a finished scope programatically:
+You can access to the scope's info programmatically:
 
 ```swift
-var scope = logger.scope("scope") { _ in
-    ...
+let scope = logger.scope("My Scope") { _ in
+  delay()
 }
-
-print(scope.duration) // Time duration
+if let scope {
+  print("name: \(scope.name), level: \(scope.level), duration: \(scope.duration)")
+}
+// Outputs:
+name: My Scope, level: 0, duration: 0.10507702827453613
 ```
 
 It's possible to `enter` and `leave` a scope asynchronously:
 
 ```swift
 let scope = logger.scope("Request")
-scope.enter()
-
-let session = URLSession(configuration: .default)
-session.dataTask(with: URL(string: "https://apple.com")!) { data, response, error in
-    defer {
-        scope.leave()
-    }
-
-    guard let data = data, let http = response as? HTTPURLResponse else {
-        return
-    }
-
-    scope.debug("\(http.url!.absoluteString) - HTTP \(http.statusCode)")
-    scope.debug("Loaded: \(data.count) bytes")
+scope?.enter()
+defer {
+  scope?.leave()
 }
-.resume()
+
+let (data, response) = try await URLSession.shared.data(from: URL(string: "https://apple.com")!)
+
+let http = response as! HTTPURLResponse
+scope?.debug("\(http.url!.absoluteString) - HTTP \(http.statusCode)")
+scope?.debug("Loaded: \(data.count) bytes")
+
+// Outputs:
+• 13:20:14.812 [DLOG] ┌ ⬇️ [SCOPE:Request] <DLogTests.swift:1071>
+• 13:20:14.984 [DLOG] ├ ▶️ [DEBUG] <DLogTests.swift:1079> https://www.apple.com/ - HTTP 200
+• 13:20:14.984 [DLOG] ├ ▶️ [DEBUG] <DLogTests.swift:1080> Loaded: 188023 bytes
+• 13:20:14.984 [DLOG] └ ⬆️ [SCOPE:Request] <DLogTests.swift:1073> {duration:0.173s}
 ```
 
-Outputs:
-
-```
-• 00:01:24.158 [DLOG] ┌ [Request]
-• 00:01:24.829 [DLOG] ├ [DEBUG] <DLog.swift:25> https://www.apple.com/ - HTTP 200
-• 00:01:24.830 [DLOG] ├ [DEBUG] <DLog.swift:26> Loaded: 74454 bytes
-• 00:01:24.830 [DLOG] └ [Request] (0.671s)
-```
-
-Scopes can be nested one into one and that implements a global stack of scopes:
+Scopes can be nested one into one and that implements the stack of scopes:
 
 ```swift
-logger.scope("Loading") { scope1 in
-    if let url = Bundle.main.url(forResource: "data", withExtension: "json") {
-        scope1.info("File: \(url)")
-
-        if let data = try? Data(contentsOf: url) {
-            scope1.debug("Loaded \(data.count) bytes")
-
-            logger.scope("Parsing") { scope2 in
-                if let items = try? JSONDecoder().decode([Item].self, from: data) {
-                    scope2.debug("Parsed \(items.count) items")
-                }
-            }
-        }
+logger.scope("File") {
+  guard let url = Bundle.module.url(forResource: "data", withExtension: "json") else {
+    return
+  }
+  $0.info("File: \(url)")
+  
+  if let data = try? Data(contentsOf: url) {
+    $0.debug("Loaded \(data.count) bytes")
+    
+    logger.scope("Parsing") {
+      if let json = try? JSONSerialization.jsonObject(with: data, options: .mutableContainers) as? [String: Any] {
+        $0.debug("Parsed: \(json.count)")
+      }
     }
+  }
 }
-```
 
-Outputs:
-
-```
-• 00:03:13.552 [DLOG] ┌ [Loading]
-• 00:03:13.554 [DLOG] ├ [INFO] <DLog.swift:20> File: file:///path/data.json
-• 00:03:13.555 [DLOG] ├ [DEBUG] <DLog.swift:23> Loaded 121 bytes
-• 00:03:13.555 [DLOG] | ┌ [Parsing]
-• 00:03:13.557 [DLOG] | ├ [DEBUG] <DLog.swift:27> Parsed 3 items
-• 00:03:13.557 [DLOG] | └ [Parsing] (0.200s)
-• 00:03:13.609 [DLOG] └ [Loading] (0.560s)
+// Outputs:
+• 13:49:47.612 [DLOG] ┌ ⬇️ [SCOPE:File] <DLogTests.swift:1070>
+• 13:49:47.613 [DLOG] ├ ✅ [INFO] <DLogTests.swift:1074> File: file:///path/Resources/data.json
+• 13:49:47.614 [DLOG] ├ ▶️ [DEBUG] <DLogTests.swift:1077> Loaded 7323 bytes
+• 13:49:47.614 [DLOG] | ┌ ⬇️ [SCOPE:Parsing] <DLogTests.swift:1079>
+• 13:49:47.614 [DLOG] | ├ ▶️ [DEBUG] <DLogTests.swift:1081> Parsed: 11
+• 13:49:47.614 [DLOG] | └ ⬆️ [SCOPE:Parsing] <DLogTests.swift:1079> {duration:0s}
+• 13:49:47.614 [DLOG] └ ⬆️ [SCOPE:File] <DLogTests.swift:1070> {duration:0.002s}
 ```
 
 ## Interval
