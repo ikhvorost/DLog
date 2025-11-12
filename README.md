@@ -160,8 +160,6 @@ logger.info("uuid: \(uuid)")
 Log the current function name and a message (if it is provided) to help in debugging problems during the development:
 
 ```swift
-let logger = DLog()
-
 func startup() {
     logger.trace()
     logger.trace("start")
@@ -846,74 +844,48 @@ logger.scope("File") {
 `interval` measures performance of your code by a running time and logs a detailed message with accumulated statistics in seconds:
 
 ```swift
-for _ in 0..<10 {
-    logger.interval("sorting") {
-        var arr = (1...10000).map {_ in arc4random()}
-        arr.sort()
-    }
+logger.interval("sort") {
+  var arr = (1...100_000).map {_ in arc4random()}
+  arr.sort()
 }
-```
 
-Outputs:
-
-```
-• 20:00:01.439 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.022s,duration:0.022s} sorting
-• 20:00:01.462 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.022s,duration:0.022s} sorting
-• 20:00:01.484 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.022s,duration:0.022s} sorting
-• 20:00:01.507 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.022s,duration:0.022s} sorting
-• 20:00:01.528 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.022s,duration:0.022s} sorting
-• 20:00:01.550 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.022s,duration:0.021s} sorting
-• 20:00:01.570 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.021s,duration:0.020s} sorting
-• 20:00:01.591 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.021s,duration:0.020s} sorting
-• 20:00:01.611 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.021s,duration:0.020s} sorting
-• 20:00:01.632 [DLOG] [INTERVAL] <DLogTests.swift:518> {average:0.021s,duration:0.020s} sorting
+// Outputs:
+• 14:44:05.233 [DLOG] 🕑 [INTERVAL:sort] <DLogTests.swift:1069> {average:0.159s,duration:0.159s}
 ```
 
 Where:
+- `[INTERVAL:sort]` - Name of the interval.
 - `average` - Average time duration of all intervals.
 - `duration` - The current time duration of the current interval.
-- `sorting` - Name of the interval.
 
-You can also get the current interval's duration and all its statistics programatically:
+You can also get the current interval's duration and all its statistics programmatically:
 
 ```swift
-let interval = logger.interval("signpost") {
-    ...
+let interval = logger.interval("sort") {
+  var arr = (1...100_000).map {_ in arc4random()}
+  arr.sort()
 }
 
-print(interval.duration) // The current duration
-
-print(interval.statistics.count) // Total count of calls
-print(interval.statistics.total) // Total time of all durations
-print(interval.statistics.min) // Min duration
-print(interval.statistics.max) // Max duration
-print(interval.statistics.average) // Average duraton
+print(interval!.duration) // 0.14887499809265137 - The current duration
+print(interval!.stats.count) // 1 - Total count of calls
+print(interval!.stats.total) // 0.14887499809265137 - Total time of all durations
+print(interval!.stats.min) // 0.14887499809265137 - Min duration
+print(interval!.stats.max) // 0.14887499809265137 - Max duration
+print(interval!.stats.average) // 0.14887499809265137 - Average duration
 ```
 
 To measure asynchronous tasks you can use `begin` and `end` methods:
 
 ```swift
-let logger = DLog()
-
 let interval = logger.interval("load")
-interval.begin()
+interval?.begin()
 
-let url = URL(string: "https://bitmovin-a.akamaihd.net/content/MI201109210084_1/m3u8s/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.m3u8")!
-let asset = AVURLAsset(url: url)
-asset.loadValuesAsynchronously(forKeys: ["duration"]) {
-    let status = asset.statusOfValue(forKey: "duration", error: nil)
-    if status == .loaded {
-        logger.debug("duration: \(asset.duration.seconds)")
-    }
-    interval.end()
+DispatchQueue.global().asyncAfter(deadline: .now() + 2) {
+  interval?.end()
 }
-```
 
-Outputs:
-
-```
-• 18:56:38.134 [DLOG] [DEBUG] <DLogTests.swift:528> duration: 210.0
-• 18:56:38.135 [DLOG] [INTERVAL] <DLogTests.swift:520> {average:7.979s,duration:7.979s} load
+// Outputs:
+• 15:25:49.905 [DLOG] 🕑 [INTERVAL:load] <DLogTests.swift:1074> {average:2.078s,duration:2.078s}
 ```
 
 ## Category
@@ -921,47 +893,39 @@ Outputs:
 You can define category name to differentiate unique areas and parts of your app and DLog uses this value to categorize and filter related log messages. For example, you might define separate strings for your app’s user interface, data model, and networking code.
 
 ```swift
-let logger = DLog()
 let tableLogger = logger["TABLE"]
 let netLogger = logger["NET"]
 
-logger.debug("Refresh")
+logger.debug("Refresh") // Default category "DLOG"
 netLogger.debug("Successfully fetched recordings.")
 tableLogger.debug("Updating with network response.")
-```
 
-Outputs:
-
-```
-• 00:11:30.660 [DLOG] [DEBUG] <DLog.swift:22> Refresh
-• 00:11:30.661 [NET] [DEBUG] <DLog.swift:23> Successfully fetched recordings.
-• 00:11:30.661 [TABLE] [DEBUG] <DLog.swift:24> Updating with network response.
+// Outputs:
+• 15:32:52.108 [DLOG] ▶️ [DEBUG] <DLogTests.swift:1073> Refresh
+• 15:32:52.108 [NET] ▶️ [DEBUG] <DLogTests.swift:1074> Successfully fetched recordings.
+• 15:32:52.108 [TABLE] ▶️ [DEBUG] <DLogTests.swift:1075> Updating with network response.
 ```
 
 **Configuration**
 
-You can apply your specific configuration to your category to change the default log messages appearance, visible info and details etc. (See more: [Configuration](#configuration) )
+You can apply your specific configuration to your category to change the default log messages appearance, visible info or details. (See more: [Configuration](#configuration) )
 
 For instance:
 
 ```swift
-let logger = DLog()
-
 var config = LogConfig()
 config.sign = ">"
-config.options = [.sign, .time, .category, .type]
+config.options = [.sign, .time, .category, .type, .data]
 config.traceConfig.options = [.queue]
 
 let netLogger = logger.category(name: "NET", config: config)
 
 logger.trace("default")
-netLogger.trace("net")
-```
+netLogger.trace("request")
 
-Outputs:
-```
-• 10:12:12.332 [DLOG] [TRACE] <DLogTests.swift:182> {func:test,thread:{name:main,number:1}} default
-> 10:12:12.334 [NET] [TRACE] net
+// Outputs:
+• 15:38:29.904 [DLOG] #️⃣ [TRACE] <DLogTests.swift:1077> {func:test,thread:{number:2}} default
+> 15:38:29.904 [NET] [TRACE] {queue:com.apple.root.user-initiated-qos.cooperative} request
 ```
 
 ## Metadata
@@ -969,6 +933,7 @@ Outputs:
 In its most basic usage, metadata is useful for grouping log messages about the same subject together. For example, you can set the request ID of an HTTP request as metadata, and all the log lines about that HTTP request would show that request ID. 
 
 Logger metadata is a keyword list stored in the dictionary and it can be applied to the logger on creation or changed with its instance later, e.g.:
+
 ```swift
 let logger = DLog(metadata: ["id" : 12345])
 logger.log("start")
@@ -976,30 +941,28 @@ logger.log("start")
 logger.metadata["process"] = "main"
 logger.log("attach")
 
-logger.metadata.clear() // Clear metadata
+logger.metadata.removeAll() // Clear metadata
 logger.log("finish")
+
+// Outputs:
+• 15:43:07.559 [DLOG] 💬 [LOG] <DLogTests.swift:1071> {id:12345} start
+• 15:43:07.559 [DLOG] 💬 [LOG] <DLogTests.swift:1074> {id:12345,process:main} attach
+• 15:43:07.559 [DLOG] 💬 [LOG] <DLogTests.swift:1077> finish
 ```
 
-Outputs:
-```
-• 10:13:11.372 [DLOG] [LOG] <DLogTests.swift:174> {id:12345} start
-• 10:13:11.374 [DLOG] [LOG] <DLogTests.swift:177> {id:12345,process:main} attach
-• 10:13:11.374 [DLOG] [LOG] <DLogTests.swift:180> finish
-```
-
-Where: `(id:12345,process:main)` - key-value pairs of the current metadata.
+Where: `{id:12345,process:main}` - key-value pairs of the current metadata.
 
 The same works with category and scope which copy its parent metadata on creation, but this copy can be changed later:
 
 ```swift
 let logger = DLog(metadata: ["id" : 12345])
 logger.log("start")
-        
+
 // Scope
 logger.scope("scope") { scope in
-    scope.log("start")
-    scope.metadata["id"] = nil // Remove "id" kev-value pair
-    scope.log("finish")
+  scope.log("start")
+  scope.metadata["id"] = nil // Remove "id" kev-value pair
+  scope.log("finish")
 }
 
 // Category
@@ -1008,20 +971,18 @@ category.metadata["method"] = "POST"
 category.log("post data")
 category.log("receive response")
 
-category.metadata.clear()
+category.metadata.removeAll()
 category.log("close")
-```
 
-Outputs:
-```
-• 10:13:54.542 [DLOG] [LOG] <DLogTests.swift:174> {id:12345} start
-• 10:13:54.543 [DLOG] ┌ [scope] 
-• 10:13:54.543 [DLOG] ├ [LOG] <DLogTests.swift:178> {id:12345} start
-• 10:13:54.544 [DLOG] ├ [LOG] <DLogTests.swift:180> finish
-• 10:13:54.544 [DLOG] └ [scope] (0s)
-• 10:13:54.546 [NET] [LOG] <DLogTests.swift:186> {id:12345,method:POST} post data
-• 10:13:54.546 [NET] [LOG] <DLogTests.swift:187> {id:12345,method:POST} receive response
-• 10:13:54.546 [NET] [LOG] <DLogTests.swift:190> close
+// Outputs:
+• 15:47:33.742 [DLOG] 💬 [LOG] <DLogTests.swift:1071> {id:12345} start
+• 15:47:33.742 [DLOG] ┌ ⬇️ [SCOPE:scope] <DLogTests.swift:1074> {id:12345}
+• 15:47:33.742 [DLOG] ├ 💬 [LOG] <DLogTests.swift:1075> {id:12345} start
+• 15:47:33.742 [DLOG] ├ 💬 [LOG] <DLogTests.swift:1077> finish
+• 15:47:33.742 [DLOG] └ ⬆️ [SCOPE:scope] <DLogTests.swift:1074> {duration:0s}
+• 15:47:33.742 [NET] 💬 [LOG] <DLogTests.swift:1083> {id:12345,method:POST} post data
+• 15:47:33.742 [NET] 💬 [LOG] <DLogTests.swift:1084> {id:12345,method:POST} receive response
+• 15:47:33.742 [NET] 💬 [LOG] <DLogTests.swift:1087> close
 ```
 
 ## Outputs
