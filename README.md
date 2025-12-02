@@ -110,7 +110,7 @@ logger.log("log")
 log
 ```
 
-### Pipelines
+### Pipeline
 
 You can manage your outputs with `Pipe`, `Fork` and `Filter` to make your logging flow flexible and conditional:
 
@@ -987,96 +987,22 @@ category.log("close")
 
 ## Outputs
 
-### Text
-
-`Text` is a source output that generates text representation of log messages. It doesn't deliver text to any target outputs (stdout, file etc.) and usually other outputs use it.
-
-It supports thee styles:
-- `.plain` - universal plain text
-- `.emoji` - text with type icons for info, debug etc. (useful for XCode console)
-- `.colored` - colored text with ANSI escape codes (useful for Terminal and files)
-
-```swift
-let outputs = [
-    "Plain" : Text(style: .plain),
-    "Emoji" : Text(style: .emoji),
-    "Colored" : Text(style: .colored),
-]
-
-for (name, output) in outputs {
-    let logger = DLog(output)
-
-    print(name)
-    print(logger.info("info")!)
-    print(logger.error("error")!)
-    print(logger.fault("fatal")!)
-    print("")
-}
-```
-
-Outputs:
-
-```
-Plain
-• 00:12:31.718 [DLOG] [INFO] <DLog.swift:25> info
-• 00:12:31.719 [DLOG] [ERROR] <DLog.swift:26> error
-• 00:12:31.720 [DLOG] [FAULT] <DLog.swift:27> fatal
-
-Emoji
-• 00:12:31.720 [DLOG] ✅ [INFO] <DLog.swift:25> info
-• 00:12:31.721 [DLOG] ⚠️ [ERROR] <DLog.swift:26> error
-• 00:12:31.734 [DLOG] 🆘 [FAULT] <DLog.swift:27> fatal
-
-Colored
-[2m•[0m [2m00:12:31.735[0m [34mDLOG[0m [42m[37m INFO [0m [2m[32m<DLog.swift:25>[0m [32minfo[0m
-[2m•[0m [2m00:12:31.735[0m [34mDLOG[0m [43m[30m ERROR [0m [2m[33m<DLog.swift:26>[0m [33merror[0m
-[2m•[0m [2m00:12:31.735[0m [34mDLOG[0m [41m[37m[5m FAULT [0m [2m[31m<DLog.swift:27>[0m [31mfatal[0m
-```
-
-Colored text in Terminal:
-
-<img src="Images/dlog-text-colored.png" alt="DLog.swift: Colored text log in Terminal"><br>
-
-You can also use shortcuts `.textPlain`, `.textEmoji` and `.textColored` to create the output:
-
-```swift
-let logger = DLog(.textEmoji)
-```
-
 ### Standard
 
-`Standard` is a target output that can output text messages to POSIX streams:
-- `stdout` - Standard Output
-- `stderr` - Standard Error
+`StdOut` and `StdErr` print text representations of the log messages to POSIX streams accordingly.
 
 ```swift
-// Prints to stdout
-let loggerOut = DLog(Standard())
+let out = DLog { StdOut }
+out.log("log") // Prints to stdout
 
-// Prints to stderr
-let loggerErr = DLog(Standard(stream: Darwin.stderr))
+let err = DLog { StdErr }
+err.error("error") // Prints to stderr
 ```
 
-You can also use shortcuts `.stdout` and `.stderr` to create the output for the logger:
+`StdOut` is used by default if you don't provide any output to DLog:
 
-```swift
-let logger = DLog(.stderr)
-logger.info("It's error stream")
-```
-
-By default `Standard` uses `Text(style: .plain)` output as a source to write text to the streams but you can set other:
-
-```swift
-let output = Standard(source: .textEmoji)
-let logger = DLog(output)
-
-logger.info("Emoji")
-```
-
-Outputs:
-
-```
-• 00:15:25.602 [DLOG] ✅ [INFO] <DLog.swift:18> Emoji
+``` swift
+let logger = DLog() // StdOut
 ```
 
 ### File
@@ -1084,41 +1010,19 @@ Outputs:
 `File` is a target output that writes text messages to a file by a provided path:
 
 ```swift
-let file = File(path: "/users/user/dlog.txt")
-let logger = DLog(file)
-
+let logger = DLog { File(path: "/users/user/dlog.txt") }
 logger.info("It's a file")
 ```
 
-By default `File` output clears content of a opened file but if you want to append data to the existed file you should set `append` parameter to `true`:
+By default `File` clears content of an opened file but if you want to append data to the existed file you should set `append` parameter to `true`:
 
 ```swift
-let file = File(path: "/users/user/dlog.txt", append: true)
+File(path: "/users/user/dlog.txt", append: true)
 ```
-
-You can also use `.file` shortcut to create the output:
-
-```swift
-let logger = DLog(.file("dlog.txt"))
-```
-
-`File` output uses `Text(style: .plain)` as a source by default but you can change it:
-
-```swift
-let file = File(path: "/users/user/dlog.txt", source: .textColored)
-let logger = DLog(file)
-
-logger.scope("File") { scope in
-    scope.info("It's a file")
-}
-```
-File "dlog.txt":
-
-<img src="Images/dlog-file-colored.png" alt="DLog: Colored text log in a file."><br>
 
 ### OSLog
 
-`OSLog` is a target output that writes messages to the Unified Logging System (https://developer.apple.com/documentation/os/logging) that captures telemetry from your app for debugging and performance analysis and then you can use various tools to retrieve log information such as: `Console` and `Instruments` apps, command line tool `log` etc.
+`OSLog` writes messages to the Unified Logging System (https://developer.apple.com/documentation/os/logging) that captures telemetry from your app for debugging and performance analysis and then you can use various tools to retrieve log information such as: `Console` and `Instruments` apps, command line tool `log` etc.
 
 To create `OSLog` you can use subsystem strings that identify major functional areas of your app, and you specify them in reverse DNS notation—for example, `com.your_company.your_subsystem_name`. `OSLog` uses `com.dlog.logger` subsystem by default:
 
@@ -1411,6 +1315,60 @@ Outputs:
 
 ```
 > 00:01:24.380 Info message
+```
+
+### Text styles
+
+It supports thee styles:
+- `.plain` - universal plain text
+- `.emoji` - text with type icons for info, debug etc. (useful for XCode console)
+- `.colored` - colored text with ANSI escape codes (useful for Terminal and files)
+
+```swift
+let outputs = [
+    "Plain" : Text(style: .plain),
+    "Emoji" : Text(style: .emoji),
+    "Colored" : Text(style: .colored),
+]
+
+for (name, output) in outputs {
+    let logger = DLog(output)
+
+    print(name)
+    print(logger.info("info")!)
+    print(logger.error("error")!)
+    print(logger.fault("fatal")!)
+    print("")
+}
+```
+
+Outputs:
+
+```
+Plain
+• 00:12:31.718 [DLOG] [INFO] <DLog.swift:25> info
+• 00:12:31.719 [DLOG] [ERROR] <DLog.swift:26> error
+• 00:12:31.720 [DLOG] [FAULT] <DLog.swift:27> fatal
+
+Emoji
+• 00:12:31.720 [DLOG] ✅ [INFO] <DLog.swift:25> info
+• 00:12:31.721 [DLOG] ⚠️ [ERROR] <DLog.swift:26> error
+• 00:12:31.734 [DLOG] 🆘 [FAULT] <DLog.swift:27> fatal
+
+Colored
+[2m•[0m [2m00:12:31.735[0m [34mDLOG[0m [42m[37m INFO [0m [2m[32m<DLog.swift:25>[0m [32minfo[0m
+[2m•[0m [2m00:12:31.735[0m [34mDLOG[0m [43m[30m ERROR [0m [2m[33m<DLog.swift:26>[0m [33merror[0m
+[2m•[0m [2m00:12:31.735[0m [34mDLOG[0m [41m[37m[5m FAULT [0m [2m[31m<DLog.swift:27>[0m [31mfatal[0m
+```
+
+Colored text in Terminal:
+
+<img src="Images/dlog-text-colored.png" alt="DLog.swift: Colored text log in Terminal"><br>
+
+You can also use shortcuts `.textPlain`, `.textEmoji` and `.textColored` to create the output:
+
+```swift
+let logger = DLog(.textEmoji)
 ```
 
 ### `TraceConfig`
