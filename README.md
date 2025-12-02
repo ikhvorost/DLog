@@ -1024,24 +1024,19 @@ File(path: "/users/user/dlog.txt", append: true)
 
 `OSLog` writes messages to the Unified Logging System (https://developer.apple.com/documentation/os/logging) that captures telemetry from your app for debugging and performance analysis and then you can use various tools to retrieve log information such as: `Console` and `Instruments` apps, command line tool `log` etc.
 
-To create `OSLog` you can use subsystem strings that identify major functional areas of your app, and you specify them in reverse DNS notation—for example, `com.your_company.your_subsystem_name`. `OSLog` uses `com.dlog.logger` subsystem by default:
+To create `OSLog` you can use subsystem strings that identify major functional areas of your app, and you specify them in reverse DNS notation—for example, `com.your_company.your_subsystem_name`.
+
+`OSLog` uses `com.dlog.logger` subsystem by default:
 
 ```swift
-let output1 = OSLog() // subsystem = "com.dlog.logger"
-let output2 = OSLog(subsystem: "com.company.app") // subsystem = "com.company.app"
-```
-
-You can also use `.oslog` shortcut to create the output:
-
-```swift
-let logger1 = DLog(.oslog)
-let logger2 = DLog(.oslog("com.company.app"))
+let oslog1 = OSLog() // subsystem = "com.dlog.logger"
+let oslog2 = OSLog(subsystem: "com.company.app") // subsystem = "com.company.app"
 ```
 
 All DLog's methods map to the system logger ones with appropriate log levels e.g.:
 
 ```swift
-let logger = DLog(.oslog)
+let logger = DLog { OSLog() }
 
 logger.log("log")
 logger.info("info")
@@ -1060,14 +1055,14 @@ Console.app with log levels:
 DLog's scopes map to the system logger activities:
 
 ```swift
-let logger = DLog(.oslog)
+let logger = DLog { OSLog() }
 
 logger.scope("Loading") { scope1 in
-    scope1.info("start")
-    logger.scope("Parsing") { scope2 in
-        scope2.debug("Parsed 1000 items")
-    }
-    scope1.info("finish")
+  scope1.info("start")
+  scope1.scope("Parsing") { scope2 in
+    scope2.debug("Parsed 1000 items")
+  }
+  scope1.info("finish")
 }
 ```
 
@@ -1078,14 +1073,14 @@ Console.app with activities:
 DLog's intervals map to the system logger signposts:
 
 ```swift
-let logger = DLog(.oslog)
+let logger = DLog { OSLog() }
 
 for _ in 0..<10 {
-    logger.interval("Sorting") {
-        let delay = [0.1, 0.2, 0.3].randomElement()!
-        Thread.sleep(forTimeInterval: delay)
-        logger.debug("Sorted")
-    }
+  logger.interval("Sorting") {
+    let delay = [0.1, 0.2, 0.3].randomElement()!
+    Thread.sleep(forTimeInterval: delay)
+    logger.debug("Sorted")
+  }
 }
 ```
 
