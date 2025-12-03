@@ -24,7 +24,6 @@ DLog is the development logger for Swift that supports emoji and colored text ou
 - [Metadata](#metadata)
 - [Outputs](#outputs)
 - [Pipeline](#pipeline)
-- [Filter](#filter)
 - [.disabled](#disabled)
 - [Configuration](#configuration)
 - [Installation](#installation)
@@ -118,15 +117,13 @@ You can manage your outputs with `Pipe`, `Fork` and `Filter` to make your loggin
 let logger = DLog {
   Pipe {
     StdOut
-    Filter {
-      $0.type == .error
-    }
+    Filter { $0.type == .error }
     File(path: "path/error.log")
   }
 }
 ```
 
-All log messages are being sending to `StdOut` first then filtering by `error` type so the error messages only will be printed to the file.
+All log messages will be printed to `StdOut` first then filtered by `error` type so the error messages only will be written to the file.
 
 ## Log levels
 
@@ -1088,147 +1085,98 @@ Instruments.app with signposts:
 
 <img src="Images/dlog-oslog-instruments-signpost.png" alt="DLog: Signposts in Instruments.app"><br>
 
+### Output
+
+`Output` is a custom output that provides `LogItem` with all its properties so that you can get needed ones and operate with them on your own.
+
+``` swift
+let logger = DLog {
+  Output {
+    print($0.time, $0.message)
+  }
+}
+logger.log("log")
+
+// Outputs:
+2025-12-03 15:20:38 +0000 log
+```
+
 ## Pipeline
 
-As described above `File`, `Net` and `Standard` outputs have `source` parameter in their initializers to set a source output that is very useful if we want to change an output by default:
+As described above `Standard`, `File`, `OSLog` and `Output` are final outputs that provide logs to ultimate target. But sometimes we need to log into different targets with different log messages. And in this case we can use complex outputs like `Pipe` and `Fork`.
 
-```swift
-let std = Standard(stream: .out, source: .textEmoji)
-let logger = DLog(std)
-```
+### Pipe
 
-Actually any output has `source` property:
+If you need to deliver your logs one by one to a chained list of needed outputs you can use `Pipe`:
 
-```swift
-let std = Standard()
-std.source = .textEmoji
-let logger = DLog(std)
-```
-
-So that it's possible to make a linked list of outputs:
-
-```swift
-// Text
-let text: LogOutput = .textEmoji
-
-// Standard
-let std = Standard()
-std.source = text
-
-// File
-let file = File(path: "dlog.txt")
-file.source = std
-
-let logger = DLog(file)
-```
-
-Where `text` is a source for `std` and `std` is a source for `file`: text --> std --> file, and now each text message will be sent to both `std` and `file` outputs consecutive.
-
-Lets rewrite this shorter:
-
-```swift
-let logger = DLog(.textEmoji => .stdout => .file("dlog.txt"))
-```
-
-Where `=>` is pipeline operator which defines a combined output from two outputs where the first one is a source and second is a target. So from example above emoji text messages will be written twice: first to standard output and then to the file.
-
-You can combine any needed outputs together and create a final chained output from multiple outputs and your messages will be forwarded to all of them one by one:
-
-```swift
-// All log messages will be written:
-// 1) as plain text to stdout
-// 2) as colored text (with escape codes) to the file
-
-let logger = DLog(.textPlain => .stdout => .textColored => .file(path))
-```
-
-## Filter
-
-`Filter` or `.filter` represents a pipe output that can filter log messages by next available fields: `time`, `category`, `type`, `fileName`, `funcName`, `line`, `text` and `scope`. You can inject it to your pipeline where you need to log specific data only.
-
-Examples:
-
-1) Log messages to stardard output with 'NET' category only
-
-```swift
-let logger = DLog(.textPlain => .filter { $0.category == "NET" } => .stdout)
-let netLogger = logger["NET"]
-
-logger.info("info")
-netLogger.info("info")
-```
-
-Outputs:
-
-```
-• 00:17:58.076 [NET] [INFO] <DLog.swift:19> info
-```
-
-2) Log debug messages only
-
-```swift
-let logger = DLog(.textPlain => .filter { $0.type == .debug } => .stdout)
-
-logger.trace()
-logger.info("info")
-logger.debug("debug")
-logger.error("error")
-```
-
-Outputs:
-
-```
-• 00:18:23.638 [DLOG] [DEBUG] <DLog.swift:19> debug
-```
-
-3) Log messages that contain "hello" string only
-
-```swift
-let logger = DLog(.textPlain => .filter { $0.text().contains("hello") } => .stdout)
-
-logger.debug("debug")
-logger.log("hello world")
-logger.info("info")
-```
-
-Outputs:
-
-```
-• 00:19:17.821 [DLOG] [LOG] <DLog.swift:18> hello world
-```
-
-3) Log messages which are related to a specific scope:
-
-```swift
-let filter = Filter { item in
-    return item.scope?.name == "Load"
-} isScope: { scope in
-    return scope.name == "Load"
+``` swift
+let logger = DLog {
+  Pipe {
+    StdOut
+    File(path: "path/dlog.txt")
+  }
 }
+```
 
-let logger = DLog(.textPlain => filter => .stdout)
+First, your log will be printed out to the console (`StdOut`)` and then written to the file ("path/dlog.txt").
 
-logger.trace("trace")
-logger.scope("Load") { scope1 in
-    scope1.debug("debug")
+Also you can use `if` and `switch` statements to configure your outputs e.g.:
 
-    logger.scope("Parse") { scope2 in
-        scope2.log("log")
-        scope2.info("info")
+``` swift
+let isDebug = true
+
+let logger = DLog {
+  if isDebug {
+    StdOut
+  }
+  else {
+    File(path: "path/dlog.txt")
+  }
+}
+```
+
+### Filter
+
+If you need to write specific log items to your needed target you can use `Filter` inside `Pipe` for these purposes. `Filter`  represents the output that can filter log messages by all available fields of `LogItem`: `time`, `category`, `type`, `message` etc. You can inject it to your pipe where you need to log needed items only.
+
+``` swift
+let logger = DLog {
+  Pipe {
+    StdOut
+    Filter { $0.type == .error }
+    File(path: "path/error.txt")
+  }
+}
+```
+
+From above:
+1) All log messages will be printed to the console
+2) Only error messages will be written to the file ("path/error.txt")
+
+### Fork
+
+With `Fork` you can deliver your log messages to different pipes in parallel that gives additional flexibility to configure your logging flow:
+
+``` swift
+let logger = DLog {
+  Fork {
+    StdOut
+    Pipe {
+      Filter { $0.type == .error }
+      File(path: "path/error.log")
     }
-
-    scope1.error("error")
+    Pipe {
+      Filter { $0.type == .warning }
+      File(path: "path/warning.log")
+    }
+  }
 }
-logger.fault("fault")
 ```
 
-Outputs:
-```
-• 16:28:50.443 [DLOG] ┌ [Load] 
-• 16:28:50.443 [DLOG] ├ [DEBUG] <DLogTests.swift:528> debug
-• 16:28:50.443 [DLOG] ├ [ERROR] <DLogTests.swift:535> error
-• 16:28:50.443 [DLOG] └ [Load] (0.001s)
-```
+From above:
+1) All messages will be printed to the console
+2) Only error messages will be written to the error file in the first pipe
+3) Only warning messages will be written to the warning file in the second pipe
 
 ## `.disabled`
 
