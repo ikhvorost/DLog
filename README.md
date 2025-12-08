@@ -751,9 +751,9 @@ logger.info("\(data, format: .raw)")
 ```swift
 logger.scope("Loading") { scope in
   if let url = Bundle.module.url(forResource: "data", withExtension: "json") {
-    scope.info("File: \(url.path())")
+    scope?.info("File: \(url.path())")
     if let data = try? String(contentsOf: url) {
-      scope.debug("Loaded \(data.count) bytes")
+      scope?.debug("Loaded \(data.count) bytes")
     }
   }
 }
@@ -813,14 +813,14 @@ logger.scope("File") {
   guard let url = Bundle.module.url(forResource: "data", withExtension: "json") else {
     return
   }
-  $0.info("File: \(url)")
+  $0?.info("File: \(url)")
   
   if let data = try? Data(contentsOf: url) {
-    $0.debug("Loaded \(data.count) bytes")
+    $0?.debug("Loaded \(data.count) bytes")
     
-    logger.scope("Parsing") {
+    $0?.scope("Parsing") {
       if let json = try? JSONSerialization.jsonObject(with: data, options: .mutableContainers) as? [String: Any] {
-        $0.debug("Parsed: \(json.count)")
+        $0?.debug("Parsed: \(json.count)")
       }
     }
   }
@@ -957,9 +957,9 @@ logger.log("start")
 
 // Scope
 logger.scope("scope") { scope in
-  scope.log("start")
-  scope.metadata["id"] = nil // Remove "id" kev-value pair
-  scope.log("finish")
+  scope?.log("start")
+  scope?.metadata["id"] = nil // Remove "id" kev-value pair
+  scope?.log("finish")
 }
 
 // Category
@@ -1055,11 +1055,11 @@ DLog's scopes map to the system logger activities:
 let logger = DLog { OSLog() }
 
 logger.scope("Loading") { scope1 in
-  scope1.info("start")
-  scope1.scope("Parsing") { scope2 in
-    scope2.debug("Parsed 1000 items")
+  scope1?.info("start")
+  scope1?.scope("Parsing") { scope2 in
+    scope2?.debug("Parsed 1000 items")
   }
-  scope1.info("finish")
+  scope1?.info("finish")
 }
 ```
 
@@ -1184,43 +1184,42 @@ It is the shared disabled logger constant that doesn't emit any log message and 
 
 ```swift
 // Logging is enabled for `Debug` build configuration only
-
 #if DEBUG
-    let logger = DLog(.textPlain => .file(path))
+  let logger = DLog()
 #else
-    let logger = DLog.disabled
+  let logger = DLog.disabled
 #endif
 ```
 
 The same can be done for disabling unnecessary log categories without commenting or deleting the logger's functions:
 
 ```swift
-//let netLogger = log["NET"]
-let netLogger = DLog.disabled // Disable "NET" category
+// Disable "NET" category
+let logger = DLog()
+let enabled = false
+let netLogger = enabled ? logger["NET"] : DLog.disabled
 ```
 
-The disabled logger continue running your code inside scopes and intervals:
+The disabled logger continues running your code inside scopes and intervals closures:
 
 ```swift
 let logger = DLog.disabled
 
 logger.log("start")
+
 logger.scope("scope") { scope in
-    scope.debug("debug")
-
-    print("scope code")
+  scope?.debug("debug")
+  print("scope code")
 }
+
 logger.interval("signpost") {
-    logger.info("info")
-
-    print("signpost code")
+  logger.info("info")
+  print("signpost code")
 }
+
 logger.log("finish")
-```
 
-Outputs:
-
-```
+// Outputs:
 scope code
 signpost code
 ```

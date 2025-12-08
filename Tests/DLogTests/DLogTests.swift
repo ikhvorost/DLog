@@ -222,8 +222,23 @@ final class DLogTests: XCTestCase {
       XCTAssert($0 == nil)
     }
     
+    let net = logger["NET"]
+    log_all(net, message: "log").forEach {
+      XCTAssert($0 == nil)
+    }
+    
     XCTAssert(logger.scope("scope") == nil)
     XCTAssert(logger.interval("interval") == nil)
+    
+    wait(count: 2) { exps in
+      logger.scope("scope") { _ in
+        exps[0].fulfill()
+      }
+      
+      logger.interval("int") {
+        exps[1].fulfill()
+      }
+    }
   }
   
   func test_block() {
@@ -234,7 +249,7 @@ final class DLogTests: XCTestCase {
     log_all(logger, message: "log")
     
     logger.scope("scope") {
-      log_all($0, message: "log")
+      log_all($0!, message: "log")
     }
     
     logger.interval("interval") {
@@ -332,13 +347,13 @@ final class DLogTests: XCTestCase {
     let logger = DLog()
     
     let scope = logger.scope("scope") { scope in
-      XCTAssert(scope.name == "scope")
-      XCTAssert(scope.level == 1)
-      XCTAssert(scope.duration == 0)
+      XCTAssert(scope?.name == "scope")
+      XCTAssert(scope?.level == 1)
+      XCTAssert(scope?.duration == 0)
       
       delay()
       
-      let item = scope.log("log")
+      let item = scope?.log("log")
       XCTAssert(item?.stack?.count == 0)
     }
     XCTAssert(scope?.level == 0)
@@ -367,18 +382,18 @@ final class DLogTests: XCTestCase {
     let log = DLog()
     
     log.scope("Scope0") { scope in
-      XCTAssert(scope.level == 1)
-      let item = scope.debug("debug")
+      XCTAssert(scope?.level == 1)
+      let item = scope?.debug("debug")
       XCTAssert(item?.stack?.count == 0)
       
-      scope.scope("Scope1") { scope in
-        XCTAssert(scope.level == 2)
-        let item = scope.debug("debug")
+      scope?.scope("Scope1") { scope in
+        XCTAssert(scope?.level == 2)
+        let item = scope?.debug("debug")
         XCTAssert(item?.stack?.count == 1)
         
-        scope.scope("Scope2") { scope in
-          XCTAssert(scope.level == 3)
-          let item = scope.debug("debug")
+        scope?.scope("Scope2") { scope in
+          XCTAssert(scope?.level == 3)
+          let item = scope?.debug("debug")
           XCTAssert(item?.stack?.count == 2)
         }
       }
@@ -392,7 +407,7 @@ final class DLogTests: XCTestCase {
       delay([0.1, 0.2, 0.3, 0.4])
       let scope = logger.scope("Scope \(i)") {
         delay([0.1, 0.2, 0.3, 0.4])
-        $0.debug("debug \(i)")
+        $0?.debug("debug \(i)")
       }
       XCTAssert(scope?.duration ?? 0 >= 0.1)
     }
@@ -1005,7 +1020,7 @@ final class OutputTests: XCTestCase {
     
     //let text = read_oslog_stream() {
       logger.trace()
-      logger.scope("scope") { $0.debug("debug") }
+      logger.scope("scope") { $0?.debug("debug") }
       logger.interval("interval") { }
     //}
     //XCTAssert(text.match(#function) == true )
@@ -1062,15 +1077,5 @@ final class OutputTests: XCTestCase {
     logger.interval("interval") { }
     delay()
   }
-  
-  func test() {
-    //let logger = DLog()
-    //let logger = DLog { File(path: "") }
-    let logger = DLog {
-      Output {
-        print($0.message)
-      }
-    }
-    logger.log("log")
-  }
 }
+
