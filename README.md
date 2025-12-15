@@ -1226,22 +1226,17 @@ signpost code
 
 ## Configuration
 
-You can customize the logger's output by setting which info from the logger should be used. `LogConfig` is a root struct to configure the logger which contains common settings for log messages.
+### LogConfig
 
-For instance you can change the default view of log messages which includes a start sign, category, log type and location:
+You can customize the logger's text output by setting which info from the log messages should be used. `LogConfig` is a root struct to configure the logger which contains common settings for log messages:
 
-```swift
-let logger = DLog()
-logger.info("Info message")
-```
+- `style`: Style of text to output.
+- `sign`: Start sign of the logger
+- `options`: Set which info from the logger should be used.
+- `traceConfig`: Configuration of the `trace` method
+- `intervalConfig`: Configuration of intervals
 
-Outputs:
-
-```
-• 23:53:16.116 [DLOG] [INFO] <DLog.swift:12> Info message
-```
-
-To new appearance that includes your start sign and timestamp only:
+For instance, you can change the default text view of log messages which includes a start sign and the options (category, log type, location etc.), for instance:
 
 ```swift
 var config = LogConfig()
@@ -1249,193 +1244,64 @@ config.sign = ">"
 config.options = [.sign, .time]
 
 let logger = DLog(config: config)
-
 logger.info("Info message")
+
+// Outputs:
+> 13:21:52.111 Info message
 ```
 
-Outputs:
+The `style` property supports two cases:
+- `plain`: universal plain text (with emoji icons for a type)
+- `colored`: colored text with ANSI escape codes (useful for Terminal and files)
 
-```
-> 00:01:24.380 Info message
-```
-
-### Text styles
-
-It supports thee styles:
-- `.plain` - universal plain text
-- `.emoji` - text with type icons for info, debug etc. (useful for XCode console)
-- `.colored` - colored text with ANSI escape codes (useful for Terminal and files)
+Example: 
 
 ```swift
-let outputs = [
-    "Plain" : Text(style: .plain),
-    "Emoji" : Text(style: .emoji),
-    "Colored" : Text(style: .colored),
-]
+var config = LogConfig()
+config.style = .colored
 
-for (name, output) in outputs {
-    let logger = DLog(output)
+let logger = DLog(config: config)
+logger.log("log")
+logger.trace("trace")
+logger.info("info")
+logger.fault("fault")
 
-    print(name)
-    print(logger.info("info")!)
-    print(logger.error("error")!)
-    print(logger.fault("fatal")!)
-    print("")
-}
-```
-
-Outputs:
-
-```
-Plain
-• 00:12:31.718 [DLOG] [INFO] <DLog.swift:25> info
-• 00:12:31.719 [DLOG] [ERROR] <DLog.swift:26> error
-• 00:12:31.720 [DLOG] [FAULT] <DLog.swift:27> fatal
-
-Emoji
-• 00:12:31.720 [DLOG] ✅ [INFO] <DLog.swift:25> info
-• 00:12:31.721 [DLOG] ⚠️ [ERROR] <DLog.swift:26> error
-• 00:12:31.734 [DLOG] 🆘 [FAULT] <DLog.swift:27> fatal
-
-Colored
-[2m•[0m [2m00:12:31.735[0m [34mDLOG[0m [42m[37m INFO [0m [2m[32m<DLog.swift:25>[0m [32minfo[0m
-[2m•[0m [2m00:12:31.735[0m [34mDLOG[0m [43m[30m ERROR [0m [2m[33m<DLog.swift:26>[0m [33merror[0m
-[2m•[0m [2m00:12:31.735[0m [34mDLOG[0m [41m[37m[5m FAULT [0m [2m[31m<DLog.swift:27>[0m [31mfatal[0m
+// Outputs:
+[2m•[0m [2m14:36:03.139[0m [34m[DLOG][0m 💬 [47m[30m[LOG][0m [2m<DLogTests.swift:1087>[0m [37mlog[0m
+[2m•[0m [2m14:36:03.139[0m [34m[DLOG][0m ✅ [42m[30m[INFO][0m [2m<DLogTests.swift:1089>[0m [32minfo[0m
+[2m•[0m [2m14:36:03.139[0m [34m[DLOG][0m 🆘 [101m[97m[5m[FAULT][0m [2m<DLogTests.swift:1090>[0m [91mfault[0m
 ```
 
 Colored text in Terminal:
 
 <img src="Images/dlog-text-colored.png" alt="DLog.swift: Colored text log in Terminal"><br>
 
-You can also use shortcuts `.textPlain`, `.textEmoji` and `.textColored` to create the output:
-
-```swift
-let logger = DLog(.textEmoji)
-```
-
 ### `TraceConfig`
 
-It contains configuration values regarding to the `trace` method which includes trace view options, thread and stack configurations.
+It contains configuration values regarding to the `trace` method which includes trace view options, process, function and other configurations:
 
-By default `trace` method uses `.compact` view option to produce information about the current function name and thread info:
+- `style`: View style.
+- `options`: Set which info from the `trace` method should be used.
+- `processConfig`: Configuration of process info.
+- `funcConfig`: Configuration of function info.
+- `threadConfig`: Configuration of thread info.
+- `stackConfig`: Configuration of stack info.
 
-```swift
-let logger = DLog()
+For instance, you can show your function name, process `pid`, thread `tid` and a calling method from the stack backtrace for your `trace` messages:
 
-func doTest() {
-    logger.trace()
-}
-
-doTest()
-```
-
-Outputs:
-
-```
-• 16:42:56.065 [DLOG] [TRACE] <DLogTests.swift:521> {func:doTest,thread:{name:main,number:1}}
-```
-
-But you can change it to show a function and queue names with pretty style:
-
-```swift
+``` swift
 var config = LogConfig()
-config.traceConfig.options = [.function, .queue]
-config.traceConfig.style = .pretty
+config.traceConfig.options = [.function, .process, .thread, .stack]
+config.traceConfig.processConfig.options = [.pid]
+config.traceConfig.threadConfig.options = [.tid]
+config.traceConfig.stackConfig.options = [.symbol]
+config.traceConfig.stackConfig.depth = 1
 
 let logger = DLog(config: config)
+logger.trace("trace")
 
-func doTest() {
-    logger.trace()
-}
-
-doTest()
-```
-
-Outputs:
-
-```
-• 10:17:59.021 [DLOG] [TRACE] <DLogTests.swift:180> {
-  func : doTest,
-  queue : com.apple.main-thread
-}
-```
-
-#### `ThreadConfig`
-
-The trace configuration has `threadConfig` property to change view options of thread info. For instance the logger can print the current QoS of threads.
-
-```swift
-var config = LogConfig()
-config.traceConfig.threadConfig.options = [.number, .qos]
-
-let logger = DLog(config: config)
-
-func doTest() {
-    logger.trace()
-}
-
-doTest()
-
-DispatchQueue.global().async {
-    doTest()
-}
-```
-
-Outputs:
-
-```
-• 10:18:40.976 [DLOG] [TRACE] <DLogTests.swift:179> {func:doTest,thread:{number:1,qos:userInteractive}}
-• 10:18:40.978 [DLOG] [TRACE] <DLogTests.swift:179> {func:doTest,thread:{number:2,qos:userInitiated}}
-```
-
-#### `StackConfig`
-
-The `trace` method can output the call stack backtrace of the current thread at the moment this method was called. To enable this feature you should configure stack view options, style and depth with `stackConfig` property:
-
-```swift
-let logger: DLog = {
-  var config = LogConfig()
-  config.traceConfig.options = [.stack]
-  config.traceConfig.stackConfig.options = [.symbol, .frame]
-  config.traceConfig.stackConfig.depth = 3
-  config.traceConfig.style = .pretty
-  return DLog(config: config)
-}()
-
-func third() {
-  logger.trace()
-}
-
-func second() {
-  third()
-}
-
-func first() {
-  second()
-}
-
-first()
-```
-
-Outputs:
-
-```
-• 10:20:47.180 [DLOG] [TRACE] <DLogTests.swift:183> {
-  stack : [
-    {
-      frame : 0,
-      symbol : third #1 () -> () in DLogTests.DLogTests.test() -> ()
-    },
-    {
-      frame : 1,
-      symbol : second #1 () -> () in DLogTests.DLogTests.test() -> ()
-    },
-    {
-      frame : 2,
-      symbol : first #1 () -> () in DLogTests.DLogTests.test() -> ()
-    }
-  ]
-}
+// Outputs:
+• 15:21:56.308 [DLOG] #️⃣ [TRACE] <DLogTests.swift:1091> {func:test_trace,process:{pid:87497},stack:[{symbol:DLogTests.OutputTests.test_trace() -> ()}],thread:{tid:6743152}} trace
 ```
 
 > NOTE: A full call stack backtrace is available in Debug mode only.
