@@ -1308,23 +1308,19 @@ logger.trace("trace")
 
 ### `IntervalConfig`
 
-You can change the view options of interval statistics with `intervalConfig` property of `LogConfig` to show needed information such as: `.count`, `.min`, `.max` etc. Or you can use `.all` to output all parameters.
+You can change the view options of interval statistics with `intervalConfig` property of `LogConfig` to show needed information such as: `.count`, `.min`, `.max` etc. Or you can use `.all` to output all parameters for your interval:
 
 ```swift
 var config = LogConfig()
 config.intervalConfig.options = [.all]
 
 let logger = DLog(config: config)
-
 logger.interval("signpost") {
-    Thread.sleep(forTimeInterval: 3)
+  Thread.sleep(forTimeInterval: 3)
 }
-```
 
-Outputs:
-
-```
-• 10:21:47.407 [DLOG] [INTERVAL] <DLogTests.swift:178> {average:3.005s,count:1,duration:3.005s,max:3.005s,min:3.005s,total:3.005s} signpost
+// Outputs:
+• 15:31:08.093 [DLOG] 🕑 [INTERVAL:signpost] <DLogTests.swift:1088> {average:3.005s,count:1,duration:3.005s,max:3.005s,min:3.005s,total:3.005s}
 ```
 
 ## Installation
@@ -1341,18 +1337,20 @@ Add `DLog` package dependency to your `Package.swift` file:
 
 ```swift
 let package = Package(
-    ...
-    dependencies: [
-        .package(url: "https://github.com/ikhvorost/DLog.git", from: "1.0.0")
-    ],
-    targets: [
-        .target(name: "YourPackage",
-            dependencies: [
-                .product(name: "DLog", package: "DLog")
-            ]
-        ),
-        ...
-    ...
+  ...
+  dependencies: [
+    .package(url: "https://github.com/ikhvorost/DLog.git", from: "2.0.0")
+  ],
+  targets: [
+    .target(
+      name: "YourPackage",
+      dependencies: [
+        .product(name: "DLog", package: "DLog")
+      ]
+      ...
+    ),
+  ],
+  ...
 )
 ```
 
