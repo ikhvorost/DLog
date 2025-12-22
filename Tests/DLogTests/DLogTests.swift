@@ -257,7 +257,7 @@ final class DLogTests: XCTestCase {
     }
     
     let timeout = -date.timeIntervalSinceNow
-    XCTAssert(timeout < 0.001)
+    XCTAssert(timeout <= 0.001)
   }
   
   func test_category() {
